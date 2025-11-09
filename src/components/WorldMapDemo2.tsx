@@ -70,6 +70,9 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
   const [showTeleportMenu, setShowTeleportMenu] = useState(false);
   const [enchantItem, setEnchantItem] = useState<any | null>(null);
 
+  // Location tracking: Player is "in town" when town modal is open
+  const isInTown = showTownModal !== null;
+
   // Energy regeneration system (10 energy per hour)
   const energyRegen = useEnergyRegeneration({
     currentEnergy: gameState.energy,
@@ -466,11 +469,11 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
             </div>
             <div style={styles.infoItem}>
               <span style={styles.infoIcon}>🏆</span>
-              <span style={styles.infoText}>{t('worldmap.dailyRank')} #250</span>
+              <span style={styles.infoText}>Level {gameState.playerLevel}</span>
             </div>
             <div style={styles.infoItem}>
-              <span style={styles.infoIcon}>🕳️</span>
-              <span style={styles.infoText}>{t('worldmap.todo')} 15</span>
+              <span style={styles.infoIcon}>💰</span>
+              <span style={styles.infoText}>{gameState.gold.toLocaleString()} Gold</span>
             </div>
             {gameState.saving && (
               <div style={styles.infoItem}>
@@ -491,13 +494,15 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
       heroes={gameState.allHeroes}
       activeParty={gameState.activeParty}
       onPartyChange={(heroes) => gameActions.updateActiveParty(heroes)}
+      isInTown={isInTown}
     />
   );
 
   const inventoryContent = (
     <InventoryScreen
-      heroes={gameState.allHeroes}
+      heroes={isInTown ? gameState.allHeroes : gameState.activeParty}
       inventory={gameState.inventory}
+      isInTown={isInTown}
       onEquipItem={(hero, item) => {
         if (!hero.equipment) return;
         const result = hero.equipment.equip(item);

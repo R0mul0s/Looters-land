@@ -1723,6 +1723,152 @@ ADD COLUMN chat_message_timestamp TIMESTAMP WITH TIME ZONE;
 
 ---
 
+### 15.16. UI Interaction Patterns
+
+**Purpose**: Standardize common UI interactions for consistency and better UX.
+
+#### Mouse Wheel Zoom Pattern
+
+**When to use**: Canvas-based map or visualization components that benefit from zooming.
+
+**Implementation**:
+
+```typescript
+const [zoom, setZoom] = useState(1.0);
+
+/**
+ * Handle zoom level changes
+ */
+const handleZoom = (delta: number) => {
+  setZoom(prev => Math.max(0.5, Math.min(2, prev + delta)));
+};
+
+/**
+ * Handle mouse wheel zoom
+ */
+const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? -0.1 : 0.1;
+  handleZoom(delta);
+};
+
+// Apply to canvas
+<canvas
+  ref={canvasRef}
+  onWheel={handleWheel}
+  style={styles.canvas}
+/>
+```
+
+**Key Points**:
+- ✅ Prevent default wheel behavior with `e.preventDefault()`
+- ✅ Clamp zoom between min/max values (0.5x - 2.0x typical)
+- ✅ Use consistent delta increments (0.1 recommended)
+- ✅ Wheel down = zoom out, wheel up = zoom in
+
+---
+
+#### Keyboard Shortcuts Pattern
+
+**When to use**: Navigation-heavy applications where users benefit from quick access.
+
+**Implementation**:
+
+```typescript
+// Add keyboard shortcuts
+useEffect(() => {
+  const handleKeyPress = (e: KeyboardEvent) => {
+    // Don't trigger if user is typing in an input field
+    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      return;
+    }
+
+    const key = e.key.toUpperCase();
+
+    // Map keys to screens
+    const keyMap: Record<string, GameScreen> = {
+      'W': 'worldmap',
+      'H': 'heroes',
+      'I': 'inventory',
+      'T': 'teleport',
+      'L': 'leaderboards',
+      'Q': 'quests',
+      'G': 'guild'
+    };
+
+    const screen = keyMap[key];
+    if (screen) {
+      e.preventDefault();
+      onScreenChange(screen);
+    }
+  };
+
+  window.addEventListener('keydown', handleKeyPress);
+  return () => window.removeEventListener('keydown', handleKeyPress);
+}, [onScreenChange]);
+```
+
+**Key Points**:
+- ✅ Always check if user is typing in input/textarea
+- ✅ Use `keydown` event (not `keypress`)
+- ✅ Call `preventDefault()` to avoid browser shortcuts
+- ✅ Clean up event listener on unmount
+- ✅ Include handler dependencies in useEffect array
+- ✅ Use intuitive key mappings (W for World, I for Inventory, etc.)
+- ❌ Never override critical browser shortcuts (Ctrl+C, Ctrl+V, F5, etc.)
+
+**Visual Indication**:
+Display keyboard shortcuts in UI to help users discover them:
+
+```typescript
+const menuItems = [
+  { id: 'worldmap', icon: '🗺️', label: 'World Map', hotkey: 'W' },
+  { id: 'heroes', icon: '🦸', label: 'Heroes', hotkey: 'H' }
+];
+
+// Render hotkey badge
+{item.hotkey && (
+  <span style={styles.hotkey}>{item.hotkey}</span>
+)}
+```
+
+---
+
+#### Dynamic Info Display Pattern
+
+**When to use**: Status bars, info panels showing live game state.
+
+**Implementation**:
+
+```typescript
+// ❌ BAD - Hardcoded placeholder values
+<div style={styles.infoPanel}>
+  <span>Rank #250</span>
+  <span>TODO 15</span>
+</div>
+
+// ✅ GOOD - Real-time data from game state
+<div style={styles.infoPanel}>
+  <div style={styles.infoItem}>
+    <span style={styles.infoIcon}>🏆</span>
+    <span style={styles.infoText}>Level {gameState.playerLevel}</span>
+  </div>
+  <div style={styles.infoItem}>
+    <span style={styles.infoIcon}>💰</span>
+    <span style={styles.infoText}>{gameState.gold.toLocaleString()} Gold</span>
+  </div>
+</div>
+```
+
+**Key Points**:
+- ✅ Always use real game state values, never placeholders
+- ✅ Format numbers with `toLocaleString()` for thousands separators
+- ✅ Use emoji icons for visual clarity
+- ✅ Update automatically when state changes
+- ❌ Never leave "TODO" or hardcoded test values in production
+
+---
+
 ## Resources
 
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
@@ -1734,4 +1880,4 @@ ADD COLUMN chat_message_timestamp TIMESTAMP WITH TIME ZONE;
 
 **Remember**: These rules exist to maintain code quality and consistency. If you find a rule that doesn't work, propose a change to this document rather than ignoring the rule.
 
-**Last Updated:** 2025-11-09
+**Last Updated:** 2025-11-09 (UI Interaction Patterns Added)

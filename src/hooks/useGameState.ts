@@ -142,6 +142,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userIdRef = useRef<string | null>(null);
   const stateRef = useRef<GameState>(state);
+  const hasLoadedRef = useRef(false); // Track if we've loaded data to prevent duplicate loads
 
   // Auto-save delay (ms)
   const AUTO_SAVE_DELAY = 2000;
@@ -215,12 +216,13 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         gacha_pity_summons: currentState.gachaState.pitySummons
       });
 
-      // Save game data (heroes, inventory)
+      // Save game data (heroes, inventory, active party)
       await GameSaveService.saveGame(
         userIdRef.current!,
         'Auto Save',
         currentState.allHeroes,
-        currentState.inventory
+        currentState.inventory,
+        currentState.activeParty
       );
 
       console.log('✅ Auto-save completed');
@@ -283,8 +285,12 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
 
       if (saveResult.success && saveResult.data && saveResult.data.heroes.length > 0) {
         console.log('🎮 Loading heroes from save data...');
+
+        // Create a map to store hero with their party order
+        const heroesWithPartyOrder: Array<{hero: Hero, partyOrder: number | null}> = [];
+
         // Reconstruct heroes from database
-        heroes = saveResult.data.heroes.map(dbHero => {
+        saveResult.data.heroes.forEach(dbHero => {
           const hero = new Hero(dbHero.hero_name, dbHero.hero_class as any, dbHero.level, dbHero.rarity as any || 'common');
           hero.id = dbHero.id;
           hero.experience = dbHero.experience;
@@ -327,8 +333,11 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
             }
           });
 
-          return hero;
+          heroesWithPartyOrder.push({hero, partyOrder: dbHero.party_order});
         });
+
+        // Extract all heroes
+        heroes = heroesWithPartyOrder.map(item => item.hero);
 
         // Reconstruct inventory items
         saveResult.data.inventoryItems.forEach(dbItem => {
@@ -370,6 +379,33 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
 
       console.log('📊 Final heroes array length:', heroes.length);
 
+      // Build active party from party_order (if available)
+      let activeParty: Hero[];
+      let activePartyIndices: number[];
+
+      if (saveResult.success && saveResult.data && saveResult.data.heroes.length > 0) {
+        // Sort heroes by party_order and filter those in party
+        const heroesWithPartyOrder: Array<{hero: Hero, partyOrder: number | null, index: number}> = heroes
+          .map((hero, index) => {
+            const dbHero = saveResult.data!.heroes.find(db => db.id === hero.id);
+            return {hero, partyOrder: dbHero?.party_order ?? null, index};
+          })
+          .filter(item => item.partyOrder !== null)
+          .sort((a, b) => (a.partyOrder as number) - (b.partyOrder as number));
+
+        activeParty = heroesWithPartyOrder.map(item => item.hero);
+        activePartyIndices = heroesWithPartyOrder.map(item => item.index);
+
+        console.log('🎯 Loaded active party from party_order:', {
+          partySize: activeParty.length,
+          partyNames: activeParty.map(h => h.name).join(', ')
+        });
+      } else {
+        // New player - default party (first 4 heroes)
+        activeParty = heroes.slice(0, 4);
+        activePartyIndices = heroes.length >= 4 ? [0, 1, 2, 3] : Array.from({ length: heroes.length }, (_, i) => i);
+      }
+
       setState(prev => ({
         ...prev,
         profile,
@@ -381,8 +417,8 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         energy: profile.energy,
         maxEnergy: profile.max_energy,
         allHeroes: heroes,
-        activeParty: heroes.slice(0, 4),
-        activePartyIndices: heroes.length >= 4 ? [0, 1, 2, 3] : Array.from({ length: heroes.length }, (_, i) => i),
+        activeParty,
+        activePartyIndices,
         inventory,
         playerPos: { x: profile.current_world_x, y: profile.current_world_y },
         worldMap: profile.world_map_data || null,
@@ -413,17 +449,33 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
   };
 
   /**
-   * Initialize game state on mount
+   * Initialize game state on mount - only load once per session
    */
   useEffect(() => {
     const initializeGameState = async () => {
       const session = await AuthService.getCurrentSession();
 
       if (session?.user?.id) {
-        userIdRef.current = session.user.id;
-        await loadGameData(session.user.id);
+        // Check if we already have this user's data loaded AND if user ID hasn't changed
+        const isSameUser = userIdRef.current === session.user.id;
+        const alreadyLoaded = hasLoadedRef.current && isSameUser;
+
+        if (!alreadyLoaded) {
+          console.log('🔄 Loading game data for user:', session.user.id);
+
+          // Set the flag IMMEDIATELY to prevent race conditions
+          hasLoadedRef.current = true;
+          userIdRef.current = session.user.id;
+
+          await loadGameData(session.user.id);
+        } else {
+          console.log('⏭️ Skipping reload - data already loaded for same user');
+          setState(prev => ({ ...prev, loading: false, profileLoading: false }));
+        }
       } else {
         // Not logged in - use local state
+        hasLoadedRef.current = false;
+        userIdRef.current = null;
         setState(prev => ({ ...prev, loading: false, profileLoading: false }));
       }
     };
@@ -553,6 +605,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       setState(prev => {
         const newAllHeroes = [...prev.allHeroes, hero];
         console.log('📊 All heroes count after add:', newAllHeroes.length);
+
         return {
           ...prev,
           allHeroes: newAllHeroes

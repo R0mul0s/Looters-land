@@ -237,6 +237,15 @@ export function WorldMapViewer({
     setZoom(prev => Math.max(0.5, Math.min(2, prev + delta)));
   };
 
+  /**
+   * Handle mouse wheel zoom
+   */
+  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+    handleZoom(delta);
+  };
+
   // Calculate distance and cost for hovered tile
   const getHoverInfo = () => {
     if (!hoveredTile) return null;
@@ -291,6 +300,7 @@ export function WorldMapViewer({
         onClick={handleCanvasClick}
         onMouseMove={handleCanvasMouseMove}
         onMouseLeave={() => setHoveredTile(null)}
+        onWheel={handleWheel}
         style={styles.canvas}
       />
 

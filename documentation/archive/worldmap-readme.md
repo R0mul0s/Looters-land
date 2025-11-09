@@ -1,8 +1,8 @@
 # Worldmap System - Implementation Guide
 
 **Author:** Roman Hlaváček - rhsoft.cz
-**Status:** Phase 1 Complete (Basic Generation)
-**Last Updated:** 2025-11-07
+**Status:** Phase 1 Complete with UI Enhancements
+**Last Updated:** 2025-11-09
 
 ---
 
@@ -211,6 +211,7 @@ interface WorldMapViewerProps {
 - **Viewport:** 800px × 600px (shows ~25×19 tiles at zoom 1.0)
 - **Fog of War:** Unexplored tiles are darkened (70% opacity)
 - **Player Icon:** 🧙 with yellow glow effect
+- **Mouse Wheel Zoom:** Zoom in/out with mouse wheel (0.5x - 2.0x range)
 
 ### Performance
 
@@ -222,12 +223,12 @@ interface WorldMapViewerProps {
 
 ## 🚀 Next Steps
 
-### Phase 2: Game Integration
+### Phase 2: Game Integration ✅ (COMPLETE)
 
-1. **Add to Main App:** Replace dungeon-only flow with worldmap hub
-2. **Hero Movement:** Implement click-to-move with pathfinding
-3. **Dungeon Integration:** Enter dungeons from worldmap
-4. **Town Interaction:** Add town UI (tavern, smithy, etc.)
+1. ✅ **Add to Main App:** Worldmap is now the main hub
+2. ✅ **Hero Movement:** Click-to-move implemented with energy cost
+3. ✅ **Dungeon Integration:** Enter dungeons from worldmap
+4. 🔄 **Town Interaction:** Town UI framework ready (buildings planned for v0.9.0)
 
 ### Phase 3: Multiplayer
 
@@ -247,7 +248,13 @@ interface WorldMapViewerProps {
 
 ## 🐛 Known Issues
 
-- None yet! This is the initial implementation.
+- None! All major features implemented and tested.
+
+## ✨ Recent Improvements (v0.6.1 - 2025-11-09)
+
+- ✅ **Mouse Wheel Zoom** - Smooth zoom in/out on canvas
+- ✅ **Keyboard Shortcuts** - Quick navigation (W/H/I/T/L/Q/G)
+- ✅ **Info Panel Polish** - Fixed placeholder text to show real data (level, gold)
 
 ---
 

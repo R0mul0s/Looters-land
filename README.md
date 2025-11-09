@@ -148,6 +148,7 @@ The game currently includes:
 11. **Database Integration** - Cloud saves with Supabase (player profiles, game saves, auto-sync)
 12. **Authentication** - User registration, login, logout with secure session management
 13. **Centralized State** - useGameState hook managing all game data with auto-save
+14. **UI Enhancements** - Mouse wheel zoom, keyboard shortcuts (W/H/I/T/L/Q/G)
 
 ## Migration Benefits
 
@@ -249,15 +250,31 @@ When adding new features:
 - Town system buildings not interactive yet
 - Gacha/hero collection system pending (v0.7.0)
 
-## Resources
+## Documentation
+
+### Project Documentation
+
+- **[Roadmap](documentation/roadmap.md)** - Development roadmap and version planning
+- **[Game Design](documentation/GAME-LOOP-DESIGN.md)** - Complete game loop design document
+- **[Project Status](documentation/project_status.md)** - Current development status
+- **[Documentation Index](documentation/INDEX.md)** - Complete documentation overview
+
+### Technical Guides
+
+- **[Coding Rules](documentation/technical/coding_rules.md)** - Coding standards and patterns
+- **[Localization](documentation/technical/LOCALIZATION.md)** - i18n implementation guide
+- **[Supabase Setup](documentation/technical/SUPABASE_SETUP.md)** - Database configuration
+- **[Deployment](documentation/technical/DEPLOY_INSTRUCTIONS.md)** - Production deployment guide
+
+### External Resources
 
 - [React Documentation](https://react.dev)
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 - [Vite Guide](https://vitejs.dev/guide/)
-- [Original GDD](../GDD.md)
+- [Supabase Documentation](https://supabase.com/docs)
 
 ---
 
 **Version**: 0.6.1
-**Last Updated**: 2025-11-08
-**Status**: Active development - Database integration complete, worldmap foundation ready, preparing v0.7.0 (Hero Collection & Gacha)
+**Last Updated**: 2025-11-09
+**Status**: Active development - UI improvements complete (zoom, keyboard shortcuts), preparing v0.7.0 (Hero Collection & Gacha)

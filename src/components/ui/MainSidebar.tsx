@@ -12,7 +12,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards';
+type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport';
 
 interface MainSidebarProps {
   activeScreen: GameScreen;

@@ -382,9 +382,9 @@ function App() {
   const [combatEngine] = useState(() => new CombatEngine());
   const [combatActive, setCombatActive] = useState(false);
   const [combatLog, setCombatLog] = useState<CombatLogEntry[]>([]);
-  const [enemyLevel, setEnemyLevel] = useState(10);
+  const [enemyLevel] = useState(10);
   const [enemyCount, setEnemyCount] = useState(3);
-  const [enemyType, setEnemyType] = useState<'normal' | 'elite' | 'boss'>('normal');
+  const [enemyType] = useState<'normal' | 'elite' | 'boss'>('normal');
   const [currentEnemies, setCurrentEnemies] = useState<Enemy[]>([]);
   const [isManualMode, setIsManualMode] = useState(false);
   const [waitingForInput, setWaitingForInput] = useState(false);
@@ -1559,7 +1559,7 @@ function App() {
                             if (isEliteRoom && currentRoom?.eliteRewards) {
                               currentRoom.eliteRewards.items = [];
                               currentRoom.eliteRewards.gold = 0;
-                            } else {
+                            } else if (combatEngine.lootReward) {
                               combatEngine.lootReward.items = [];
                               combatEngine.lootReward.gold = 0;
                             }
@@ -1590,7 +1590,7 @@ function App() {
                             if (isEliteRoom && currentRoom?.eliteRewards) {
                               currentRoom.eliteRewards.items = [];
                               currentRoom.eliteRewards.gold = 0;
-                            } else {
+                            } else if (combatEngine.lootReward) {
                               combatEngine.lootReward.items = [];
                               combatEngine.lootReward.gold = 0;
                             }

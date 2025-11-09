@@ -89,11 +89,26 @@ export class GameSaveService {
 
       const gameSaveId = gameSave.id;
 
-      // 2. Delete existing heroes, inventory items, and equipment for this save
-      await Promise.all([
-        supabase.from('heroes').delete().eq('game_save_id', gameSaveId),
-        supabase.from('inventory_items').delete().eq('game_save_id', gameSaveId)
-      ]);
+      // 2. Delete existing data for this save
+      // IMPORTANT: Delete heroes FIRST (this will cascade delete equipment_slots due to FK constraint)
+      // Then delete inventory items
+      const { error: deleteHeroesError } = await supabase
+        .from('heroes')
+        .delete()
+        .eq('game_save_id', gameSaveId);
+
+      if (deleteHeroesError) {
+        console.error('Delete heroes error:', deleteHeroesError);
+      }
+
+      const { error: deleteItemsError } = await supabase
+        .from('inventory_items')
+        .delete()
+        .eq('game_save_id', gameSaveId);
+
+      if (deleteItemsError) {
+        console.error('Delete inventory error:', deleteItemsError);
+      }
 
       // 3. Save heroes with party_order
       const heroInserts: DBHeroInsert[] = heroes.map(hero => {

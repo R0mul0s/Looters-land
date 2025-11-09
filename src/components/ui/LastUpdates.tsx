@@ -33,12 +33,17 @@ const getChangelog = (): ChangelogEntry[] => [
     fixes: [
       t('updates.v2_1_0.fixes.item1'),
       t('updates.v2_1_0.fixes.item2'),
-      t('updates.v2_1_0.fixes.item3')
+      t('updates.v2_1_0.fixes.item3'),
+      t('updates.v2_1_0.fixes.item4'),
+      t('updates.v2_1_0.fixes.item5'),
+      t('updates.v2_1_0.fixes.item6'),
+      t('updates.v2_1_0.fixes.item7')
     ],
     technical: [
       t('updates.v2_1_0.technical.item1'),
       t('updates.v2_1_0.technical.item2'),
-      t('updates.v2_1_0.technical.item3')
+      t('updates.v2_1_0.technical.item3'),
+      t('updates.v2_1_0.technical.item4')
     ]
   },
   {

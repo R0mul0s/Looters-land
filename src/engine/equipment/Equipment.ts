@@ -13,6 +13,7 @@ import type {
   ActiveSetInfo
 } from '../../types/equipment.types';
 import { SetBonusManager } from './SetBonusManager';
+import { t } from '../../localization/i18n';
 
 export class Equipment {
   hero: Hero;
@@ -39,6 +40,18 @@ export class Equipment {
       return {
         success: false,
         message: 'Invalid item or not equipment type'
+      };
+    }
+
+    // Check level requirement
+    if (item.level > this.hero.level) {
+      return {
+        success: false,
+        message: t('equipment.levelRequirement', {
+          itemName: item.getDisplayName(),
+          requiredLevel: item.level.toString(),
+          currentLevel: this.hero.level.toString()
+        })
       };
     }
 

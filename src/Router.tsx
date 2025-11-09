@@ -43,9 +43,9 @@ export function Router() {
   const [combatLog, setCombatLog] = useState<CombatLogEntry[]>([]);
   const [currentEnemies, setCurrentEnemies] = useState<Enemy[]>([]);
   const [isManualMode] = useState(false);
-  const [waitingForInput, setWaitingForInput] = useState(false);
-  const [activeCharacter, setActiveCharacter] = useState<Combatant | null>(null);
-  const [selectedTarget, setSelectedTarget] = useState<Combatant | null>(null);
+  const [_waitingForInput, setWaitingForInput] = useState(false);
+  const [_activeCharacter, setActiveCharacter] = useState<Combatant | null>(null);
+  const [_selectedTarget, setSelectedTarget] = useState<Combatant | null>(null);
   const [showDungeonVictory, setShowDungeonVictory] = useState(false);
   const [dungeonUpdateKey, setDungeonUpdateKey] = useState(0);
   const [, forceUpdate] = useState({});

@@ -453,7 +453,7 @@ function App() {
   };
 
   // Combat handlers
-  const startCombat = () => {
+  // const startCombat = () => {
     // Validate enemy count
     if (enemyCount > 10) {
       alert('⚠️ Maximum 10 enemies allowed! Setting to 10.');
@@ -505,7 +505,7 @@ function App() {
     setWaitingForInput(false);
     setActiveCharacter(null);
     forceUpdate();
-  };
+  // };
 
   const executeTurn = () => {
     if (combatActive) {

@@ -604,4 +604,103 @@ export const cs: LocaleKeys = {
     notEnoughResources: 'Nedostatek zdrojů',
     targetInvalid: 'Neplatný cíl',
   },
+
+  // ============================================================================
+  // PROFILE SCREEN
+  // ============================================================================
+  profile: {
+    title: 'Profil & Nastavení',
+    logout: 'Odhlásit se',
+    logoutConfirm: 'Opravdu se chcete odhlásit?',
+    nameLabel: 'Jméno:',
+    emailLabel: 'Email:',
+    levelLabel: 'Úroveň:',
+    goldLabel: 'Zlato:',
+    gemsLabel: 'Drahokamy:',
+    energyLabel: 'Energie:',
+    experienceLabel: 'Zkušenosti:',
+    editName: 'Upravit jméno',
+    nameEmpty: 'Jméno nesmí být prázdné',
+    notLoggedIn: 'Nejste přihlášeni',
+    saveNameFailed: 'Nepodařilo se uložit jméno',
+    saveNameError: 'Nastala chyba při ukládání jména',
+    saving: 'Ukládám...',
+    saveButton: 'Uložit',
+    cancelButton: 'Zrušit',
+    enterNewName: 'Zadejte nové jméno',
+    resetProgress: 'Resetovat Průběh',
+    resetProgressConfirm: 'VAROVÁNÍ: Tímto smažete VŠECHNA data ze hry!\n\nZůstane vám pouze účet a email.\n\nTato akce je NEVRATNÁ!\n\nOpravdu chcete pokračovat?',
+    resetProgressSuccess: 'Průběh úspěšně resetován',
+    resetProgressFailed: 'Resetování průběhu selhalo',
+    deleteAccount: 'Smazat Účet',
+    deleteAccountConfirm: 'VAROVÁNÍ: Tímto TRVALE SMAŽETE váš účet!\n\nVŠECHNA data budou ztracena navždy.\n\nTato akce je NEVRATNÁ!\n\nOpravdu chcete pokračovat?',
+    deleteAccountSuccess: 'Účet úspěšně smazán',
+    deleteAccountFailed: 'Smazání účtu selhalo',
+  },
+
+  // ============================================================================
+  // LAST UPDATES / CHANGELOG
+  // ============================================================================
+  updates: {
+    title: 'Poslední změny',
+    features: 'Nové funkce',
+    fixes: 'Opravy',
+    gameplay: 'Gameplay',
+    technical: 'Technické změny',
+    footer: 'Více informací na',
+    github: 'GitHub',
+
+    // Version 2.1.0
+    v2_1_0: {
+      features: {
+        item1: 'Přidána možnost editace uživatelského jména v profilu',
+        item2: 'Přidáno tlačítko pro odhlášení v profilu',
+        item3: 'Přidána sekce "Poslední změny" do hlavního menu',
+      },
+      fixes: {
+        item1: '🔥 Kritická oprava: Vyřešen problém s mizením hrdinů při vstupu do dungeonů',
+        item2: 'Opravena race condition v načítání dat ze hry',
+        item3: 'Hrdové nyní správně persistují napříč dungeony a combaty',
+      },
+      technical: {
+        item1: 'Optimalizace loadGameData funkce',
+        item2: 'Implementace správného lifecycle managementu pro game state',
+        item3: 'Přidán party_order sloupec do databáze',
+      },
+    },
+
+    // Version 2.0.0
+    v2_0_0: {
+      features: {
+        item1: 'Nový hlavní gameplay loop s World Map',
+        item2: 'Dungeon exploration system',
+        item3: 'Combat system s auto-battle režimem',
+        item4: 'Hero gacha system',
+        item5: 'Equipment system',
+        item6: 'Profile & settings screen',
+      },
+      gameplay: {
+        item1: 'Procedurálně generované dungeons',
+        item2: 'Různé typy nepřátel (Easy, Normal, Hard, Elite)',
+        item3: 'Loot system se zlatem a předměty',
+        item4: 'Hero leveling a experience systém',
+        item5: 'Active party management (4 hrdinové)',
+      },
+      technical: {
+        item1: 'Supabase integrace pro multiplayer',
+        item2: 'Row Level Security (RLS) policies',
+        item3: 'Real-time updates',
+        item4: 'Cloud saves',
+      },
+    },
+
+    // Version 1.0.0
+    v1_0_0: {
+      features: {
+        item1: 'Základní hero systém',
+        item2: 'Jednoduchý combat',
+        item3: 'Local storage saves',
+      },
+    },
+  },
 };

@@ -1639,7 +1639,7 @@ The `ModalContent.tsx` file provides styled components for use inside modals:
 ```tsx
 import { useOtherPlayers } from '../hooks/useOtherPlayers';
 import { ChatBox } from './ChatBox';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../lib/supabase';
 
 function WorldMapComponent() {
   const [gameState, gameActions] = useGameState(userId);
@@ -1653,7 +1653,7 @@ function WorldMapComponent() {
 
     const updatePresence = async () => {
       await supabase
-        .from('profiles')
+        .from('player_profiles')
         .update({
           is_online: true,
           last_seen: new Date().toISOString(),
@@ -1670,7 +1670,7 @@ function WorldMapComponent() {
     return () => {
       clearInterval(interval);
       supabase
-        .from('profiles')
+        .from('player_profiles')
         .update({ is_online: false })
         .eq('user_id', gameState.profile.user_id);
     };
@@ -1679,7 +1679,7 @@ function WorldMapComponent() {
   // Handle chat messages
   const handleSendMessage = async (message: string) => {
     await supabase
-      .from('profiles')
+      .from('player_profiles')
       .update({
         current_chat_message: message,
         chat_message_timestamp: new Date().toISOString()
@@ -1702,7 +1702,7 @@ function WorldMapComponent() {
 
 **Database Schema**:
 ```sql
-ALTER TABLE profiles
+ALTER TABLE player_profiles
 ADD COLUMN last_seen TIMESTAMP WITH TIME ZONE,
 ADD COLUMN is_online BOOLEAN DEFAULT false,
 ADD COLUMN current_map_x INTEGER,

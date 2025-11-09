@@ -15,12 +15,14 @@
  * @lastModified 2025-11-09
  */
 
-import React, { useState, useRef, type KeyboardEvent } from 'react';
+import React, { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import { t } from '../localization/i18n';
 
 interface ChatBoxProps {
   onSendMessage: (message: string) => void;
   disabled?: boolean;
+  lastMessage?: string;
+  lastMessageTimestamp?: Date;
 }
 
 const MAX_MESSAGE_LENGTH = 100;
@@ -36,8 +38,14 @@ const MAX_MESSAGE_LENGTH = 100;
  * <ChatBox onSendMessage={(msg) => console.log(msg)} />
  * ```
  */
-export function ChatBox({ onSendMessage, disabled = false }: ChatBoxProps) {
+export function ChatBox({
+  onSendMessage,
+  disabled = false,
+  lastMessage,
+  lastMessageTimestamp
+}: ChatBoxProps) {
   const [message, setMessage] = useState('');
+  const [showConfirmation, setShowConfirmation] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleSend = () => {
@@ -45,9 +53,21 @@ export function ChatBox({ onSendMessage, disabled = false }: ChatBoxProps) {
     if (trimmed && trimmed.length > 0) {
       onSendMessage(trimmed);
       setMessage('');
+      setShowConfirmation(true);
       inputRef.current?.blur();
     }
   };
+
+  // Show confirmation flash for 2 seconds when message is sent
+  useEffect(() => {
+    if (lastMessageTimestamp) {
+      setShowConfirmation(true);
+      const timer = setTimeout(() => {
+        setShowConfirmation(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [lastMessageTimestamp]);
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
@@ -85,9 +105,21 @@ export function ChatBox({ onSendMessage, disabled = false }: ChatBoxProps) {
           ↗
         </button>
       </div>
-      <div style={styles.charCount}>
-        {message.length}/{MAX_MESSAGE_LENGTH}
-      </div>
+
+      {/* Confirmation message */}
+      {showConfirmation && lastMessage && (
+        <div style={styles.confirmation}>
+          <span style={styles.confirmationIcon}>✓</span>
+          <span style={styles.confirmationText}>"{lastMessage}"</span>
+        </div>
+      )}
+
+      {/* Character count */}
+      {!showConfirmation && (
+        <div style={styles.charCount}>
+          {message.length}/{MAX_MESSAGE_LENGTH}
+        </div>
+      )}
     </div>
   );
 }
@@ -154,5 +186,27 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#64748b',
     fontWeight: '600',
     paddingRight: '4px'
+  },
+  confirmation: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    fontSize: '12px',
+    color: '#10b981',
+    fontWeight: '600',
+    paddingRight: '4px',
+    animation: 'fadeIn 0.2s ease-out'
+  },
+  confirmationIcon: {
+    fontSize: '14px',
+    color: '#10b981'
+  },
+  confirmationText: {
+    color: '#94a3b8',
+    fontStyle: 'italic',
+    maxWidth: '280px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap'
   }
 };

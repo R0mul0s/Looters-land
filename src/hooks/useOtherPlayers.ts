@@ -16,7 +16,7 @@
  */
 
 import { useEffect, useState } from 'react';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../lib/supabase';
 
 export interface OtherPlayer {
   id: string;
@@ -47,11 +47,11 @@ export function useOtherPlayers(currentUserId: string | undefined): OtherPlayer[
 
     // Fetch initial online players
     const fetchOnlinePlayers = async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, nickname, level, current_map_x, current_map_y, current_chat_message, chat_message_timestamp')
+      const { data, error} = await supabase
+        .from('player_profiles')
+        .select('id, nickname, player_level, current_map_x, current_map_y, current_chat_message, chat_message_timestamp, user_id')
         .eq('is_online', true)
-        .neq('id', currentUserId)
+        .neq('user_id', currentUserId)
         .not('current_map_x', 'is', null)
         .not('current_map_y', 'is', null);
 
@@ -63,7 +63,7 @@ export function useOtherPlayers(currentUserId: string | undefined): OtherPlayer[
       const players: OtherPlayer[] = (data || []).map(p => ({
         id: p.id,
         nickname: p.nickname || 'Unknown',
-        level: p.level || 1,
+        level: p.player_level || 1,
         x: p.current_map_x!,
         y: p.current_map_y!,
         chatMessage: p.current_chat_message || undefined,
@@ -83,7 +83,7 @@ export function useOtherPlayers(currentUserId: string | undefined): OtherPlayer[
         {
           event: '*',
           schema: 'public',
-          table: 'profiles',
+          table: 'player_profiles',
           filter: `is_online=eq.true`
         },
         (payload) => {
@@ -93,7 +93,7 @@ export function useOtherPlayers(currentUserId: string | undefined): OtherPlayer[
             const updated = payload.new as any;
 
             // Ignore self
-            if (updated.id === currentUserId) return;
+            if (updated.user_id === currentUserId) return;
 
             // Ignore players without map position
             if (updated.current_map_x == null || updated.current_map_y == null) return;
@@ -108,7 +108,7 @@ export function useOtherPlayers(currentUserId: string | undefined): OtherPlayer[
                   {
                     id: updated.id,
                     nickname: updated.nickname || 'Unknown',
-                    level: updated.level || 1,
+                    level: updated.player_level || 1,
                     x: updated.current_map_x,
                     y: updated.current_map_y,
                     chatMessage: updated.current_chat_message || undefined,

@@ -86,6 +86,7 @@ export interface Town extends StaticObject {
     healer: boolean;
     market: boolean;
     bank: boolean;
+    guild: boolean;
   };
 }
 

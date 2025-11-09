@@ -8,6 +8,7 @@
 import type { ServicePrices, MarketItem } from '../types/town.types';
 import type { Hero } from '../engine/hero/Hero';
 import type { Item } from '../engine/item/Item';
+import type { ItemRarity } from '../types/item.types';
 import { ItemGenerator } from '../engine/item/ItemGenerator';
 
 export class TownService {
@@ -221,7 +222,7 @@ export class TownService {
         icon: item.icon,
         level: item.level,
         rarity: item.rarity,
-        baseStats: item.stats as Record<string, number>,
+        baseStats: item.stats as unknown as Record<string, number>,
         goldValue: item.goldValue,
         price: buyPrice,
         stock: 1

@@ -116,7 +116,7 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
   /**
    * Check if room is adjacent to current room
    */
-  const isAdjacent = (room: Room): boolean => {
+  // const isAdjacent = (room: Room): boolean => {
     const current = getCurrentRoom();
     if (!current) return false;
 
@@ -124,8 +124,8 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
     const dy = Math.abs(room.position.y - current.position.y);
 
     // Adjacent if exactly 1 tile away in one direction
-    return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
-  };
+    // return (dx === 1 && dy === 0) || (dx === 0 && dy === 1);
+  // };
 
   /**
    * Check if room is accessible (connected) from current room
@@ -162,7 +162,7 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
   /**
    * Render wall connections
    */
-  const renderWalls = (room: Room, x: number, y: number) => {
+  const renderWalls = (room: Room, _x: number, _y: number) => {
     const walls: React.CSSProperties = {
       position: 'absolute',
       top: 0,

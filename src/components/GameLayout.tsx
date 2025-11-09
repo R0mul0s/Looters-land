@@ -14,11 +14,8 @@ import { GameHeader } from './ui/GameHeader';
 import { MainSidebar } from './ui/MainSidebar';
 import { ComingSoon } from './ui/ComingSoon';
 import { ProfileScreen } from './ProfileScreen';
-import * as AuthService from '../services/AuthService';
-import { ProfileService } from '../services/ProfileService';
 
-type NavigationTab = 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards';
-type GameScreen = 'worldmap' | 'teleport' | 'dungeon' | NavigationTab;
+type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport';
 
 interface GameLayoutProps {
   playerName: string;

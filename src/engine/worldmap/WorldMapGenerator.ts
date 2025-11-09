@@ -231,7 +231,8 @@ export class WorldMapGenerator {
               smithy: pos.level >= 2,
               healer: true,
               market: pos.level >= 2,
-              bank: pos.level >= 3
+              bank: pos.level >= 3,
+              guild: pos.level >= 3
             }
           };
 

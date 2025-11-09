@@ -208,7 +208,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         current_world_x: currentState.playerPos.x,
         current_world_y: currentState.playerPos.y,
         world_map_data: currentState.worldMap,
-        discovered_locations: currentState.discoveredLocations,
+        discovered_locations: currentState.discoveredLocations.map(loc => JSON.stringify(loc)),
         gacha_summon_count: currentState.gachaState.summonCount,
         gacha_last_free_summon: currentState.gachaState.lastFreeSummonDate || null,
         gacha_pity_summons: currentState.gachaState.pitySummons
@@ -385,7 +385,13 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         inventory,
         playerPos: { x: profile.current_world_x, y: profile.current_world_y },
         worldMap: profile.world_map_data || null,
-        discoveredLocations: profile.discovered_locations || [],
+        discoveredLocations: (profile.discovered_locations || []).map(str => {
+          try {
+            return JSON.parse(str);
+          } catch {
+            return { name: '', x: 0, y: 0, type: 'town' as const };
+          }
+        }),
         gachaState: {
           summonCount: profile.gacha_summon_count || 0,
           lastFreeSummonDate: profile.gacha_last_free_summon || '',

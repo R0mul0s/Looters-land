@@ -315,7 +315,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
                 icon: eq.icon!,
                 level: eq.level!,
                 rarity: eq.rarity as any,
-                stats: eq.base_stats || {},
+                stats: eq.base_stats as any || {},
                 goldValue: eq.gold_value!,
                 enchantLevel: eq.enchant_level || 0,
                 setId: eq.set_id || undefined,
@@ -339,7 +339,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
             icon: dbItem.icon,
             level: dbItem.level,
             rarity: dbItem.rarity as any,
-            stats: dbItem.base_stats || {},
+            stats: dbItem.base_stats as any || {},
             goldValue: dbItem.gold_value,
             enchantLevel: dbItem.enchant_level,
             setId: dbItem.set_id || undefined,
@@ -535,8 +535,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     removeItem: async (itemId: string) => {
       setState(prev => {
         const inv = prev.inventory;
-        const item = inv.items.find(i => i.id === itemId);
-        if (item) inv.removeItem(item);
+        inv.removeItem(itemId);
         return { ...prev, inventory: inv };
       });
       scheduleAutoSave();

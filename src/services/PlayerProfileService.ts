@@ -19,6 +19,8 @@ export interface PlayerProfile {
   max_energy: number;
   current_world_x: number;
   current_world_y: number;
+  world_map_data?: any;
+  discovered_locations?: string[];
   gacha_summon_count: number;
   gacha_last_free_summon: string | null;
   gacha_pity_summons: number;
@@ -37,6 +39,8 @@ export interface PlayerProfileUpdate {
   max_energy?: number;
   current_world_x?: number;
   current_world_y?: number;
+  world_map_data?: any;
+  discovered_locations?: string[];
   gacha_summon_count?: number;
   gacha_last_free_summon?: string | null;
   gacha_pity_summons?: number;

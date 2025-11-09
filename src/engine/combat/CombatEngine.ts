@@ -421,11 +421,14 @@ export class CombatEngine {
     const aliveHeroes = this.heroes.filter(h => h.isAlive);
 
     aliveHeroes.forEach(hero => {
-      const levelUpMessages = hero.gainXP(totalXP);
+      // Type guard: only Hero has gainXP method
+      if ('gainXP' in hero && typeof hero.gainXP === 'function') {
+        const levelUpMessages = hero.gainXP(totalXP);
 
-      // Log level ups if any occurred
-      if (levelUpMessages.length > 0) {
-        levelUpMessages.forEach(msg => this.log(msg, 'level_up'));
+        // Log level ups if any occurred
+        if (levelUpMessages.length > 0) {
+          levelUpMessages.forEach(msg => this.log(msg, 'level_up'));
+        }
       }
     });
   }

@@ -18,6 +18,7 @@ interface HeroesScreenProps {
   heroes: Hero[];
   activeParty: Hero[];
   onPartyChange?: (heroes: Hero[]) => void;
+  isInTown?: boolean; // Can only change party in town
 }
 
 /**
@@ -29,7 +30,8 @@ interface HeroesScreenProps {
 export function HeroesScreen({
   heroes,
   activeParty,
-  onPartyChange
+  onPartyChange,
+  isInTown = true
 }: HeroesScreenProps) {
   const [selectedHero, setSelectedHero] = useState<Hero | null>(null);
   const [filterClass, setFilterClass] = useState<HeroClass | 'all'>('all');
@@ -42,6 +44,12 @@ export function HeroesScreen({
 
   const toggleParty = (hero: Hero) => {
     if (!onPartyChange) return;
+
+    // Can only change party in town (e.g., in Tavern)
+    if (!isInTown) {
+      alert('⚠️ You can only change your party in town (visit the Tavern)!');
+      return;
+    }
 
     if (isInParty(hero)) {
       // Remove from party

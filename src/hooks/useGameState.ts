@@ -17,6 +17,7 @@ import { GameSaveService } from '../services/GameSaveService';
 import * as AuthService from '../services/AuthService';
 import type { WorldMap } from '../types/worldmap.types';
 import type { GachaState } from '../types/hero.types';
+import { supabase } from '../lib/supabase';
 
 interface GameState {
   // Player profile
@@ -429,9 +430,57 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
 
     initializeGameState();
 
+    // Subscribe to real-time profile changes (energy regen, map reset, etc.)
+    let profileSubscription: any = null;
+
+    if (userIdRef.current) {
+      profileSubscription = supabase
+        .channel(`profile:${userIdRef.current}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'player_profiles',
+            filter: `user_id=eq.${userIdRef.current}`
+          },
+          (payload) => {
+            console.log('🔄 Profile updated via realtime:', payload.new);
+            const updatedProfile = payload.new as PlayerProfile;
+
+            setState(prev => ({
+              ...prev,
+              profile: updatedProfile,
+              energy: updatedProfile.energy,
+              maxEnergy: updatedProfile.max_energy,
+              gold: updatedProfile.gold,
+              gems: updatedProfile.gems,
+              playerLevel: updatedProfile.player_level,
+              // Check if map was reset (world_map_data became null)
+              worldMap: updatedProfile.world_map_data || prev.worldMap,
+              discoveredLocations: updatedProfile.discovered_locations
+                ? updatedProfile.discovered_locations.map(str => {
+                    try { return JSON.parse(str); }
+                    catch { return { name: '', x: 0, y: 0, type: 'town' as const }; }
+                  })
+                : prev.discoveredLocations
+            }));
+
+            // If map was reset, show notification
+            if (!updatedProfile.world_map_data && prev.worldMap) {
+              console.log('🗺️ World map reset detected!');
+            }
+          }
+        )
+        .subscribe();
+    }
+
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
+      }
+      if (profileSubscription) {
+        supabase.removeChannel(profileSubscription);
       }
     };
   }, [userEmail]);

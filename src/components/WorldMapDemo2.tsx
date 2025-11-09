@@ -753,7 +753,9 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
         icon="⚔️"
         onClose={() => setEquipmentMessage(null)}
       >
-        <ModalText style={{ whiteSpace: 'pre-line' }}>{equipmentMessage}</ModalText>
+        <div style={{ margin: '0 0 15px 0', fontSize: '15px', color: '#cbd5e1', lineHeight: '1.6', whiteSpace: 'pre-line' }}>
+          {equipmentMessage}
+        </div>
         <ModalDivider />
         <ModalButton onClick={() => setEquipmentMessage(null)} variant="primary" fullWidth>
           OK

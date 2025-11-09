@@ -92,4 +92,9 @@ export interface AutoEquipResult {
   success: boolean;
   equippedItems: Item[];
   message: string;
+  skippedItems?: Array<{
+    item: Item;
+    reason: 'level_too_low' | 'no_items';
+    slot: ItemSlot;
+  }>;
 }

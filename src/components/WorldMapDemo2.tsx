@@ -69,6 +69,7 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
   const [showUnexploredModal, setShowUnexploredModal] = useState(false);
   const [showTeleportMenu, setShowTeleportMenu] = useState(false);
   const [enchantItem, setEnchantItem] = useState<any | null>(null);
+  const [equipmentMessage, setEquipmentMessage] = useState<string | null>(null);
 
   // Location tracking: Player is "in town" when town modal is open
   const isInTown = showTownModal !== null;
@@ -513,6 +514,9 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
           }
           gameActions.forceUpdate();
           gameActions.saveGame(); // Trigger save after equipment change
+        } else {
+          // Show error message if equip failed
+          setEquipmentMessage(result.message);
         }
       }}
       onUnequipItem={(hero, slotName) => {
@@ -527,6 +531,24 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
       onAutoEquipBest={(hero) => {
         if (!hero.equipment) return;
         const result = InventoryHelper.autoEquipBest(gameState.inventory, hero.equipment, hero.level);
+
+        // Build message based on results
+        let message = result.message;
+
+        if (result.skippedItems && result.skippedItems.length > 0) {
+          const skippedByLevel = result.skippedItems.filter(s => s.reason === 'level_too_low');
+          if (skippedByLevel.length > 0) {
+            message += '\n\n⚠️ ' + t('inventory.autoEquip.skippedItems') + '\n';
+            skippedByLevel.forEach(skipped => {
+              const slotName = t(`inventory.slots.${skipped.slot}`);
+              message += `\n• ${skipped.item.name} (${t(`inventory.rarity.${skipped.item.rarity}`)}, Lv.${skipped.item.level}) - ${slotName}`;
+              message += `\n  ${t('inventory.autoEquip.requiresLevel')} ${skipped.item.level}`;
+            });
+          }
+        }
+
+        setEquipmentMessage(message);
+
         if (result.success) {
           console.log(result.message);
           gameActions.forceUpdate();
@@ -720,6 +742,20 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
           💡 <strong>Tip:</strong> {t('worldmap.unexploredTip')}
         </ModalInfoBox>
         <ModalButton onClick={() => setShowUnexploredModal(false)}>
+          OK
+        </ModalButton>
+      </GameModal>
+
+      {/* Equipment Message Modal */}
+      <GameModal
+        isOpen={!!equipmentMessage}
+        title={t('inventory.title')}
+        icon="⚔️"
+        onClose={() => setEquipmentMessage(null)}
+      >
+        <ModalText style={{ whiteSpace: 'pre-line' }}>{equipmentMessage}</ModalText>
+        <ModalDivider />
+        <ModalButton onClick={() => setEquipmentMessage(null)} variant="primary" fullWidth>
           OK
         </ModalButton>
       </GameModal>

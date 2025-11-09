@@ -229,6 +229,32 @@ export const en = {
     unequip: 'Unequip',
     discard: 'Discard',
     enchant: 'Enchant',
+    autoEquip: {
+      skippedItems: 'Some items could not be equipped:',
+      requiresLevel: 'Requires hero level'
+    },
+    slots: {
+      helmet: 'Helmet',
+      weapon: 'Weapon',
+      chest: 'Chest',
+      gloves: 'Gloves',
+      legs: 'Legs',
+      boots: 'Boots',
+      accessory: 'Accessory',
+      all: 'All'
+    },
+    rarity: {
+      common: 'Common',
+      uncommon: 'Uncommon',
+      rare: 'Rare',
+      epic: 'Epic',
+      legendary: 'Legendary',
+      mythic: 'Mythic'
+    }
+  },
+
+  equipment: {
+    levelRequirement: 'Cannot equip {{itemName}} - requires hero level {{requiredLevel}} (current: {{currentLevel}})'
   },
 
   // ============================================================================
@@ -659,11 +685,16 @@ export const en = {
         item1: '🔥 Critical fix: Resolved issue with heroes disappearing when entering dungeons',
         item2: 'Fixed race condition in game data loading',
         item3: 'Heroes now properly persist across dungeons and combats',
+        item4: 'Fixed auto-equip sorting to prioritize rarity over level and power score',
+        item5: 'Added CASCADE DELETE for equipment_slots to prevent save conflicts',
+        item6: 'Added level requirement check when manually equipping items',
+        item7: 'Equipment level requirements now shown in modal dialogs instead of alerts',
       },
       technical: {
         item1: 'Optimized loadGameData function',
         item2: 'Implemented proper lifecycle management for game state',
         item3: 'Added party_order column to database',
+        item4: 'Added comprehensive debug logging for auto-equip system',
       },
     },
 

@@ -56,38 +56,58 @@ export class InventoryHelper {
   }
 
   /**
-   * Find best item for slot (by power score)
-   * Includes currently equipped items in comparison
+   * Find best item for slot (by rarity first, then level, then power score)
+   * Only considers items from inventory (not currently equipped items)
    */
   static findBestForSlot(inventory: Inventory, slot: ItemSlot, heroLevel: number = 1, equipment?: Equipment, specificSlot?: EquipmentSlotName): Item | null {
+    // Only get items from inventory (not equipped items)
     const items = inventory.getItemsBySlot(slot);
 
-    // If equipment provided, also consider currently equipped item
-    let allItems = [...items];
-    if (equipment && specificSlot) {
-      const equippedItem = equipment.slots[specificSlot];
-      if (equippedItem && equippedItem.slot === slot) {
-        allItems.push(equippedItem);
-      }
-    }
+    console.log(`🔍 findBestForSlot for ${slot}:`, {
+      itemsInInventory: items.length,
+      heroLevel,
+      items: items.map(i => `${i.name} (${i.rarity}, Lv.${i.level})`)
+    });
 
-    if (allItems.length === 0) return null;
+    if (items.length === 0) return null;
 
     // Filter by level requirement
-    const usableItems = allItems.filter(item => item.level <= heroLevel);
+    const usableItems = items.filter(item => item.level <= heroLevel);
+
+    console.log(`✅ Usable items (level <= ${heroLevel}):`, usableItems.length);
 
     if (usableItems.length === 0) return null;
+
+    // Rarity order for comparison
+    const rarityOrder: ItemRarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
 
     // Calculate power score for each item
     const scored = usableItems.map(item => {
       const stats = item.getEffectiveStats();
       const powerScore = stats.HP + (stats.ATK * 2) + (stats.DEF * 1.5) + stats.SPD + (stats.CRIT * 10);
+      const rarityIndex = rarityOrder.indexOf(item.rarity);
 
-      return { item, powerScore };
+      return { item, powerScore, rarityIndex, level: item.level };
     });
 
-    // Sort by power score
-    scored.sort((a, b) => b.powerScore - a.powerScore);
+    // Sort by: 1) rarity (higher first), 2) level (higher first), 3) power score (higher first)
+    scored.sort((a, b) => {
+      if (a.rarityIndex !== b.rarityIndex) {
+        return b.rarityIndex - a.rarityIndex; // Higher rarity first
+      }
+      if (a.level !== b.level) {
+        return b.level - a.level; // Higher level first
+      }
+      return b.powerScore - a.powerScore; // Higher power score first
+    });
+
+    console.log(`🏆 Best item selected:`, {
+      name: scored[0].item.name,
+      rarity: scored[0].item.rarity,
+      level: scored[0].item.level,
+      powerScore: scored[0].powerScore,
+      allScored: scored.map(s => `${s.item.name} (${s.item.rarity}, Lv.${s.item.level}, PS:${s.powerScore.toFixed(0)})`)
+    });
 
     return scored[0].item;
   }
@@ -97,6 +117,8 @@ export class InventoryHelper {
    * Compares inventory items with currently equipped items and equips the best ones
    */
   static autoEquipBest(inventory: Inventory, equipment: Equipment, heroLevel: number): AutoEquipResult {
+    console.log('🔧 Auto-equip starting...', { heroLevel, inventorySize: inventory.items.length });
+
     const slotPairs: { slot: ItemSlot; equipSlot: EquipmentSlotName }[] = [
       { slot: 'helmet', equipSlot: 'helmet' },
       { slot: 'weapon', equipSlot: 'weapon' },
@@ -109,13 +131,44 @@ export class InventoryHelper {
     ];
 
     const equipped: Item[] = [];
+    const skippedItems: Array<{ item: Item; reason: 'level_too_low' | 'no_items'; slot: ItemSlot }> = [];
 
     slotPairs.forEach(({ slot, equipSlot }) => {
       // Find best item including currently equipped one
+      // IMPORTANT: Re-check inventory after each equip in case items were moved
+      const allItemsInSlot = inventory.getItemsBySlot(slot);
       const bestItem = this.findBestForSlot(inventory, slot, heroLevel, equipment, equipSlot);
-      if (!bestItem) return;
-
       const currentItem = equipment.slots[equipSlot];
+
+      console.log(`📦 Checking ${equipSlot}:`, {
+        slot,
+        currentItem: currentItem ? `${currentItem.name} (${currentItem.rarity}, Lv.${currentItem.level})` : 'Empty',
+        bestItem: bestItem ? `${bestItem.name} (${bestItem.rarity}, Lv.${bestItem.level})` : 'None found',
+        inInventory: bestItem ? inventory.items.find(i => i.id === bestItem.id) !== undefined : false
+      });
+
+      // Check if there are items that couldn't be equipped due to level requirement
+      if (!bestItem && allItemsInSlot.length > 0) {
+        // Find the best item regardless of level
+        const itemsTooHigh = allItemsInSlot.filter(item => item.level > heroLevel);
+        if (itemsTooHigh.length > 0) {
+          // Sort by rarity to find the best item that can't be equipped
+          const rarityOrder: ItemRarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+          itemsTooHigh.sort((a, b) => {
+            const aIndex = rarityOrder.indexOf(a.rarity);
+            const bIndex = rarityOrder.indexOf(b.rarity);
+            if (aIndex !== bIndex) return bIndex - aIndex;
+            return b.level - a.level;
+          });
+          skippedItems.push({
+            item: itemsTooHigh[0],
+            reason: 'level_too_low',
+            slot
+          });
+        }
+      }
+
+      if (!bestItem) return;
 
       // Only equip if:
       // 1. Slot is empty, OR
@@ -125,6 +178,7 @@ export class InventoryHelper {
         if (inventory.items.find(i => i.id === bestItem.id)) {
           const result = equipment.equip(bestItem);
           if (result.success) {
+            console.log(`✅ Equipped ${bestItem.name} to ${equipSlot}`);
             equipped.push(bestItem);
             inventory.removeItem(bestItem.id);
 
@@ -138,10 +192,14 @@ export class InventoryHelper {
       }
     });
 
+    console.log(`🎉 Auto-equip finished: ${equipped.length} items equipped`);
+    console.log(`⚠️ Skipped items: ${skippedItems.length}`);
+
     return {
       success: equipped.length > 0,
       equippedItems: equipped,
-      message: equipped.length > 0 ? `Auto-equipped ${equipped.length} items` : 'Already using best items'
+      message: equipped.length > 0 ? `Auto-equipped ${equipped.length} items` : 'Already using best items',
+      skippedItems: skippedItems.length > 0 ? skippedItems : undefined
     };
   }
 }

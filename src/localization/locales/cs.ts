@@ -231,6 +231,32 @@ export const cs: LocaleKeys = {
     unequip: 'Sundat',
     discard: 'Zahodit',
     enchant: 'Vylepšit',
+    autoEquip: {
+      skippedItems: 'Některé předměty nebylo možné nasadit:',
+      requiresLevel: 'Vyžaduje úroveň hrdiny'
+    },
+    slots: {
+      helmet: 'Helma',
+      weapon: 'Zbraň',
+      chest: 'Hrudník',
+      gloves: 'Rukavice',
+      legs: 'Nohavice',
+      boots: 'Boty',
+      accessory: 'Doplněk',
+      all: 'Vše'
+    },
+    rarity: {
+      common: 'Běžný',
+      uncommon: 'Neobvyklý',
+      rare: 'Vzácný',
+      epic: 'Epický',
+      legendary: 'Legendární',
+      mythic: 'Mýtický'
+    }
+  },
+
+  equipment: {
+    levelRequirement: 'Nelze obléknout {{itemName}} - vyžaduje úroveň hrdiny {{requiredLevel}} (aktuální: {{currentLevel}})'
   },
 
   // ============================================================================
@@ -661,11 +687,16 @@ export const cs: LocaleKeys = {
         item1: '🔥 Kritická oprava: Vyřešen problém s mizením hrdinů při vstupu do dungeonů',
         item2: 'Opravena race condition v načítání dat ze hry',
         item3: 'Hrdové nyní správně persistují napříč dungeony a combaty',
+        item4: 'Opraveno řazení auto-equip pro prioritizaci rarity nad úrovní a silou',
+        item5: 'Přidáno CASCADE DELETE pro equipment_slots k prevenci konfliktů při ukládání',
+        item6: 'Přidána kontrola level requirementu při ručním oblékání itemů',
+        item7: 'Level požadavky na vybavení nyní zobrazeny v modal dialozích místo alertů',
       },
       technical: {
         item1: 'Optimalizace loadGameData funkce',
         item2: 'Implementace správného lifecycle managementu pro game state',
         item3: 'Přidán party_order sloupec do databáze',
+        item4: 'Přidáno komplexní debug logování pro auto-equip systém',
       },
     },
 

@@ -79,7 +79,7 @@ export function generateDailyShop(playerLevel: number, date: string): ShopItem[]
  * @param seed - Random seed
  * @returns Selected rarity
  */
-function selectRarity(seed: number): Rarity {
+function selectRarity(seed: number): ItemRarity {
   const rand = seededRandom(seed);
   const rates = MARKET_CONFIG.SHOP_RARITY_RATES;
 

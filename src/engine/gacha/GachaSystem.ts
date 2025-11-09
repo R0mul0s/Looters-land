@@ -144,7 +144,7 @@ export class GachaSystem {
 
     let cumulative = 0;
     for (const [rarity, rate] of normalizedRates) {
-      cumulative += rate;
+      cumulative += Number(rate);
       if (roll < cumulative) {
         return rarity as HeroRarity;
       }

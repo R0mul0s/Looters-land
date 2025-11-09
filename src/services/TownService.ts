@@ -207,7 +207,9 @@ export class TownService {
 
     for (let i = 0; i < count; i++) {
       const itemLevel = townLevel + Math.floor(Math.random() * 3);
-      const item = ItemGenerator.generate(itemLevel);
+      const rarities: ItemRarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+      const rarity = rarities[Math.floor(Math.random() * rarities.length)];
+      const item = ItemGenerator.generate(itemLevel, rarity);
 
       const buyPrice = Math.ceil(item.goldValue * this.DEFAULT_PRICES.buyPriceMultiplier);
 
@@ -219,7 +221,7 @@ export class TownService {
         icon: item.icon,
         level: item.level,
         rarity: item.rarity,
-        baseStats: item.stats,
+        baseStats: item.stats as Record<string, number>,
         goldValue: item.goldValue,
         price: buyPrice,
         stock: 1

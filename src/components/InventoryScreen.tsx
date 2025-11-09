@@ -25,6 +25,7 @@ interface InventoryScreenProps {
   onExpandInventory: () => void;
   onAutoSellCommon: () => void;
   onOpenEnchantPanel?: (item: Item) => void;
+  isInTown?: boolean; // Sell/Expand/Enchant only available in town
 }
 
 /**
@@ -41,7 +42,8 @@ export function InventoryScreen({
   onAutoEquipBest,
   onExpandInventory,
   onAutoSellCommon,
-  onOpenEnchantPanel
+  onOpenEnchantPanel,
+  isInTown = true
 }: InventoryScreenProps) {
   const [selectedHeroIndex, setSelectedHeroIndex] = useState(0);
   const [tooltip, setTooltip] = useState<{ item: Item; x: number; y: number } | null>(null);
@@ -221,6 +223,10 @@ export function InventoryScreen({
                 onMouseLeave={hideTooltip}
                 onContextMenu={(e) => {
                   e.preventDefault();
+                  if (!isInTown) {
+                    alert('⚠️ Enchanting is only available in town (visit the Smithy)!');
+                    return;
+                  }
                   if (item && onOpenEnchantPanel) onOpenEnchantPanel(item);
                 }}
               >
@@ -309,6 +315,10 @@ export function InventoryScreen({
                   onClick={() => onEquipItem(selectedHero, item)}
                   onContextMenu={(e) => {
                     e.preventDefault();
+                    if (!isInTown) {
+                      alert('⚠️ Enchanting is only available in town (visit the Smithy)!');
+                      return;
+                    }
                     if (onOpenEnchantPanel) onOpenEnchantPanel(item);
                   }}
                   onMouseEnter={(e) => showTooltip(item, e)}
@@ -324,14 +334,16 @@ export function InventoryScreen({
           </div>
 
           {/* Inventory Actions */}
-          <div className="inventory-actions">
-            <button className="btn btn-primary" onClick={onExpandInventory}>
-              Expand (+10 slots, 500g)
-            </button>
-            <button className="btn btn-warning" onClick={onAutoSellCommon}>
-              Auto-Sell Common
-            </button>
-          </div>
+          {isInTown && (
+            <div className="inventory-actions">
+              <button className="btn btn-primary" onClick={onExpandInventory}>
+                Expand (+10 slots, 500g)
+              </button>
+              <button className="btn btn-warning" onClick={onAutoSellCommon}>
+                Auto-Sell Common
+              </button>
+            </div>
+          )}
         </div>
       </div>
 

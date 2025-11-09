@@ -4,6 +4,11 @@
 -- Enable RLS
 ALTER TABLE player_profiles ENABLE ROW LEVEL SECURITY;
 
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Users can view own profile" ON player_profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON player_profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON player_profiles;
+
 -- Users can view their own profile
 CREATE POLICY "Users can view own profile"
   ON player_profiles FOR SELECT

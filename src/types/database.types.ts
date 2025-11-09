@@ -30,6 +30,7 @@ export interface DBHero {
   def: number;
   spd: number;
   crit: number;
+  party_order: number | null;
   created_at: string;
   updated_at: string;
 }

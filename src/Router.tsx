@@ -416,38 +416,59 @@ export function Router() {
     forceUpdate({});
   };
 
-  // Show dungeon if active
-  if (inDungeon && currentDungeon) {
-    // Get active party from game state
-    const activeHeroes = gameState.activeParty || [];
+  // Render both WorldMap and Dungeon - hide/show based on state to prevent unmounting
+  return (
+    <>
+      {/* WorldMap - always mounted, just hidden when in dungeon */}
+      <div style={{ display: inDungeon ? 'none' : 'block' }}>
+        <div style={{
+          position: 'fixed',
+          bottom: 10,
+          right: 10,
+          zIndex: 10000,
+          background: '#666',
+          color: '#fff',
+          padding: '8px 16px',
+          borderRadius: '5px',
+          cursor: 'pointer',
+          fontSize: '12px',
+          border: '1px solid #444'
+        }}
+        onClick={() => navigate('/test')}>
+          {t('router.testUI')}
+        </div>
+        <WorldMapDemo2
+          userEmail={userEmail}
+          onEnterDungeon={handleEnterDungeon}
+        />
+      </div>
 
-    return (
-      <>
-        {!combatActive && (
-          <DungeonExplorer
-            dungeon={currentDungeon}
-            dungeonUpdateKey={dungeonUpdateKey}
-            heroes={activeHeroes}
-            onCombatStart={handleDungeonCombatStart}
-            onTreasureLooted={async (gold, items) => {
-              console.log('💰 Treasure looted:', gold, 'gold and', items.length, 'items');
-              // Add loot to inventory using gameActions
-              await gameActions.addGold(gold);
-              for (const item of items) {
-                await gameActions.addItem(item);
-              }
-              forceUpdate({});
-            }}
-            onDungeonExit={handleDungeonExit}
-            onFloorComplete={() => {
-              console.log('🎉 Floor completed!');
-              forceUpdate({});
-            }}
-          />
-        )}
+      {/* Dungeon Explorer - only rendered when active */}
+      {inDungeon && currentDungeon && !combatActive && (
+        <DungeonExplorer
+          dungeon={currentDungeon}
+          dungeonUpdateKey={dungeonUpdateKey}
+          heroes={gameState.activeParty || []}
+          onCombatStart={handleDungeonCombatStart}
+          onTreasureLooted={async (gold, items) => {
+            console.log('💰 Treasure looted:', gold, 'gold and', items.length, 'items');
+            // Add loot to inventory using gameActions
+            await gameActions.addGold(gold);
+            for (const item of items) {
+              await gameActions.addItem(item);
+            }
+            forceUpdate({});
+          }}
+          onDungeonExit={handleDungeonExit}
+          onFloorComplete={() => {
+            console.log('🎉 Floor completed!');
+            forceUpdate({});
+          }}
+        />
+      )}
 
-        {/* Combat Display */}
-        {combatActive && (
+      {/* Combat Display - shown when combat is active */}
+      {inDungeon && currentDungeon && combatActive && (
           <div style={{
             width: '100vw',
             height: '100vh',
@@ -736,7 +757,7 @@ export function Router() {
               {/* Heroes */}
               <div>
                 <h3 style={{ marginBottom: '15px' }}>{t('router.heroes')}</h3>
-                {activeHeroes.map((hero) => (
+                {(gameState.activeParty || []).map((hero) => (
                   <div key={hero.id} style={{
                     padding: '15px',
                     marginBottom: '10px',
@@ -863,33 +884,6 @@ export function Router() {
             </div>
           </div>
         )}
-      </>
-    );
-  }
-
-  // Default: Main game
-  return (
-    <div>
-      <div style={{
-        position: 'fixed',
-        bottom: 10,
-        right: 10,
-        zIndex: 10000,
-        background: '#666',
-        color: '#fff',
-        padding: '8px 16px',
-        borderRadius: '5px',
-        cursor: 'pointer',
-        fontSize: '12px',
-        border: '1px solid #444'
-      }}
-      onClick={() => navigate('/test')}>
-        {t('router.testUI')}
-      </div>
-      <WorldMapDemo2
-        userEmail={userEmail}
-        onEnterDungeon={handleEnterDungeon}
-      />
-    </div>
+    </>
   );
 }

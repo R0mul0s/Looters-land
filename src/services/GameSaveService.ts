@@ -54,7 +54,8 @@ export class GameSaveService {
     userId: string,
     saveName: string,
     heroes: Hero[],
-    inventory: Inventory
+    inventory: Inventory,
+    activeParty?: Hero[]
   ): Promise<{ success: boolean; message: string; saveId?: string }> {
     if (!isSupabaseConfigured()) {
       return {
@@ -94,23 +95,30 @@ export class GameSaveService {
         supabase.from('inventory_items').delete().eq('game_save_id', gameSaveId)
       ]);
 
-      // 3. Save heroes
-      const heroInserts: DBHeroInsert[] = heroes.map(hero => ({
-        game_save_id: gameSaveId,
-        hero_name: hero.name,
-        hero_class: hero.class,
-        rarity: hero.rarity,
-        level: hero.level,
-        experience: hero.experience,
-        required_xp: hero.requiredXP,
-        talent_points: hero.talentPoints,
-        current_hp: hero.currentHP,
-        max_hp: hero.maxHP,
-        atk: hero.ATK,
-        def: hero.DEF,
-        spd: hero.SPD,
-        crit: hero.CRIT
-      }));
+      // 3. Save heroes with party_order
+      const heroInserts: DBHeroInsert[] = heroes.map(hero => {
+        // Find if hero is in active party and get its position
+        const partyIndex = activeParty?.findIndex(h => h.id === hero.id) ?? -1;
+        const party_order = partyIndex >= 0 ? partyIndex : null;
+
+        return {
+          game_save_id: gameSaveId,
+          hero_name: hero.name,
+          hero_class: hero.class,
+          rarity: hero.rarity,
+          level: hero.level,
+          experience: hero.experience,
+          required_xp: hero.requiredXP,
+          talent_points: hero.talentPoints,
+          current_hp: hero.currentHP,
+          max_hp: hero.maxHP,
+          atk: hero.ATK,
+          def: hero.DEF,
+          spd: hero.SPD,
+          crit: hero.CRIT,
+          party_order
+        };
+      });
 
       const { data: savedHeroes, error: heroError } = await supabase
         .from('heroes')

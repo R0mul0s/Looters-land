@@ -407,9 +407,16 @@ The dungeon system is now complete with all planned room types. The next major f
 
 ---
 
-**Last Updated:** 2025-11-08 (Night - Gacha System & Daily Summon Persistence Complete)
-**Current Version:** v0.7.0 (90% Complete - Hero Collection & Gacha System)
-**Next Version:** v0.7.1 (4v4 Combat Integration)
+**Last Updated:** 2025-11-09 (UI Enhancements - Zoom & Keyboard Shortcuts)
+**Current Version:** v0.6.1 (UI Polish Complete)
+**Next Version:** v0.7.0 (Hero Collection & Gacha System - 90% Complete)
+
+### ✅ v0.6.1 UI Enhancements (2025-11-09)
+- ✅ **Mouse Wheel Zoom** - Zoom in/out on worldmap using mouse wheel
+- ✅ **Keyboard Shortcuts** - Navigate with W/H/I/T/L/Q/G keys
+- ✅ **Bottom Bar Info** - Fixed "Denní Pořadí #250" → "Level {playerLevel}"
+- ✅ **Bottom Bar Gold** - Fixed "TODO 15" → "{gold} Gold" with formatting
+- ✅ **Code Compliance** - All changes follow coding_rules.md standards
 
 ### ✅ v0.7.0 Gacha System & Persistence (2025-11-08 Night)
 - ✅ **Hero Collection System** - 60 unique heroes with rarities, roles, factions

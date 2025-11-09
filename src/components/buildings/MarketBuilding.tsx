@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import type { Inventory } from '../../engine/item/Inventory';
 import type { Item } from '../../engine/item/Item';
 import { MarketService, type ShopItem } from '../../services/MarketService';
-import { RARITY_COLORS } from '../../types/hero.types';
+import { RARITY_COLORS } from '../../types/item.types';
 import { ItemTooltip } from '../ui/ItemTooltip';
 
 interface MarketBuildingProps {

@@ -2,10 +2,11 @@
  * Profile Service
  *
  * Manages player profile data including nickname, level, and resources.
+ * Supports multiplayer with online presence and chat features.
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-08
+ * @lastModified 2025-11-09
  */
 
 import { supabase } from '../lib/supabase';
@@ -28,6 +29,13 @@ export interface PlayerProfile {
   current_world_y: number;
   world_map_data?: any; // JSONB - serialized WorldMap
   discovered_locations?: any[]; // JSONB array
+  // Multiplayer fields
+  is_online?: boolean;
+  last_seen?: string;
+  current_map_x?: number;
+  current_map_y?: number;
+  current_chat_message?: string;
+  chat_message_timestamp?: string;
   created_at: string;
   updated_at: string;
   last_login: string;

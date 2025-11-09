@@ -21,6 +21,8 @@ interface WorldMapViewerProps {
   worldMap: WorldMap;
   playerPosition: { x: number; y: number };
   otherPlayers?: OtherPlayer[]; // Optional list of other players to render
+  playerChatMessage?: string; // Current player's chat message
+  playerChatTimestamp?: Date; // Timestamp of current player's chat message
   onTileClick?: (x: number, y: number) => void;
   onObjectClick?: (object: StaticObject) => void;
 }
@@ -44,6 +46,8 @@ export function WorldMapViewer({
   worldMap,
   playerPosition,
   otherPlayers = [],
+  playerChatMessage,
+  playerChatTimestamp,
   onTileClick,
   onObjectClick
 }: WorldMapViewerProps) {
@@ -290,11 +294,29 @@ export function WorldMapViewer({
         style={styles.canvas}
       />
 
+      {/* Render Current Player Chat Bubble */}
+      {playerChatMessage && playerChatTimestamp && (
+        <div
+          style={{
+            position: 'absolute',
+            left: `${VIEWPORT_WIDTH / 2}px`,
+            top: `${VIEWPORT_HEIGHT / 2}px`,
+            zIndex: 100
+          }}
+        >
+          <ChatBubble
+            message={playerChatMessage}
+            timestamp={playerChatTimestamp}
+            offsetY={-80}
+          />
+        </div>
+      )}
+
       {/* Render Other Players */}
       {otherPlayers.map((player) => {
         // Calculate screen position from map coordinates
-        const screenX = (player.x - viewport.x) * TILE_SIZE * zoom + TILE_SIZE * zoom / 2;
-        const screenY = (player.y - viewport.y) * TILE_SIZE * zoom + TILE_SIZE * zoom;
+        const screenX = (player.x - viewport.x) * TILE_SIZE + TILE_SIZE / 2;
+        const screenY = (player.y - viewport.y) * TILE_SIZE + TILE_SIZE;
 
         // Only render if player is in viewport
         const isVisible =

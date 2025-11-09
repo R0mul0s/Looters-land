@@ -36,6 +36,9 @@ export function ChatBubble({
   const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
+    // Reset visibility when timestamp changes (new message)
+    setIsVisible(true);
+
     // Check if message is older than 10 seconds
     const age = Date.now() - timestamp.getTime();
     if (age > 10000) {
@@ -72,7 +75,7 @@ const styles: Record<string, React.CSSProperties> = {
     maxWidth: '200px',
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
     border: '2px solid rgba(45, 212, 191, 0.6)',
-    zIndex: 99,
+    zIndex: 101,
     animation: 'fadeIn 0.2s ease-out',
     pointerEvents: 'none'
   },

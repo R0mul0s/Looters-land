@@ -26,7 +26,7 @@ import { InventoryHelper } from '../engine/item/InventoryHelper';
 import { useGameState } from '../hooks/useGameState';
 import { useEnergyRegeneration } from '../hooks/useEnergyRegeneration';
 import { useOtherPlayers } from '../hooks/useOtherPlayers';
-import { supabase } from '../services/supabaseClient';
+import { supabase } from '../lib/supabase';
 import { t } from '../localization/i18n';
 import type { StaticObject, Town, DungeonEntrance } from '../types/worldmap.types';
 
@@ -82,6 +82,29 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
   // Multiplayer: Subscribe to other online players
   const otherPlayers = useOtherPlayers(gameState.profile?.user_id);
 
+  // Multiplayer: Track own chat message
+  const [myChatMessage, setMyChatMessage] = useState<string | undefined>(undefined);
+  const [myChatTimestamp, setMyChatTimestamp] = useState<Date | undefined>(undefined);
+
+  // Auto-clear own chat message after 10 seconds
+  useEffect(() => {
+    if (!myChatTimestamp) return;
+
+    const age = Date.now() - myChatTimestamp.getTime();
+    if (age >= 10000) {
+      setMyChatMessage(undefined);
+      setMyChatTimestamp(undefined);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setMyChatMessage(undefined);
+      setMyChatTimestamp(undefined);
+    }, 10000 - age);
+
+    return () => clearTimeout(timer);
+  }, [myChatTimestamp]);
+
   // Multiplayer: Heartbeat system - Update position and online status every 15 seconds
   useEffect(() => {
     if (!gameState.profile?.user_id || gameState.loading) return;
@@ -89,7 +112,7 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
     const updatePresence = async () => {
       try {
         await supabase
-          .from('profiles')
+          .from('player_profiles')
           .update({
             is_online: true,
             last_seen: new Date().toISOString(),
@@ -112,7 +135,7 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
     return () => {
       clearInterval(heartbeatInterval);
       supabase
-        .from('profiles')
+        .from('player_profiles')
         .update({
           is_online: false,
           last_seen: new Date().toISOString()
@@ -127,11 +150,18 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
     if (!gameState.profile?.user_id || !message.trim()) return;
 
     try {
+      const timestamp = new Date();
+
+      // Update local state immediately for instant feedback
+      setMyChatMessage(message);
+      setMyChatTimestamp(timestamp);
+
+      // Update database
       await supabase
-        .from('profiles')
+        .from('player_profiles')
         .update({
           current_chat_message: message,
-          chat_message_timestamp: new Date().toISOString()
+          chat_message_timestamp: timestamp.toISOString()
         })
         .eq('user_id', gameState.profile.user_id);
     } catch (error) {
@@ -411,6 +441,8 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
             worldMap={gameState.worldMap}
             playerPosition={gameState.playerPos}
             otherPlayers={otherPlayers}
+            playerChatMessage={myChatMessage}
+            playerChatTimestamp={myChatTimestamp}
             onTileClick={handleTileClick}
           />
 
@@ -418,6 +450,8 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
           <ChatBox
             onSendMessage={handleSendChatMessage}
             disabled={!gameState.profile?.user_id}
+            lastMessage={myChatMessage}
+            lastMessageTimestamp={myChatTimestamp}
           />
 
           {/* Info Panel Overlay */}

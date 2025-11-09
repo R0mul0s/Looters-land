@@ -459,28 +459,30 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           console.log('🔄 Profile updated via realtime:', payload.new);
           const updatedProfile = payload.new as PlayerProfile;
 
-          setState(prev => ({
-            ...prev,
-            profile: updatedProfile,
-            energy: updatedProfile.energy,
-            maxEnergy: updatedProfile.max_energy,
-            gold: updatedProfile.gold,
-            gems: updatedProfile.gems,
-            playerLevel: updatedProfile.player_level,
+          setState(prev => {
             // Check if map was reset (world_map_data became null)
-            worldMap: updatedProfile.world_map_data || prev.worldMap,
-            discoveredLocations: updatedProfile.discovered_locations
-              ? updatedProfile.discovered_locations.map(str => {
-                  try { return JSON.parse(str); }
-                  catch { return { name: '', x: 0, y: 0, type: 'town' as const }; }
-                })
-              : prev.discoveredLocations
-          }));
+            if (!updatedProfile.world_map_data && prev.worldMap) {
+              console.log('🗺️ World map reset detected!');
+            }
 
-          // If map was reset, show notification
-          if (!updatedProfile.world_map_data && prev.worldMap) {
-            console.log('🗺️ World map reset detected!');
-          }
+            return {
+              ...prev,
+              profile: updatedProfile,
+              energy: updatedProfile.energy,
+              maxEnergy: updatedProfile.max_energy,
+              gold: updatedProfile.gold,
+              gems: updatedProfile.gems,
+              playerLevel: updatedProfile.player_level,
+              // Check if map was reset (world_map_data became null)
+              worldMap: updatedProfile.world_map_data || prev.worldMap,
+              discoveredLocations: updatedProfile.discovered_locations
+                ? updatedProfile.discovered_locations.map(str => {
+                    try { return JSON.parse(str); }
+                    catch { return { name: '', x: 0, y: 0, type: 'town' as const }; }
+                  })
+                : prev.discoveredLocations
+            };
+          });
         }
       )
       .subscribe();

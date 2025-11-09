@@ -266,7 +266,7 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
       gameActions.updateWorldMap({ ...gameState.worldMap }); // Force re-render
     } else {
       setShowEnergyModal({
-        message: t('worldmap.notEnoughEnergy', `Not enough energy! You need ${movementCost} energy but only have ${gameState.energy}.`),
+        message: t('worldmap.notEnoughEnergy', { required: movementCost, current: gameState.energy }),
         required: movementCost
       });
     }
@@ -353,7 +353,7 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
 
     if (gameState.energy < TELEPORT_COST) {
       setShowEnergyModal({
-        message: t('worldmap.notEnoughEnergy', 'Not enough energy to teleport!'),
+        message: t('worldmap.notEnoughEnergyTeleport', { required: TELEPORT_COST }),
         required: TELEPORT_COST
       });
       return;

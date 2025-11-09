@@ -129,7 +129,7 @@ export function ProfileScreen({
         alert('❌ Účet byl úspěšně smazán. Budete odhlášeni...');
 
         // Sign out and redirect
-        await AuthService.signOut();
+        await AuthService.logout();
 
         if (onAccountDeleted) {
           onAccountDeleted();

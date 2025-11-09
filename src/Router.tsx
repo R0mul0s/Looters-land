@@ -42,7 +42,7 @@ export function Router() {
   const [combatActive, setCombatActive] = useState(false);
   const [combatLog, setCombatLog] = useState<CombatLogEntry[]>([]);
   const [currentEnemies, setCurrentEnemies] = useState<Enemy[]>([]);
-  const [isManualMode, setIsManualMode] = useState(false);
+  const [isManualMode] = useState(false);
   const [waitingForInput, setWaitingForInput] = useState(false);
   const [activeCharacter, setActiveCharacter] = useState<Combatant | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<Combatant | null>(null);
@@ -63,7 +63,7 @@ export function Router() {
     checkAuth();
 
     // Listen for auth changes
-    const unsubscribe = AuthService.onAuthStateChange((event, session) => {
+    const unsubscribe = AuthService.onAuthStateChange((_event, session) => {
       if (session) {
         setUserEmail(session.user.email || '');
       } else {
@@ -109,7 +109,7 @@ export function Router() {
 
   // Show login screen if not authenticated
   if (!userEmail) {
-    return <LoginScreen />;
+    return <LoginScreen onLoginSuccess={() => {}} />;
   }
 
   // Render based on path

@@ -15,7 +15,7 @@
  * @lastModified 2025-11-09
  */
 
-import React, { useState, useRef, KeyboardEvent } from 'react';
+import React, { useState, useRef, type KeyboardEvent } from 'react';
 import { t } from '../localization/i18n';
 
 interface ChatBoxProps {

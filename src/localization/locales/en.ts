@@ -602,6 +602,105 @@ export const en = {
     notEnoughResources: 'Not enough resources',
     targetInvalid: 'Invalid target',
   },
+
+  // ============================================================================
+  // PROFILE SCREEN
+  // ============================================================================
+  profile: {
+    title: 'Profile & Settings',
+    logout: 'Logout',
+    logoutConfirm: 'Are you sure you want to logout?',
+    nameLabel: 'Name:',
+    emailLabel: 'Email:',
+    levelLabel: 'Level:',
+    goldLabel: 'Gold:',
+    gemsLabel: 'Gems:',
+    energyLabel: 'Energy:',
+    experienceLabel: 'Experience:',
+    editName: 'Edit name',
+    nameEmpty: 'Name cannot be empty',
+    notLoggedIn: 'You are not logged in',
+    saveNameFailed: 'Failed to save name',
+    saveNameError: 'An error occurred while saving name',
+    saving: 'Saving...',
+    saveButton: 'Save',
+    cancelButton: 'Cancel',
+    enterNewName: 'Enter new name',
+    resetProgress: 'Reset Progress',
+    resetProgressConfirm: 'WARNING: This will delete ALL game data!\n\nOnly your account and email will remain.\n\nThis action is IRREVERSIBLE!\n\nDo you really want to continue?',
+    resetProgressSuccess: 'Progress reset successfully',
+    resetProgressFailed: 'Failed to reset progress',
+    deleteAccount: 'Delete Account',
+    deleteAccountConfirm: 'WARNING: This will PERMANENTLY DELETE your account!\n\nALL data will be lost forever.\n\nThis action is IRREVERSIBLE!\n\nDo you really want to continue?',
+    deleteAccountSuccess: 'Account deleted successfully',
+    deleteAccountFailed: 'Failed to delete account',
+  },
+
+  // ============================================================================
+  // LAST UPDATES / CHANGELOG
+  // ============================================================================
+  updates: {
+    title: 'Last Updates',
+    features: 'New Features',
+    fixes: 'Fixes',
+    gameplay: 'Gameplay',
+    technical: 'Technical Changes',
+    footer: 'More information at',
+    github: 'GitHub',
+
+    // Version 2.1.0
+    v2_1_0: {
+      features: {
+        item1: 'Added username editing in profile',
+        item2: 'Added logout button in profile',
+        item3: 'Added "Last Updates" section to main menu',
+      },
+      fixes: {
+        item1: '🔥 Critical fix: Resolved issue with heroes disappearing when entering dungeons',
+        item2: 'Fixed race condition in game data loading',
+        item3: 'Heroes now properly persist across dungeons and combats',
+      },
+      technical: {
+        item1: 'Optimized loadGameData function',
+        item2: 'Implemented proper lifecycle management for game state',
+        item3: 'Added party_order column to database',
+      },
+    },
+
+    // Version 2.0.0
+    v2_0_0: {
+      features: {
+        item1: 'New main gameplay loop with World Map',
+        item2: 'Dungeon exploration system',
+        item3: 'Combat system with auto-battle mode',
+        item4: 'Hero gacha system',
+        item5: 'Equipment system',
+        item6: 'Profile & settings screen',
+      },
+      gameplay: {
+        item1: 'Procedurally generated dungeons',
+        item2: 'Various enemy types (Easy, Normal, Hard, Elite)',
+        item3: 'Loot system with gold and items',
+        item4: 'Hero leveling and experience system',
+        item5: 'Active party management (4 heroes)',
+      },
+      technical: {
+        item1: 'Supabase integration for multiplayer',
+        item2: 'Row Level Security (RLS) policies',
+        item3: 'Real-time updates',
+        item4: 'Cloud saves',
+      },
+    },
+
+    // Version 1.0.0
+    v1_0_0: {
+      features: {
+        item1: 'Basic hero system',
+        item2: 'Simple combat',
+        item3: 'Local storage saves',
+      },
+    },
+  },
 } as const;
 
 // Extract the structure type (not literal strings)

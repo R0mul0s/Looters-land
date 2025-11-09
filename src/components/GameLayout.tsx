@@ -14,8 +14,9 @@ import { GameHeader } from './ui/GameHeader';
 import { MainSidebar } from './ui/MainSidebar';
 import { ComingSoon } from './ui/ComingSoon';
 import { ProfileScreen } from './ProfileScreen';
+import { LastUpdates } from './ui/LastUpdates';
 
-type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport';
+type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport' | 'updates';
 
 interface GameLayoutProps {
   playerName: string;
@@ -107,6 +108,8 @@ export function GameLayout({
         return questsScreen || <ComingSoon title="Quests" icon="📜" description="Track your active quests and story progress." />;
       case 'guild':
         return guildScreen || <ComingSoon title="Guild" icon="👥" description="Join a guild and participate in guild activities." />;
+      case 'updates':
+        return <LastUpdates />;
       default:
         return <ComingSoon title="Unknown Screen" icon="❓" />;
     }

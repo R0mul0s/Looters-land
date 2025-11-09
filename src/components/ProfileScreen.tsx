@@ -13,6 +13,7 @@
 import React, { useState } from 'react';
 import * as AuthService from '../services/AuthService';
 import { ProfileService } from '../services/ProfileService';
+import { t } from '../localization/i18n';
 
 interface ProfileScreenProps {
   playerName: string;
@@ -45,6 +46,9 @@ export function ProfileScreen({
   const [deleteStep, setDeleteStep] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(playerName);
+  const [isSavingName, setIsSavingName] = useState(false);
 
   /**
    * Reset Progress - Clears all game data but keeps account
@@ -159,48 +163,176 @@ export function ProfileScreen({
     setShowDeleteConfirm(false);
   };
 
+  /**
+   * Handle logout
+   *
+   * @description Logs out the user after confirmation
+   * @returns Promise that resolves when logout is complete
+   *
+   * @example
+   * ```tsx
+   * handleLogout();
+   * ```
+   */
+  const handleLogout = async () => {
+    const confirmed = window.confirm(t('profile.logoutConfirm'));
+    if (!confirmed) return;
+
+    try {
+      await AuthService.logout();
+      window.location.href = '/';
+    } catch (err) {
+      console.error('Logout error:', err);
+      setError(t('auth.loginFailed'));
+    }
+  };
+
+  /**
+   * Save edited username
+   *
+   * @description Saves the edited username to the profile
+   * @returns Promise that resolves when save is complete
+   *
+   * @example
+   * ```tsx
+   * handleSaveUsername();
+   * ```
+   */
+  const handleSaveUsername = async () => {
+    if (!editedName.trim()) {
+      setError(t('profile.nameEmpty'));
+      return;
+    }
+
+    setIsSavingName(true);
+    setError(null);
+
+    try {
+      const session = await AuthService.getCurrentSession();
+      if (!session?.user?.id) {
+        setError(t('profile.notLoggedIn'));
+        return;
+      }
+
+      const result = await ProfileService.updateUsername(session.user.id, editedName.trim());
+
+      if (result.success) {
+        setIsEditingName(false);
+        // Reload to refresh the name everywhere
+        window.location.reload();
+      } else {
+        setError(result.message || t('profile.saveNameFailed'));
+      }
+    } catch (err) {
+      console.error('Save username error:', err);
+      setError(t('profile.saveNameError'));
+    } finally {
+      setIsSavingName(false);
+    }
+  };
+
+  /**
+   * Cancel name editing
+   *
+   * @description Cancels the name editing mode and resets the edited name
+   *
+   * @example
+   * ```tsx
+   * cancelEditName();
+   * ```
+   */
+  const cancelEditName = () => {
+    setEditedName(playerName);
+    setIsEditingName(false);
+    setError(null);
+  };
+
   return (
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <h2 style={styles.title}>⚙️ Profil & Nastavení</h2>
-        {onClose && (
-          <button style={styles.closeButton} onClick={onClose}>✕</button>
-        )}
+        <h2 style={styles.title}>⚙️ {t('profile.title')}</h2>
+        <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
+          <button style={styles.logoutButton} onClick={handleLogout}>
+            🚪 {t('profile.logout')}
+          </button>
+          {onClose && (
+            <button style={styles.closeButton} onClick={onClose}>✕</button>
+          )}
+        </div>
       </div>
 
       {/* Profile Info */}
       <div style={styles.section}>
-        <h3 style={styles.sectionTitle}>👤 Informace o hráči</h3>
+        <h3 style={styles.sectionTitle}>👤 {t('profile.title')}</h3>
         <div style={styles.infoGrid}>
-          <div style={styles.infoItem}>
-            <div style={styles.infoLabel}>Jméno:</div>
-            <div style={styles.infoValue}>{playerName}</div>
+          <div style={{...styles.infoItem, gridColumn: isEditingName ? '1 / -1' : 'auto'}}>
+            <div style={styles.infoLabel}>{t('profile.nameLabel')}</div>
+            {!isEditingName ? (
+              <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+                <div style={styles.infoValue}>{playerName}</div>
+                <button
+                  style={styles.editButton}
+                  onClick={() => setIsEditingName(true)}
+                  title={t('profile.editName')}
+                >
+                  ✏️
+                </button>
+              </div>
+            ) : (
+              <div style={{marginTop: '8px'}}>
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  style={styles.nameInput}
+                  placeholder={t('profile.enterNewName')}
+                  maxLength={20}
+                  autoFocus
+                />
+                <div style={{display: 'flex', gap: '8px', marginTop: '8px'}}>
+                  <button
+                    style={styles.saveButton}
+                    onClick={handleSaveUsername}
+                    disabled={isSavingName || !editedName.trim()}
+                  >
+                    {isSavingName ? t('profile.saving') : `💾 ${t('profile.saveButton')}`}
+                  </button>
+                  <button
+                    style={styles.cancelEditButton}
+                    onClick={cancelEditName}
+                    disabled={isSavingName}
+                  >
+                    ❌ {t('profile.cancelButton')}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           {playerEmail && (
             <div style={styles.infoItem}>
-              <div style={styles.infoLabel}>Email:</div>
+              <div style={styles.infoLabel}>{t('profile.emailLabel')}</div>
               <div style={styles.infoValue}>{playerEmail}</div>
             </div>
           )}
           <div style={styles.infoItem}>
-            <div style={styles.infoLabel}>Level:</div>
+            <div style={styles.infoLabel}>{t('profile.levelLabel')}</div>
             <div style={styles.infoValue}>{playerLevel}</div>
           </div>
           <div style={styles.infoItem}>
-            <div style={styles.infoLabel}>Zlato:</div>
+            <div style={styles.infoLabel}>{t('profile.goldLabel')}</div>
             <div style={styles.infoValue}>{gold.toLocaleString()}g</div>
           </div>
           <div style={styles.infoItem}>
-            <div style={styles.infoLabel}>Drahokamy:</div>
+            <div style={styles.infoLabel}>{t('profile.gemsLabel')}</div>
             <div style={styles.infoValue}>{gems.toLocaleString()} 💎</div>
           </div>
           <div style={styles.infoItem}>
-            <div style={styles.infoLabel}>Hrdinové:</div>
+            <div style={styles.infoLabel}>{t('town.heroRoster')}:</div>
             <div style={styles.infoValue}>{heroCount}</div>
           </div>
           <div style={styles.infoItem}>
-            <div style={styles.infoLabel}>Předměty:</div>
+            <div style={styles.infoLabel}>{t('dungeon.items')}:</div>
             <div style={styles.infoValue}>{itemCount}</div>
           </div>
         </div>
@@ -416,6 +548,65 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'pointer',
     padding: '8px 16px',
     borderRadius: '8px',
+    transition: 'all 0.2s'
+  },
+  logoutButton: {
+    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+    border: 'none',
+    color: '#fff',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    padding: '10px 16px',
+    borderRadius: '8px',
+    transition: 'all 0.2s',
+    boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
+  },
+  editButton: {
+    background: 'transparent',
+    border: '1px solid rgba(45, 212, 191, 0.4)',
+    color: '#2dd4bf',
+    fontSize: '16px',
+    cursor: 'pointer',
+    padding: '4px 8px',
+    borderRadius: '6px',
+    transition: 'all 0.2s'
+  },
+  nameInput: {
+    width: '100%',
+    padding: '10px',
+    background: 'rgba(15, 23, 42, 0.8)',
+    border: '2px solid rgba(45, 212, 191, 0.4)',
+    borderRadius: '8px',
+    color: '#f1f5f9',
+    fontSize: '14px',
+    fontFamily: 'inherit',
+    outline: 'none',
+    transition: 'border-color 0.2s'
+  },
+  saveButton: {
+    flex: 1,
+    padding: '8px 12px',
+    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
+    border: 'none',
+    borderRadius: '6px',
+    color: '#fff',
+    fontSize: '13px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    transition: 'all 0.2s',
+    boxShadow: '0 2px 8px rgba(45, 212, 191, 0.3)'
+  },
+  cancelEditButton: {
+    flex: 1,
+    padding: '8px 12px',
+    background: '#334155',
+    border: 'none',
+    borderRadius: '6px',
+    color: '#f1f5f9',
+    fontSize: '13px',
+    fontWeight: '600',
+    cursor: 'pointer',
     transition: 'all 0.2s'
   },
   section: {

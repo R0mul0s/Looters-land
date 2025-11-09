@@ -431,6 +431,7 @@ export async function deleteAccount(): Promise<ServiceResult<void>> {
 export const ProfileService = {
   getPlayerProfile,
   updateNickname,
+  updateUsername: updateNickname, // Alias for better clarity
   updateProfile,
   resetProgress,
   deleteAccount

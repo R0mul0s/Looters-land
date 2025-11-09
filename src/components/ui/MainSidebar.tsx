@@ -12,7 +12,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport';
+type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport' | 'updates';
 
 interface MainSidebarProps {
   activeScreen: GameScreen;
@@ -45,6 +45,39 @@ export function MainSidebar({
     return () => window.removeEventListener('resize', checkWidth);
   }, []);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Don't trigger if user is typing in an input field
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      const key = e.key.toUpperCase();
+
+      // Map keys to screens
+      const keyMap: Record<string, GameScreen> = {
+        'W': 'worldmap',
+        'H': 'heroes',
+        'I': 'inventory',
+        'T': 'teleport',
+        'L': 'leaderboards',
+        'Q': 'quests',
+        'G': 'guild',
+        'U': 'updates'
+      };
+
+      const screen = keyMap[key];
+      if (screen) {
+        e.preventDefault();
+        onScreenChange(screen);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [onScreenChange]);
+
   const menuItems = [
     { id: 'worldmap' as GameScreen, icon: '🗺️', label: 'World Map', hotkey: 'W' },
     { id: 'heroes' as GameScreen, icon: '🦸', label: 'Heroes', hotkey: 'H' },
@@ -52,7 +85,8 @@ export function MainSidebar({
     { id: 'teleport' as GameScreen, icon: '🌍', label: 'Teleport', hotkey: 'T' },
     { id: 'leaderboards' as GameScreen, icon: '🏆', label: 'Leaderboards', hotkey: 'L' },
     { id: 'quests' as GameScreen, icon: '📜', label: 'Quests', hotkey: 'Q' },
-    { id: 'guild' as GameScreen, icon: '👥', label: 'Guild', hotkey: 'G' }
+    { id: 'guild' as GameScreen, icon: '👥', label: 'Guild', hotkey: 'G' },
+    { id: 'updates' as GameScreen, icon: '📋', label: 'Last Updates', hotkey: 'U' }
   ];
 
   return (

@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worldmap Generator Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            color: #fff;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 42px;
+            margin: 0 0 10px 0;
+        }
+        .subtitle {
+            color: #aaa;
+            font-size: 16px;
+        }
+        .info-box {
+            background: #2a2a2a;
+            border: 2px solid #4CAF50;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .info-box h2 {
+            margin-top: 0;
+            color: #4CAF50;
+        }
+        .info-box ul {
+            line-height: 1.8;
+        }
+        .cta-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        .cta-button:hover {
+            background: #45a049;
+        }
+        .tech-stack {
+            background: #1a1a1a;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .tech-stack h3 {
+            color: #4a9eff;
+        }
+        code {
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #ffa500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🗺️ Worldmap Generator</h1>
+            <p class="subtitle">HOMAM-Style Procedural World Generation</p>
+        </div>
+
+        <div class="info-box">
+            <h2>✨ Features Implemented</h2>
+            <ul>
+                <li>🌍 <strong>50x50 Large-Scale Map</strong> - Massive world ready for multiplayer</li>
+                <li>🎲 <strong>Perlin Noise Terrain</strong> - Natural-looking biomes and terrain types</li>
+                <li>🏰 <strong>4 Fixed Towns</strong> - Strategic locations (Capital, Stronghold, Oasis, Outpost)</li>
+                <li>🕳️ <strong>5 Dungeon Entrances</strong> - Easy to Nightmare difficulty</li>
+                <li>🛤️ <strong>Road Network</strong> - Auto-generated roads connecting towns</li>
+                <li>⚔️ <strong>15 Enemy Encounters</strong> - Dynamic spawn/despawn system</li>
+                <li>💎 <strong>50 Resource Nodes</strong> - Gold, wood, stone, ore, gems</li>
+                <li>🌫️ <strong>Fog of War</strong> - Explore to reveal tiles</li>
+                <li>🧙 <strong>Player Movement</strong> - Click tiles to move around</li>
+                <li>🎨 <strong>Visual Rendering</strong> - Canvas-based map with icons and colors</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h2>🎮 How It Works</h2>
+            <ol style="line-height: 2;">
+                <li>Click "Generate New World" to create a procedurally generated 50x50 map</li>
+                <li>Player starts at the Capital (center of map)</li>
+                <li>Click on tiles to move your hero around the map</li>
+                <li>Click on towns (🏰) or dungeons (🕳️) to interact</li>
+                <li>Unexplored areas are covered with fog of war</li>
+                <li>Use zoom controls to adjust view</li>
+            </ol>
+        </div>
+
+        <div class="tech-stack">
+            <h3>🛠️ Technical Implementation</h3>
+            <p><strong>Files Created:</strong></p>
+            <ul>
+                <li><code>src/types/worldmap.types.ts</code> - Type definitions for worldmap system</li>
+                <li><code>src/engine/worldmap/PerlinNoise.ts</code> - Perlin noise generator for terrain</li>
+                <li><code>src/engine/worldmap/WorldMapGenerator.ts</code> - Main world generation engine</li>
+                <li><code>src/components/WorldMapViewer.tsx</code> - Canvas-based map renderer</li>
+                <li><code>src/components/WorldMapDemo.tsx</code> - Demo UI for testing</li>
+            </ul>
+
+            <p><strong>Key Technologies:</strong></p>
+            <ul>
+                <li>Perlin Noise Algorithm for natural terrain</li>
+                <li>Canvas API for performant rendering</li>
+                <li>TypeScript for type safety</li>
+                <li>React for UI components</li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <h2>🚀 Next Steps for Multiplayer</h2>
+            <p>To enable multiplayer features:</p>
+            <ol style="line-height: 2;">
+                <li>✅ <strong>Worldmap Generation</strong> - DONE!</li>
+                <li>⏳ <strong>Supabase Real-time Integration</strong> - Sync player positions</li>
+                <li>⏳ <strong>Player Visibility</strong> - Show other players on map</li>
+                <li>⏳ <strong>Movement Sync</strong> - Update positions in real-time</li>
+                <li>⏳ <strong>Dynamic Objects Sync</strong> - Share encounters and resources</li>
+            </ol>
+        </div>
+
+        <div style="text-align: center; margin: 40px 0;">
+            <a href="/" class="cta-button">🎮 Open Main Game</a>
+            <p style="margin-top: 20px; color: #888;">
+                Note: Add WorldMapDemo to your main app routing to access the worldmap generator
+            </p>
+        </div>
+
+        <div style="text-align: center; margin-top: 60px; padding-top: 20px; border-top: 1px solid #333; color: #666;">
+            <p>Looters Land - Worldmap System</p>
+            <p>© 2025 Roman Hlaváček - rhsoft.cz</p>
+        </div>
+    </div>
+</body>
+</html>

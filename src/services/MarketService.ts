@@ -13,7 +13,7 @@ import { MARKET_CONFIG } from '../config/BALANCE_CONFIG';
 import { ItemGenerator } from '../engine/item/ItemGenerator';
 import type { Item } from '../engine/item/Item';
 import type { Inventory } from '../engine/item/Inventory';
-import type { Rarity } from '../types/item.types';
+import type { ItemRarity } from '../types/item.types';
 
 // ============================================================================
 // TYPES

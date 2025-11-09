@@ -207,7 +207,7 @@ export class TownService {
 
     for (let i = 0; i < count; i++) {
       const itemLevel = townLevel + Math.floor(Math.random() * 3);
-      const item = ItemGenerator.generateItem(itemLevel);
+      const item = ItemGenerator.generate(itemLevel);
 
       const buyPrice = Math.ceil(item.goldValue * this.DEFAULT_PRICES.buyPriceMultiplier);
 

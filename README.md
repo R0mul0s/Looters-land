@@ -2,7 +2,7 @@
 
 **Author:** Roman Hlaváček - rhsoft.cz
 **Copyright:** 2025
-**Last Modified:** 2025-11-08
+**Last Modified:** 2025-11-10
 
 ---
 
@@ -73,7 +73,7 @@ looters-land/
 - [x] useGameState hook for centralized state management
 - [x] Complete UI with responsive design
 
-### ✅ Completed (v0.7.0)
+### ✅ Completed (v0.7.0 - Hero Collection & Gacha)
 
 - [x] Hero collection system (party of 4)
 - [x] Gacha summon system (gold-based, daily free summon)
@@ -85,6 +85,25 @@ looters-land/
   - Talent points awarded for duplicates (+1 per dupe)
   - Talent point UI indicators on hero cards
   - "Coming Soon" placeholder for talent tree
+
+### ✅ Completed (v0.7.1 - Scoring & Mobile)
+
+- [x] **Hero & Item Scoring System**
+  - Hero score calculation (rarity, level, equipment)
+  - Item score calculation (rarity, level, enchant, slot)
+  - Combat Power display in UI (MainSidebar badge)
+  - Score display in Hero Collection and Item Tooltips
+- [x] **Mobile Optimizations**
+  - Fixed map rendering issues on mobile devices
+  - High-DPI canvas support (devicePixelRatio)
+  - Proper zoom centering on player avatar
+  - Fixed click/tap position calculations
+  - Other player markers scale with zoom level
+- [x] **Sync Status Indicator**
+  - Real-time database sync status display
+  - Saving/Success/Error states with icons
+  - Last save timestamp with relative time
+  - Integrated into GameHeader component
 
 ### 🔄 In Progress (v0.8.0 - Next)
 
@@ -131,7 +150,7 @@ npm run build
 npm run preview
 ```
 
-## Current Features (v0.6.1)
+## Current Features (v0.7.1)
 
 The game currently includes:
 
@@ -149,6 +168,11 @@ The game currently includes:
 12. **Authentication** - User registration, login, logout with secure session management
 13. **Centralized State** - useGameState hook managing all game data with auto-save
 14. **UI Enhancements** - Mouse wheel zoom, keyboard shortcuts (W/H/I/T/L/Q/G)
+15. **Hero Collection & Gacha** - 60+ unique heroes, daily free summons, talent system
+16. **Scoring System** - Hero and item power ratings, combat power calculation
+17. **Multiplayer** - Real-time player positions, chat system, online/offline status
+18. **Mobile Optimized** - High-DPI canvas rendering, proper zoom centering, responsive design
+19. **Sync Status Indicator** - Real-time database sync status with timestamp display
 
 ## Migration Benefits
 
@@ -246,9 +270,8 @@ When adding new features:
 ## Known Issues
 
 - Node.js version warning (20.17.0 vs 20.19+ recommended)
-- Energy system not yet implemented
-- Town system buildings not interactive yet
-- Gacha/hero collection system pending (v0.7.0)
+- Energy system regeneration implemented but daily reset pending
+- Some town building interactions need expansion
 
 ## Documentation
 
@@ -275,6 +298,39 @@ When adding new features:
 
 ---
 
-**Version**: 0.6.1
-**Last Updated**: 2025-11-09
-**Status**: Active development - UI improvements complete (zoom, keyboard shortcuts), preparing v0.7.0 (Hero Collection & Gacha)
+**Version**: 0.7.1
+**Last Updated**: 2025-11-10
+**Status**: Active development
+
+## Last Updates (2025-11-10)
+
+### Localization Improvements
+- ✅ **Complete Czech localization** for Heroes, Inventory, and Leaderboards sections
+- ✅ **101 hardcoded strings** replaced with translation keys across 3 major components
+- ✅ Added comprehensive translation sections to `en.ts` and `cs.ts`:
+  - `heroCollection` (44 translation keys)
+  - `inventoryScreen` (38 translation keys)
+  - `leaderboard` (19 translation keys)
+- ✅ Fixed duplicate key issue (`inventory` → `inventoryScreen`) preventing translations from working
+
+### Code Quality & Documentation
+- ✅ **All localized components** checked against `coding_rules.md` standards
+- ✅ Added comprehensive JSDoc documentation to all functions and interfaces
+- ✅ Updated `@lastModified` dates to 2025-11-10 in all modified files
+- ✅ Added explicit TypeScript return types to all helper functions
+- ✅ Compliance with sections 1, 2, 3, 4, and 7 of coding standards
+
+### Bug Fixes
+- ✅ **Fixed energy regeneration system** - Removed `currentEnergy` from useEffect dependencies
+- ✅ Energy now properly regenerates at 10 energy/hour (~1 energy per 6 minutes)
+- ✅ Interval no longer restarts on every energy change
+
+### Files Modified
+- `src/components/gacha/HeroCollection.tsx` - Localized + JSDoc
+- `src/components/InventoryScreen.tsx` - Localized + JSDoc
+- `src/components/LeaderboardScreen.tsx` - Localized + JSDoc
+- `src/components/SyncStatusIndicator.tsx` - JSDoc improvements
+- `src/components/ui/GameHeader.tsx` - JSDoc improvements
+- `src/localization/locales/en.ts` - Added 3 new sections
+- `src/localization/locales/cs.ts` - Added 3 new Czech sections
+- `src/hooks/useEnergyRegeneration.ts` - Fixed regeneration bug

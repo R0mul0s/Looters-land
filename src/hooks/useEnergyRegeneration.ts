@@ -35,15 +35,22 @@ export function useEnergyRegeneration(config: EnergyRegenerationConfig) {
   const lastTickRef = useRef<number>(Date.now());
 
   useEffect(() => {
-    // Don't start if disabled or already at max
+    // Don't start if disabled
     if (!enabled) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
       return;
     }
 
-    // Clear existing interval
+    // If already running, don't restart
     if (intervalRef.current) {
-      clearInterval(intervalRef.current);
+      return;
     }
+
+    // Initialize last tick time
+    lastTickRef.current = Date.now();
 
     // Calculate milliseconds per energy point
     const msPerEnergy = (60 * 60 * 1000) / regenRate; // Hour in ms divided by rate
@@ -70,9 +77,10 @@ export function useEnergyRegeneration(config: EnergyRegenerationConfig) {
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
+        intervalRef.current = null;
       }
     };
-  }, [currentEnergy, maxEnergy, onEnergyChange, regenRate, enabled]);
+  }, [regenRate, enabled]); // Removed currentEnergy and maxEnergy from dependencies!
 
   // Return regeneration info for UI display
   return {

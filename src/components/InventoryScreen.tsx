@@ -3,10 +3,11 @@
  *
  * Displays hero equipment and inventory management.
  * Shows equipped items, inventory grid, and equipment actions.
+ * Supports item equipping, unequipping, enchanting, and auto-equip.
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-08
+ * @lastModified 2025-11-10
  */
 
 import React, { useState } from 'react';
@@ -14,18 +15,31 @@ import type { Hero } from '../engine/hero/Hero';
 import type { Item } from '../engine/item/Item';
 import type { Inventory } from '../engine/item/Inventory';
 import { CLASS_ICONS, RARITY_COLORS } from '../types/hero.types';
+import { t } from '../localization/i18n';
 import '../App.css';
 
+/**
+ * Props for InventoryScreen component
+ */
 interface InventoryScreenProps {
+  /** Array of heroes to manage equipment for */
   heroes: Hero[];
+  /** Inventory containing all items */
   inventory: Inventory;
+  /** Callback when equipping an item */
   onEquipItem: (hero: Hero, item: Item) => void;
+  /** Callback when unequipping an item */
   onUnequipItem: (hero: Hero, slotName: string) => void;
+  /** Callback for auto-equip best items */
   onAutoEquipBest: (hero: Hero) => void;
+  /** Callback for expanding inventory capacity */
   onExpandInventory: () => void;
+  /** Callback for auto-selling common items */
   onAutoSellCommon: () => void;
+  /** Optional callback when opening enchant panel */
   onOpenEnchantPanel?: (item: Item) => void;
-  isInTown?: boolean; // Sell/Expand/Enchant only available in town
+  /** Whether player is in town (enables selling/expanding/enchanting) */
+  isInTown?: boolean;
 }
 
 /**
@@ -61,22 +75,36 @@ export function InventoryScreen({
         fontSize: '18px',
         color: '#888'
       }}>
-        Loading heroes...
+        {t('inventoryScreen.loading')}
       </div>
     );
   }
 
-  const showTooltip = (item: Item, e: React.MouseEvent) => {
+  /**
+   * Show item tooltip at mouse position
+   *
+   * @param item - Item to show in tooltip
+   * @param e - Mouse event with position
+   */
+  const showTooltip = (item: Item, e: React.MouseEvent): void => {
     setTooltip({ item, x: e.clientX, y: e.clientY });
   };
 
-  const updateTooltipPosition = (e: React.MouseEvent) => {
+  /**
+   * Update tooltip position as mouse moves
+   *
+   * @param e - Mouse event with new position
+   */
+  const updateTooltipPosition = (e: React.MouseEvent): void => {
     if (tooltip) {
       setTooltip({ ...tooltip, x: e.clientX, y: e.clientY });
     }
   };
 
-  const hideTooltip = () => {
+  /**
+   * Hide the item tooltip
+   */
+  const hideTooltip = (): void => {
     setTooltip(null);
   };
 
@@ -84,7 +112,7 @@ export function InventoryScreen({
     <div style={styles.container}>
       {/* Hero Selector */}
       <div className="hero-selector">
-        <h3>Select Hero</h3>
+        <h3>{t('inventoryScreen.selectHero')}</h3>
         <div className="hero-buttons">
           {heroes.map((hero, index) => (
             <button
@@ -112,7 +140,7 @@ export function InventoryScreen({
               >
                 {hero.rarity}
               </span>
-              {CLASS_ICONS[hero.class]} {hero.name} (Lv.{hero.level})
+              {CLASS_ICONS[hero.class]} {hero.name} {t('inventoryScreen.levelFormat')}{hero.level})
             </button>
           ))}
         </div>
@@ -122,7 +150,7 @@ export function InventoryScreen({
       <div className="equipment-grid">
         {/* Equipment Panel */}
         <div className="equipment-panel">
-          <h3>⚔️ Equipment</h3>
+          <h3>⚔️ {t('inventoryScreen.equipment.title')}</h3>
 
           {/* Hero Info */}
           <div className="hero-info">
@@ -156,8 +184,8 @@ export function InventoryScreen({
                 fontSize: '0.9em',
                 color: '#ccc'
               }}>
-                <span>Level {selectedHero.level}</span>
-                <span>{selectedHero.xp}/{selectedHero.xpToNextLevel} XP</span>
+                <span>{t('inventoryScreen.labels.level')} {selectedHero.level}</span>
+                <span>{selectedHero.xp}/{selectedHero.xpToNextLevel} {t('inventoryScreen.labels.xp')}</span>
               </div>
               <div style={{
                 width: '100%',
@@ -186,27 +214,27 @@ export function InventoryScreen({
 
             <div id="hero-stats">
               <div className="stat-item">
-                <strong>HP:</strong>
+                <strong>{t('inventoryScreen.equipment.stats.hp')}</strong>
                 <span>{selectedHero.currentHP}/{selectedHero.maxHP}</span>
               </div>
               <div className="stat-item">
-                <strong>ATK:</strong>
+                <strong>{t('inventoryScreen.equipment.stats.atk')}</strong>
                 <span>{selectedHero.ATK}</span>
               </div>
               <div className="stat-item">
-                <strong>DEF:</strong>
+                <strong>{t('inventoryScreen.equipment.stats.def')}</strong>
                 <span>{selectedHero.DEF}</span>
               </div>
               <div className="stat-item">
-                <strong>SPD:</strong>
+                <strong>{t('inventoryScreen.equipment.stats.spd')}</strong>
                 <span>{selectedHero.SPD}</span>
               </div>
               <div className="stat-item">
-                <strong>CRIT:</strong>
+                <strong>{t('inventoryScreen.equipment.stats.crit')}</strong>
                 <span>{selectedHero.CRIT}%</span>
               </div>
               <div className="stat-item">
-                <strong>Power:</strong>
+                <strong>{t('inventoryScreen.equipment.stats.power')}</strong>
                 <span>{selectedHero.equipment?.getPowerScore().toFixed(0) || 0}</span>
               </div>
             </div>
@@ -224,7 +252,7 @@ export function InventoryScreen({
                 onContextMenu={(e) => {
                   e.preventDefault();
                   if (!isInTown) {
-                    alert('⚠️ Enchanting is only available in town (visit the Smithy)!');
+                    alert(t('inventoryScreen.equipment.warnings.enchantingTownOnly'));
                     return;
                   }
                   if (item && onOpenEnchantPanel) onOpenEnchantPanel(item);
@@ -251,7 +279,7 @@ export function InventoryScreen({
                     </button>
                   </div>
                 ) : (
-                  <div className="empty-slot">Empty</div>
+                  <div className="empty-slot">{t('inventoryScreen.equipment.empty')}</div>
                 )}
               </div>
             ))}
@@ -259,9 +287,9 @@ export function InventoryScreen({
 
           {/* Set Bonuses */}
           <div className="set-bonuses">
-            <h4>Set Bonuses</h4>
+            <h4>{t('inventoryScreen.equipment.setBonuses')}</h4>
             {selectedHero.equipment?.getActiveSetBonuses().length === 0 ? (
-              <p style={{ color: '#999', fontSize: '0.9em' }}>No active set bonuses</p>
+              <p style={{ color: '#999', fontSize: '0.9em' }}>{t('inventoryScreen.equipment.noSetBonuses')}</p>
             ) : (
               selectedHero.equipment?.getActiveSetBonuses().map((setInfo, index) => (
                 <div key={index} className="set-bonus-item">
@@ -283,20 +311,20 @@ export function InventoryScreen({
           {/* Equipment Actions */}
           <div style={{ marginTop: '15px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button className="btn btn-success" onClick={() => onAutoEquipBest(selectedHero)}>
-              Auto-Equip Best
+              {t('inventoryScreen.equipment.buttons.autoEquipBest')}
             </button>
           </div>
         </div>
 
         {/* Inventory Panel */}
         <div className="inventory-panel">
-          <h3>🎒 Inventory</h3>
+          <h3>🎒 {t('inventoryScreen.inventoryPanel.title')}</h3>
 
           {/* Inventory Info */}
           <div className="inventory-info">
             <div className="info-row">
-              <span><strong>Slots:</strong> {inventory.items.length}/{inventory.maxSlots}</span>
-              <span><strong>Gold:</strong> 💰 {inventory.gold}</span>
+              <span><strong>{t('inventoryScreen.inventoryPanel.slots')}</strong> {inventory.items.length}/{inventory.maxSlots}</span>
+              <span><strong>{t('inventoryScreen.inventoryPanel.gold')}</strong> 💰 {inventory.gold}</span>
             </div>
           </div>
 
@@ -304,8 +332,8 @@ export function InventoryScreen({
           <div className="inventory-grid">
             {inventory.getFilteredItems().length === 0 ? (
               <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#999' }}>
-                <p>Inventory is empty</p>
-                <p style={{ fontSize: '0.9em' }}>No items available</p>
+                <p>{t('inventoryScreen.inventoryPanel.emptyTitle')}</p>
+                <p style={{ fontSize: '0.9em' }}>{t('inventoryScreen.inventoryPanel.emptyMessage')}</p>
               </div>
             ) : (
               inventory.getFilteredItems().map((item) => (
@@ -316,7 +344,7 @@ export function InventoryScreen({
                   onContextMenu={(e) => {
                     e.preventDefault();
                     if (!isInTown) {
-                      alert('⚠️ Enchanting is only available in town (visit the Smithy)!');
+                      alert(t('inventoryScreen.equipment.warnings.enchantingTownOnly'));
                       return;
                     }
                     if (onOpenEnchantPanel) onOpenEnchantPanel(item);
@@ -337,10 +365,10 @@ export function InventoryScreen({
           {isInTown && (
             <div className="inventory-actions">
               <button className="btn btn-primary" onClick={onExpandInventory}>
-                Expand (+10 slots, 500g)
+                {t('inventoryScreen.inventoryPanel.buttons.expand')}
               </button>
               <button className="btn btn-warning" onClick={onAutoSellCommon}>
-                Auto-Sell Common
+                {t('inventoryScreen.inventoryPanel.buttons.autoSellCommon')}
               </button>
             </div>
           )}
@@ -379,31 +407,31 @@ export function InventoryScreen({
                 <>
                   {stats.HP > 0 && (
                     <div className="tooltip-stat">
-                      <span>HP:</span>
+                      <span>{t('inventoryScreen.equipment.tooltip.hp')}</span>
                       <span className="stat-positive">+{stats.HP}</span>
                     </div>
                   )}
                   {stats.ATK > 0 && (
                     <div className="tooltip-stat">
-                      <span>ATK:</span>
+                      <span>{t('inventoryScreen.equipment.tooltip.atk')}</span>
                       <span className="stat-positive">+{stats.ATK}</span>
                     </div>
                   )}
                   {stats.DEF > 0 && (
                     <div className="tooltip-stat">
-                      <span>DEF:</span>
+                      <span>{t('inventoryScreen.equipment.tooltip.def')}</span>
                       <span className="stat-positive">+{stats.DEF}</span>
                     </div>
                   )}
                   {stats.SPD > 0 && (
                     <div className="tooltip-stat">
-                      <span>SPD:</span>
+                      <span>{t('inventoryScreen.equipment.tooltip.spd')}</span>
                       <span className="stat-positive">+{stats.SPD}</span>
                     </div>
                   )}
                   {stats.CRIT > 0 && (
                     <div className="tooltip-stat">
-                      <span>CRIT:</span>
+                      <span>{t('inventoryScreen.equipment.tooltip.crit')}</span>
                       <span className="stat-positive">+{stats.CRIT}%</span>
                     </div>
                   )}
@@ -413,9 +441,9 @@ export function InventoryScreen({
           </div>
 
           <div className="tooltip-actions">
-            <div>💰 Value: {tooltip.item.goldValue} gold</div>
+            <div>{t('inventoryScreen.equipment.tooltip.value', { value: tooltip.item.goldValue.toString() })}</div>
             <div style={{ marginTop: '5px', fontSize: '0.85em', fontStyle: 'italic' }}>
-              Left-click to equip | Right-click to enchant
+              {t('inventoryScreen.equipment.tooltip.clickInstructions')}
             </div>
           </div>
         </div>

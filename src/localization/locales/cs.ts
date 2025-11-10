@@ -351,6 +351,12 @@ export const cs: LocaleKeys = {
     notEnoughEnergyButton: 'Nedostatek Energie',
     town: 'Město',
     dungeon: 'Podzemí',
+
+    // Tooltip info
+    terrain: 'Terén',
+    distance: 'Vzdálenost',
+    cost: 'Cena',
+    tiles: 'dlaždic',
   },
 
   // ============================================================================
@@ -413,6 +419,28 @@ export const cs: LocaleKeys = {
     continue: 'Pokračovat',
     yes: 'Ano',
     no: 'Ne',
+  },
+
+  // ============================================================================
+  // SIDEBAR NAVIGATION
+  // ============================================================================
+  sidebar: {
+    worldMap: 'Mapa světa',
+    heroes: 'Hrdinové',
+    inventory: 'Inventář',
+    teleport: 'Teleport',
+    leaderboards: 'Žebříčky',
+    quests: 'Úkoly',
+    guild: 'Cech',
+    lastUpdates: 'Poslední změny',
+    combatPower: 'Bojová Síla',
+  },
+
+  // ============================================================================
+  // RESOURCES
+  // ============================================================================
+  resources: {
+    gems: 'Drahokamy',
   },
 
   // ============================================================================
@@ -620,6 +648,166 @@ export const cs: LocaleKeys = {
   },
 
   // ============================================================================
+  // HERO COLLECTION SCREEN
+  // ============================================================================
+  heroCollection: {
+    title: 'Sbírka Hrdinů',
+    stats: {
+      totalHeroes: 'Celkem Hrdinů:',
+      activeParty: 'Aktivní Skupina:',
+      partySlots: '/4',
+      hp: 'Životy:',
+      atk: 'Útok:',
+      def: 'Obrana:',
+      score: 'Skóre:',
+    },
+    filters: {
+      rarity: 'Vzácnost:',
+      class: 'Třída:',
+      sortBy: 'Seřadit podle:',
+      all: 'Vše',
+    },
+    rarities: {
+      legendary: 'Legendární',
+      epic: 'Epické',
+      rare: 'Vzácné',
+      common: 'Běžné',
+    },
+    classes: {
+      warrior: 'Válečník',
+      archer: 'Lučištník',
+      mage: 'Mág',
+      cleric: 'Klerik',
+      paladin: 'Paladin',
+    },
+    sortOptions: {
+      level: 'Úroveň',
+      rarity: 'Vzácnost',
+      name: 'Jméno',
+      class: 'Třída',
+    },
+    badges: {
+      activeParty: 'Aktivní Skupina',
+    },
+    labels: {
+      level: 'Úroveň',
+    },
+    empty: {
+      title: 'Nenalezeni Žádní Hrdinové',
+      message: 'Zkuste upravit filtry nebo vyvolat další hrdiny!',
+    },
+    details: {
+      class: 'Třída:',
+      role: 'Role:',
+      level: 'Úroveň:',
+      xp: 'Zkušenosti:',
+      statisticsTitle: 'Statistiky',
+      description: 'Popis',
+      specialAbility: 'Speciální Schopnost',
+    },
+    detailStats: {
+      hp: 'Životy',
+      attack: 'Útok',
+      defense: 'Obrana',
+      speed: 'Rychlost',
+      heroScore: 'Skóre Hrdiny',
+    },
+    talent: {
+      title: 'Body Talentu',
+      pointsAvailable: 'Dostupné Body',
+      description: 'Tento hrdina byl vyvolán vícekrát! Body talentu mohou být použity ve Stromě Talentů (Již Brzy).',
+    },
+  },
+
+  // ============================================================================
+  // INVENTORY SCREEN
+  // ============================================================================
+  inventoryScreen: {
+    loading: 'Načítání hrdinů...',
+    selectHero: 'Vybrat Hrdinu',
+    levelFormat: '(Úr.',
+    labels: {
+      level: 'Úroveň',
+      xp: 'Zkušenosti',
+    },
+    equipment: {
+      title: 'Vybavení',
+      empty: 'Prázdné',
+      setBonuses: 'Set Bonusy',
+      noSetBonuses: 'Žádné aktivní set bonusy',
+      stats: {
+        hp: 'Životy:',
+        atk: 'Útok:',
+        def: 'Obrana:',
+        spd: 'Rychlost:',
+        crit: 'Kritický Zásah:',
+        power: 'Síla:',
+      },
+      buttons: {
+        autoEquipBest: 'Auto-Nasadit Nejlepší',
+      },
+      warnings: {
+        enchantingTownOnly: '⚠️ Očarování je dostupné pouze v městě (navštivte Kovárnu)!',
+      },
+      tooltip: {
+        hp: 'Životy:',
+        atk: 'Útok:',
+        def: 'Obrana:',
+        spd: 'Rychlost:',
+        crit: 'Kritický Zásah:',
+        value: '💰 Hodnota: {{value}} zlato',
+        clickInstructions: 'Levý klik pro nasazení | Pravý klik pro očarování',
+      },
+    },
+    inventoryPanel: {
+      title: 'Inventář',
+      slots: 'Sloty:',
+      gold: 'Zlato:',
+      emptyTitle: 'Inventář je prázdný',
+      emptyMessage: 'Žádné dostupné předměty',
+      buttons: {
+        expand: 'Rozšířit (+10 slotů, 500z)',
+        autoSellCommon: 'Auto-Prodat Běžné',
+      },
+    },
+  },
+
+  // ============================================================================
+  // LEADERBOARD SCREEN
+  // ============================================================================
+  leaderboard: {
+    title: 'Denní Žebříčky',
+    resetIcon: '⏰',
+    resetLabel: 'Resetuje se za:',
+    categories: {
+      deepestFloor: 'Nejhlubší Patro',
+      totalGold: 'Celkem Zlata',
+      heroesCollected: 'Sebraní Hrdinové',
+      combatPower: 'Bojová Síla',
+    },
+    categoryDescriptions: {
+      deepestFloor: 'Nejhlubší patro dungeonů dosažené dnes',
+      totalGold: 'Celkem zlata získaného dnes',
+      heroesCollected: 'Počet jedinečných vlastněných hrdinů',
+      combatPower: 'Kombinovaná bojová síla skupiny',
+    },
+    noRank: {
+      message: 'V této kategorii jste si dnes ještě nezískali pořadí.',
+      hint: 'Začněte hrát, abyste se objevili na žebříčku!',
+    },
+    loading: 'Načítání žebříčku...',
+    empty: {
+      message: 'Zatím žádné záznamy dnes',
+      hint: 'Buďte první, kdo se objeví na žebříčku!',
+    },
+    youBadge: 'VY',
+    labels: {
+      level: 'Úroveň',
+    },
+    anonymous: 'Anonymní',
+  },
+
+  // ============================================================================
   // ERRORS & WARNINGS
   // ============================================================================
   errors: {
@@ -662,6 +850,52 @@ export const cs: LocaleKeys = {
     deleteAccountConfirm: 'VAROVÁNÍ: Tímto TRVALE SMAŽETE váš účet!\n\nVŠECHNA data budou ztracena navždy.\n\nTato akce je NEVRATNÁ!\n\nOpravdu chcete pokračovat?',
     deleteAccountSuccess: 'Účet úspěšně smazán',
     deleteAccountFailed: 'Smazání účtu selhalo',
+    languageSettings: 'Nastavení Jazyka',
+    languageLabel: 'Jazyk',
+
+    // Dangerous Actions section
+    dangerousActions: 'Nebezpečné akce',
+    resetProgressTitle: 'Resetovat progres (DEBUG)',
+    resetProgressDesc: 'Smaže všechny hrdiny, předměty a progres. Účet zůstane aktivní.',
+    resetProgressButton: 'Resetovat progres',
+    resetProgressConfirm1: 'Opravdu chcete smazat veškerý progres?',
+    resetProgressConfirm2Warning: 'Tato akce je NEVRATNÁ! Ztratíte:',
+    resetProgressConfirm2Heroes: 'hrdinů',
+    resetProgressConfirm2Items: 'předmětů',
+    resetProgressConfirm2AllProgress: 'Veškerý progres a zlato',
+    resetProgressConfirm2Question: 'Pokračovat?',
+    resetProgressConfirm3: 'POSLEDNÍ VAROVÁNÍ!\nToto NELZE vrátit zpět. Opravdu smazat vše?',
+    deleteAccountTitle: 'Smazat účet',
+    deleteAccountDesc: 'Trvale smaže váš účet a VŠECHNA data. Tuto akci NELZE vrátit zpět!',
+    deleteAccountButton: 'Smazat účet',
+    deleteAccountConfirm1: 'Opravdu chcete TRVALE smazat svůj účet?',
+    deleteAccountConfirm2Warning: 'POSLEDNÍ VAROVÁNÍ!',
+    deleteAccountConfirm2Text: 'Váš účet ({email}) bude TRVALE SMAZÁN.\nZtratíte přístup NAVŽDY. Pokračovat?',
+    deleteAccountConfirm3: 'OPRAVDU POSLEDNÍ ŠANCE!\nToto NELZE vrátit zpět. Smazat účet NAVŽDY?',
+    resetError: 'Nastala chyba při resetování progressu',
+    deleteError: 'Nastala chyba při mazání účtu',
+    processing: 'Probíhá...',
+    yesReset: 'Ano, resetovat',
+    yesSure: 'Ano, jsem si jistý',
+    yesDeleteAll: 'ANO, SMAZAT VŠE',
+    yesDeleteAccount: 'Ano, smazat účet',
+    yesDeletePermanently: 'ANO, SMAZAT TRVALE',
+    noCancel: 'Ne, zrušit',
+    noKeepAccount: 'Ne, zachovat účet',
+  },
+
+  // ============================================================================
+  // SYNC STATUS
+  // ============================================================================
+  sync: {
+    saving: 'Ukládání...',
+    saved: 'Uloženo',
+    savedAt: 'Uloženo {{time}}',
+    error: 'Chyba ukládání',
+    connected: 'Připojeno',
+    timeJustNow: 'právě teď',
+    timeMinutesAgo: 'před {{minutes}}m',
+    timeHoursAgo: 'před {{hours}}h',
   },
 
   // ============================================================================

@@ -1,16 +1,27 @@
 /**
- * Hero Collection Component - Display and manage collected heroes
+ * Hero Collection Component
+ *
+ * Displays and manages the player's collected heroes with filtering,
+ * sorting, and detailed hero information. Shows hero stats, rarity,
+ * class, talent points, and active party status.
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
+ * @lastModified 2025-11-10
  */
 
 import React, { useState } from 'react';
 import type { Hero } from '../../engine/hero/Hero';
 import { RARITY_COLORS } from '../../types/hero.types';
+import { t } from '../../localization/i18n';
 
+/**
+ * Props for HeroCollection component
+ */
 interface HeroCollectionProps {
+  /** Array of collected heroes to display */
   heroes: Hero[];
+  /** Indices of heroes currently in active party */
   activePartyIndices: number[];
 }
 
@@ -18,6 +29,23 @@ type FilterRarity = 'all' | 'common' | 'rare' | 'epic' | 'legendary';
 type FilterClass = 'all' | 'warrior' | 'archer' | 'mage' | 'cleric' | 'paladin';
 type SortMode = 'level' | 'rarity' | 'name' | 'class';
 
+/**
+ * Hero Collection Component
+ *
+ * Displays all collected heroes with filtering by rarity/class,
+ * sorting options, and detailed hero information panel.
+ *
+ * @param props - Component props
+ * @returns React component
+ *
+ * @example
+ * ```tsx
+ * <HeroCollection
+ *   heroes={collectedHeroes}
+ *   activePartyIndices={[0, 1, 2, 3]}
+ * />
+ * ```
+ */
 export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionProps) {
   const [selectedHero, setSelectedHero] = useState<Hero | null>(null);
   const [filterRarity, setFilterRarity] = useState<FilterRarity>('all');
@@ -49,7 +77,13 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
     }
   });
 
-  const getClassIcon = (heroClass: string) => {
+  /**
+   * Get emoji icon for hero class
+   *
+   * @param heroClass - Hero class name
+   * @returns Emoji representing the class
+   */
+  const getClassIcon = (heroClass: string): string => {
     switch (heroClass) {
       case 'warrior': return '⚔️';
       case 'archer': return '🏹';
@@ -60,7 +94,13 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
     }
   };
 
-  const getRoleIcon = (role: string) => {
+  /**
+   * Get emoji icon for hero role
+   *
+   * @param role - Hero role name
+   * @returns Emoji representing the role
+   */
+  const getRoleIcon = (role: string): string => {
     switch (role) {
       case 'tank': return '🛡️';
       case 'dps': return '⚔️';
@@ -70,7 +110,13 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
     }
   };
 
-  const isInActiveParty = (heroIndex: number) => {
+  /**
+   * Check if hero is in active party
+   *
+   * @param heroIndex - Index of hero in heroes array
+   * @returns True if hero is in active party
+   */
+  const isInActiveParty = (heroIndex: number): boolean => {
     return activePartyIndices.includes(heroIndex);
   };
 
@@ -78,10 +124,10 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <h2 style={styles.title}>📖 Hero Collection</h2>
+        <h2 style={styles.title}>📖 {t('heroCollection.title')}</h2>
         <div style={styles.collectionStats}>
-          <span style={styles.statText}>Total Heroes: {heroes.length}</span>
-          <span style={styles.statText}>Active Party: {activePartyIndices.length}/4</span>
+          <span style={styles.statText}>{t('heroCollection.stats.totalHeroes')} {heroes.length}</span>
+          <span style={styles.statText}>{t('heroCollection.stats.activeParty')} {activePartyIndices.length}{t('heroCollection.stats.partySlots')}</span>
         </div>
       </div>
 
@@ -89,49 +135,49 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
       <div style={styles.controlsSection}>
         {/* Rarity Filter */}
         <div style={styles.filterGroup}>
-          <label style={styles.filterLabel}>Rarity:</label>
+          <label style={styles.filterLabel}>{t('heroCollection.filters.rarity')}</label>
           <select
             style={styles.select}
             value={filterRarity}
             onChange={(e) => setFilterRarity(e.target.value as FilterRarity)}
           >
-            <option value="all">All</option>
-            <option value="legendary">Legendary</option>
-            <option value="epic">Epic</option>
-            <option value="rare">Rare</option>
-            <option value="common">Common</option>
+            <option value="all">{t('heroCollection.filters.all')}</option>
+            <option value="legendary">{t('heroCollection.rarities.legendary')}</option>
+            <option value="epic">{t('heroCollection.rarities.epic')}</option>
+            <option value="rare">{t('heroCollection.rarities.rare')}</option>
+            <option value="common">{t('heroCollection.rarities.common')}</option>
           </select>
         </div>
 
         {/* Class Filter */}
         <div style={styles.filterGroup}>
-          <label style={styles.filterLabel}>Class:</label>
+          <label style={styles.filterLabel}>{t('heroCollection.filters.class')}</label>
           <select
             style={styles.select}
             value={filterClass}
             onChange={(e) => setFilterClass(e.target.value as FilterClass)}
           >
-            <option value="all">All</option>
-            <option value="warrior">Warrior</option>
-            <option value="archer">Archer</option>
-            <option value="mage">Mage</option>
-            <option value="cleric">Cleric</option>
-            <option value="paladin">Paladin</option>
+            <option value="all">{t('heroCollection.filters.all')}</option>
+            <option value="warrior">{t('heroCollection.classes.warrior')}</option>
+            <option value="archer">{t('heroCollection.classes.archer')}</option>
+            <option value="mage">{t('heroCollection.classes.mage')}</option>
+            <option value="cleric">{t('heroCollection.classes.cleric')}</option>
+            <option value="paladin">{t('heroCollection.classes.paladin')}</option>
           </select>
         </div>
 
         {/* Sort Mode */}
         <div style={styles.filterGroup}>
-          <label style={styles.filterLabel}>Sort by:</label>
+          <label style={styles.filterLabel}>{t('heroCollection.filters.sortBy')}</label>
           <select
             style={styles.select}
             value={sortMode}
             onChange={(e) => setSortMode(e.target.value as SortMode)}
           >
-            <option value="rarity">Rarity</option>
-            <option value="level">Level</option>
-            <option value="name">Name</option>
-            <option value="class">Class</option>
+            <option value="rarity">{t('heroCollection.sortOptions.rarity')}</option>
+            <option value="level">{t('heroCollection.sortOptions.level')}</option>
+            <option value="name">{t('heroCollection.sortOptions.name')}</option>
+            <option value="class">{t('heroCollection.sortOptions.class')}</option>
           </select>
         </div>
       </div>
@@ -141,9 +187,9 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
         {filteredHeroes.length === 0 ? (
           <div style={styles.emptyState}>
             <div style={styles.emptyIcon}>🎯</div>
-            <h3 style={styles.emptyTitle}>No Heroes Found</h3>
+            <h3 style={styles.emptyTitle}>{t('heroCollection.empty.title')}</h3>
             <p style={styles.emptyText}>
-              Try adjusting your filters or summon more heroes!
+              {t('heroCollection.empty.message')}
             </p>
           </div>
         ) : (
@@ -163,7 +209,7 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
                   onClick={() => setSelectedHero(hero)}
                 >
                   {inActiveParty && (
-                    <div style={styles.activeBadge}>Active Party</div>
+                    <div style={styles.activeBadge}>{t('heroCollection.badges.activeParty')}</div>
                   )}
 
                   <div
@@ -195,21 +241,27 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
                         </>
                       )}
                     </div>
-                    <div style={styles.heroLevel}>Level {hero.level}</div>
+                    <div style={styles.heroLevel}>{t('heroCollection.labels.level')} {hero.level}</div>
 
                     {/* Stats Preview */}
                     <div style={styles.statsPreview}>
                       <div style={styles.statRow}>
-                        <span style={styles.statLabel}>HP:</span>
+                        <span style={styles.statLabel}>{t('heroCollection.stats.hp')}</span>
                         <span style={styles.statValue}>{hero.currentHP}/{hero.maxHP}</span>
                       </div>
                       <div style={styles.statRow}>
-                        <span style={styles.statLabel}>ATK:</span>
+                        <span style={styles.statLabel}>{t('heroCollection.stats.atk')}</span>
                         <span style={styles.statValue}>{hero.ATK}</span>
                       </div>
                       <div style={styles.statRow}>
-                        <span style={styles.statLabel}>DEF:</span>
+                        <span style={styles.statLabel}>{t('heroCollection.stats.def')}</span>
                         <span style={styles.statValue}>{hero.DEF}</span>
+                      </div>
+                      <div style={styles.statRow}>
+                        <span style={styles.statLabel}>🏆 {t('heroCollection.stats.score')}</span>
+                        <span style={{ ...styles.statValue, color: '#ffd700', fontWeight: 'bold' }}>
+                          {hero.getScore().toLocaleString()}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -248,21 +300,21 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
 
             <div style={styles.detailInfo}>
               <div style={styles.detailRow}>
-                <span style={styles.detailLabel}>Class:</span>
+                <span style={styles.detailLabel}>{t('heroCollection.details.class')}</span>
                 <span style={styles.detailValue}>{selectedHero.class}</span>
               </div>
               {selectedHero.role && (
                 <div style={styles.detailRow}>
-                  <span style={styles.detailLabel}>Role:</span>
+                  <span style={styles.detailLabel}>{t('heroCollection.details.role')}</span>
                   <span style={styles.detailValue}>{selectedHero.role}</span>
                 </div>
               )}
               <div style={styles.detailRow}>
-                <span style={styles.detailLabel}>Level:</span>
+                <span style={styles.detailLabel}>{t('heroCollection.details.level')}</span>
                 <span style={styles.detailValue}>{selectedHero.level}</span>
               </div>
               <div style={styles.detailRow}>
-                <span style={styles.detailLabel}>XP:</span>
+                <span style={styles.detailLabel}>{t('heroCollection.details.xp')}</span>
                 <span style={styles.detailValue}>
                   {selectedHero.xp}/{selectedHero.xpToNextLevel}
                 </span>
@@ -270,23 +322,29 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
             </div>
 
             <div style={styles.detailStats}>
-              <h4 style={styles.statsTitle}>Statistics</h4>
+              <h4 style={styles.statsTitle}>{t('heroCollection.details.statisticsTitle')}</h4>
               <div style={styles.statGrid}>
                 <div style={styles.detailStatItem}>
-                  <div style={styles.detailStatLabel}>HP</div>
+                  <div style={styles.detailStatLabel}>{t('heroCollection.detailStats.hp')}</div>
                   <div style={styles.detailStatValue}>{selectedHero.currentHP}/{selectedHero.maxHP}</div>
                 </div>
                 <div style={styles.detailStatItem}>
-                  <div style={styles.detailStatLabel}>Attack</div>
+                  <div style={styles.detailStatLabel}>{t('heroCollection.detailStats.attack')}</div>
                   <div style={styles.detailStatValue}>{selectedHero.ATK}</div>
                 </div>
                 <div style={styles.detailStatItem}>
-                  <div style={styles.detailStatLabel}>Defense</div>
+                  <div style={styles.detailStatLabel}>{t('heroCollection.detailStats.defense')}</div>
                   <div style={styles.detailStatValue}>{selectedHero.DEF}</div>
                 </div>
                 <div style={styles.detailStatItem}>
-                  <div style={styles.detailStatLabel}>Speed</div>
+                  <div style={styles.detailStatLabel}>{t('heroCollection.detailStats.speed')}</div>
                   <div style={styles.detailStatValue}>{selectedHero.SPD}</div>
+                </div>
+                <div style={styles.detailStatItem}>
+                  <div style={styles.detailStatLabel}>🏆 {t('heroCollection.detailStats.heroScore')}</div>
+                  <div style={{ ...styles.detailStatValue, color: '#ffd700', fontWeight: 'bold' }}>
+                    {selectedHero.getScore().toLocaleString()}
+                  </div>
                 </div>
               </div>
             </div>
@@ -294,11 +352,11 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
             {/* Talent Points Section - Shows for duplicate heroes */}
             {selectedHero.talentPoints > 0 && (
               <div style={styles.talentSection}>
-                <h4 style={styles.talentSectionTitle}>⭐ Talent Points</h4>
+                <h4 style={styles.talentSectionTitle}>⭐ {t('heroCollection.talent.title')}</h4>
                 <div style={styles.talentInfo}>
-                  <span style={styles.talentCount}>{selectedHero.talentPoints} Points Available</span>
+                  <span style={styles.talentCount}>{selectedHero.talentPoints} {t('heroCollection.talent.pointsAvailable')}</span>
                   <p style={styles.talentDescription}>
-                    This hero was summoned multiple times! Talent points can be used in the Talent Tree (Coming Soon).
+                    {t('heroCollection.talent.description')}
                   </p>
                 </div>
               </div>
@@ -306,14 +364,14 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
 
             {selectedHero.description && (
               <div style={styles.detailDescription}>
-                <h4 style={styles.descriptionTitle}>Description</h4>
+                <h4 style={styles.descriptionTitle}>{t('heroCollection.details.description')}</h4>
                 <p style={styles.descriptionText}>{selectedHero.description}</p>
               </div>
             )}
 
             {selectedHero.specialAbility && (
               <div style={styles.specialAbilityBox}>
-                <h4 style={styles.abilityTitle}>Special Ability</h4>
+                <h4 style={styles.abilityTitle}>{t('heroCollection.details.specialAbility')}</h4>
                 <p style={styles.abilityText}>{selectedHero.specialAbility}</p>
               </div>
             )}

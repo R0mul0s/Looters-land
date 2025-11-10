@@ -11,6 +11,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { t } from '../../localization/i18n';
 
 type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport' | 'updates';
 
@@ -18,6 +19,7 @@ interface MainSidebarProps {
   activeScreen: GameScreen;
   onScreenChange: (screen: GameScreen) => void;
   playerLevel?: number;
+  combatPower?: number;
 }
 
 /**
@@ -29,7 +31,8 @@ interface MainSidebarProps {
 export function MainSidebar({
   activeScreen,
   onScreenChange,
-  playerLevel = 1
+  playerLevel = 1,
+  combatPower = 0
 }: MainSidebarProps) {
   const [isCompact, setIsCompact] = useState(false);
   const [hoveredItem, setHoveredItem] = useState<GameScreen | null>(null);
@@ -79,14 +82,14 @@ export function MainSidebar({
   }, [onScreenChange]);
 
   const menuItems = [
-    { id: 'worldmap' as GameScreen, icon: '🗺️', label: 'World Map', hotkey: 'W' },
-    { id: 'heroes' as GameScreen, icon: '🦸', label: 'Heroes', hotkey: 'H' },
-    { id: 'inventory' as GameScreen, icon: '🎒', label: 'Inventory', hotkey: 'I' },
-    { id: 'teleport' as GameScreen, icon: '🌍', label: 'Teleport', hotkey: 'T' },
-    { id: 'leaderboards' as GameScreen, icon: '🏆', label: 'Leaderboards', hotkey: 'L' },
-    { id: 'quests' as GameScreen, icon: '📜', label: 'Quests', hotkey: 'Q' },
-    { id: 'guild' as GameScreen, icon: '👥', label: 'Guild', hotkey: 'G' },
-    { id: 'updates' as GameScreen, icon: '📋', label: 'Last Updates', hotkey: 'U' }
+    { id: 'worldmap' as GameScreen, icon: '🗺️', labelKey: 'sidebar.worldMap', hotkey: 'W' },
+    { id: 'heroes' as GameScreen, icon: '🦸', labelKey: 'sidebar.heroes', hotkey: 'H' },
+    { id: 'inventory' as GameScreen, icon: '🎒', labelKey: 'sidebar.inventory', hotkey: 'I' },
+    { id: 'teleport' as GameScreen, icon: '🌍', labelKey: 'sidebar.teleport', hotkey: 'T' },
+    { id: 'leaderboards' as GameScreen, icon: '🏆', labelKey: 'sidebar.leaderboards', hotkey: 'L' },
+    { id: 'quests' as GameScreen, icon: '📜', labelKey: 'sidebar.quests', hotkey: 'Q' },
+    { id: 'guild' as GameScreen, icon: '👥', labelKey: 'sidebar.guild', hotkey: 'G' },
+    { id: 'updates' as GameScreen, icon: '📋', labelKey: 'sidebar.lastUpdates', hotkey: 'U' }
   ];
 
   return (
@@ -108,18 +111,18 @@ export function MainSidebar({
         </div>
       )}
 
-      {/* Player Level Badge */}
+      {/* Combat Power Badge */}
       {!isCompact && (
-        <div style={styles.levelBadge}>
-          <span style={styles.levelIcon}>⭐</span>
-          <span style={styles.levelText}>Level {playerLevel}</span>
+        <div style={styles.combatPowerBadge}>
+          <span style={styles.combatPowerIcon}>🏆</span>
+          <span style={styles.combatPowerText}>{combatPower.toLocaleString()}</span>
         </div>
       )}
 
       {isCompact && (
-        <div style={styles.levelBadgeCompact} title={`Level ${playerLevel}`}>
-          <span style={styles.levelIconCompact}>⭐</span>
-          <span style={styles.levelTextCompact}>{playerLevel}</span>
+        <div style={styles.combatPowerBadgeCompact} title={`${t('sidebar.combatPower')}: ${combatPower.toLocaleString()}`}>
+          <span style={styles.combatPowerIconCompact}>🏆</span>
+          <span style={styles.combatPowerTextCompact}>{(combatPower / 1000).toFixed(1)}k</span>
         </div>
       )}
 
@@ -143,12 +146,12 @@ export function MainSidebar({
                   ...(isCompact ? styles.menuItemCompact : {}),
                   ...(isActive ? (isCompact ? styles.menuItemActiveCompact : styles.menuItemActive) : {})
                 }}
-                title={isCompact ? undefined : `${item.label} (${item.hotkey})`}
+                title={isCompact ? undefined : `${t(item.labelKey)} (${item.hotkey})`}
               >
                 <span style={isCompact ? styles.menuIconCompact : styles.menuIcon}>{item.icon}</span>
                 {!isCompact && (
                   <>
-                    <span style={styles.menuLabel}>{item.label}</span>
+                    <span style={styles.menuLabel}>{t(item.labelKey)}</span>
                     <span style={styles.hotkey}>{item.hotkey}</span>
                   </>
                 )}
@@ -157,7 +160,7 @@ export function MainSidebar({
               {/* Tooltip for compact mode */}
               {isCompact && isHovered && (
                 <div style={styles.tooltip}>
-                  <span style={styles.tooltipText}>{item.label}</span>
+                  <span style={styles.tooltipText}>{t(item.labelKey)}</span>
                   <span style={styles.tooltipHotkey}>{item.hotkey}</span>
                 </div>
               )}
@@ -346,6 +349,50 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 'bold',
     color: '#fbbf24',
     textShadow: '0 0 8px rgba(251, 191, 36, 0.4)'
+  },
+  combatPowerBadge: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    margin: '15px 20px',
+    padding: '10px 12px',
+    background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(218, 165, 32, 0.05) 100%)',
+    borderRadius: '10px',
+    border: '1px solid rgba(255, 215, 0, 0.3)',
+    boxShadow: '0 4px 12px rgba(255, 215, 0, 0.1)'
+  },
+  combatPowerIcon: {
+    fontSize: '18px',
+    filter: 'drop-shadow(0 0 6px rgba(255, 215, 0, 0.6))'
+  },
+  combatPowerText: {
+    fontSize: '13px',
+    fontWeight: 'bold',
+    color: '#ffd700',
+    textShadow: '0 0 8px rgba(255, 215, 0, 0.4)'
+  },
+  combatPowerBadgeCompact: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '2px',
+    margin: '0 5px 10px 5px',
+    padding: '8px 5px',
+    background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(218, 165, 32, 0.05) 100%)',
+    borderRadius: '10px',
+    border: '1px solid rgba(255, 215, 0, 0.3)',
+    cursor: 'default',
+    boxShadow: '0 2px 8px rgba(255, 215, 0, 0.1)'
+  },
+  combatPowerIconCompact: {
+    fontSize: '18px',
+    filter: 'drop-shadow(0 0 6px rgba(255, 215, 0, 0.6))'
+  },
+  combatPowerTextCompact: {
+    fontSize: '10px',
+    fontWeight: 'bold',
+    color: '#ffd700',
+    textShadow: '0 0 8px rgba(255, 215, 0, 0.4)'
   },
   menuItemCompact: {
     justifyContent: 'center',

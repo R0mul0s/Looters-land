@@ -124,6 +124,18 @@ export function ItemTooltip({
             </div>
           )}
         </div>
+
+        {/* Item Score */}
+        <div style={{
+          marginTop: '12px',
+          paddingTop: '8px',
+          borderTop: '1px solid rgba(45, 212, 191, 0.15)',
+          textAlign: 'center'
+        }}>
+          <div style={{ color: '#ffd700', fontWeight: 'bold', fontSize: '0.95em' }}>
+            🏆 Item Score: {item.getScore().toLocaleString()}
+          </div>
+        </div>
       </div>
 
       {/* Actions */}

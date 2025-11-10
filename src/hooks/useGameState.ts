@@ -3,7 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-08
+ * @lastModified 2025-11-10
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -18,6 +18,7 @@ import * as AuthService from '../services/AuthService';
 import type { WorldMap } from '../types/worldmap.types';
 import type { GachaState } from '../types/hero.types';
 import { supabase } from '../lib/supabase';
+import type { SyncStatus } from '../components/SyncStatusIndicator';
 
 interface GameState {
   // Player profile
@@ -27,6 +28,7 @@ interface GameState {
   // Player data
   playerName: string;
   playerLevel: number;
+  combatPower: number; // Total party score
   gold: number;
   gems: number;
   energy: number;
@@ -48,6 +50,10 @@ interface GameState {
   loading: boolean;
   saving: boolean;
   error: string | null;
+
+  // Sync status
+  syncStatus: SyncStatus;
+  lastSaveTime: Date | null;
 }
 
 interface GameStateActions {
@@ -117,6 +123,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     profileLoading: true,
     playerName: 'Adventurer',
     playerLevel: 1,
+    combatPower: 0,
     gold: 0,
     gems: 100,
     energy: 100,
@@ -135,7 +142,9 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     },
     loading: true,
     saving: false,
-    error: null
+    error: null,
+    syncStatus: 'idle',
+    lastSaveTime: null
   });
 
   const [updateTrigger, setUpdateTrigger] = useState(0);
@@ -191,7 +200,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
   const saveGameInternal = async () => {
     if (!userIdRef.current) return;
 
-    setState(prev => ({ ...prev, saving: true }));
+    setState(prev => ({ ...prev, saving: true, syncStatus: 'saving' }));
 
     try {
       // Use stateRef to get the most current state
@@ -226,10 +235,10 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       );
 
       console.log('✅ Auto-save completed');
+      setState(prev => ({ ...prev, saving: false, syncStatus: 'success', lastSaveTime: new Date() }));
     } catch (error) {
       console.error('❌ Auto-save failed:', error);
-    } finally {
-      setState(prev => ({ ...prev, saving: false }));
+      setState(prev => ({ ...prev, saving: false, syncStatus: 'error' }));
     }
   };
 
@@ -711,6 +720,29 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       setUpdateTrigger(prev => prev + 1);
     }
   };
+
+  /**
+   * Calculate combat power whenever active party changes
+   *
+   * Combat power = sum of all active party hero scores
+   */
+  useEffect(() => {
+    let totalScore = 0;
+
+    for (const hero of state.activeParty) {
+      if (hero && hero.isAlive) {
+        totalScore += hero.getScore();
+      }
+    }
+
+    // Only update if changed to avoid infinite loops
+    if (totalScore !== state.combatPower) {
+      setState(prev => ({
+        ...prev,
+        combatPower: Math.floor(totalScore)
+      }));
+    }
+  }, [state.activeParty, state.activeParty.length]);
 
   return [state, actions];
 }

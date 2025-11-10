@@ -470,7 +470,7 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
             </div>
             <div style={styles.infoItem}>
               <span style={styles.infoIcon}>🏆</span>
-              <span style={styles.infoText}>Level {gameState.playerLevel}</span>
+              <span style={styles.infoText}>Combat Power: {gameState.combatPower.toLocaleString()}</span>
             </div>
             <div style={styles.infoItem}>
               <span style={styles.infoIcon}>💰</span>
@@ -602,6 +602,7 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
         playerEmail={playerEmail}
         userId={gameState.profile?.user_id}
         playerLevel={gameState.playerLevel}
+        combatPower={gameState.combatPower}
         gold={gameState.gold}
         gems={gameState.gems}
         energy={gameState.energy}
@@ -609,6 +610,8 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
         energyRegenRate={energyRegen.regenRate}
         heroCount={gameState.allHeroes.length}
         itemCount={gameState.inventory.items.length}
+        syncStatus={gameState.syncStatus}
+        lastSaveTime={gameState.lastSaveTime}
         worldmapScreen={worldmapContent}
         heroesScreen={heroesContent}
         inventoryScreen={inventoryContent}

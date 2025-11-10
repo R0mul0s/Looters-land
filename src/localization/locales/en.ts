@@ -349,6 +349,12 @@ export const en = {
     notEnoughEnergyButton: 'Not Enough Energy',
     town: 'Town',
     dungeon: 'Dungeon',
+
+    // Tooltip info
+    terrain: 'Terrain',
+    distance: 'Distance',
+    cost: 'Cost',
+    tiles: 'tiles',
   },
 
   // ============================================================================
@@ -411,6 +417,28 @@ export const en = {
     continue: 'Continue',
     yes: 'Yes',
     no: 'No',
+  },
+
+  // ============================================================================
+  // SIDEBAR NAVIGATION
+  // ============================================================================
+  sidebar: {
+    worldMap: 'World Map',
+    heroes: 'Heroes',
+    inventory: 'Inventory',
+    teleport: 'Teleport',
+    leaderboards: 'Leaderboards',
+    quests: 'Quests',
+    guild: 'Guild',
+    lastUpdates: 'Last Updates',
+    combatPower: 'Combat Power',
+  },
+
+  // ============================================================================
+  // RESOURCES
+  // ============================================================================
+  resources: {
+    gems: 'Gems',
   },
 
   // ============================================================================
@@ -618,6 +646,166 @@ export const en = {
   },
 
   // ============================================================================
+  // HERO COLLECTION SCREEN
+  // ============================================================================
+  heroCollection: {
+    title: 'Hero Collection',
+    stats: {
+      totalHeroes: 'Total Heroes:',
+      activeParty: 'Active Party:',
+      partySlots: '/4',
+      hp: 'HP:',
+      atk: 'ATK:',
+      def: 'DEF:',
+      score: 'Score:',
+    },
+    filters: {
+      rarity: 'Rarity:',
+      class: 'Class:',
+      sortBy: 'Sort by:',
+      all: 'All',
+    },
+    rarities: {
+      legendary: 'Legendary',
+      epic: 'Epic',
+      rare: 'Rare',
+      common: 'Common',
+    },
+    classes: {
+      warrior: 'Warrior',
+      archer: 'Archer',
+      mage: 'Mage',
+      cleric: 'Cleric',
+      paladin: 'Paladin',
+    },
+    sortOptions: {
+      level: 'Level',
+      rarity: 'Rarity',
+      name: 'Name',
+      class: 'Class',
+    },
+    badges: {
+      activeParty: 'Active Party',
+    },
+    labels: {
+      level: 'Level',
+    },
+    empty: {
+      title: 'No Heroes Found',
+      message: 'Try adjusting your filters or summon more heroes!',
+    },
+    details: {
+      class: 'Class:',
+      role: 'Role:',
+      level: 'Level:',
+      xp: 'XP:',
+      statisticsTitle: 'Statistics',
+      description: 'Description',
+      specialAbility: 'Special Ability',
+    },
+    detailStats: {
+      hp: 'HP',
+      attack: 'Attack',
+      defense: 'Defense',
+      speed: 'Speed',
+      heroScore: 'Hero Score',
+    },
+    talent: {
+      title: 'Talent Points',
+      pointsAvailable: 'Points Available',
+      description: 'This hero was summoned multiple times! Talent points can be used in the Talent Tree (Coming Soon).',
+    },
+  },
+
+  // ============================================================================
+  // INVENTORY SCREEN
+  // ============================================================================
+  inventoryScreen: {
+    loading: 'Loading heroes...',
+    selectHero: 'Select Hero',
+    levelFormat: '(Lv.',
+    labels: {
+      level: 'Level',
+      xp: 'XP',
+    },
+    equipment: {
+      title: 'Equipment',
+      empty: 'Empty',
+      setBonuses: 'Set Bonuses',
+      noSetBonuses: 'No active set bonuses',
+      stats: {
+        hp: 'HP:',
+        atk: 'ATK:',
+        def: 'DEF:',
+        spd: 'SPD:',
+        crit: 'CRIT:',
+        power: 'Power:',
+      },
+      buttons: {
+        autoEquipBest: 'Auto-Equip Best',
+      },
+      warnings: {
+        enchantingTownOnly: '⚠️ Enchanting is only available in town (visit the Smithy)!',
+      },
+      tooltip: {
+        hp: 'HP:',
+        atk: 'ATK:',
+        def: 'DEF:',
+        spd: 'SPD:',
+        crit: 'CRIT:',
+        value: '💰 Value: {{value}} gold',
+        clickInstructions: 'Left-click to equip | Right-click to enchant',
+      },
+    },
+    inventoryPanel: {
+      title: 'Inventory',
+      slots: 'Slots:',
+      gold: 'Gold:',
+      emptyTitle: 'Inventory is empty',
+      emptyMessage: 'No items available',
+      buttons: {
+        expand: 'Expand (+10 slots, 500g)',
+        autoSellCommon: 'Auto-Sell Common',
+      },
+    },
+  },
+
+  // ============================================================================
+  // LEADERBOARD SCREEN
+  // ============================================================================
+  leaderboard: {
+    title: 'Daily Leaderboards',
+    resetIcon: '⏰',
+    resetLabel: 'Resets in:',
+    categories: {
+      deepestFloor: 'Deepest Floor',
+      totalGold: 'Total Gold',
+      heroesCollected: 'Heroes Collected',
+      combatPower: 'Combat Power',
+    },
+    categoryDescriptions: {
+      deepestFloor: 'Deepest dungeon floor reached today',
+      totalGold: 'Total gold earned today',
+      heroesCollected: 'Number of unique heroes owned',
+      combatPower: 'Combined party combat power',
+    },
+    noRank: {
+      message: "You haven't earned a rank in this category yet today.",
+      hint: 'Start playing to appear on the leaderboard!',
+    },
+    loading: 'Loading leaderboard...',
+    empty: {
+      message: 'No entries yet today',
+      hint: 'Be the first to appear on the leaderboard!',
+    },
+    youBadge: 'YOU',
+    labels: {
+      level: 'Level',
+    },
+    anonymous: 'Anonymous',
+  },
+
+  // ============================================================================
   // ERRORS & WARNINGS
   // ============================================================================
   errors: {
@@ -660,6 +848,52 @@ export const en = {
     deleteAccountConfirm: 'WARNING: This will PERMANENTLY DELETE your account!\n\nALL data will be lost forever.\n\nThis action is IRREVERSIBLE!\n\nDo you really want to continue?',
     deleteAccountSuccess: 'Account deleted successfully',
     deleteAccountFailed: 'Failed to delete account',
+    languageSettings: 'Language Settings',
+    languageLabel: 'Language',
+
+    // Dangerous Actions section
+    dangerousActions: 'Dangerous Actions',
+    resetProgressTitle: 'Reset Progress (DEBUG)',
+    resetProgressDesc: 'Deletes all heroes, items, and progress. Account remains active.',
+    resetProgressButton: 'Reset Progress',
+    resetProgressConfirm1: 'Do you really want to delete all progress?',
+    resetProgressConfirm2Warning: 'This action is IRREVERSIBLE! You will lose:',
+    resetProgressConfirm2Heroes: 'heroes',
+    resetProgressConfirm2Items: 'items',
+    resetProgressConfirm2AllProgress: 'All progress and gold',
+    resetProgressConfirm2Question: 'Continue?',
+    resetProgressConfirm3: 'LAST WARNING!\nThis CANNOT be undone. Really delete everything?',
+    deleteAccountTitle: 'Delete Account',
+    deleteAccountDesc: 'Permanently deletes your account and ALL data. This action CANNOT be undone!',
+    deleteAccountButton: 'Delete Account',
+    deleteAccountConfirm1: 'Do you really want to PERMANENTLY delete your account?',
+    deleteAccountConfirm2Warning: 'LAST WARNING!',
+    deleteAccountConfirm2Text: 'Your account ({email}) will be PERMANENTLY DELETED.\nYou will lose access FOREVER. Continue?',
+    deleteAccountConfirm3: 'REALLY THE LAST CHANCE!\nThis CANNOT be undone. Delete account FOREVER?',
+    resetError: 'An error occurred while resetting progress',
+    deleteError: 'An error occurred while deleting account',
+    processing: 'Processing...',
+    yesReset: 'Yes, reset',
+    yesSure: 'Yes, I\'m sure',
+    yesDeleteAll: 'YES, DELETE EVERYTHING',
+    yesDeleteAccount: 'Yes, delete account',
+    yesDeletePermanently: 'YES, DELETE PERMANENTLY',
+    noCancel: 'No, cancel',
+    noKeepAccount: 'No, keep account',
+  },
+
+  // ============================================================================
+  // SYNC STATUS
+  // ============================================================================
+  sync: {
+    saving: 'Saving...',
+    saved: 'Saved',
+    savedAt: 'Saved {{time}}',
+    error: 'Save Error',
+    connected: 'Connected',
+    timeJustNow: 'just now',
+    timeMinutesAgo: '{{minutes}}m ago',
+    timeHoursAgo: '{{hours}}h ago',
   },
 
   // ============================================================================

@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-01-07
+ * @lastModified 2025-11-10
  */
 
 import type { LocaleKeys } from './en';
@@ -909,6 +909,23 @@ export const cs: LocaleKeys = {
     technical: 'Technické změny',
     footer: 'Více informací na',
     github: 'GitHub',
+
+    // Version 2.2.0
+    v2_2_0: {
+      features: {
+        item1: '🌍 Kompletní česká lokalizace pro Hrdiny, Inventář a Žebříčky',
+        item2: '📝 101 pevných textů nahrazeno překladovými klíči',
+        item3: '🔧 Přidána komplexní JSDoc dokumentace ke všem komponentům',
+      },
+      fixes: {
+        item1: '⚡ Opravena regenerace energie - energie se nyní správně doplňuje',
+      },
+      technical: {
+        item1: 'Přidány překladové sekce heroCollection, inventoryScreen a leaderboard',
+        item2: 'Všechny lokalizované komponenty zkontrolovány proti coding_rules.md standardům',
+        item3: 'Aktualizovány @lastModified datumy a přidány explicitní TypeScript return types',
+      },
+    },
 
     // Version 2.1.0
     v2_1_0: {

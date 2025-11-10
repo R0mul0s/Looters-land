@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-01-07
+ * @lastModified 2025-11-10
  */
 
 export const en = {
@@ -907,6 +907,23 @@ export const en = {
     technical: 'Technical Changes',
     footer: 'More information at',
     github: 'GitHub',
+
+    // Version 2.2.0
+    v2_2_0: {
+      features: {
+        item1: '🌍 Complete Czech localization for Heroes, Inventory, and Leaderboards',
+        item2: '📝 101 hardcoded strings replaced with translation keys',
+        item3: '🔧 Comprehensive JSDoc documentation added to all components',
+      },
+      fixes: {
+        item1: '⚡ Fixed energy regeneration system - energy now properly regenerates',
+      },
+      technical: {
+        item1: 'Added heroCollection, inventoryScreen, and leaderboard translation sections',
+        item2: 'All localized components checked against coding_rules.md standards',
+        item3: 'Updated @lastModified dates and added explicit TypeScript return types',
+      },
+    },
 
     // Version 2.1.0
     v2_1_0: {

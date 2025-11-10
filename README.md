@@ -325,12 +325,58 @@ When adding new features:
 - ✅ Energy now properly regenerates at 10 energy/hour (~1 energy per 6 minutes)
 - ✅ Interval no longer restarts on every energy change
 
-### Files Modified
-- `src/components/gacha/HeroCollection.tsx` - Localized + JSDoc
-- `src/components/InventoryScreen.tsx` - Localized + JSDoc
-- `src/components/LeaderboardScreen.tsx` - Localized + JSDoc
-- `src/components/SyncStatusIndicator.tsx` - JSDoc improvements
-- `src/components/ui/GameHeader.tsx` - JSDoc improvements
-- `src/localization/locales/en.ts` - Added 3 new sections
-- `src/localization/locales/cs.ts` - Added 3 new Czech sections
-- `src/hooks/useEnergyRegeneration.ts` - Fixed regeneration bug
+### Files Modified (Detailed Breakdown)
+
+#### Components - Localization & JSDoc
+1. **`src/components/gacha/HeroCollection.tsx`** (44 translation keys)
+   - Replaced all hardcoded strings with `t()` function calls
+   - Added JSDoc for HeroCollectionProps interface
+   - Added JSDoc with examples for component function
+   - Added JSDoc for helper functions: getClassIcon, getRoleIcon, isInActiveParty
+   - Added explicit return types (: string, : boolean)
+   - Updated @lastModified to 2025-11-10
+
+2. **`src/components/InventoryScreen.tsx`** (38 translation keys)
+   - Replaced all hardcoded strings with `t()` function calls
+   - Added JSDoc for InventoryScreenProps interface with property descriptions
+   - Added JSDoc for helper functions: showTooltip, updateTooltipPosition, hideTooltip
+   - Added explicit return types (: void)
+   - Updated @lastModified to 2025-11-10
+
+3. **`src/components/LeaderboardScreen.tsx`** (19 translation keys)
+   - Replaced all hardcoded strings with `t()` function calls
+   - Added JSDoc for LeaderboardScreenProps interface
+   - Added JSDoc with @example for component function
+   - Added JSDoc for helper functions: getRankBadge, formatScore, loadLeaderboard
+   - Added explicit return types (: string, : Promise<void>)
+   - Updated @lastModified to 2025-11-10
+
+4. **`src/components/SyncStatusIndicator.tsx`**
+   - Added JSDoc for SyncStatusIndicatorProps interface
+   - Added comprehensive JSDoc for formatTime function with examples
+   - Added JSDoc and explicit return type for getStatusConfig helper
+   - Updated @lastModified to 2025-11-10
+
+5. **`src/components/ui/GameHeader.tsx`**
+   - Added JSDoc for GameHeaderProps interface with all property descriptions
+   - Added comprehensive JSDoc for formatNumber with @example
+   - Added explicit return type (: string)
+   - Updated @lastModified to 2025-11-10
+
+#### Localization Files
+6. **`src/localization/locales/en.ts`**
+   - Added `heroCollection` section (44 keys): titles, filters, stats, talent system
+   - Added `inventoryScreen` section (38 keys): tabs, filters, tooltips, actions
+   - Added `leaderboard` section (19 keys): categories, ranks, reset timer
+
+7. **`src/localization/locales/cs.ts`**
+   - Added Czech translations for `heroCollection` section (44 keys)
+   - Added Czech translations for `inventoryScreen` section (38 keys)
+   - Added Czech translations for `leaderboard` section (19 keys)
+
+#### Bug Fixes
+8. **`src/hooks/useEnergyRegeneration.ts`**
+   - Fixed useEffect dependencies - removed `currentEnergy`, `maxEnergy`, `onEnergyChange`
+   - Added guard to prevent interval restart if already running
+   - Energy now regenerates correctly at 10 energy/hour (~1 per 6 minutes)
+   - Updated @lastModified to 2025-11-08

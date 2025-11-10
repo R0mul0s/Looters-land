@@ -71,9 +71,9 @@ export function calculateEquipmentScore(hero: Hero): number {
   let totalScore = 0;
 
   // Sum scores from all equipped items
-  const equipment = hero.equipment?.getAllEquippedItems() || [];
-  for (const item of equipment) {
-    totalScore += calculateItemScore(item);
+  const equipment = hero.equipment?.getAllEquipped() || [];
+  for (const equipped of equipment) {
+    totalScore += calculateItemScore(equipped.item);
   }
 
   return Math.floor(totalScore);

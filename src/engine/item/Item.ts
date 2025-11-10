@@ -224,9 +224,9 @@ export class Item {
       weapon: 1.5,
       chest: 1.2,
       helmet: 1.0,
+      gloves: 1.0,
       legs: 1.0,
       boots: 1.0,
-      shield: 1.2,
       accessory: 1.3
     };
 

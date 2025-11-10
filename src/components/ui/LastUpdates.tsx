@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-09
+ * @lastModified 2025-11-10
  */
 
 import React, { memo } from 'react';
@@ -22,6 +22,23 @@ interface ChangelogEntry {
 }
 
 const getChangelog = (): ChangelogEntry[] => [
+  {
+    version: 'v2.2.0',
+    date: '2025-11-10',
+    features: [
+      t('updates.v2_2_0.features.item1'),
+      t('updates.v2_2_0.features.item2'),
+      t('updates.v2_2_0.features.item3')
+    ],
+    fixes: [
+      t('updates.v2_2_0.fixes.item1')
+    ],
+    technical: [
+      t('updates.v2_2_0.technical.item1'),
+      t('updates.v2_2_0.technical.item2'),
+      t('updates.v2_2_0.technical.item3')
+    ]
+  },
   {
     version: 'v2.1.0',
     date: '2025-11-09',

@@ -689,6 +689,7 @@ export const en = {
         item5: 'Added CASCADE DELETE for equipment_slots to prevent save conflicts',
         item6: 'Added level requirement check when manually equipping items',
         item7: 'Equipment level requirements now shown in modal dialogs instead of alerts',
+        item8: 'Fixed daily world map reset - maps now properly regenerate at midnight UTC',
       },
       technical: {
         item1: 'Optimized loadGameData function',

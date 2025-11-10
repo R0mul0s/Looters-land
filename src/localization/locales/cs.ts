@@ -691,6 +691,7 @@ export const cs: LocaleKeys = {
         item5: 'Přidáno CASCADE DELETE pro equipment_slots k prevenci konfliktů při ukládání',
         item6: 'Přidána kontrola level requirementu při ručním oblékání itemů',
         item7: 'Level požadavky na vybavení nyní zobrazeny v modal dialozích místo alertů',
+        item8: 'Opraven denní reset mapy - mapy se nyní správně regenerují o půlnoci UTC',
       },
       technical: {
         item1: 'Optimalizace loadGameData funkce',

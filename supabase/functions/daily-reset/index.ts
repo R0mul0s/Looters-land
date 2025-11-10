@@ -35,16 +35,22 @@ serve(async (req: Request) => {
 
     console.log('🔄 Starting daily reset...');
 
-    // 1. Restore energy to max and reset world maps for all players
-    const { data: profiles, error: resetError } = await supabase
+    // 1. Get all player profiles to restore energy based on their max_energy
+    const { data: profiles, error: fetchError } = await supabase
       .from('player_profiles')
-      .update({
-        energy: supabase.rpc('GREATEST', [0, 'max_energy']), // Restore to max
-        world_map_data: null, // Reset world map to trigger regeneration
-        discovered_locations: [], // Reset discovered locations
-        updated_at: new Date().toISOString()
-      })
-      .neq('user_id', '00000000-0000-0000-0000-000000000000'); // Exclude invalid users
+      .select('user_id, max_energy')
+      .neq('user_id', '00000000-0000-0000-0000-000000000000');
+
+    if (fetchError) {
+      console.error('❌ Failed to fetch profiles:', fetchError);
+      throw fetchError;
+    }
+
+    console.log(`📊 Found ${profiles?.length || 0} player profiles to reset`);
+
+    // 2. Reset energy, world maps, and discovered locations for all players
+    // We use a raw SQL query to set energy = max_energy for each player
+    const { error: resetError } = await supabase.rpc('reset_daily_data');
 
     if (resetError) {
       console.error('❌ Daily reset failed:', resetError);

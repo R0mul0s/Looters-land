@@ -35,21 +35,23 @@ serve(async (req: Request) => {
 
     console.log('🔄 Starting daily reset...');
 
-    // 1. Restore energy to max for all players
-    const { data: profiles, error: energyError } = await supabase
+    // 1. Restore energy to max and reset world maps for all players
+    const { data: profiles, error: resetError } = await supabase
       .from('player_profiles')
       .update({
         energy: supabase.rpc('GREATEST', [0, 'max_energy']), // Restore to max
+        world_map_data: null, // Reset world map to trigger regeneration
+        discovered_locations: [], // Reset discovered locations
         updated_at: new Date().toISOString()
       })
       .neq('user_id', '00000000-0000-0000-0000-000000000000'); // Exclude invalid users
 
-    if (energyError) {
-      console.error('❌ Energy reset failed:', energyError);
-      throw energyError;
+    if (resetError) {
+      console.error('❌ Daily reset failed:', resetError);
+      throw resetError;
     }
 
-    console.log(`✅ Energy restored for all players`);
+    console.log(`✅ Energy restored and world maps reset for all players`);
 
     // 2. Reset daily gacha free summons
     // Note: This is handled client-side by checking lastFreeSummonDate against today's date
@@ -76,6 +78,8 @@ serve(async (req: Request) => {
       action: 'daily_reset',
       details: {
         energy_restored: true,
+        world_maps_reset: true,
+        discovered_locations_reset: true,
         leaderboards_archived: false // Not implemented yet
       }
     };

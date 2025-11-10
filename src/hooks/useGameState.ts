@@ -513,8 +513,9 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
 
           setState(prev => {
             // Check if map was reset (world_map_data became null)
-            if (!updatedProfile.world_map_data && prev.worldMap) {
-              console.log('🗺️ World map reset detected!');
+            const wasMapReset = !updatedProfile.world_map_data && prev.worldMap;
+            if (wasMapReset) {
+              console.log('🗺️ World map reset detected - generating new daily map!');
             }
 
             return {
@@ -525,8 +526,8 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
               gold: updatedProfile.gold,
               gems: updatedProfile.gems,
               playerLevel: updatedProfile.player_level,
-              // Check if map was reset (world_map_data became null)
-              worldMap: updatedProfile.world_map_data || prev.worldMap,
+              // Accept null to allow map reset
+              worldMap: updatedProfile.world_map_data ?? (wasMapReset ? null : prev.worldMap),
               discoveredLocations: updatedProfile.discovered_locations
                 ? updatedProfile.discovered_locations.map(str => {
                     try { return JSON.parse(str); }

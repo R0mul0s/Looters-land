@@ -12,7 +12,7 @@ BEGIN
   SET
     energy = max_energy,
     world_map_data = NULL,
-    discovered_locations = ARRAY[]::text[],
+    discovered_locations = '[]'::jsonb,
     updated_at = NOW()
   WHERE user_id != '00000000-0000-0000-0000-000000000000';
 

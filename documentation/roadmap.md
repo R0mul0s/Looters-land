@@ -295,6 +295,81 @@ We are transitioning from **single hero** to **party-based gameplay** with **gac
 - ✅ Fixed daily free summon persistence bug (date comparison)
 - ✅ Added SQL migration for gacha state columns
 
+**v0.7.1 - Hero & Item Scoring System (✅ COMPLETE - Nov 10, 2025):**
+
+Implemented comprehensive scoring system for power ratings and progression gates.
+
+1. **Score Calculation Formulas** ✅ COMPLETE
+   - ✅ Hero score: Base (rarity) × Level Multiplier × Equipment Bonus
+   - ✅ Item score: Base (rarity) × Level × Enchant × Slot Multiplier
+   - ✅ Combat Power: Sum of active party hero scores
+
+2. **Hero Scoring** ✅ COMPLETE
+   - ✅ Rarity base scores (Common: 100, Rare: 250, Epic: 500, Legendary: 1000)
+   - ✅ Level multiplier: 1 + (level - 1) × 0.1
+   - ✅ Equipment bonus: +1% per 100 equipment score
+   - ✅ `Hero.getScore()` method
+
+3. **Item Scoring** ✅ COMPLETE
+   - ✅ Rarity base scores (Common: 10 to Legendary: 250)
+   - ✅ Level scaling: +2% per level
+   - ✅ Enchant bonus: +15% per enchant level
+   - ✅ Slot multipliers (Weapon: 1.5x, Chest/Shield: 1.2x, Accessory: 1.3x)
+   - ✅ `Item.getScore()` method
+
+4. **UI Integration** ✅ COMPLETE
+   - ✅ Hero Collection cards show hero score
+   - ✅ Hero detail panel shows hero score
+   - ✅ Item tooltips show item score
+   - ✅ MainSidebar displays Combat Power badge
+   - ✅ Real-time combat power updates via useGameState
+
+5. **Progression System** ✅ COMPLETE
+   - ✅ Recommendation system for dungeon difficulty
+   - ✅ Foundation for leaderboard rankings
+   - ✅ Party optimization metrics
+
+**Implementation Files:**
+- ✅ `src/utils/scoreCalculator.ts` - Core scoring algorithms
+- ✅ `src/engine/hero/Hero.ts` - Hero score method
+- ✅ `src/engine/item/Item.ts` - Item score method
+- ✅ `src/hooks/useGameState.ts` - Combat power state management
+- ✅ `src/components/gacha/HeroCollection.tsx` - Score display
+- ✅ `src/components/ui/ItemTooltip.tsx` - Item score display
+- ✅ `src/components/ui/MainSidebar.tsx` - Combat power badge
+
+**v0.7.2 - Mobile Optimizations & Sync Status (✅ COMPLETE - Nov 10, 2025):**
+
+Improved mobile experience and added real-time sync status indicator.
+
+1. **Mobile Map Fixes** ✅ COMPLETE
+   - ✅ Fixed map rendering on mobile devices (stretched appearance)
+   - ✅ Fixed tap position calculations (incorrect target tiles)
+   - ✅ High-DPI canvas support using devicePixelRatio
+   - ✅ Proper zoom centering on player avatar
+   - ✅ Fixed viewport calculations with decimal coordinates
+   - ✅ Separated BASE_TILE_SIZE and TILE_SIZE for correct scaling
+
+2. **Player Marker Scaling** ✅ COMPLETE
+   - ✅ Other player markers scale with zoom level
+   - ✅ Dynamic sizing for icon, nickname, and level text
+   - ✅ Fixed transform positioning (translate -50%, -50%)
+
+3. **Sync Status Indicator** ✅ COMPLETE
+   - ✅ Created SyncStatusIndicator component
+   - ✅ Real-time sync status in GameHeader (💾 Saving, ✓ Saved, ⚠ Error)
+   - ✅ Last save timestamp with relative time display (před 2m)
+   - ✅ Integrated into useGameState hook
+   - ✅ Status updates during save operations
+
+**Implementation Files:**
+- ✅ `src/components/WorldMapViewer.tsx` - Mobile map fixes
+- ✅ `src/components/OtherPlayerMarker.tsx` - Scaling support
+- ✅ `src/components/SyncStatusIndicator.tsx` - Sync status component
+- ✅ `src/hooks/useGameState.ts` - Sync status tracking
+- ✅ `src/components/ui/GameHeader.tsx` - Status display
+- ✅ `src/components/GameLayout.tsx` - Props passing
+
 See [GAME-LOOP-DESIGN.md](./GAME-LOOP-DESIGN.md) for complete v2.0 game design.
 
 ### Alternate Priority: v0.5.0 - Active Idle System

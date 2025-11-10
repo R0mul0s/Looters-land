@@ -15,6 +15,7 @@ interface OtherPlayerMarkerProps {
   nickname: string;
   level: number;
   color?: string; // Optional color for player icon
+  scale?: number; // Scale factor based on zoom level
 }
 
 /**
@@ -31,18 +32,32 @@ interface OtherPlayerMarkerProps {
 export function OtherPlayerMarker({
   nickname,
   level,
-  color = '#3b82f6' // Blue by default
+  color = '#3b82f6', // Blue by default
+  scale = 1 // Default scale
 }: OtherPlayerMarkerProps) {
+  // Scale all sizes based on zoom level
+  const iconSize = Math.floor(32 * scale);
+  const fontSize = Math.floor(18 * scale);
+  const labelPadding = `${Math.floor(4 * scale)}px ${Math.floor(8 * scale)}px`;
+  const nicknameFontSize = Math.max(9, Math.floor(11 * scale));
+  const levelFontSize = Math.max(8, Math.floor(9 * scale));
+
   return (
     <div style={styles.container}>
       {/* Nickname and Level Label */}
-      <div style={styles.label}>
-        <span style={styles.nickname}>{nickname}</span>
-        <span style={styles.level}>Lv.{level}</span>
+      <div style={{ ...styles.label, padding: labelPadding }}>
+        <span style={{ ...styles.nickname, fontSize: `${nicknameFontSize}px` }}>{nickname}</span>
+        <span style={{ ...styles.level, fontSize: `${levelFontSize}px` }}>Lv.{level}</span>
       </div>
 
       {/* Player Icon */}
-      <div style={{ ...styles.playerIcon, backgroundColor: color }}>
+      <div style={{
+        ...styles.playerIcon,
+        backgroundColor: color,
+        width: `${iconSize}px`,
+        height: `${iconSize}px`,
+        fontSize: `${fontSize}px`
+      }}>
         👤
       </div>
     </div>
@@ -55,7 +70,7 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    transform: 'translate(-50%, -100%)',
+    transform: 'translate(-50%, -50%)',
     pointerEvents: 'none',
     zIndex: 100
   },
@@ -85,13 +100,10 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: '1px'
   },
   playerIcon: {
-    width: '32px',
-    height: '32px',
     borderRadius: '50%',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '18px',
     border: '2px solid rgba(255, 255, 255, 0.8)',
     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
     animation: 'pulse 2s ease-in-out infinite'

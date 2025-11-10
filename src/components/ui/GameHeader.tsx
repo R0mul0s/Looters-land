@@ -3,21 +3,38 @@
  *
  * Displays player info, resources (gold, gems), and energy bar.
  * Main header for the game UI shown across all screens.
+ * Includes sync status indicator and settings button.
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-08
+ * @lastModified 2025-11-10
  */
 
 import React from 'react';
+import { SyncStatusIndicator, type SyncStatus } from '../SyncStatusIndicator';
+import { t } from '../../localization/i18n';
 
+/**
+ * Props for GameHeader component
+ */
 interface GameHeaderProps {
+  /** Player's display name */
   playerName: string;
+  /** Current gold amount */
   gold: number;
+  /** Current gems amount */
   gems: number;
+  /** Current energy points */
   energy: number;
+  /** Maximum energy capacity */
   maxEnergy: number;
-  energyRegenRate: number; // Energy per hour
+  /** Energy regeneration rate per hour */
+  energyRegenRate: number;
+  /** Current database sync status */
+  syncStatus?: SyncStatus;
+  /** Last save timestamp */
+  lastSaveTime?: Date | null;
+  /** Callback when settings button is clicked */
   onSettingsClick?: () => void;
 }
 
@@ -34,12 +51,24 @@ export function GameHeader({
   energy,
   maxEnergy,
   energyRegenRate,
+  syncStatus,
+  lastSaveTime,
   onSettingsClick
 }: GameHeaderProps) {
   // Calculate energy percentage for progress bar
   const energyPercent = (energy / maxEnergy) * 100;
 
-  // Format numbers with commas
+  /**
+   * Format numbers with Czech locale (thousands separator)
+   *
+   * @param num - Number to format
+   * @returns Formatted number string with thousands separators
+   *
+   * @example
+   * ```typescript
+   * formatNumber(1234567) // "1 234 567"
+   * ```
+   */
   const formatNumber = (num: number): string => {
     return num.toLocaleString('cs-CZ');
   };
@@ -53,12 +82,20 @@ export function GameHeader({
         </div>
 
         <div style={styles.resources}>
-          <div style={styles.resource}>
+          {/* Sync Status Indicator */}
+          {syncStatus && (
+            <SyncStatusIndicator
+              status={syncStatus}
+              lastSaveTime={lastSaveTime || undefined}
+            />
+          )}
+
+          <div style={styles.resource} title={t('worldmap.gold')}>
             <span style={styles.resourceIcon}>💰</span>
             <span style={styles.resourceValue}>{formatNumber(gold)}</span>
           </div>
 
-          <div style={styles.resource}>
+          <div style={styles.resource} title={t('resources.gems')}>
             <span style={styles.resourceIcon}>💎</span>
             <span style={styles.resourceValue}>{formatNumber(gems)}</span>
           </div>
@@ -72,7 +109,7 @@ export function GameHeader({
       {/* Energy Bar */}
       <div style={styles.energyContainer}>
         <div style={styles.energyLabel}>
-          ⚡ Energy: {energy}/{maxEnergy} (+{energyRegenRate}/hour)
+          ⚡ {t('worldmap.energy')}: {energy}/{maxEnergy} (+{energyRegenRate}/hour)
         </div>
 
         <div style={styles.energyBarBackground}>

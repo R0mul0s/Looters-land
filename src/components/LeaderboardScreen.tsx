@@ -2,11 +2,12 @@
  * Leaderboard Screen Component
  *
  * Displays daily competitive leaderboards across 4 categories.
- * Shows top 100 players and user's current rank.
+ * Shows top 100 players and user's current rank with real-time updates.
+ * Includes daily reset timer and category-based filtering.
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-08
+ * @lastModified 2025-11-10
  */
 
 import React, { useState, useEffect } from 'react';
@@ -16,39 +17,64 @@ import {
   type LeaderboardEntry
 } from '../services/LeaderboardService';
 import { DailyResetService } from '../services/DailyResetService';
+import { t } from '../localization/i18n';
 
+/**
+ * Props for LeaderboardScreen component
+ */
 interface LeaderboardScreenProps {
+  /** User ID for fetching player rank */
   userId: string;
+  /** Player's display name */
   playerName: string;
+  /** Player's current level */
   playerLevel: number;
 }
 
 const CATEGORY_CONFIG: Record<
   LeaderboardCategory,
-  { icon: string; label: string; description: string }
+  { icon: string; labelKey: string; descriptionKey: string }
 > = {
   deepest_floor: {
     icon: '🕳️',
-    label: 'Deepest Floor',
-    description: 'Deepest dungeon floor reached today'
+    labelKey: 'leaderboard.categories.deepestFloor',
+    descriptionKey: 'leaderboard.descriptions.deepestFloor'
   },
   total_gold: {
     icon: '💰',
-    label: 'Total Gold',
-    description: 'Total gold earned today'
+    labelKey: 'leaderboard.categories.totalGold',
+    descriptionKey: 'leaderboard.descriptions.totalGold'
   },
   heroes_collected: {
     icon: '👥',
-    label: 'Heroes Collected',
-    description: 'Number of unique heroes owned'
+    labelKey: 'leaderboard.categories.heroesCollected',
+    descriptionKey: 'leaderboard.descriptions.heroesCollected'
   },
   combat_power: {
     icon: '⚔️',
-    label: 'Combat Power',
-    description: 'Combined party combat power'
+    labelKey: 'leaderboard.categories.combatPower',
+    descriptionKey: 'leaderboard.descriptions.combatPower'
   }
 };
 
+/**
+ * Leaderboard Screen Component
+ *
+ * Displays daily leaderboards with filtering by category,
+ * player rank display, and countdown to daily reset.
+ *
+ * @param props - Component props
+ * @returns React component
+ *
+ * @example
+ * ```tsx
+ * <LeaderboardScreen
+ *   userId="user123"
+ *   playerName="Hero123"
+ *   playerLevel={50}
+ * />
+ * ```
+ */
 export function LeaderboardScreen({
   userId,
   playerName,
@@ -77,7 +103,12 @@ export function LeaderboardScreen({
     return () => clearInterval(interval);
   }, []);
 
-  const loadLeaderboard = async () => {
+  /**
+   * Load leaderboard data for current category
+   *
+   * Fetches top 100 players and player's rank from LeaderboardService.
+   */
+  const loadLeaderboard = async (): Promise<void> => {
     setLoading(true);
 
     try {
@@ -103,7 +134,13 @@ export function LeaderboardScreen({
     }
   };
 
-  const getRankBadge = (rank: number | null) => {
+  /**
+   * Get rank badge emoji for top 3, or rank number for others
+   *
+   * @param rank - Player's rank (1-based)
+   * @returns Medal emoji for top 3, or #rank for others
+   */
+  const getRankBadge = (rank: number | null): string => {
     if (!rank) return '';
     if (rank === 1) return '🥇';
     if (rank === 2) return '🥈';
@@ -111,7 +148,14 @@ export function LeaderboardScreen({
     return `#${rank}`;
   };
 
-  const formatScore = (score: number, category: LeaderboardCategory) => {
+  /**
+   * Format score based on category (adds 'g' suffix for gold)
+   *
+   * @param score - Score value to format
+   * @param category - Leaderboard category
+   * @returns Formatted score string
+   */
+  const formatScore = (score: number, category: LeaderboardCategory): string => {
     if (category === 'total_gold') {
       return `${score.toLocaleString()}g`;
     }
@@ -122,10 +166,10 @@ export function LeaderboardScreen({
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <h1 style={styles.title}>🏆 Daily Leaderboards</h1>
+        <h1 style={styles.title}>🏆 {t('leaderboard.title')}</h1>
         <div style={styles.resetTimer}>
-          <span style={styles.resetIcon}>⏰</span>
-          <span style={styles.resetText}>Resets in: {timeUntilReset}</span>
+          <span style={styles.resetIcon}>{t('leaderboard.resetIcon')}</span>
+          <span style={styles.resetText}>{t('leaderboard.resetLabel')} {timeUntilReset}</span>
         </div>
       </div>
 
@@ -141,14 +185,14 @@ export function LeaderboardScreen({
             }}
           >
             <span style={styles.categoryIcon}>{config.icon}</span>
-            <span style={styles.categoryLabel}>{config.label}</span>
+            <span style={styles.categoryLabel}>{t(config.labelKey)}</span>
           </button>
         ))}
       </div>
 
       {/* Category Description */}
       <div style={styles.categoryDescription}>
-        {CATEGORY_CONFIG[activeCategory].description}
+        {t(CATEGORY_CONFIG[activeCategory].descriptionKey)}
       </div>
 
       {/* Player's Rank Card */}
@@ -159,7 +203,7 @@ export function LeaderboardScreen({
           </div>
           <div style={styles.playerRankInfo}>
             <div style={styles.playerRankName}>{playerName}</div>
-            <div style={styles.playerRankLevel}>Level {playerLevel}</div>
+            <div style={styles.playerRankLevel}>{t('leaderboard.levelLabel')} {playerLevel}</div>
           </div>
           <div style={styles.playerRankScore}>
             {formatScore(playerEntry.score, activeCategory)}
@@ -171,10 +215,10 @@ export function LeaderboardScreen({
         <div style={styles.noRankCard}>
           <div style={styles.noRankIcon}>📊</div>
           <div style={styles.noRankText}>
-            You haven't earned a rank in this category yet today.
+            {t('leaderboard.noRank.message')}
           </div>
           <div style={styles.noRankHint}>
-            Start playing to appear on the leaderboard!
+            {t('leaderboard.noRank.hint')}
           </div>
         </div>
       )}
@@ -184,13 +228,13 @@ export function LeaderboardScreen({
         {loading ? (
           <div style={styles.loading}>
             <div style={styles.loadingIcon}>⏳</div>
-            <div style={styles.loadingText}>Loading leaderboard...</div>
+            <div style={styles.loadingText}>{t('leaderboard.loading')}</div>
           </div>
         ) : leaderboard.length === 0 ? (
           <div style={styles.emptyState}>
             <div style={styles.emptyIcon}>📋</div>
-            <div style={styles.emptyText}>No entries yet today</div>
-            <div style={styles.emptyHint}>Be the first to appear on the leaderboard!</div>
+            <div style={styles.emptyText}>{t('leaderboard.empty.message')}</div>
+            <div style={styles.emptyHint}>{t('leaderboard.empty.hint')}</div>
           </div>
         ) : (
           <div style={styles.leaderboardList}>
@@ -211,10 +255,10 @@ export function LeaderboardScreen({
                   </div>
                   <div style={styles.entryInfo}>
                     <div style={styles.entryName}>
-                      {entry.player_name || 'Anonymous'}
-                      {isPlayer && <span style={styles.youBadge}>YOU</span>}
+                      {entry.player_name || t('leaderboard.anonymous')}
+                      {isPlayer && <span style={styles.youBadge}>{t('leaderboard.youBadge')}</span>}
                     </div>
-                    <div style={styles.entryLevel}>Level {entry.player_level || 1}</div>
+                    <div style={styles.entryLevel}>{t('leaderboard.levelLabel')} {entry.player_level || 1}</div>
                   </div>
                   <div style={styles.entryScore}>
                     {formatScore(entry.score, activeCategory)}

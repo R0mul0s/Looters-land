@@ -197,6 +197,49 @@ export class Item {
     };
   }
 
+  /**
+   * Calculate item score (value rating)
+   *
+   * Formula: Base Score (rarity) × (1 + level/50) × (1 + enchant × 0.15) × Slot Multiplier
+   *
+   * @returns Item score value
+   *
+   * @example
+   * ```typescript
+   * const score = item.getScore();
+   * console.log(score); // 1875
+   * ```
+   */
+  getScore(): number {
+    const baseScores: Record<ItemRarity, number> = {
+      common: 10,
+      uncommon: 25,
+      rare: 50,
+      epic: 100,
+      legendary: 250,
+      mythic: 500
+    };
+
+    const slotMultipliers: Record<ItemSlot, number> = {
+      weapon: 1.5,
+      chest: 1.2,
+      helmet: 1.0,
+      legs: 1.0,
+      boots: 1.0,
+      shield: 1.2,
+      accessory: 1.3
+    };
+
+    const baseScore = baseScores[this.rarity] || baseScores.common;
+    const levelScaling = 1 + this.level / 50;
+    const enchantBonus = 1 + this.enchantLevel * 0.15;
+    const slotMultiplier = slotMultipliers[this.slot] || 1.0;
+
+    const itemScore = baseScore * levelScaling * enchantBonus * slotMultiplier;
+
+    return Math.floor(itemScore);
+  }
+
   toJSON(): ItemConfig {
     return {
       id: this.id,

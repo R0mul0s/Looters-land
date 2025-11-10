@@ -1,6 +1,6 @@
 # Looters Land - Documentation Index
 
-**Last Updated:** 2025-11-09
+**Last Updated:** 2025-11-10
 
 ---
 

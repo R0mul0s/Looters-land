@@ -16,6 +16,7 @@ import { TERRAIN_ICONS } from '../types/worldmap.types';
 import { OtherPlayerMarker } from './OtherPlayerMarker';
 import { ChatBubble } from './ChatBubble';
 import type { OtherPlayer } from '../hooks/useOtherPlayers';
+import { t } from '../localization/i18n';
 
 interface WorldMapViewerProps {
   worldMap: WorldMap;
@@ -58,7 +59,8 @@ export function WorldMapViewer({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const TILE_SIZE = 32 * zoom;
+  const BASE_TILE_SIZE = 32; // Base tile size without zoom
+  const TILE_SIZE = BASE_TILE_SIZE * zoom; // Scaled tile size with zoom
   const VIEWPORT_WIDTH = dimensions.width;
   const VIEWPORT_HEIGHT = dimensions.height;
 
@@ -80,14 +82,20 @@ export function WorldMapViewer({
   }, []);
 
   /**
-   * Center viewport on player
+   * Center viewport on player (accounts for current zoom level)
+   * Recalculates when player moves, viewport size changes, or zoom changes
    */
   useEffect(() => {
+    // Calculate exact offset to center player tile in viewport
+    // This ensures player tile aligns with player sprite
+    const tilesX = VIEWPORT_WIDTH / TILE_SIZE / 2;
+    const tilesY = VIEWPORT_HEIGHT / TILE_SIZE / 2;
+
     setViewport({
-      x: playerPosition.x - Math.floor(VIEWPORT_WIDTH / TILE_SIZE / 2),
-      y: playerPosition.y - Math.floor(VIEWPORT_HEIGHT / TILE_SIZE / 2)
+      x: playerPosition.x - tilesX,
+      y: playerPosition.y - tilesY
     });
-  }, [playerPosition, TILE_SIZE, VIEWPORT_WIDTH, VIEWPORT_HEIGHT]);
+  }, [playerPosition.x, playerPosition.y, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, TILE_SIZE, zoom]);
 
   /**
    * Render worldmap on canvas
@@ -99,14 +107,23 @@ export function WorldMapViewer({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // High-DPI canvas support for crisp rendering on mobile
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = VIEWPORT_WIDTH * dpr;
+    canvas.height = VIEWPORT_HEIGHT * dpr;
+    canvas.style.width = `${VIEWPORT_WIDTH}px`;
+    canvas.style.height = `${VIEWPORT_HEIGHT}px`;
+    ctx.scale(dpr, dpr);
+
     // Clear canvas
     ctx.clearRect(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
 
-    // Calculate visible tiles
-    const startX = Math.max(0, viewport.x);
-    const startY = Math.max(0, viewport.y);
-    const endX = Math.min(worldMap.width, viewport.x + Math.ceil(VIEWPORT_WIDTH / TILE_SIZE) + 1);
-    const endY = Math.min(worldMap.height, viewport.y + Math.ceil(VIEWPORT_HEIGHT / TILE_SIZE) + 1);
+    // Calculate visible tiles (accounts for current zoom level)
+    // Use floor/ceil to ensure we render all partially visible tiles
+    const startX = Math.max(0, Math.floor(viewport.x));
+    const startY = Math.max(0, Math.floor(viewport.y));
+    const endX = Math.min(worldMap.width, Math.ceil(viewport.x + VIEWPORT_WIDTH / TILE_SIZE) + 1);
+    const endY = Math.min(worldMap.height, Math.ceil(viewport.y + VIEWPORT_HEIGHT / TILE_SIZE) + 1);
 
     // Render tiles
     for (let y = startY; y < endY; y++) {
@@ -153,9 +170,14 @@ export function WorldMapViewer({
       }
     }
 
-    // Draw player
-    const playerScreenX = (playerPosition.x - viewport.x) * TILE_SIZE;
-    const playerScreenY = (playerPosition.y - viewport.y) * TILE_SIZE;
+    // Draw player - calculate exact position based on tile grid
+    // Player tile position relative to viewport
+    const playerTileOffsetX = playerPosition.x - viewport.x;
+    const playerTileOffsetY = playerPosition.y - viewport.y;
+
+    // Screen position (center of player's tile)
+    const playerScreenX = playerTileOffsetX * TILE_SIZE;
+    const playerScreenY = playerTileOffsetY * TILE_SIZE;
 
     // Player glow
     ctx.shadowColor = '#ffff00';
@@ -195,8 +217,9 @@ export function WorldMapViewer({
     const clickX = e.clientX - rect.left;
     const clickY = e.clientY - rect.top;
 
-    const tileX = Math.floor(clickX / TILE_SIZE) + viewport.x;
-    const tileY = Math.floor(clickY / TILE_SIZE) + viewport.y;
+    // Calculate tile position (TILE_SIZE already includes zoom)
+    const tileX = Math.floor(Math.floor(clickX / TILE_SIZE) + viewport.x);
+    const tileY = Math.floor(Math.floor(clickY / TILE_SIZE) + viewport.y);
 
     if (tileX >= 0 && tileX < worldMap.width && tileY >= 0 && tileY < worldMap.height) {
       const tile = worldMap.tiles[tileY][tileX];
@@ -220,8 +243,8 @@ export function WorldMapViewer({
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
 
-    const tileX = Math.floor(mouseX / TILE_SIZE) + viewport.x;
-    const tileY = Math.floor(mouseY / TILE_SIZE) + viewport.y;
+    const tileX = Math.floor(Math.floor(mouseX / TILE_SIZE) + viewport.x);
+    const tileY = Math.floor(Math.floor(mouseY / TILE_SIZE) + viewport.y);
 
     if (tileX >= 0 && tileX < worldMap.width && tileY >= 0 && tileY < worldMap.height) {
       setHoveredTile({ x: tileX, y: tileY });
@@ -279,16 +302,16 @@ export function WorldMapViewer({
       {hoverInfo && hoverInfo.isExplored && (
         <div style={styles.tooltip}>
           <div style={styles.tooltipRow}>
-            <span>Terrain:</span>
+            <span>{t('worldmap.terrain')}:</span>
             <span style={styles.tooltipValue}>{hoverInfo.tile.terrain}</span>
           </div>
           <div style={styles.tooltipRow}>
-            <span>Distance:</span>
-            <span style={styles.tooltipValue}>{hoverInfo.distance} tiles</span>
+            <span>{t('worldmap.distance')}:</span>
+            <span style={styles.tooltipValue}>{hoverInfo.distance} {t('worldmap.tiles')}</span>
           </div>
           <div style={styles.tooltipRow}>
-            <span>Cost:</span>
-            <span style={{ ...styles.tooltipValue, color: '#fbbf24' }}>{hoverInfo.totalCost} energy</span>
+            <span>{t('worldmap.cost')}:</span>
+            <span style={{ ...styles.tooltipValue, color: '#fbbf24' }}>{hoverInfo.totalCost} {t('worldmap.energy')}</span>
           </div>
         </div>
       )}
@@ -324,14 +347,14 @@ export function WorldMapViewer({
 
       {/* Render Other Players */}
       {otherPlayers.map((player) => {
-        // Calculate screen position from map coordinates
+        // Calculate screen position from map coordinates (center of tile)
         const screenX = (player.x - viewport.x) * TILE_SIZE + TILE_SIZE / 2;
-        const screenY = (player.y - viewport.y) * TILE_SIZE + TILE_SIZE;
+        const screenY = (player.y - viewport.y) * TILE_SIZE + TILE_SIZE / 2;
 
         // Only render if player is in viewport
         const isVisible =
-          screenX >= 0 && screenX <= VIEWPORT_WIDTH &&
-          screenY >= 0 && screenY <= VIEWPORT_HEIGHT;
+          screenX >= -TILE_SIZE && screenX <= VIEWPORT_WIDTH + TILE_SIZE &&
+          screenY >= -TILE_SIZE && screenY <= VIEWPORT_HEIGHT + TILE_SIZE;
 
         if (!isVisible) return null;
 
@@ -342,7 +365,7 @@ export function WorldMapViewer({
               position: 'absolute',
               left: `${screenX}px`,
               top: `${screenY}px`,
-              zIndex: 50
+              zIndex: 50 + player.y // Players lower on map (higher Y) have higher z-index
             }}
           >
             {/* Chat Bubble (if message exists and recent) */}
@@ -350,7 +373,7 @@ export function WorldMapViewer({
               <ChatBubble
                 message={player.chatMessage}
                 timestamp={player.chatTimestamp}
-                offsetY={-80}
+                offsetY={-80 * zoom}
               />
             )}
 
@@ -359,6 +382,7 @@ export function WorldMapViewer({
               nickname={player.nickname}
               level={player.level}
               color="#3b82f6"
+              scale={zoom}
             />
           </div>
         );

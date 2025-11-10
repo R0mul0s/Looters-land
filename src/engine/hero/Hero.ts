@@ -593,6 +593,48 @@ export class Hero {
     }
   }
 
+  /**
+   * Calculate hero score (power rating)
+   *
+   * Formula: Base Score (rarity) × Level Multiplier × (1 + Equipment Score Bonus)
+   * - Base Score: 100 (Common) to 1000 (Legendary)
+   * - Level Multiplier: 1 + (level - 1) × 0.1
+   * - Equipment Bonus: +1% per 100 equipment score
+   *
+   * @returns Hero score (power rating)
+   *
+   * @example
+   * ```typescript
+   * const score = hero.getScore();
+   * console.log(score); // 5850
+   * ```
+   */
+  getScore(): number {
+    const baseScores: Record<HeroRarity, number> = {
+      common: 100,
+      rare: 250,
+      epic: 500,
+      legendary: 1000
+    };
+
+    const baseScore = baseScores[this.rarity] || baseScores.common;
+    const levelMultiplier = 1 + (this.level - 1) * 0.1;
+
+    // Calculate equipment score
+    let equipmentScore = 0;
+    if (this.equipment) {
+      const equippedItems = this.equipment.getAllEquipped();
+      for (const equipped of equippedItems) {
+        equipmentScore += equipped.item.getScore();
+      }
+    }
+
+    const equipmentBonus = 1 + equipmentScore / 10000;
+    const heroScore = baseScore * levelMultiplier * equipmentBonus;
+
+    return Math.floor(heroScore);
+  }
+
   reset(): void {
     this.currentHP = this.maxHP;
     this.isAlive = true;

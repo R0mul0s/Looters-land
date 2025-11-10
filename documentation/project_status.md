@@ -2,9 +2,9 @@
 
 ## 📊 Development Progress Overview
 
-**Overall Completion**: ~32% of full game design (v0.6.1)
-**Current Phase**: UI Polish Complete - Preparing v0.7.0 (Hero Collection & Gacha)
-**Last Update**: 2025-11-09
+**Overall Completion**: ~38% of full game design (v0.7.2)
+**Current Phase**: Mobile Optimizations & Sync Status Complete
+**Last Update**: 2025-11-10
 
 ---
 
@@ -200,9 +200,51 @@
 
 ---
 
-### 🔄 IN DEVELOPMENT
+#### 11. Hero & Item Scoring System ✅ (100% - v0.7.1)
+**Priority**: HIGH
+**Status**: Production-ready
 
-#### 15. UI/UX Enhancements ✅ (100% - v0.6.1)
+**COMPLETED:**
+- [x] Score calculation formulas for heroes and items
+- [x] Hero score based on rarity, level, and equipment
+  - Common: 100 base, Rare: 250, Epic: 500, Legendary: 1000
+  - Level multiplier: 1 + (level - 1) × 0.1
+  - Equipment bonus: +1% per 100 equipment score
+- [x] Item score based on rarity, level, enchant, and slot
+  - Common: 10 base, Uncommon: 25, Rare: 50, Epic: 100, Legendary: 250
+  - Level scaling: +2% per level
+  - Enchant bonus: +15% per enchant level
+  - Slot multipliers: Weapon 1.5x, Chest/Shield 1.2x, Accessory 1.3x
+- [x] Combat Power calculation (sum of active party scores)
+- [x] Real-time combat power updates in useGameState
+- [x] Score display in Hero Collection UI (cards and detail panel)
+- [x] Score display in Item Tooltips
+- [x] Combat Power badge in MainSidebar (full and compact modes)
+- [x] Progression gates recommendation system
+
+**Use Cases:**
+- Player power rating for progression gates
+- Dungeon difficulty recommendations
+- Leaderboard rankings (Combat Power category)
+- Hero comparison and party optimization
+- Item value assessment
+
+**Files**:
+- `src/utils/scoreCalculator.ts` - Core scoring logic
+- `src/engine/hero/Hero.ts` - getScore() method
+- `src/engine/item/Item.ts` - getScore() method
+- `src/hooks/useGameState.ts` - combatPower state
+- `src/components/gacha/HeroCollection.tsx` - Hero score UI
+- `src/components/ui/ItemTooltip.tsx` - Item score UI
+- `src/components/ui/MainSidebar.tsx` - Combat power badge
+
+---
+
+#### 12. UI/UX Enhancements ✅ (100% - v0.7.2)
+**Priority**: HIGH
+**Status**: Production-ready
+
+**COMPLETED:**
 - [x] Mouse wheel zoom on worldmap canvas (0.5x - 2.0x)
 - [x] Keyboard shortcuts for menu navigation
   - [x] W - World Map
@@ -216,9 +258,32 @@
   - [x] "Denní Pořadí #250" → "Level {playerLevel}"
   - [x] "TODO 15" → "{gold} Gold" with number formatting
 - [x] Input field detection (shortcuts disabled during typing)
+- [x] **Mobile Map Optimizations (v0.7.2)**
+  - Fixed stretched map appearance on mobile
+  - Fixed tap position calculations (incorrect target tiles)
+  - High-DPI canvas support using devicePixelRatio
+  - Proper zoom centering on player avatar
+  - Decimal viewport coordinates for precise rendering
+- [x] **Player Marker Scaling (v0.7.2)**
+  - Other players scale with zoom level
+  - Dynamic sizing for icon, nickname, level text
+- [x] **Sync Status Indicator (v0.7.2)**
+  - Real-time database sync status display
+  - Status icons: 💾 Saving, ✓ Saved, ⚠ Error
+  - Relative timestamp display (před 2m)
+  - Integrated into GameHeader
 
-**Files**: `src/components/WorldMapViewer.tsx:243-247`, `src/components/ui/MainSidebar.tsx:48-78`, `src/components/WorldMapDemo2.tsx:467-474`
-**Status**: Production-ready
+**Files**:
+- `src/components/WorldMapViewer.tsx` - Zoom, mobile fixes, high-DPI
+- `src/components/ui/MainSidebar.tsx` - Keyboard shortcuts
+- `src/components/OtherPlayerMarker.tsx` - Scaling support
+- `src/components/SyncStatusIndicator.tsx` - Sync status component
+- `src/components/ui/GameHeader.tsx` - Status display
+- `src/hooks/useGameState.ts` - Sync status tracking
+
+---
+
+### 🔄 IN DEVELOPMENT
 
 ---
 
@@ -482,8 +547,10 @@
 | Hero Progression | ✅ Complete | v0.3.0 | 2025-01-15 |
 | Worldmap System | ✅ Complete | v0.6.0 | 2025-11-07 |
 | Database Integration | ✅ Complete | v0.6.1 | 2025-11-08 |
-| **Dungeon Integration** | ✅ Complete | **v0.6.2** | **2025-11-08** |
-| Hero Collection & Gacha | 🔄 Next | v0.7.0 | TBD |
+| Dungeon Integration | ✅ Complete | v0.6.2 | 2025-11-08 |
+| Hero Collection & Gacha | ✅ Complete | v0.7.0 | 2025-11-09 |
+| Hero & Item Scoring | ✅ Complete | v0.7.1 | 2025-11-10 |
+| **Mobile & Sync Status** | ✅ Complete | **v0.7.2** | **2025-11-10** |
 | Energy System & Daily Reset | 📋 Planned | v0.8.0 | TBD |
 | Leaderboards System | 📋 Planned | v0.8.0 | TBD |
 | Town System | 📋 Planned | v0.9.0 | TBD |

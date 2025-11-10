@@ -7,13 +7,13 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-09
+ * @lastModified 2025-11-10
  */
 
 import React, { useState } from 'react';
 import * as AuthService from '../services/AuthService';
 import { ProfileService } from '../services/ProfileService';
-import { t } from '../localization/i18n';
+import { t, setLanguage, getLanguage, type Language } from '../localization/i18n';
 
 interface ProfileScreenProps {
   playerName: string;
@@ -49,6 +49,7 @@ export function ProfileScreen({
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(playerName);
   const [isSavingName, setIsSavingName] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState<Language>(getLanguage());
 
   /**
    * Reset Progress - Clears all game data but keeps account
@@ -97,7 +98,7 @@ export function ProfileScreen({
       }
     } catch (err) {
       console.error('Reset progress error:', err);
-      setError('Nastala chyba při resetování progressu');
+      setError(t('profile.resetError'));
       setResetStep(0);
     } finally {
       setIsProcessing(false);
@@ -146,7 +147,7 @@ export function ProfileScreen({
       }
     } catch (err) {
       console.error('Delete account error:', err);
-      setError('Nastala chyba při mazání účtu');
+      setError(t('profile.deleteError'));
       setDeleteStep(0);
     } finally {
       setIsProcessing(false);
@@ -247,6 +248,24 @@ export function ProfileScreen({
     setError(null);
   };
 
+  /**
+   * Handle language change
+   *
+   * @description Changes the application language
+   * @param lang - Language code ('en' or 'cs')
+   *
+   * @example
+   * ```tsx
+   * handleLanguageChange('cs');
+   * ```
+   */
+  const handleLanguageChange = (lang: Language) => {
+    setLanguage(lang);
+    setCurrentLanguage(lang);
+    // Reload to apply language changes throughout the app
+    window.location.reload();
+  };
+
   return (
     <div style={styles.container}>
       {/* Header */}
@@ -338,6 +357,22 @@ export function ProfileScreen({
         </div>
       </div>
 
+      {/* Language Settings */}
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>🌍 {t('profile.languageSettings')}</h3>
+        <div style={styles.languageContainer}>
+          <div style={styles.infoLabel}>{t('profile.languageLabel')}:</div>
+          <select
+            style={styles.languageSelect}
+            value={currentLanguage}
+            onChange={(e) => handleLanguageChange(e.target.value as Language)}
+          >
+            <option value="en">🇬🇧 English</option>
+            <option value="cs">🇨🇿 Čeština</option>
+          </select>
+        </div>
+      </div>
+
       {/* Error Message */}
       {error && (
         <div style={styles.errorMessage}>
@@ -347,16 +382,16 @@ export function ProfileScreen({
 
       {/* Dangerous Actions */}
       <div style={styles.section}>
-        <h3 style={{...styles.sectionTitle, color: '#ef4444'}}>⚠️ Nebezpečné akce</h3>
+        <h3 style={{...styles.sectionTitle, color: '#ef4444'}}>⚠️ {t('profile.dangerousActions')}</h3>
 
         {/* Reset Progress */}
         <div style={styles.dangerCard}>
           <div style={styles.dangerHeader}>
             <div style={styles.dangerIcon}>🔄</div>
             <div>
-              <div style={styles.dangerTitle}>Resetovat progres (DEBUG)</div>
+              <div style={styles.dangerTitle}>{t('profile.resetProgressTitle')}</div>
               <div style={styles.dangerDescription}>
-                Smaže všechny hrdiny, předměty a progres. Účet zůstane aktivní.
+                {t('profile.resetProgressDesc')}
               </div>
             </div>
           </div>
@@ -367,21 +402,21 @@ export function ProfileScreen({
               onClick={() => setShowResetConfirm(true)}
               disabled={isProcessing}
             >
-              Resetovat progres
+              {t('profile.resetProgressButton')}
             </button>
           ) : (
             <div style={styles.confirmBox}>
               {resetStep === 0 && (
                 <>
                   <div style={styles.confirmText}>
-                    Opravdu chcete smazat veškerý progres?
+                    {t('profile.resetProgressConfirm1')}
                   </div>
                   <div style={styles.confirmButtons}>
                     <button style={styles.cancelButton} onClick={cancelReset}>
-                      Zrušit
+                      {t('ui.cancel')}
                     </button>
                     <button style={styles.confirmButton} onClick={handleResetProgress}>
-                      Ano, resetovat
+                      {t('profile.yesReset')}
                     </button>
                   </div>
                 </>
@@ -389,18 +424,18 @@ export function ProfileScreen({
               {resetStep === 1 && (
                 <>
                   <div style={styles.confirmText}>
-                    ⚠️ Tato akce je NEVRATNÁ! Ztratíte:<br/>
-                    • {heroCount} hrdinů<br/>
-                    • {itemCount} předmětů<br/>
-                    • Veškerý progres a zlato<br/><br/>
-                    Pokračovat?
+                    ⚠️ {t('profile.resetProgressConfirm2Warning')}<br/>
+                    • {heroCount} {t('profile.resetProgressConfirm2Heroes')}<br/>
+                    • {itemCount} {t('profile.resetProgressConfirm2Items')}<br/>
+                    • {t('profile.resetProgressConfirm2AllProgress')}<br/><br/>
+                    {t('profile.resetProgressConfirm2Question')}
                   </div>
                   <div style={styles.confirmButtons}>
                     <button style={styles.cancelButton} onClick={cancelReset}>
-                      Zrušit
+                      {t('ui.cancel')}
                     </button>
                     <button style={styles.confirmButton} onClick={handleResetProgress}>
-                      Ano, jsem si jistý
+                      {t('profile.yesSure')}
                     </button>
                   </div>
                 </>
@@ -408,19 +443,18 @@ export function ProfileScreen({
               {resetStep === 2 && (
                 <>
                   <div style={styles.confirmText}>
-                    🔴 POSLEDNÍ VAROVÁNÍ!<br/>
-                    Toto NELZE vrátit zpět. Opravdu smazat vše?
+                    🔴 {t('profile.resetProgressConfirm3')}
                   </div>
                   <div style={styles.confirmButtons}>
                     <button style={styles.cancelButton} onClick={cancelReset}>
-                      Ne, zrušit
+                      {t('profile.noCancel')}
                     </button>
                     <button
                       style={{...styles.confirmButton, background: '#dc2626'}}
                       onClick={handleResetProgress}
                       disabled={isProcessing}
                     >
-                      {isProcessing ? 'Probíhá...' : 'ANO, SMAZAT VŠE'}
+                      {isProcessing ? t('profile.processing') : t('profile.yesDeleteAll')}
                     </button>
                   </div>
                 </>
@@ -434,9 +468,9 @@ export function ProfileScreen({
           <div style={styles.dangerHeader}>
             <div style={styles.dangerIcon}>🗑️</div>
             <div>
-              <div style={styles.dangerTitle}>Smazat účet</div>
+              <div style={styles.dangerTitle}>{t('profile.deleteAccountTitle')}</div>
               <div style={styles.dangerDescription}>
-                Trvale smaže váš účet a VŠECHNA data. Tuto akci NELZE vrátit zpět!
+                {t('profile.deleteAccountDesc')}
               </div>
             </div>
           </div>
@@ -447,24 +481,24 @@ export function ProfileScreen({
               onClick={() => setShowDeleteConfirm(true)}
               disabled={isProcessing}
             >
-              Smazat účet
+              {t('profile.deleteAccountButton')}
             </button>
           ) : (
             <div style={styles.confirmBox}>
               {deleteStep === 0 && (
                 <>
                   <div style={styles.confirmText}>
-                    Opravdu chcete TRVALE smazat svůj účet?
+                    {t('profile.deleteAccountConfirm1')}
                   </div>
                   <div style={styles.confirmButtons}>
                     <button style={styles.cancelButton} onClick={cancelDelete}>
-                      Zrušit
+                      {t('ui.cancel')}
                     </button>
                     <button
                       style={{...styles.confirmButton, background: '#dc2626'}}
                       onClick={handleDeleteAccount}
                     >
-                      Ano, smazat účet
+                      {t('profile.yesDeleteAccount')}
                     </button>
                   </div>
                 </>
@@ -472,19 +506,18 @@ export function ProfileScreen({
               {deleteStep === 1 && (
                 <>
                   <div style={styles.confirmText}>
-                    ❌ POSLEDNÍ VAROVÁNÍ!<br/>
-                    Váš účet ({playerEmail}) bude TRVALE SMAZÁN.<br/>
-                    Ztratíte přístup NAVŽDY. Pokračovat?
+                    ❌ {t('profile.deleteAccountConfirm2Warning')}<br/>
+                    {t('profile.deleteAccountConfirm2Text', { email: playerEmail })}
                   </div>
                   <div style={styles.confirmButtons}>
                     <button style={styles.cancelButton} onClick={cancelDelete}>
-                      Zrušit
+                      {t('ui.cancel')}
                     </button>
                     <button
                       style={{...styles.confirmButton, background: '#dc2626'}}
                       onClick={handleDeleteAccount}
                     >
-                      Ano, jsem si jistý
+                      {t('profile.yesSure')}
                     </button>
                   </div>
                 </>
@@ -492,19 +525,18 @@ export function ProfileScreen({
               {deleteStep === 2 && (
                 <>
                   <div style={styles.confirmText}>
-                    🔴 OPRAVDU POSLEDNÍ ŠANCE!<br/>
-                    Toto NELZE vrátit zpět. Smazat účet NAVŽDY?
+                    🔴 {t('profile.deleteAccountConfirm3')}
                   </div>
                   <div style={styles.confirmButtons}>
                     <button style={styles.cancelButton} onClick={cancelDelete}>
-                      Ne, zachovat účet
+                      {t('profile.noKeepAccount')}
                     </button>
                     <button
                       style={{...styles.confirmButton, background: '#991b1b'}}
                       onClick={handleDeleteAccount}
                       disabled={isProcessing}
                     >
-                      {isProcessing ? 'Probíhá...' : 'ANO, SMAZAT TRVALE'}
+                      {isProcessing ? t('profile.processing') : t('profile.yesDeletePermanently')}
                     </button>
                   </div>
                 </>
@@ -725,5 +757,28 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: '600',
     cursor: 'pointer',
     transition: 'all 0.2s'
+  },
+  languageContainer: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '15px',
+    background: 'rgba(30, 41, 59, 0.5)',
+    padding: '15px',
+    borderRadius: '8px',
+    border: '1px solid rgba(45, 212, 191, 0.2)'
+  },
+  languageSelect: {
+    flex: 1,
+    padding: '10px 15px',
+    background: 'rgba(15, 23, 42, 0.8)',
+    border: '2px solid rgba(45, 212, 191, 0.4)',
+    borderRadius: '8px',
+    color: '#f1f5f9',
+    fontSize: '14px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    outline: 'none',
+    transition: 'all 0.2s',
+    fontFamily: 'inherit'
   }
 };

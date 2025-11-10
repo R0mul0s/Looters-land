@@ -15,6 +15,7 @@ import { MainSidebar } from './ui/MainSidebar';
 import { ComingSoon } from './ui/ComingSoon';
 import { ProfileScreen } from './ProfileScreen';
 import { LastUpdates } from './ui/LastUpdates';
+import type { SyncStatus } from './SyncStatusIndicator';
 
 type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport' | 'updates';
 
@@ -28,8 +29,11 @@ interface GameLayoutProps {
   maxEnergy: number;
   energyRegenRate?: number; // Energy per hour (default: 10)
   playerLevel?: number;
+  combatPower?: number; // Total party score
   heroCount?: number; // For profile screen
   itemCount?: number; // For profile screen
+  syncStatus?: SyncStatus; // Database sync status
+  lastSaveTime?: Date | null; // Last successful save time
   // Screen components
   worldmapScreen?: React.ReactNode;
   heroesScreen?: React.ReactNode;
@@ -69,8 +73,11 @@ export function GameLayout({
   maxEnergy,
   energyRegenRate = 10, // Default: 10 energy per hour
   playerLevel = 1,
+  combatPower = 0,
   heroCount = 0,
   itemCount = 0,
+  syncStatus,
+  lastSaveTime,
   worldmapScreen,
   heroesScreen,
   inventoryScreen,
@@ -122,6 +129,7 @@ export function GameLayout({
         activeScreen={activeScreen}
         onScreenChange={handleScreenChange}
         playerLevel={playerLevel}
+        combatPower={combatPower}
       />
 
       {/* Right Content Area (scrollable) */}
@@ -134,6 +142,8 @@ export function GameLayout({
           energy={energy}
           maxEnergy={maxEnergy}
           energyRegenRate={energyRegenRate}
+          syncStatus={syncStatus}
+          lastSaveTime={lastSaveTime}
           onSettingsClick={handleSettingsClick}
         />
 

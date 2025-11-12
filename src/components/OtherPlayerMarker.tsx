@@ -74,9 +74,9 @@ export function OtherPlayerMarker({
   const nicknameFontSize = Math.max(9, Math.floor(11 * scale));
   const combatPowerFontSize = Math.max(8, Math.floor(9 * scale));
 
-  // Use combat power if available, otherwise fallback to level
-  const displayValue = combatPower > 0 ? combatPower : (level || 0);
-  const displayLabel = combatPower > 0 ? `⚔️ ${displayValue}` : `Lv.${displayValue}`;
+  // Always display combat power (even if 0)
+  const displayValue = combatPower;
+  const displayLabel = `⚔️ ${displayValue}`;
 
   return (
     <div style={styles.container}>

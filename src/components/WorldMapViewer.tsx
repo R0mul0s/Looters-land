@@ -62,6 +62,7 @@ import frostGiantImg from '../assets/images/monster/frost-giant.png';
 import manticoreImg from '../assets/images/monster/manticore.png';
 import wyvernImg from '../assets/images/monster/wyvern.png';
 import banditLeaderImg from '../assets/images/monster/bandit-leader.png';
+import darkKnightImg from '../assets/images/monster/dark-knight.png';
 
 interface WorldMapViewerProps {
   worldMap: WorldMap;
@@ -171,6 +172,7 @@ function WorldMapViewerComponent({
     manticore: HTMLImageElement | null;
     wyvern: HTMLImageElement | null;
     banditLeader: HTMLImageElement | null;
+    darkKnight: HTMLImageElement | null;
   }>({
     ancientGolem: null,
     direWolf: null,
@@ -180,7 +182,8 @@ function WorldMapViewerComponent({
     frostGiant: null,
     manticore: null,
     wyvern: null,
-    banditLeader: null
+    banditLeader: null,
+    darkKnight: null
   });
 
   // Perlin noise for smooth variant distribution (prevents checkerboard pattern)
@@ -325,7 +328,8 @@ function WorldMapViewerComponent({
       frostGiant: new Image(),
       manticore: new Image(),
       wyvern: new Image(),
-      banditLeader: new Image()
+      banditLeader: new Image(),
+      darkKnight: new Image()
     };
 
     images.ancientGolem.src = ancientGolemImg;
@@ -337,9 +341,10 @@ function WorldMapViewerComponent({
     images.manticore.src = manticoreImg;
     images.wyvern.src = wyvernImg;
     images.banditLeader.src = banditLeaderImg;
+    images.darkKnight.src = darkKnightImg;
 
     let loadedCount = 0;
-    const totalImages = 9;
+    const totalImages = 10;
 
     const onLoad = () => {
       loadedCount++;
@@ -353,7 +358,8 @@ function WorldMapViewerComponent({
           frostGiant: images.frostGiant,
           manticore: images.manticore,
           wyvern: images.wyvern,
-          banditLeader: images.banditLeader
+          banditLeader: images.banditLeader,
+          darkKnight: images.darkKnight
         });
         console.log('✅ All monster images loaded successfully');
       }
@@ -368,6 +374,7 @@ function WorldMapViewerComponent({
     images.manticore.onload = onLoad;
     images.wyvern.onload = onLoad;
     images.banditLeader.onload = onLoad;
+    images.darkKnight.onload = onLoad;
 
     images.ancientGolem.onerror = () => console.error('Failed to load ancient-golem.png');
     images.direWolf.onerror = () => console.error('Failed to load dire-wolf.png');
@@ -378,6 +385,7 @@ function WorldMapViewerComponent({
     images.manticore.onerror = () => console.error('Failed to load manticore.png');
     images.wyvern.onerror = () => console.error('Failed to load wyvern.png');
     images.banditLeader.onerror = () => console.error('Failed to load bandit-leader.png');
+    images.darkKnight.onerror = () => console.error('Failed to load dark-knight.png');
   }, []);
 
   // Load all terrain images
@@ -700,6 +708,9 @@ function WorldMapViewerComponent({
               } else if (obj.enemyName === 'Bandit Leader' && monsterImages.banditLeader) {
                 useImage = true;
                 imgToUse = monsterImages.banditLeader;
+              } else if (obj.enemyName === 'Dark Knight' && monsterImages.darkKnight) {
+                useImage = true;
+                imgToUse = monsterImages.darkKnight;
               }
             }
             break;

@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2025-11-12
  */
 
 import React, { memo } from 'react';
@@ -22,6 +22,57 @@ interface ChangelogEntry {
 }
 
 const getChangelog = (): ChangelogEntry[] => [
+  {
+    version: 'v2.3.2',
+    date: '2025-11-12',
+    technical: [
+      t('updates.v2_3_2.technical.item1'),
+      t('updates.v2_3_2.technical.item2'),
+      t('updates.v2_3_2.technical.item3'),
+      t('updates.v2_3_2.technical.item4'),
+      t('updates.v2_3_2.technical.item5'),
+      t('updates.v2_3_2.technical.item6'),
+      t('updates.v2_3_2.technical.item7'),
+      t('updates.v2_3_2.technical.item8')
+    ]
+  },
+  {
+    version: 'v2.3.1',
+    date: '2025-11-11',
+    features: [
+      t('updates.v2_3_1.features.item1'),
+      t('updates.v2_3_1.features.item2'),
+      t('updates.v2_3_1.features.item3'),
+      t('updates.v2_3_1.features.item4'),
+      t('updates.v2_3_1.features.item5'),
+      t('updates.v2_3_1.features.item6'),
+      t('updates.v2_3_1.features.item7')
+    ],
+    technical: [
+      t('updates.v2_3_1.technical.item1'),
+      t('updates.v2_3_1.technical.item2')
+    ]
+  },
+  {
+    version: 'v2.3.0',
+    date: '2025-11-10',
+    features: [
+      t('updates.v2_3_0.features.item1'),
+      t('updates.v2_3_0.features.item2'),
+      t('updates.v2_3_0.features.item3'),
+      t('updates.v2_3_0.features.item4'),
+      t('updates.v2_3_0.features.item5'),
+      t('updates.v2_3_0.features.item6'),
+      t('updates.v2_3_0.features.item7'),
+      t('updates.v2_3_0.features.item8'),
+      t('updates.v2_3_0.features.item9')
+    ],
+    technical: [
+      t('updates.v2_3_0.technical.item1'),
+      t('updates.v2_3_0.technical.item2'),
+      t('updates.v2_3_0.technical.item3')
+    ]
+  },
   {
     version: 'v2.2.0',
     date: '2025-11-10',

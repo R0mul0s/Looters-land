@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2025-11-12
  */
 
 export const en = {
@@ -16,6 +16,17 @@ export const en = {
   app: {
     title: 'Looters Land',
     subtitle: 'Idle RPG Adventure - Loot, Fight, Conquer!',
+  },
+
+  // ============================================================================
+  // COMMON UI ELEMENTS
+  // ============================================================================
+  common: {
+    ok: 'OK',
+    cancel: 'Cancel',
+    close: 'Close',
+    confirm: 'Confirm',
+    information: 'Information',
   },
 
   // ============================================================================
@@ -76,6 +87,7 @@ export const en = {
     // Combat status
     victory: '🎉 VICTORY! Heroes win! 🎉',
     defeat: '💀 DEFEAT! Heroes have fallen... 💀',
+    allHeroesDead: 'All your heroes have been defeated in battle!',
 
     // Turn info
     turnCounter: 'Turn',
@@ -355,6 +367,19 @@ export const en = {
     distance: 'Distance',
     cost: 'Cost',
     tiles: 'tiles',
+
+    // Worldmap object messages
+    treasureChestAlreadyOpened: 'This treasure chest has already been opened!',
+    hiddenPathAlreadyDiscovered: 'This hidden path has already been discovered!',
+    hiddenPathLevelRequired: 'This hidden path requires level {{requiredLevel}}!\nYour level: {{playerLevel}}',
+    portalNotConnected: 'This portal is not connected to anything!',
+    portalNotFound: 'The linked portal could not be found!',
+    rareSpawnDefeated: 'This rare enemy has already been defeated!',
+    monsterDefeated: 'This monster has already been defeated!\nIt will respawn later.',
+    notEnoughGold: 'Not enough gold!\nRequired: {{required}}\nCurrent: {{current}}',
+    merchantSoldOut: 'The merchant has sold all their items!',
+    randomEventComingSoon: 'Random Event: {{eventType}}\nFeature coming soon!',
+    itemSold: '✅ Sold {{itemName}} for {{gold}} gold!',
   },
 
   // ============================================================================
@@ -815,6 +840,8 @@ export const en = {
     cooldownActive: 'Skill is on cooldown',
     notEnoughResources: 'Not enough resources',
     targetInvalid: 'Invalid target',
+    notLoggedIn: 'Not logged in',
+    avatarUpdateFailed: 'Failed to update avatar',
   },
 
   // ============================================================================
@@ -842,14 +869,19 @@ export const en = {
     enterNewName: 'Enter new name',
     resetProgress: 'Reset Progress',
     resetProgressConfirm: 'WARNING: This will delete ALL game data!\n\nOnly your account and email will remain.\n\nThis action is IRREVERSIBLE!\n\nDo you really want to continue?',
-    resetProgressSuccess: 'Progress reset successfully',
+    resetProgressSuccess: '✅ Progress successfully reset! You will be logged out...',
     resetProgressFailed: 'Failed to reset progress',
     deleteAccount: 'Delete Account',
     deleteAccountConfirm: 'WARNING: This will PERMANENTLY DELETE your account!\n\nALL data will be lost forever.\n\nThis action is IRREVERSIBLE!\n\nDo you really want to continue?',
-    deleteAccountSuccess: 'Account deleted successfully',
+    deleteAccountSuccess: '❌ Account successfully deleted. You will be logged out...',
     deleteAccountFailed: 'Failed to delete account',
     languageSettings: 'Language Settings',
     languageLabel: 'Language',
+
+    // Avatar section
+    avatarSectionTitle: 'Avatar Selection',
+    avatarSelectedBadge: 'Selected',
+    avatarSaving: 'Saving...',
 
     // Dangerous Actions section
     dangerousActions: 'Dangerous Actions',
@@ -907,6 +939,43 @@ export const en = {
     technical: 'Technical Changes',
     footer: 'More information at',
     github: 'GitHub',
+
+    // Version 2.3.1
+    v2_3_1: {
+      features: {
+        item1: '✅ Treasure Chests - Now fully functional! Open chests for gold and items',
+        item2: '✅ Hidden Paths - Discover secret areas with level requirements and rare loot',
+        item3: '✅ Portals - Teleport between linked portals with energy cost',
+        item4: '✅ Rare Spawns - Fight powerful enemies with guaranteed rare/epic drops',
+        item5: '✅ Wandering Monsters - Fast combat encounters on the worldmap',
+        item6: '✅ Traveling Merchants - Shop interface with purchasable items',
+        item7: '✅ Weather & Time Display - See current weather and time of day on map'
+      },
+      technical: {
+        item1: 'LootGenerator - Added static methods for worldmap loot generation',
+        item2: 'WorldMapDemo2 - All worldmap features now fully implemented'
+      }
+    },
+
+    // Version 2.3.0
+    v2_3_0: {
+      features: {
+        item1: '🌀 Portals - Fast travel between discovered portals (costs energy)',
+        item2: '🗝️ Hidden Paths - Secret areas with rare loot in remote locations',
+        item3: '📦 Treasure Chests - Random chests spawn on map with gold and items',
+        item4: '👹 Rare Spawns - Powerful enemies with guaranteed rare/epic drops',
+        item5: '🐺 Wandering Monsters - Clickable enemies on map for fast combat',
+        item6: '🛒 Traveling Merchants - Random merchants with unique items',
+        item7: '⭐ Random Events - Special events (rescue NPC, boss fight, treasure hunt)',
+        item8: '🌦️ Weather System - Weather affects enemy spawn rates',
+        item9: '🌙 Day/Night Cycle - Different enemies spawn at different times',
+      },
+      technical: {
+        item1: 'Extended WorldMap types with 6 new static objects and 3 dynamic objects',
+        item2: 'Added procedural generation for all new map features',
+        item3: 'Implemented click handlers and rendering for new objects',
+      },
+    },
 
     // Version 2.2.0
     v2_2_0: {
@@ -975,6 +1044,20 @@ export const en = {
       },
     },
 
+    // Version 2.3.2
+    v2_3_2: {
+      technical: {
+        item1: 'Fixed all hardcoded Czech/English strings in ProfileScreen - replaced with t() localization',
+        item2: 'Localized avatar display names with getAvatarDisplayName() function',
+        item3: 'Added comprehensive JSDoc documentation to 6 helper functions in WorldMapViewer',
+        item4: 'Implemented React.memo() for WorldMapViewer component performance optimization',
+        item5: 'Added useMemo() to getHoverInfo calculation for better performance',
+        item6: 'Added component-level JSDoc to ProfileScreen with full interface documentation',
+        item7: 'Removed unused previewImage property from AVATAR_CONFIG',
+        item8: 'Updated @lastModified dates to 2025-11-12 in all modified files',
+      },
+    },
+
     // Version 1.0.0
     v1_0_0: {
       features: {
@@ -983,6 +1066,17 @@ export const en = {
         item3: 'Local storage saves',
       },
     },
+  },
+
+  // ============================================================================
+  // AVATARS
+  // ============================================================================
+  avatars: {
+    hero1: 'Knight',
+    hero2: 'Ranger',
+    hero3: 'Mage',
+    hero4: 'Shieldbearer',
+    hero5: 'Bard',
   },
 } as const;
 

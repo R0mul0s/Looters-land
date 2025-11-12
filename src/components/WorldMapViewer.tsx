@@ -12,13 +12,14 @@
  */
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import type { WorldMap, Tile, StaticObject } from '../types/worldmap.types';
+import type { WorldMap, Tile, StaticObject, WeatherState, TimeState } from '../types/worldmap.types';
 import { TERRAIN_ICONS } from '../types/worldmap.types';
 import { OtherPlayerMarker } from './OtherPlayerMarker';
 import { ChatBubble } from './ChatBubble';
 import type { OtherPlayer } from '../hooks/useOtherPlayers';
 import { t } from '../localization/i18n';
 import { PerlinNoise } from '../engine/worldmap/PerlinNoise';
+import { TimeOfDaySystem } from '../engine/worldmap/TimeOfDaySystem';
 
 // Import terrain images
 import forest1Img from '../assets/images/terrian/forest1.png';
@@ -41,6 +42,21 @@ import hero3Img from '../assets/images/hero/hero3.png';
 import hero4Img from '../assets/images/hero/hero4.png';
 import hero5Img from '../assets/images/hero/hero5.png';
 
+// Import building images for dungeons and cities
+import dungeon1Img from '../assets/images/building/dungeon1.png';
+import dungeon2Img from '../assets/images/building/dungeon2.png';
+import dungeon3Img from '../assets/images/building/dungeon3.png';
+import city1Img from '../assets/images/building/city1.png';
+import city2Img from '../assets/images/building/city2.png';
+import city3Img from '../assets/images/building/city3.png';
+import city4Img from '../assets/images/building/city4.png';
+import city5Img from '../assets/images/building/city5.png';
+
+// Import monster images
+import ancientGolemImg from '../assets/images/monster/ancient-golem.png';
+import direWolfImg from '../assets/images/monster/dire-wolf.png';
+import trollImg from '../assets/images/monster/troll.png';
+
 interface WorldMapViewerProps {
   worldMap: WorldMap;
   playerPosition: { x: number; y: number };
@@ -48,6 +64,8 @@ interface WorldMapViewerProps {
   otherPlayers?: OtherPlayer[]; // Optional list of other players to render
   playerChatMessage?: string; // Current player's chat message
   playerChatTimestamp?: Date; // Timestamp of current player's chat message
+  weather?: WeatherState; // Current weather state
+  timeOfDay?: TimeState; // Current time of day state
   onTileClick?: (x: number, y: number) => void;
   onObjectClick?: (object: StaticObject) => void;
 }
@@ -77,6 +95,8 @@ function WorldMapViewerComponent({
   otherPlayers = [],
   playerChatMessage,
   playerChatTimestamp,
+  weather,
+  timeOfDay,
   onTileClick,
   onObjectClick
 }: WorldMapViewerProps) {
@@ -84,7 +104,7 @@ function WorldMapViewerComponent({
   const [viewport, setViewport] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [hoveredTile, setHoveredTile] = useState<{ x: number; y: number } | null>(null);
-  const [, setAnimationTrigger] = useState(0); // Dummy state to trigger re-renders for animation
+  const [animationTrigger, setAnimationTrigger] = useState(0); // Dummy state to trigger re-renders for animation
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -108,12 +128,52 @@ function WorldMapViewerComponent({
   // Hero/player avatar image
   const [heroImage, setHeroImage] = useState<HTMLImageElement | null>(null);
 
+  // Dungeon building images
+  const [dungeonImages, setDungeonImages] = useState<{
+    dungeon1: HTMLImageElement | null;
+    dungeon2: HTMLImageElement | null;
+    dungeon3: HTMLImageElement | null;
+  }>({
+    dungeon1: null,
+    dungeon2: null,
+    dungeon3: null
+  });
+
+  // City building images
+  const [cityImages, setCityImages] = useState<{
+    city1: HTMLImageElement | null;
+    city2: HTMLImageElement | null;
+    city3: HTMLImageElement | null;
+    city4: HTMLImageElement | null;
+    city5: HTMLImageElement | null;
+  }>({
+    city1: null,
+    city2: null,
+    city3: null,
+    city4: null,
+    city5: null
+  });
+
+  // Monster images
+  const [monsterImages, setMonsterImages] = useState<{
+    ancientGolem: HTMLImageElement | null;
+    direWolf: HTMLImageElement | null;
+    troll: HTMLImageElement | null;
+  }>({
+    ancientGolem: null,
+    direWolf: null,
+    troll: null
+  });
+
   // Perlin noise for smooth variant distribution (prevents checkerboard pattern)
   const variantNoise = useRef<PerlinNoise | null>(null);
 
   // Animation state for pulsating glow effect
   const animationFrameRef = useRef<number | null>(null);
   const glowStartTimeRef = useRef<number>(Date.now());
+
+  // Weather particles state (rain drops, snowflakes)
+  const weatherParticlesRef = useRef<Array<{ x: number; y: number; speed: number; opacity: number }>>([]);
 
   const BASE_TILE_SIZE = 32; // Base tile size without zoom
   const TILE_SIZE = BASE_TILE_SIZE * zoom; // Scaled tile size with zoom
@@ -153,6 +213,124 @@ function WorldMapViewerComponent({
     };
     img.onerror = () => console.error(`Failed to load ${playerAvatar}`);
   }, [playerAvatar]); // Re-load when avatar changes
+
+  // Load dungeon building images
+  useEffect(() => {
+    const images = {
+      dungeon1: new Image(),
+      dungeon2: new Image(),
+      dungeon3: new Image()
+    };
+
+    images.dungeon1.src = dungeon1Img;
+    images.dungeon2.src = dungeon2Img;
+    images.dungeon3.src = dungeon3Img;
+
+    let loadedCount = 0;
+    const totalImages = 3;
+
+    const onLoad = () => {
+      loadedCount++;
+      if (loadedCount === totalImages) {
+        setDungeonImages({
+          dungeon1: images.dungeon1,
+          dungeon2: images.dungeon2,
+          dungeon3: images.dungeon3
+        });
+        console.log('✅ All dungeon images loaded successfully');
+      }
+    };
+
+    images.dungeon1.onload = onLoad;
+    images.dungeon2.onload = onLoad;
+    images.dungeon3.onload = onLoad;
+
+    images.dungeon1.onerror = () => console.error('Failed to load dungeon1.png');
+    images.dungeon2.onerror = () => console.error('Failed to load dungeon2.png');
+    images.dungeon3.onerror = () => console.error('Failed to load dungeon3.png');
+  }, []);
+
+  // Load city building images
+  useEffect(() => {
+    const images = {
+      city1: new Image(),
+      city2: new Image(),
+      city3: new Image(),
+      city4: new Image(),
+      city5: new Image()
+    };
+
+    images.city1.src = city1Img;
+    images.city2.src = city2Img;
+    images.city3.src = city3Img;
+    images.city4.src = city4Img;
+    images.city5.src = city5Img;
+
+    let loadedCount = 0;
+    const totalImages = 5;
+
+    const onLoad = () => {
+      loadedCount++;
+      if (loadedCount === totalImages) {
+        setCityImages({
+          city1: images.city1,
+          city2: images.city2,
+          city3: images.city3,
+          city4: images.city4,
+          city5: images.city5
+        });
+        console.log('✅ All city images loaded successfully');
+      }
+    };
+
+    images.city1.onload = onLoad;
+    images.city2.onload = onLoad;
+    images.city3.onload = onLoad;
+    images.city4.onload = onLoad;
+    images.city5.onload = onLoad;
+
+    images.city1.onerror = () => console.error('Failed to load city1.png');
+    images.city2.onerror = () => console.error('Failed to load city2.png');
+    images.city3.onerror = () => console.error('Failed to load city3.png');
+    images.city4.onerror = () => console.error('Failed to load city4.png');
+    images.city5.onerror = () => console.error('Failed to load city5.png');
+  }, []);
+
+  // Load monster images
+  useEffect(() => {
+    const images = {
+      ancientGolem: new Image(),
+      direWolf: new Image(),
+      troll: new Image()
+    };
+
+    images.ancientGolem.src = ancientGolemImg;
+    images.direWolf.src = direWolfImg;
+    images.troll.src = trollImg;
+
+    let loadedCount = 0;
+    const totalImages = 3;
+
+    const onLoad = () => {
+      loadedCount++;
+      if (loadedCount === totalImages) {
+        setMonsterImages({
+          ancientGolem: images.ancientGolem,
+          direWolf: images.direWolf,
+          troll: images.troll
+        });
+        console.log('✅ All monster images loaded successfully');
+      }
+    };
+
+    images.ancientGolem.onload = onLoad;
+    images.direWolf.onload = onLoad;
+    images.troll.onload = onLoad;
+
+    images.ancientGolem.onerror = () => console.error('Failed to load ancient-golem.png');
+    images.direWolf.onerror = () => console.error('Failed to load dire-wolf.png');
+    images.troll.onerror = () => console.error('Failed to load troll.png');
+  }, []);
 
   // Load all terrain images
   useEffect(() => {
@@ -252,6 +430,28 @@ function WorldMapViewerComponent({
   }, [playerPosition.x, playerPosition.y, VIEWPORT_WIDTH, VIEWPORT_HEIGHT, TILE_SIZE, zoom]);
 
   /**
+   * Initialize weather particles when weather changes
+   */
+  useEffect(() => {
+    if (!weather) return;
+
+    const particleCount = weather.current === 'rain' ? 150 : weather.current === 'snow' ? 100 : weather.current === 'storm' ? 250 : 0;
+
+    // Reset particles
+    weatherParticlesRef.current = [];
+
+    // Generate particles
+    for (let i = 0; i < particleCount; i++) {
+      weatherParticlesRef.current.push({
+        x: Math.random() * VIEWPORT_WIDTH,
+        y: Math.random() * VIEWPORT_HEIGHT,
+        speed: weather.current === 'rain' ? 4 + Math.random() * 3 : weather.current === 'storm' ? 6 + Math.random() * 4 : 1 + Math.random() * 2,
+        opacity: weather.current === 'rain' ? 0.3 + Math.random() * 0.4 : weather.current === 'storm' ? 0.4 + Math.random() * 0.5 : 0.5 + Math.random() * 0.5
+      });
+    }
+  }, [weather?.current, VIEWPORT_WIDTH, VIEWPORT_HEIGHT]);
+
+  /**
    * Render worldmap on canvas
    */
   useEffect(() => {
@@ -280,7 +480,14 @@ function WorldMapViewerComponent({
     const endY = Math.min(worldMap.height, Math.ceil(viewport.y + VIEWPORT_HEIGHT / TILE_SIZE) + 1);
 
     // Collect static objects to render later (after player)
-    const staticObjectsToRender: Array<{ icon: string; screenX: number; screenY: number }> = [];
+    const staticObjectsToRender: Array<{
+      icon: string;
+      screenX: number;
+      screenY: number;
+      objectType: string;
+      objectId?: string;
+      objectName?: string;
+    }> = [];
 
     // Render tiles
     for (let y = startY; y < endY; y++) {
@@ -361,6 +568,10 @@ function WorldMapViewerComponent({
         // Collect static objects to render later (after player for proper z-index)
         if (tile.staticObject && tile.isExplored) {
           let icon = '';
+          const objectType = tile.staticObject.type;
+          const objectId = tile.staticObject.id;
+          const objectName = tile.staticObject.name;
+
           switch (tile.staticObject.type) {
             case 'town':
               icon = '🏰';
@@ -382,7 +593,7 @@ function WorldMapViewerComponent({
               break;
           }
           if (icon) {
-            staticObjectsToRender.push({ icon, screenX, screenY });
+            staticObjectsToRender.push({ icon, screenX, screenY, objectType, objectId, objectName });
           }
         }
 
@@ -409,9 +620,22 @@ function WorldMapViewerComponent({
         screenY <= VIEWPORT_HEIGHT
       ) {
         let icon = '';
+        let useImage = false;
+        let imgToUse: HTMLImageElement | null = null;
+
         switch (obj.type) {
           case 'wanderingMonster':
             icon = '🐺';
+            // Check if this is a Dire Wolf or Troll and use image if available
+            if ('enemyName' in obj) {
+              if (obj.enemyName === 'Dire Wolf' && monsterImages.direWolf) {
+                useImage = true;
+                imgToUse = monsterImages.direWolf;
+              } else if (obj.enemyName === 'Troll' && monsterImages.troll) {
+                useImage = true;
+                imgToUse = monsterImages.troll;
+              }
+            }
             break;
           case 'travelingMerchant':
             icon = '🛒';
@@ -421,7 +645,21 @@ function WorldMapViewerComponent({
             break;
         }
 
-        if (icon) {
+        if (useImage && imgToUse) {
+          // Add yellow glow effect for monsters
+          ctx.shadowColor = '#ffff00';
+          ctx.shadowBlur = 15;
+
+          // Make monster larger (1.3x tile size) and center it
+          const monsterSize = TILE_SIZE * 1.3;
+          const monsterOffsetX = screenX - (monsterSize - TILE_SIZE) / 2;
+          const monsterOffsetY = screenY - (monsterSize - TILE_SIZE) / 2;
+
+          ctx.drawImage(imgToUse, monsterOffsetX, monsterOffsetY, monsterSize, monsterSize);
+
+          // Reset shadow
+          ctx.shadowBlur = 0;
+        } else if (icon) {
           ctx.font = `${Math.floor(TILE_SIZE * 0.7)}px sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
@@ -474,19 +712,167 @@ function WorldMapViewerComponent({
     ctx.font = `${Math.floor(TILE_SIZE * 0.8)}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    staticObjectsToRender.forEach(({ icon, screenX, screenY }) => {
-      ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+    staticObjectsToRender.forEach(({ icon, screenX, screenY, objectType, objectId, objectName }) => {
+      // Use dungeon images for dungeons if available
+      if (objectType === 'dungeon' && objectId) {
+        // Select dungeon image based on dungeon ID (0 = dungeon1, 1 = dungeon2, etc.)
+        const dungeonIndex = parseInt(objectId.split('-')[1] || '0');
+        let dungeonImg: HTMLImageElement | null = null;
+
+        switch (dungeonIndex % 3) {
+          case 0:
+            dungeonImg = dungeonImages.dungeon1;
+            break;
+          case 1:
+            dungeonImg = dungeonImages.dungeon2;
+            break;
+          case 2:
+            dungeonImg = dungeonImages.dungeon3;
+            break;
+        }
+
+        // Draw dungeon image if loaded, otherwise fall back to emoji
+        if (dungeonImg) {
+          // Add yellow glow effect
+          ctx.shadowColor = '#ffff00';
+          ctx.shadowBlur = 15;
+
+          // Make dungeon larger (1.3x tile size) and center it
+          const dungeonSize = TILE_SIZE * 1.3;
+          const dungeonOffsetX = screenX - (dungeonSize - TILE_SIZE) / 2;
+          const dungeonOffsetY = screenY - (dungeonSize - TILE_SIZE) / 2;
+
+          ctx.drawImage(dungeonImg, dungeonOffsetX, dungeonOffsetY, dungeonSize, dungeonSize);
+
+          // Reset shadow
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+        }
+      } else if (objectType === 'town' && objectId) {
+        // Use city images for towns if available
+        // Select city image based on town ID (0 = city1, 1 = city2, etc.)
+        const townIndex = parseInt(objectId.split('-')[1] || '0');
+        let cityImg: HTMLImageElement | null = null;
+
+        switch (townIndex % 5) {
+          case 0:
+            cityImg = cityImages.city1;
+            break;
+          case 1:
+            cityImg = cityImages.city2;
+            break;
+          case 2:
+            cityImg = cityImages.city3;
+            break;
+          case 3:
+            cityImg = cityImages.city4;
+            break;
+          case 4:
+            cityImg = cityImages.city5;
+            break;
+        }
+
+        // Draw city image if loaded, otherwise fall back to emoji
+        if (cityImg) {
+          // Add yellow glow effect
+          ctx.shadowColor = '#ffff00';
+          ctx.shadowBlur = 15;
+
+          // Make city larger (1.3x tile size) and center it
+          const citySize = TILE_SIZE * 1.3;
+          const cityOffsetX = screenX - (citySize - TILE_SIZE) / 2;
+          const cityOffsetY = screenY - (citySize - TILE_SIZE) / 2;
+
+          ctx.drawImage(cityImg, cityOffsetX, cityOffsetY, citySize, citySize);
+
+          // Reset shadow
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+        }
+      } else if (objectType === 'rareSpawn' && objectName === 'Ancient Golem') {
+        // Use Ancient Golem image for Ancient Golem rare spawn
+        if (monsterImages.ancientGolem) {
+          // Add yellow glow effect
+          ctx.shadowColor = '#ffff00';
+          ctx.shadowBlur = 15;
+
+          // Make Ancient Golem larger (1.3x tile size) and center it
+          const golemSize = TILE_SIZE * 1.3;
+          const golemOffsetX = screenX - (golemSize - TILE_SIZE) / 2;
+          const golemOffsetY = screenY - (golemSize - TILE_SIZE) / 2;
+
+          ctx.drawImage(monsterImages.ancientGolem, golemOffsetX, golemOffsetY, golemSize, golemSize);
+
+          // Reset shadow
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+        }
+      } else {
+        // Draw emoji for other object types
+        ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+      }
     });
 
-  }, [worldMap, playerPosition, viewport, zoom, TILE_SIZE, terrainImages, heroImage]);
+    // === WEATHER & TIME OF DAY EFFECTS ===
+
+    // 1. Time of Day Lighting Overlay
+    if (timeOfDay) {
+      const lighting = TimeOfDaySystem.getLightingOverlay(timeOfDay.current);
+      ctx.fillStyle = `${lighting.color}${Math.round(lighting.alpha * 255).toString(16).padStart(2, '0')}`;
+      ctx.fillRect(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+    }
+
+    // 2. Fog Weather Effect (semi-transparent overlay)
+    if (weather?.current === 'fog') {
+      ctx.fillStyle = 'rgba(180, 180, 180, 0.4)';
+      ctx.fillRect(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
+    }
+
+    // 3. Rain/Storm/Snow Particles
+    if (weather && (weather.current === 'rain' || weather.current === 'storm' || weather.current === 'snow')) {
+      weatherParticlesRef.current.forEach(particle => {
+        // Update particle position
+        particle.y += particle.speed;
+
+        // Wrap around when particle goes off screen
+        if (particle.y > VIEWPORT_HEIGHT) {
+          particle.y = -10;
+          particle.x = Math.random() * VIEWPORT_WIDTH;
+        }
+
+        // Draw particle based on weather type
+        if (weather.current === 'snow') {
+          // Snowflakes - small white circles
+          ctx.fillStyle = `rgba(255, 255, 255, ${particle.opacity})`;
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, 2, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          // Rain/storm drops - thin lines
+          const dropLength = weather.current === 'storm' ? 15 : 10;
+          ctx.strokeStyle = `rgba(174, 194, 224, ${particle.opacity})`;
+          ctx.lineWidth = weather.current === 'storm' ? 2 : 1;
+          ctx.beginPath();
+          ctx.moveTo(particle.x, particle.y);
+          ctx.lineTo(particle.x - 3, particle.y + dropLength);
+          ctx.stroke();
+        }
+      });
+    }
+
+  }, [worldMap, playerPosition, viewport, zoom, TILE_SIZE, terrainImages, heroImage, dungeonImages, weather, timeOfDay, animationTrigger]);
 
   /**
-   * Animation loop for pulsating glow effect
+   * Animation loop for pulsating glow effect and weather particles
    * Uses requestAnimationFrame to continuously update the canvas
    */
   useEffect(() => {
     const animate = () => {
       // Trigger re-render by updating animation trigger state
+      // This causes the main render useEffect to run, which updates particles and glow
       setAnimationTrigger(prev => prev + 1);
       animationFrameRef.current = requestAnimationFrame(animate);
     };

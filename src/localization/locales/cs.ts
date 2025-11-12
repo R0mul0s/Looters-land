@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2025-11-12
  */
 
 import type { LocaleKeys } from './en';
@@ -18,6 +18,17 @@ export const cs: LocaleKeys = {
   app: {
     title: 'Looters Land',
     subtitle: 'Idle RPG Dobrodružství - Koř, Bojuj, Dobývej!',
+  },
+
+  // ============================================================================
+  // COMMON UI ELEMENTS
+  // ============================================================================
+  common: {
+    ok: 'OK',
+    cancel: 'Zrušit',
+    close: 'Zavřít',
+    confirm: 'Potvrdit',
+    information: 'Informace',
   },
 
   // ============================================================================
@@ -78,6 +89,7 @@ export const cs: LocaleKeys = {
     // Combat status
     victory: '🎉 VÍTĚZSTVÍ! Hrdinové zvítězili! 🎉',
     defeat: '💀 PORÁŽKA! Hrdinové padli... 💀',
+    allHeroesDead: 'Všichni vaši hrdinové byli poraženi v boji!',
 
     // Turn info
     turnCounter: 'Kolo',
@@ -357,6 +369,19 @@ export const cs: LocaleKeys = {
     distance: 'Vzdálenost',
     cost: 'Cena',
     tiles: 'dlaždic',
+
+    // Worldmap object messages
+    treasureChestAlreadyOpened: 'Tato truhla s pokladem již byla otevřena!',
+    hiddenPathAlreadyDiscovered: 'Tato skrytá cesta již byla objevena!',
+    hiddenPathLevelRequired: 'Tato skrytá cesta vyžaduje úroveň {{requiredLevel}}!\nVaše úroveň: {{playerLevel}}',
+    portalNotConnected: 'Tento portál není připojen k ničemu!',
+    portalNotFound: 'Propojený portál nebyl nalezen!',
+    rareSpawnDefeated: 'Tento vzácný nepřítel již byl poražen!',
+    monsterDefeated: 'Toto monstrum již bylo poraženo!\nPozději se znovu objeví.',
+    notEnoughGold: 'Nedostatek zlata!\nPotřebné: {{required}}\nAktuální: {{current}}',
+    merchantSoldOut: 'Obchodník vyprodal všechny své předměty!',
+    randomEventComingSoon: 'Náhodná Událost: {{eventType}}\nFunkce připravujeme!',
+    itemSold: '✅ Prodáno {{itemName}} za {{gold}} zlata!',
   },
 
   // ============================================================================
@@ -817,6 +842,8 @@ export const cs: LocaleKeys = {
     cooldownActive: 'Schopnost má aktivní prodlevu',
     notEnoughResources: 'Nedostatek zdrojů',
     targetInvalid: 'Neplatný cíl',
+    notLoggedIn: 'Nejste přihlášeni',
+    avatarUpdateFailed: 'Nepodařilo se aktualizovat avatar',
   },
 
   // ============================================================================
@@ -844,14 +871,19 @@ export const cs: LocaleKeys = {
     enterNewName: 'Zadejte nové jméno',
     resetProgress: 'Resetovat Průběh',
     resetProgressConfirm: 'VAROVÁNÍ: Tímto smažete VŠECHNA data ze hry!\n\nZůstane vám pouze účet a email.\n\nTato akce je NEVRATNÁ!\n\nOpravdu chcete pokračovat?',
-    resetProgressSuccess: 'Průběh úspěšně resetován',
+    resetProgressSuccess: '✅ Progres byl úspěšně resetován! Budete odhlášeni...',
     resetProgressFailed: 'Resetování průběhu selhalo',
     deleteAccount: 'Smazat Účet',
     deleteAccountConfirm: 'VAROVÁNÍ: Tímto TRVALE SMAŽETE váš účet!\n\nVŠECHNA data budou ztracena navždy.\n\nTato akce je NEVRATNÁ!\n\nOpravdu chcete pokračovat?',
-    deleteAccountSuccess: 'Účet úspěšně smazán',
+    deleteAccountSuccess: '❌ Účet byl úspěšně smazán. Budete odhlášeni...',
     deleteAccountFailed: 'Smazání účtu selhalo',
     languageSettings: 'Nastavení Jazyka',
     languageLabel: 'Jazyk',
+
+    // Avatar section
+    avatarSectionTitle: 'Výběr Avatara',
+    avatarSelectedBadge: 'Vybráno',
+    avatarSaving: 'Ukládání...',
 
     // Dangerous Actions section
     dangerousActions: 'Nebezpečné akce',
@@ -909,6 +941,43 @@ export const cs: LocaleKeys = {
     technical: 'Technické změny',
     footer: 'Více informací na',
     github: 'GitHub',
+
+    // Version 2.3.1
+    v2_3_1: {
+      features: {
+        item1: '✅ Truhly s poklady - Nyní plně funkční! Otevírejte truhly pro zlato a předměty',
+        item2: '✅ Skryté cesty - Objevujte tajné oblasti s level požadavky a vzácnou kořistí',
+        item3: '✅ Portály - Teleportujte se mezi propojenými portály za energii',
+        item4: '✅ Vzácní nepřátelé - Bojujte s mocnými nepřáteli s garantovaným rare/epic dropem',
+        item5: '✅ Potulní příšery - Rychlé bojové setkání na světové mapě',
+        item6: '✅ Putující obchodníci - Obchodní rozhraní s nakupitelnými předměty',
+        item7: '✅ Zobrazení počasí a času - Vidíte aktuální počasí a denní dobu na mapě'
+      },
+      technical: {
+        item1: 'LootGenerator - Přidány statické metody pro generování kořisti ze světové mapy',
+        item2: 'WorldMapDemo2 - Všechny funkce světové mapy nyní plně implementovány'
+      }
+    },
+
+    // Version 2.3.0
+    v2_3_0: {
+      features: {
+        item1: '🌀 Portály - Rychlé cestování mezi objevenými portály (stojí energii)',
+        item2: '🗝️ Skryté cesty - Tajné oblasti s vzácnou kořistí na odlehlých místech',
+        item3: '📦 Truhly s poklady - Náhodné truhly na mapě se zlatem a předměty',
+        item4: '👹 Vzácní nepřátelé - Silní nepřátelé s garantovaným rare/epic dropem',
+        item5: '🐺 Potulní příšery - Klikatelní nepřátelé na mapě pro rychlý boj',
+        item6: '🛒 Putující obchodníci - Náhodní obchodníci s unikátními předměty',
+        item7: '⭐ Náhodné události - Speciální události (záchrana NPC, boss fight, hon za pokladem)',
+        item8: '🌦️ Systém počasí - Počasí ovlivňuje spawn rate nepřátel',
+        item9: '🌙 Cyklus dne a noci - Různí nepřátelé se objevují v různých denních dobách',
+      },
+      technical: {
+        item1: 'Rozšířeny typy WorldMap o 6 nových statických a 3 dynamické objekty',
+        item2: 'Přidána procedurální generace pro všechny nové mapové funkce',
+        item3: 'Implementovány click handlery a vykreslování nových objektů',
+      },
+    },
 
     // Version 2.2.0
     v2_2_0: {
@@ -977,6 +1046,20 @@ export const cs: LocaleKeys = {
       },
     },
 
+    // Version 2.3.2
+    v2_3_2: {
+      technical: {
+        item1: 'Opraveny všechny hardcoded české/anglické texty v ProfileScreen - nahrazeny t() lokalizací',
+        item2: 'Lokalizovány názvy avatarů pomocí funkce getAvatarDisplayName()',
+        item3: 'Přidána kompletní JSDoc dokumentace k 6 helper funkcím ve WorldMapViewer',
+        item4: 'Implementováno React.memo() pro optimalizaci výkonu komponenty WorldMapViewer',
+        item5: 'Přidán useMemo() k výpočtu getHoverInfo pro lepší výkon',
+        item6: 'Přidána JSDoc na úrovni komponenty ProfileScreen s plnou dokumentací rozhraní',
+        item7: 'Odstraněna nepoužívaná property previewImage z AVATAR_CONFIG',
+        item8: 'Aktualizována @lastModified data na 2025-11-12 ve všech upravených souborech',
+      },
+    },
+
     // Version 1.0.0
     v1_0_0: {
       features: {
@@ -985,5 +1068,16 @@ export const cs: LocaleKeys = {
         item3: 'Local storage saves',
       },
     },
+  },
+
+  // ============================================================================
+  // AVATARS
+  // ============================================================================
+  avatars: {
+    hero1: 'Rytíř',
+    hero2: 'Hraničář',
+    hero3: 'Kouzelník',
+    hero4: 'Štítonoš',
+    hero5: 'Bard',
   },
 };

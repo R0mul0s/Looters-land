@@ -7,31 +7,87 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2025-11-12
  */
 
 import React, { useState } from 'react';
 import * as AuthService from '../services/AuthService';
-import { ProfileService } from '../services/ProfileService';
+import { ProfileService, updateAvatar } from '../services/ProfileService';
 import { t, setLanguage, getLanguage, type Language } from '../localization/i18n';
+import { AVAILABLE_AVATARS, getAvatarDisplayName } from '../config/AVATAR_CONFIG';
+import hero1Img from '../assets/images/hero/hero1.png';
+import hero2Img from '../assets/images/hero/hero2.png';
+import hero3Img from '../assets/images/hero/hero3.png';
+import hero4Img from '../assets/images/hero/hero4.png';
+import hero5Img from '../assets/images/hero/hero5.png';
 
+/**
+ * ProfileScreen component props
+ *
+ * @property playerName - Player's display name
+ * @property playerEmail - Optional player email address
+ * @property playerLevel - Optional player level (defaults to 1)
+ * @property playerAvatar - Optional current avatar filename (defaults to 'hero1.png')
+ * @property gold - Player's current gold amount
+ * @property gems - Player's current gems amount
+ * @property heroCount - Total number of heroes in collection
+ * @property itemCount - Total number of items in inventory
+ * @property onClose - Optional callback when profile screen is closed
+ * @property onResetProgress - Optional callback after progress reset completes
+ * @property onAccountDeleted - Optional callback after account deletion completes
+ */
 interface ProfileScreenProps {
   playerName: string;
   playerEmail?: string;
   playerLevel?: number;
+  playerAvatar?: string;
   gold: number;
   gems: number;
   heroCount: number;
   itemCount: number;
   onClose?: () => void;
-  onResetProgress?: () => void; // Callback after progress reset
-  onAccountDeleted?: () => void; // Callback after account deletion
+  onResetProgress?: () => void;
+  onAccountDeleted?: () => void;
 }
 
+/**
+ * Profile/Settings Screen Component
+ *
+ * @description Comprehensive profile management screen displaying player information,
+ * avatar selection, language settings, and dangerous account actions.
+ * Provides three-step confirmation for destructive operations (reset progress, delete account).
+ *
+ * Features:
+ * - Player profile information display (name, email, level, resources)
+ * - Editable username with save/cancel functionality
+ * - Avatar selection with 5 hero avatars
+ * - Language switcher (English/Czech)
+ * - Progress reset (clears game data, keeps account)
+ * - Account deletion (permanent, cannot be undone)
+ *
+ * @param props - Component props
+ * @returns React component
+ *
+ * @example
+ * ```tsx
+ * <ProfileScreen
+ *   playerName="DragonSlayer"
+ *   playerEmail="player@example.com"
+ *   playerLevel={42}
+ *   playerAvatar="hero2.png"
+ *   gold={15000}
+ *   gems={250}
+ *   heroCount={25}
+ *   itemCount={150}
+ *   onClose={() => console.log('Profile closed')}
+ * />
+ * ```
+ */
 export function ProfileScreen({
   playerName,
   playerEmail,
   playerLevel = 1,
+  playerAvatar = 'hero1.png',
   gold,
   gems,
   heroCount,
@@ -50,6 +106,8 @@ export function ProfileScreen({
   const [editedName, setEditedName] = useState(playerName);
   const [isSavingName, setIsSavingName] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<Language>(getLanguage());
+  const [selectedAvatar, setSelectedAvatar] = useState(playerAvatar);
+  const [isSavingAvatar, setIsSavingAvatar] = useState(false);
 
   /**
    * Reset Progress - Clears all game data but keeps account
@@ -78,7 +136,7 @@ export function ProfileScreen({
         localStorage.clear();
         sessionStorage.clear();
 
-        alert('✅ Progres byl úspěšně resetován! Budete odhlášeni pro načtení nového stavu...');
+        alert(t('profile.resetProgressSuccess'));
 
         // Sign out to prevent auto-save from recreating data
         await AuthService.logout();
@@ -131,7 +189,7 @@ export function ProfileScreen({
         console.log('🧹 Clearing localStorage...');
         localStorage.clear();
 
-        alert('❌ Účet byl úspěšně smazán. Budete odhlášeni...');
+        alert(t('profile.deleteAccountSuccess'));
 
         // Sign out and redirect
         await AuthService.logout();
@@ -249,6 +307,47 @@ export function ProfileScreen({
   };
 
   /**
+   * Handle avatar change
+   *
+   * @description Saves the selected avatar to the profile
+   * @param avatarFilename - Avatar filename (e.g., 'hero1.png')
+   *
+   * @example
+   * ```tsx
+   * handleAvatarChange('hero2.png');
+   * ```
+   */
+  const handleAvatarChange = async (avatarFilename: string) => {
+    setIsSavingAvatar(true);
+    setError(null);
+
+    try {
+      const session = await AuthService.getCurrentSession();
+      if (!session?.user?.id) {
+        setError(t('errors.notLoggedIn'));
+        return;
+      }
+
+      const result = await updateAvatar(session.user.id, avatarFilename);
+
+      if (result.success) {
+        setSelectedAvatar(avatarFilename);
+        // Reload to apply avatar change
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } else {
+        setError(result.error || t('errors.avatarUpdateFailed'));
+      }
+    } catch (err) {
+      console.error('Avatar update error:', err);
+      setError(t('errors.avatarUpdateFailed'));
+    } finally {
+      setIsSavingAvatar(false);
+    }
+  };
+
+  /**
    * Handle language change
    *
    * @description Changes the application language
@@ -354,6 +453,62 @@ export function ProfileScreen({
             <div style={styles.infoLabel}>{t('dungeon.items')}:</div>
             <div style={styles.infoValue}>{itemCount}</div>
           </div>
+        </div>
+      </div>
+
+      {/* Avatar Selection */}
+      <div style={styles.section}>
+        <h3 style={styles.sectionTitle}>🎭 {t('profile.avatarSectionTitle')}</h3>
+        <div style={styles.avatarContainer}>
+          <div style={styles.avatarGrid}>
+            {AVAILABLE_AVATARS.map((avatar) => {
+              const isSelected = selectedAvatar === avatar.filename;
+              // Map avatar filename to imported image
+              let avatarImage: string;
+              switch (avatar.filename) {
+                case 'hero2.png':
+                  avatarImage = hero2Img;
+                  break;
+                case 'hero3.png':
+                  avatarImage = hero3Img;
+                  break;
+                case 'hero4.png':
+                  avatarImage = hero4Img;
+                  break;
+                case 'hero5.png':
+                  avatarImage = hero5Img;
+                  break;
+                default:
+                  avatarImage = hero1Img;
+              }
+
+              return (
+                <div
+                  key={avatar.id}
+                  style={{
+                    ...styles.avatarOption,
+                    ...(isSelected ? styles.avatarOptionSelected : {}),
+                    cursor: isSavingAvatar ? 'not-allowed' : 'pointer',
+                    opacity: isSavingAvatar ? 0.6 : 1
+                  }}
+                  onClick={() => !isSavingAvatar && handleAvatarChange(avatar.filename)}
+                >
+                  <img
+                    src={avatarImage}
+                    alt={getAvatarDisplayName(avatar.id)}
+                    style={styles.avatarPreview}
+                  />
+                  <div style={styles.avatarName}>{getAvatarDisplayName(avatar.id)}</div>
+                  {isSelected && (
+                    <div style={styles.avatarSelectedBadge}>✓ {t('profile.avatarSelectedBadge')}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          {isSavingAvatar && (
+            <div style={styles.savingIndicator}>💾 {t('profile.avatarSaving')}</div>
+          )}
         </div>
       </div>
 
@@ -780,5 +935,62 @@ const styles: Record<string, React.CSSProperties> = {
     outline: 'none',
     transition: 'all 0.2s',
     fontFamily: 'inherit'
+  },
+  avatarContainer: {
+    position: 'relative'
+  },
+  avatarGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+    gap: '15px',
+    padding: '10px'
+  },
+  avatarOption: {
+    background: 'rgba(30, 41, 59, 0.5)',
+    border: '2px solid rgba(45, 212, 191, 0.2)',
+    borderRadius: '12px',
+    padding: '15px',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    alignItems: 'center',
+    gap: '10px',
+    transition: 'all 0.3s',
+    position: 'relative' as const
+  },
+  avatarOptionSelected: {
+    borderColor: '#2dd4bf',
+    background: 'rgba(45, 212, 191, 0.15)',
+    boxShadow: '0 0 20px rgba(45, 212, 191, 0.3)'
+  },
+  avatarPreview: {
+    width: '96px',
+    height: '96px',
+    objectFit: 'contain' as const,
+    borderRadius: '8px',
+    background: 'rgba(15, 23, 42, 0.6)'
+  },
+  avatarName: {
+    fontSize: '14px',
+    fontWeight: '600',
+    color: '#f1f5f9',
+    textAlign: 'center' as const
+  },
+  avatarSelectedBadge: {
+    position: 'absolute' as const,
+    top: '10px',
+    right: '10px',
+    background: '#2dd4bf',
+    color: '#0f172a',
+    padding: '4px 8px',
+    borderRadius: '12px',
+    fontSize: '11px',
+    fontWeight: '700'
+  },
+  savingIndicator: {
+    textAlign: 'center' as const,
+    marginTop: '10px',
+    color: '#2dd4bf',
+    fontSize: '14px',
+    fontWeight: '600'
   }
 };

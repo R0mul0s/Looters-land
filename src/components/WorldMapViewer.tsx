@@ -52,6 +52,11 @@ import city3Img from '../assets/images/building/city3.png';
 import city4Img from '../assets/images/building/city4.png';
 import city5Img from '../assets/images/building/city5.png';
 
+// Import object images
+import treasureChest1Img from '../assets/images/object/treasure-chest1.png';
+import treasureChest2Img from '../assets/images/object/treasure-chest2.png';
+import treasureChest3Img from '../assets/images/object/treasure-chest3.png';
+
 // Import monster images
 import ancientGolemImg from '../assets/images/monster/ancient-golem.png';
 import direWolfImg from '../assets/images/monster/dire-wolf.png';

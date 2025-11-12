@@ -8,12 +8,13 @@
 
 import React, { useState } from 'react';
 import { t } from '../localization/i18n';
+import type { StaticObjectType } from '../types/worldmap.types';
 
 interface TeleportLocation {
   name: string;
   x: number;
   y: number;
-  type: 'town' | 'dungeon';
+  type: StaticObjectType;
 }
 
 interface TeleportMenuProps {

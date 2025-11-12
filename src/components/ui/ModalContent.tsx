@@ -79,12 +79,14 @@ export function ModalInfoRow({
 }: {
   label: string;
   value: React.ReactNode;
-  valueColor?: 'default' | 'energy' | 'warning';
+  valueColor?: 'default' | 'energy' | 'warning' | 'gold' | 'info';
 }) {
   const valueColors = {
     default: '#f1f5f9',
     energy: '#fbbf24',
-    warning: '#ef4444'
+    warning: '#ef4444',
+    gold: '#fbbf24',
+    info: '#3b82f6'
   };
 
   return (

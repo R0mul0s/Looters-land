@@ -15,10 +15,11 @@ import { PlayerProfileService } from '../services/PlayerProfileService';
 import type { PlayerProfile } from '../services/PlayerProfileService';
 import { GameSaveService } from '../services/GameSaveService';
 import * as AuthService from '../services/AuthService';
-import type { WorldMap } from '../types/worldmap.types';
+import type { WorldMap, StaticObjectType } from '../types/worldmap.types';
 import type { GachaState } from '../types/hero.types';
 import { supabase } from '../lib/supabase';
 import type { SyncStatus } from '../components/SyncStatusIndicator';
+import { ENERGY_CONFIG } from '../config/BALANCE_CONFIG';
 
 interface GameState {
   // Player profile
@@ -41,7 +42,7 @@ interface GameState {
   inventory: Inventory;
   worldMap: WorldMap | null;
   playerPos: { x: number; y: number };
-  discoveredLocations: Array<{ name: string; x: number; y: number; type: 'town' | 'dungeon' }>;
+  discoveredLocations: Array<{ name: string; x: number; y: number; type: StaticObjectType }>;
 
   // Gacha system
   gachaState: GachaState;
@@ -85,7 +86,7 @@ interface GameStateActions {
   // World map actions
   updatePlayerPos: (x: number, y: number) => Promise<void>;
   updateWorldMap: (worldMap: WorldMap) => Promise<void>;
-  addDiscoveredLocation: (location: { name: string; x: number; y: number; type: 'town' | 'dungeon' }) => Promise<void>;
+  addDiscoveredLocation: (location: { name: string; x: number; y: number; type: StaticObjectType }) => Promise<void>;
 
   // Save/Load actions
   saveGame: () => Promise<void>;
@@ -126,8 +127,8 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     combatPower: 0,
     gold: 0,
     gems: 100,
-    energy: 100,
-    maxEnergy: 100,
+    energy: ENERGY_CONFIG.MAX_ENERGY,
+    maxEnergy: ENERGY_CONFIG.MAX_ENERGY,
     allHeroes: [],
     activeParty: [],
     activePartyIndices: [0, 1, 2, 3],
@@ -415,6 +416,14 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         activePartyIndices = heroes.length >= 4 ? [0, 1, 2, 3] : Array.from({ length: heroes.length }, (_, i) => i);
       }
 
+      // Migrate max_energy if needed (for existing players)
+      if (profile.max_energy < ENERGY_CONFIG.MAX_ENERGY) {
+        console.log(`⚡ Migrating max_energy from ${profile.max_energy} to ${ENERGY_CONFIG.MAX_ENERGY}`);
+        await PlayerProfileService.updateProfile(userId, {
+          max_energy: ENERGY_CONFIG.MAX_ENERGY
+        });
+      }
+
       setState(prev => ({
         ...prev,
         profile,
@@ -423,8 +432,8 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         playerLevel: profile.player_level,
         gold: profile.gold,
         gems: profile.gems,
-        energy: profile.energy,
-        maxEnergy: profile.max_energy,
+        energy: Math.min(profile.energy, ENERGY_CONFIG.MAX_ENERGY),
+        maxEnergy: ENERGY_CONFIG.MAX_ENERGY,
         allHeroes: heroes,
         activeParty,
         activePartyIndices,
@@ -530,8 +539,8 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
             return {
               ...prev,
               profile: updatedProfile,
-              energy: updatedProfile.energy,
-              maxEnergy: updatedProfile.max_energy,
+              energy: Math.min(updatedProfile.energy, ENERGY_CONFIG.MAX_ENERGY),
+              maxEnergy: ENERGY_CONFIG.MAX_ENERGY,
               gold: updatedProfile.gold,
               gems: updatedProfile.gems,
               playerLevel: updatedProfile.player_level,
@@ -634,7 +643,18 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     },
 
     updateActiveParty: async (heroes: Hero[]) => {
-      setState(prev => ({ ...prev, activeParty: heroes }));
+      // IMPORTANT: Remove duplicates and limit to 4 heroes to prevent data corruption
+      const uniqueHeroes = heroes
+        .filter((hero, index, self) =>
+          index === self.findIndex(h => h.id === hero.id)
+        )
+        .slice(0, 4);
+
+      if (uniqueHeroes.length !== heroes.length) {
+        console.warn(`⚠️ Prevented duplicate heroes in party! Original: ${heroes.length}, After dedup: ${uniqueHeroes.length}`);
+      }
+
+      setState(prev => ({ ...prev, activeParty: uniqueHeroes }));
       scheduleAutoSave();
     },
 
@@ -687,7 +707,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       scheduleAutoSave();
     },
 
-    addDiscoveredLocation: async (location: { name: string; x: number; y: number; type: 'town' | 'dungeon' }) => {
+    addDiscoveredLocation: async (location: { name: string; x: number; y: number; type: StaticObjectType }) => {
       setState(prev => {
         // Check if location is already discovered
         const exists = prev.discoveredLocations.some(

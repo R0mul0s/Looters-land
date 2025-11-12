@@ -245,7 +245,7 @@ export class Hero {
     return this.currentHP - oldHP;
   }
 
-  attack(target: Hero): AttackResult | null {
+  attack(target: Combatant): AttackResult | null {
     if (!this.isAlive || !target.isAlive) return null;
 
     // Use combat stats with status effects applied
@@ -635,11 +635,23 @@ export class Hero {
     return Math.floor(heroScore);
   }
 
-  reset(): void {
-    this.currentHP = this.maxHP;
-    this.isAlive = true;
+  /**
+   * Reset combat state (cooldowns, status effects) without healing
+   * Use this between combats to prepare for next fight while keeping current HP
+   */
+  resetCombatState(): void {
     this.cooldowns.clear();
     this.ultimateCharge = 0;
     this.statusEffects = [];
+  }
+
+  /**
+   * Full reset including HP restoration
+   * Use this only when hero should be fully healed (e.g., after defeat/revival, town healing)
+   */
+  reset(): void {
+    this.currentHP = this.maxHP;
+    this.isAlive = true;
+    this.resetCombatState();
   }
 }

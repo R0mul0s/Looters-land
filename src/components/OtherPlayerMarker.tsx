@@ -21,6 +21,7 @@ import hero5Img from '../assets/images/hero/hero5.png';
 interface OtherPlayerMarkerProps {
   nickname: string;
   combatPower: number;
+  level?: number; // Fallback if combat power is not available
   avatar?: string; // Avatar filename (e.g., 'hero1.png')
   color?: string; // Optional color for fallback icon
   scale?: number; // Scale factor based on zoom level
@@ -40,6 +41,7 @@ interface OtherPlayerMarkerProps {
 export function OtherPlayerMarker({
   nickname,
   combatPower,
+  level,
   avatar = 'hero1.png',
   color = '#3b82f6', // Blue by default
   scale = 1 // Default scale
@@ -72,12 +74,16 @@ export function OtherPlayerMarker({
   const nicknameFontSize = Math.max(9, Math.floor(11 * scale));
   const combatPowerFontSize = Math.max(8, Math.floor(9 * scale));
 
+  // Use combat power if available, otherwise fallback to level
+  const displayValue = combatPower > 0 ? combatPower : (level || 0);
+  const displayLabel = combatPower > 0 ? `⚔️ ${displayValue}` : `Lv.${displayValue}`;
+
   return (
     <div style={styles.container}>
-      {/* Nickname and Combat Power Label */}
+      {/* Nickname and Combat Power/Level Label */}
       <div style={{ ...styles.label, padding: labelPadding }}>
         <span style={{ ...styles.nickname, fontSize: `${nicknameFontSize}px` }}>{nickname}</span>
-        <span style={{ ...styles.combatPower, fontSize: `${combatPowerFontSize}px` }}>⚔️ {combatPower}</span>
+        <span style={{ ...styles.combatPower, fontSize: `${combatPowerFontSize}px` }}>{displayLabel}</span>
       </div>
 
       {/* Player Avatar Image */}

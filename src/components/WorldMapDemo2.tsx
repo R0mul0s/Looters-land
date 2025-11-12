@@ -20,11 +20,14 @@ import { TownScreen } from './TownScreen';
 import { LeaderboardScreen } from './LeaderboardScreen';
 import { TeleportMenu } from './TeleportMenu';
 import { ChatBox } from './ChatBox';
+import { WeatherTimeWidget } from './WeatherTimeWidget';
 import { GameModal } from './ui/GameModal';
 import { ModalText, ModalDivider, ModalInfoBox, ModalInfoRow, ModalButton, ModalButtonGroup } from './ui/ModalContent';
 import { ItemDisplay } from './ui/ItemDisplay';
 import { InventoryHelper } from '../engine/item/InventoryHelper';
 import { LootGenerator } from '../engine/loot/LootGenerator';
+import { WeatherSystem } from '../engine/worldmap/WeatherSystem';
+import { TimeOfDaySystem } from '../engine/worldmap/TimeOfDaySystem';
 import { useGameState } from '../hooks/useGameState';
 import { useEnergyRegeneration } from '../hooks/useEnergyRegeneration';
 import { useOtherPlayers } from '../hooks/useOtherPlayers';
@@ -131,6 +134,36 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
 
     return () => clearTimeout(timer);
   }, [myChatTimestamp]);
+
+  // Weather & Time of Day Update Loop (check every minute)
+  useEffect(() => {
+    if (!gameState.worldMap) return;
+
+    const updateWeatherAndTime = () => {
+      const updatedWeather = WeatherSystem.update(gameState.worldMap!.weather);
+      const updatedTime = TimeOfDaySystem.update(gameState.worldMap!.timeOfDay);
+
+      // Only update if something changed
+      if (
+        updatedWeather.current !== gameState.worldMap!.weather.current ||
+        updatedTime.current !== gameState.worldMap!.timeOfDay.current
+      ) {
+        gameActions.updateWorldMap({
+          ...gameState.worldMap!,
+          weather: updatedWeather,
+          timeOfDay: updatedTime
+        });
+      }
+    };
+
+    // Initial check
+    updateWeatherAndTime();
+
+    // Check every 60 seconds
+    const interval = setInterval(updateWeatherAndTime, 60000);
+
+    return () => clearInterval(interval);
+  }, [gameState.worldMap, gameActions]);
 
   // Multiplayer: Heartbeat system - Update position and online status every 15 seconds
   useEffect(() => {
@@ -864,7 +897,15 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
             otherPlayers={otherPlayers}
             playerChatMessage={myChatMessage}
             playerChatTimestamp={myChatTimestamp}
+            weather={gameState.worldMap.weather}
+            timeOfDay={gameState.worldMap.timeOfDay}
             onTileClick={handleTileClick}
+          />
+
+          {/* Weather & Time Widget */}
+          <WeatherTimeWidget
+            weather={gameState.worldMap.weather}
+            timeOfDay={gameState.worldMap.timeOfDay}
           />
 
           {/* Chat Box */}

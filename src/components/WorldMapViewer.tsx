@@ -56,6 +56,8 @@ import city5Img from '../assets/images/building/city5.png';
 import ancientGolemImg from '../assets/images/monster/ancient-golem.png';
 import direWolfImg from '../assets/images/monster/dire-wolf.png';
 import trollImg from '../assets/images/monster/troll.png';
+import ogreImg from '../assets/images/monster/ogre.png';
+import harpyImg from '../assets/images/monster/Harpy.png';
 
 interface WorldMapViewerProps {
   worldMap: WorldMap;
@@ -159,10 +161,14 @@ function WorldMapViewerComponent({
     ancientGolem: HTMLImageElement | null;
     direWolf: HTMLImageElement | null;
     troll: HTMLImageElement | null;
+    ogre: HTMLImageElement | null;
+    harpy: HTMLImageElement | null;
   }>({
     ancientGolem: null,
     direWolf: null,
-    troll: null
+    troll: null,
+    ogre: null,
+    harpy: null
   });
 
   // Perlin noise for smooth variant distribution (prevents checkerboard pattern)
@@ -301,15 +307,19 @@ function WorldMapViewerComponent({
     const images = {
       ancientGolem: new Image(),
       direWolf: new Image(),
-      troll: new Image()
+      troll: new Image(),
+      ogre: new Image(),
+      harpy: new Image()
     };
 
     images.ancientGolem.src = ancientGolemImg;
     images.direWolf.src = direWolfImg;
     images.troll.src = trollImg;
+    images.ogre.src = ogreImg;
+    images.harpy.src = harpyImg;
 
     let loadedCount = 0;
-    const totalImages = 3;
+    const totalImages = 5;
 
     const onLoad = () => {
       loadedCount++;
@@ -317,7 +327,9 @@ function WorldMapViewerComponent({
         setMonsterImages({
           ancientGolem: images.ancientGolem,
           direWolf: images.direWolf,
-          troll: images.troll
+          troll: images.troll,
+          ogre: images.ogre,
+          harpy: images.harpy
         });
         console.log('✅ All monster images loaded successfully');
       }
@@ -326,10 +338,14 @@ function WorldMapViewerComponent({
     images.ancientGolem.onload = onLoad;
     images.direWolf.onload = onLoad;
     images.troll.onload = onLoad;
+    images.ogre.onload = onLoad;
+    images.harpy.onload = onLoad;
 
     images.ancientGolem.onerror = () => console.error('Failed to load ancient-golem.png');
     images.direWolf.onerror = () => console.error('Failed to load dire-wolf.png');
     images.troll.onerror = () => console.error('Failed to load troll.png');
+    images.ogre.onerror = () => console.error('Failed to load ogre.png');
+    images.harpy.onerror = () => console.error('Failed to load Harpy.png');
   }, []);
 
   // Load all terrain images
@@ -626,7 +642,7 @@ function WorldMapViewerComponent({
         switch (obj.type) {
           case 'wanderingMonster':
             icon = '🐺';
-            // Check if this is a Dire Wolf or Troll and use image if available
+            // Check if this is a monster with an image and use it if available
             if ('enemyName' in obj) {
               if (obj.enemyName === 'Dire Wolf' && monsterImages.direWolf) {
                 useImage = true;
@@ -634,6 +650,12 @@ function WorldMapViewerComponent({
               } else if (obj.enemyName === 'Troll' && monsterImages.troll) {
                 useImage = true;
                 imgToUse = monsterImages.troll;
+              } else if (obj.enemyName === 'Ogre' && monsterImages.ogre) {
+                useImage = true;
+                imgToUse = monsterImages.ogre;
+              } else if (obj.enemyName === 'Harpy' && monsterImages.harpy) {
+                useImage = true;
+                imgToUse = monsterImages.harpy;
               }
             }
             break;
@@ -1165,7 +1187,7 @@ function WorldMapViewerComponent({
             {/* Player Marker */}
             <OtherPlayerMarker
               nickname={player.nickname}
-              level={player.level}
+              combatPower={player.combatPower}
               avatar={player.avatar || 'hero1.png'}
               color="#3b82f6"
               scale={zoom}

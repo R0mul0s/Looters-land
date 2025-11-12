@@ -22,6 +22,7 @@ export interface OtherPlayer {
   id: string;
   nickname: string;
   level: number;
+  combatPower: number;
   x: number;
   y: number;
   avatar?: string; // Player avatar filename (e.g., 'hero1.png')
@@ -50,7 +51,7 @@ export function useOtherPlayers(currentUserId: string | undefined): OtherPlayer[
     const fetchOnlinePlayers = async () => {
       const { data, error} = await supabase
         .from('player_profiles')
-        .select('id, nickname, player_level, current_map_x, current_map_y, avatar, current_chat_message, chat_message_timestamp, user_id')
+        .select('id, nickname, player_level, combat_power, current_map_x, current_map_y, avatar, current_chat_message, chat_message_timestamp, user_id')
         .eq('is_online', true)
         .neq('user_id', currentUserId)
         .not('current_map_x', 'is', null)
@@ -65,6 +66,7 @@ export function useOtherPlayers(currentUserId: string | undefined): OtherPlayer[
         id: p.id,
         nickname: p.nickname || 'Unknown',
         level: p.player_level || 1,
+        combatPower: p.combat_power || 0,
         x: p.current_map_x!,
         y: p.current_map_y!,
         avatar: p.avatar || 'hero1.png',
@@ -111,6 +113,7 @@ export function useOtherPlayers(currentUserId: string | undefined): OtherPlayer[
                     id: updated.id,
                     nickname: updated.nickname || 'Unknown',
                     level: updated.player_level || 1,
+                    combatPower: updated.combat_power || 0,
                     x: updated.current_map_x,
                     y: updated.current_map_y,
                     avatar: updated.avatar || 'hero1.png',

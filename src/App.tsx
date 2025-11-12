@@ -22,6 +22,7 @@ import { DungeonExplorer } from './components/DungeonExplorer'
 import { WorldMapDemo } from './components/WorldMapDemo'
 import { WorldMapDemo2 } from './components/WorldMapDemo2'
 import { t } from './localization/i18n'
+import './config/DEBUG_CONFIG' // Load debug commands
 
 function App() {
   // ============================================================================

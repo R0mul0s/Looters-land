@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-10
  */
 
 import { PerlinNoise } from './PerlinNoise';
@@ -20,10 +20,19 @@ import type {
   WorldMapGenerationOptions,
   MapEncounter,
   ResourceNode,
+  Portal,
+  HiddenPath,
+  TreasureChest,
+  RareSpawn,
+  WanderingMonster,
+  TravelingMerchant,
+  WeatherType,
+  TimeOfDay,
   TERRAIN_MOVEMENT_COST
 } from '../../types/worldmap.types';
 
 import { TERRAIN_MOVEMENT_COST as MOVEMENT_COSTS } from '../../types/worldmap.types';
+import { WORLDMAP_CONFIG } from '../../config/BALANCE_CONFIG';
 
 /**
  * WorldMap Generator class
@@ -69,11 +78,33 @@ export class WorldMapGenerator {
     // 4. Generate roads between towns
     this.generateRoads(tiles, towns);
 
-    // 5. Spawn initial dynamic encounters
+    // 5. Place portals (for fast travel)
+    const portals = this.placePortals(tiles, WORLDMAP_CONFIG.PORTAL_COUNT);
+
+    // 6. Place hidden paths (secret areas)
+    const hiddenPaths = this.placeHiddenPaths(tiles, WORLDMAP_CONFIG.HIDDEN_PATH_COUNT);
+
+    // 7. Place treasure chests
+    const treasureChests = this.placeTreasureChests(tiles, WORLDMAP_CONFIG.TREASURE_CHEST_COUNT);
+
+    // 8. Place rare spawns
+    const rareSpawns = this.placeRareSpawns(tiles, WORLDMAP_CONFIG.RARE_SPAWN_COUNT);
+
+    // 9. Spawn initial dynamic encounters
     const encounters = this.spawnInitialEncounters(tiles, encounterCount);
 
-    // 6. Spawn initial resource nodes
+    // 10. Spawn initial resource nodes
     const resources = this.spawnInitialResources(tiles, resourceCount);
+
+    // 11. Spawn wandering monsters
+    const wanderingMonsters = this.spawnWanderingMonsters(tiles, WORLDMAP_CONFIG.WANDERING_MONSTER_COUNT);
+
+    // 12. Spawn traveling merchants
+    const travelingMerchants = this.spawnTravelingMerchants(tiles, WORLDMAP_CONFIG.TRAVELING_MERCHANT_COUNT);
+
+    // 13. Initialize weather and time of day
+    const weather = this.initializeWeather();
+    const timeOfDay = this.initializeTimeOfDay();
 
     console.log('✅ Worldmap generated successfully!');
 
@@ -83,9 +114,11 @@ export class WorldMapGenerator {
       height,
       seed,
       tiles,
-      staticObjects: [...towns, ...dungeons],
-      dynamicObjects: [...encounters, ...resources],
+      staticObjects: [...towns, ...dungeons, ...portals, ...hiddenPaths, ...treasureChests, ...rareSpawns],
+      dynamicObjects: [...encounters, ...resources, ...wanderingMonsters, ...travelingMerchants],
       players: [],
+      weather,
+      timeOfDay,
       createdAt: new Date()
     };
   }
@@ -428,5 +461,421 @@ export class WorldMapGenerator {
 
     console.log(`  💎 Spawned ${resources.length} resource nodes`);
     return resources;
+  }
+
+  /**
+   * Place portals for fast travel
+   *
+   * @param tiles - Map tiles
+   * @param count - Number of portals
+   * @returns Array of portals
+   */
+  private static placePortals(tiles: Tile[][], count: number): Portal[] {
+    console.log('🌀 Placing portals...');
+    const portals: Portal[] = [];
+    const width = tiles[0].length;
+    const height = tiles.length;
+
+    // Generate portal pairs
+    const portalCount = Math.floor(count / 2) * 2; // Ensure even number
+
+    for (let i = 0; i < portalCount; i++) {
+      // Find random passable location
+      let x: number, y: number, tile: Tile;
+      let attempts = 0;
+      do {
+        x = Math.floor(Math.random() * width);
+        y = Math.floor(Math.random() * height);
+        tile = tiles[y][x];
+        attempts++;
+      } while (
+        (tile.staticObject || tile.terrain === 'water' || tile.terrain === 'mountains') &&
+        attempts < 100
+      );
+
+      if (attempts >= 100) continue;
+
+      const portal: Portal = {
+        id: `portal-${i}`,
+        type: 'portal',
+        name: `Portal ${String.fromCharCode(65 + i)}`, // Portal A, Portal B, etc.
+        position: { x, y },
+        linkedPortalId: null,
+        energyCost: WORLDMAP_CONFIG.PORTAL_ENERGY_COST
+      };
+
+      tile.staticObject = portal;
+      portals.push(portal);
+      console.log(`  🌀 Placed ${portal.name} at (${x}, ${y})`);
+    }
+
+    // Link portals in pairs
+    for (let i = 0; i < portals.length; i += 2) {
+      if (i + 1 < portals.length) {
+        portals[i].linkedPortalId = portals[i + 1].id;
+        portals[i + 1].linkedPortalId = portals[i].id;
+        console.log(`  🔗 Linked ${portals[i].name} ↔ ${portals[i + 1].name}`);
+      }
+    }
+
+    return portals;
+  }
+
+  /**
+   * Place hidden paths (secret areas)
+   *
+   * @param tiles - Map tiles
+   * @param count - Number of hidden paths
+   * @returns Array of hidden paths
+   */
+  private static placeHiddenPaths(tiles: Tile[][], count: number): HiddenPath[] {
+    console.log('🗝️ Placing hidden paths...');
+    const hiddenPaths: HiddenPath[] = [];
+    const width = tiles[0].length;
+    const height = tiles.length;
+
+    const lootQualities: Array<'rare' | 'epic' | 'legendary'> = ['rare', 'epic', 'legendary'];
+
+    for (let i = 0; i < count; i++) {
+      // Place in remote areas (far from center)
+      const centerX = width / 2;
+      const centerY = height / 2;
+
+      let x: number, y: number, tile: Tile;
+      let attempts = 0;
+      do {
+        x = Math.floor(Math.random() * width);
+        y = Math.floor(Math.random() * height);
+        tile = tiles[y][x];
+
+        const distFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+        attempts++;
+      } while (
+        (tile.staticObject ||
+          tile.terrain === 'water' ||
+          tile.terrain === 'road' ||
+          Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2)) < 15) && // Far from center
+        attempts < 100
+      );
+
+      if (attempts >= 100) continue;
+
+      const lootQuality = lootQualities[Math.floor(Math.random() * lootQualities.length)];
+
+      const hiddenPath: HiddenPath = {
+        id: `hidden-path-${i}`,
+        type: 'hiddenPath',
+        name: 'Hidden Path',
+        position: { x, y },
+        discovered: false,
+        lootQuality,
+        requiredLevel: lootQuality === 'legendary' ? 20 : lootQuality === 'epic' ? 15 : 10
+      };
+
+      tile.staticObject = hiddenPath;
+      hiddenPaths.push(hiddenPath);
+      console.log(`  🗝️ Placed Hidden Path (${lootQuality}) at (${x}, ${y})`);
+    }
+
+    return hiddenPaths;
+  }
+
+  /**
+   * Place treasure chests
+   *
+   * @param tiles - Map tiles
+   * @param count - Number of treasure chests
+   * @returns Array of treasure chests
+   */
+  private static placeTreasureChests(tiles: Tile[][], count: number): TreasureChest[] {
+    console.log('📦 Placing treasure chests...');
+    const treasureChests: TreasureChest[] = [];
+    const width = tiles[0].length;
+    const height = tiles.length;
+
+    const lootQualities: Array<'common' | 'uncommon' | 'rare' | 'epic'> = [
+      'common',
+      'common',
+      'uncommon',
+      'uncommon',
+      'rare',
+      'epic'
+    ];
+
+    for (let i = 0; i < count; i++) {
+      let x: number, y: number, tile: Tile;
+      let attempts = 0;
+      do {
+        x = Math.floor(Math.random() * width);
+        y = Math.floor(Math.random() * height);
+        tile = tiles[y][x];
+        attempts++;
+      } while (
+        (tile.staticObject || tile.terrain === 'water' || tile.terrain === 'road') &&
+        attempts < 100
+      );
+
+      if (attempts >= 100) continue;
+
+      const lootQuality = lootQualities[Math.floor(Math.random() * lootQualities.length)];
+      const goldMultiplier = {
+        common: 1,
+        uncommon: 2,
+        rare: 5,
+        epic: 10
+      };
+
+      const treasureChest: TreasureChest = {
+        id: `chest-${i}`,
+        type: 'treasureChest',
+        name: 'Treasure Chest',
+        position: { x, y },
+        opened: false,
+        lootQuality,
+        goldAmount: Math.floor((Math.random() * 500 + 100) * goldMultiplier[lootQuality])
+      };
+
+      tile.staticObject = treasureChest;
+      treasureChests.push(treasureChest);
+      console.log(`  📦 Placed Treasure Chest (${lootQuality}) at (${x}, ${y})`);
+    }
+
+    return treasureChests;
+  }
+
+  /**
+   * Place rare spawns (rare enemies with guaranteed drops)
+   *
+   * @param tiles - Map tiles
+   * @param count - Number of rare spawns
+   * @returns Array of rare spawns
+   */
+  private static placeRareSpawns(tiles: Tile[][], count: number): RareSpawn[] {
+    console.log('👹 Placing rare spawns...');
+    const rareSpawns: RareSpawn[] = [];
+    const width = tiles[0].length;
+    const height = tiles.length;
+
+    const rareEnemies = [
+      { name: 'Ancient Golem', minLevel: 15 },
+      { name: 'Shadow Dragon', minLevel: 25 },
+      { name: 'Frost Giant', minLevel: 20 },
+      { name: 'Phoenix', minLevel: 30 }
+    ];
+
+    for (let i = 0; i < count; i++) {
+      let x: number, y: number, tile: Tile;
+      let attempts = 0;
+      do {
+        x = Math.floor(Math.random() * width);
+        y = Math.floor(Math.random() * height);
+        tile = tiles[y][x];
+        attempts++;
+      } while (
+        (tile.staticObject || tile.terrain === 'water' || tile.terrain === 'road') &&
+        attempts < 100
+      );
+
+      if (attempts >= 100) continue;
+
+      const enemy = rareEnemies[Math.floor(Math.random() * rareEnemies.length)];
+      const guaranteedDrop: 'rare' | 'epic' = Math.random() > 0.5 ? 'epic' : 'rare';
+
+      const rareSpawn: RareSpawn = {
+        id: `rare-spawn-${i}`,
+        type: 'rareSpawn',
+        name: enemy.name,
+        position: { x, y },
+        enemyName: enemy.name,
+        enemyLevel: enemy.minLevel + Math.floor(Math.random() * 10),
+        guaranteedDrop,
+        defeated: false
+      };
+
+      tile.staticObject = rareSpawn;
+      rareSpawns.push(rareSpawn);
+      console.log(`  👹 Placed ${rareSpawn.enemyName} (Lv${rareSpawn.enemyLevel}) at (${x}, ${y})`);
+    }
+
+    return rareSpawns;
+  }
+
+  /**
+   * Spawn wandering monsters
+   *
+   * @param tiles - Map tiles
+   * @param count - Number of wandering monsters
+   * @returns Array of wandering monsters
+   */
+  private static spawnWanderingMonsters(tiles: Tile[][], count: number): WanderingMonster[] {
+    console.log('🐺 Spawning wandering monsters...');
+    const wanderingMonsters: WanderingMonster[] = [];
+    const width = tiles[0].length;
+    const height = tiles.length;
+
+    const monsterNames = [
+      'Dire Wolf',
+      'Ogre',
+      'Troll',
+      'Harpy',
+      'Manticore',
+      'Wyvern',
+      'Bandit Leader',
+      'Dark Knight'
+    ];
+
+    for (let i = 0; i < count; i++) {
+      const x = Math.floor(Math.random() * width);
+      const y = Math.floor(Math.random() * height);
+      const tile = tiles[y][x];
+
+      // Only spawn on passable, empty terrain
+      if (!tile.staticObject && tile.terrain !== 'water' && tile.terrain !== 'road') {
+        const monster: WanderingMonster = {
+          id: `wandering-${Date.now()}-${i}`,
+          type: 'wanderingMonster',
+          position: { x, y },
+          enemyName: monsterNames[Math.floor(Math.random() * monsterNames.length)],
+          enemyLevel: Math.floor(Math.random() * 20) + 5,
+          difficulty: Math.random() > 0.7 ? 'Elite' : 'Normal',
+          defeated: false,
+          respawnMinutes: WORLDMAP_CONFIG.WANDERING_MONSTER_RESPAWN,
+          spawnTime: new Date(),
+          isActive: true
+        };
+
+        wanderingMonsters.push(monster);
+        console.log(`  🐺 Spawned ${monster.enemyName} (${monster.difficulty}) at (${x}, ${y})`);
+      }
+    }
+
+    return wanderingMonsters;
+  }
+
+  /**
+   * Spawn traveling merchants
+   *
+   * @param tiles - Map tiles
+   * @param count - Number of traveling merchants
+   * @returns Array of traveling merchants
+   */
+  private static spawnTravelingMerchants(tiles: Tile[][], count: number): TravelingMerchant[] {
+    console.log('🛒 Spawning traveling merchants...');
+    const merchants: TravelingMerchant[] = [];
+    const width = tiles[0].length;
+    const height = tiles.length;
+
+    const merchantNames = [
+      'Wandering Trader Marcus',
+      'Mysterious Merchant Aria',
+      'Desert Vendor Khalid',
+      'Forest Merchant Elena'
+    ];
+
+    const itemTypes = [
+      'Rare Weapon',
+      'Epic Armor',
+      'Legendary Accessory',
+      'Ancient Scroll',
+      'Magic Potion',
+      'Enchanted Ring'
+    ];
+
+    for (let i = 0; i < count; i++) {
+      // Spawn near roads if possible
+      let x: number, y: number, tile: Tile;
+      let attempts = 0;
+      do {
+        x = Math.floor(Math.random() * width);
+        y = Math.floor(Math.random() * height);
+        tile = tiles[y][x];
+        attempts++;
+      } while (
+        (tile.staticObject || tile.terrain === 'water' || tile.terrain === 'mountains') &&
+        attempts < 100
+      );
+
+      if (attempts >= 100) continue;
+
+      // Generate random inventory
+      const inventorySize = Math.floor(Math.random() * 4) + 2; // 2-5 items
+      const inventory: TravelingMerchant['inventory'] = [];
+
+      for (let j = 0; j < inventorySize; j++) {
+        const rarities: Array<'uncommon' | 'rare' | 'epic'> = ['uncommon', 'rare', 'epic'];
+        const rarity = rarities[Math.floor(Math.random() * rarities.length)];
+        const priceMultiplier = { uncommon: 1, rare: 3, epic: 8 };
+
+        inventory.push({
+          itemType: itemTypes[Math.floor(Math.random() * itemTypes.length)],
+          price: Math.floor((Math.random() * 1000 + 500) * priceMultiplier[rarity]),
+          rarity
+        });
+      }
+
+      const merchant: TravelingMerchant = {
+        id: `merchant-${Date.now()}-${i}`,
+        type: 'travelingMerchant',
+        position: { x, y },
+        merchantName: merchantNames[Math.floor(Math.random() * merchantNames.length)],
+        inventory,
+        staysUntil: new Date(Date.now() + WORLDMAP_CONFIG.TRAVELING_MERCHANT_DURATION * 60 * 60 * 1000),
+        spawnTime: new Date(),
+        isActive: true
+      };
+
+      merchants.push(merchant);
+      console.log(`  🛒 Spawned ${merchant.merchantName} at (${x}, ${y})`);
+    }
+
+    return merchants;
+  }
+
+  /**
+   * Initialize weather state
+   *
+   * @returns Initial weather state
+   */
+  private static initializeWeather() {
+    const weatherTypes: WeatherType[] = ['clear', 'rain', 'storm', 'fog', 'snow'];
+    const current = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+    const next = weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+
+    const spawnRateModifiers: Record<WeatherType, number> = {
+      clear: 1.0,
+      rain: 0.8,
+      storm: 0.5,
+      fog: 1.2,
+      snow: 0.7
+    };
+
+    return {
+      current,
+      changesAt: new Date(Date.now() + WORLDMAP_CONFIG.WEATHER_CHANGE_INTERVAL * 60 * 60 * 1000),
+      next,
+      spawnRateModifier: spawnRateModifiers[current]
+    };
+  }
+
+  /**
+   * Initialize time of day state
+   *
+   * @returns Initial time state
+   */
+  private static initializeTimeOfDay() {
+    const times: TimeOfDay[] = ['day', 'night', 'dawn', 'dusk'];
+    const current = times[Math.floor(Math.random() * times.length)];
+    const nextIndex = (times.indexOf(current) + 1) % times.length;
+    const next = times[nextIndex];
+
+    return {
+      current,
+      changesAt: new Date(Date.now() + WORLDMAP_CONFIG.TIME_CHANGE_INTERVAL * 60 * 60 * 1000),
+      next,
+      enemyModifier: {
+        dayEnemies: current === 'day' || current === 'dawn',
+        nightEnemies: current === 'night' || current === 'dusk'
+      }
+    };
   }
 }

@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-08
+ * @lastModified 2025-11-10
  */
 
 // ============================================================================
@@ -117,8 +117,8 @@ export const ENERGY_CONFIG = {
   /** Energy regeneration rate per hour */
   REGEN_RATE: 10,
 
-  /** Maximum energy capacity */
-  MAX_ENERGY: 100,
+  /** Maximum energy capacity (24 hours worth at 10/hour) */
+  MAX_ENERGY: 240,
 
   /** Energy cost for entering a dungeon */
   DUNGEON_ENTRY_COST: 10,
@@ -144,6 +144,42 @@ export const WORLDMAP_CONFIG = {
 
   /** Number of dungeons on map */
   DUNGEON_COUNT: 5,
+
+  /** Number of portals on map (for fast travel) */
+  PORTAL_COUNT: 6,
+
+  /** Number of hidden paths on map */
+  HIDDEN_PATH_COUNT: 3,
+
+  /** Number of treasure chests on map */
+  TREASURE_CHEST_COUNT: 8,
+
+  /** Number of rare spawn locations on map */
+  RARE_SPAWN_COUNT: 4,
+
+  /** Number of wandering monsters */
+  WANDERING_MONSTER_COUNT: 10,
+
+  /** Wandering monster respawn time (minutes) */
+  WANDERING_MONSTER_RESPAWN: 30,
+
+  /** Number of traveling merchants */
+  TRAVELING_MERCHANT_COUNT: 2,
+
+  /** Traveling merchant stay duration (hours) */
+  TRAVELING_MERCHANT_DURATION: 4,
+
+  /** Random event spawn chance per hour (%) */
+  RANDOM_EVENT_CHANCE: 20,
+
+  /** Portal energy cost */
+  PORTAL_ENERGY_COST: 20,
+
+  /** Weather change interval (hours) */
+  WEATHER_CHANGE_INTERVAL: 3,
+
+  /** Time of day change interval (hours) - simulates 4 periods per real day */
+  TIME_CHANGE_INTERVAL: 6,
 
   /** Fog of war reveal radius */
   FOG_REVEAL_RADIUS: 2,

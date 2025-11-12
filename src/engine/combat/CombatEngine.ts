@@ -95,8 +95,9 @@ export class CombatEngine {
     this.combatResult = null;
     this.lootReward = null;
 
-    // Reset all characters
-    this.heroes.forEach(h => h.reset());
+    // Reset combat state without healing (HP persists between fights)
+    this.heroes.forEach(h => h.resetCombatState());
+    // Enemies are freshly spawned, so they start at full HP
     this.enemies.forEach(e => e.reset());
 
     this.log('Combat initialized!');

@@ -6,11 +6,13 @@
  */
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+import { ENERGY_CONFIG } from '../config/BALANCE_CONFIG';
 
 export interface PlayerProfile {
   id: string;
   user_id: string;
   nickname: string | null;
+  avatar: string; // Avatar image filename (e.g., 'hero1.png', 'hero2.png')
   player_level: number;
   experience: number;
   gold: number;
@@ -31,6 +33,7 @@ export interface PlayerProfile {
 
 export interface PlayerProfileUpdate {
   nickname?: string;
+  avatar?: string;
   player_level?: number;
   experience?: number;
   gold?: number;
@@ -119,12 +122,13 @@ export class PlayerProfileService {
         .insert({
           user_id: userId,
           nickname: nickname || null,
+          avatar: 'hero1.png', // Default avatar
           player_level: 1,
           experience: 0,
           gold: 0,
           gems: 100, // Starting gems
-          energy: 100,
-          max_energy: 100,
+          energy: ENERGY_CONFIG.MAX_ENERGY,
+          max_energy: ENERGY_CONFIG.MAX_ENERGY,
           current_world_x: 25,
           current_world_y: 25
         })

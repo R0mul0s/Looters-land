@@ -1,7 +1,15 @@
 /**
- * Simple Router Component
+ * Router Component - Main application router and combat controller
  *
- * Routes between main game (WorldMapDemo2) and legacy test UI (App)
+ * Routes between main game (WorldMapDemo2) and legacy test UI (App).
+ * Manages combat state for both dungeon and worldmap quick combat encounters.
+ *
+ * Contains:
+ * - Route handling (/ for main game, /test for legacy UI)
+ * - Combat system integration (dungeon and quick combat)
+ * - Combat UI rendering (heroes, enemies, manual controls)
+ * - Victory/defeat modals with rewards display
+ * - Authentication state management
  *
  * Routes:
  * - / -> WorldMapDemo2 (main game)
@@ -9,7 +17,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-08
+ * @lastModified 2025-11-12
  */
 
 import { useState, useEffect } from 'react';
@@ -26,6 +34,8 @@ import type { Combatant, CombatLogEntry } from './types/combat.types';
 import { t } from './localization/i18n';
 import { DUNGEON_CONFIG, COMBAT_CONFIG } from './config/BALANCE_CONFIG';
 import { LoginScreen } from './components/LoginScreen';
+import { GameModal } from './components/ui/GameModal';
+import { ModalText, ModalDivider, ModalInfoRow, ModalInfoBox, ModalButton } from './components/ui/ModalContent';
 
 export function Router() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -43,12 +53,20 @@ export function Router() {
   const [combatLog, setCombatLog] = useState<CombatLogEntry[]>([]);
   const [currentEnemies, setCurrentEnemies] = useState<Enemy[]>([]);
   const [isManualMode] = useState(false);
-  const [_waitingForInput, setWaitingForInput] = useState(false);
-  const [_activeCharacter, setActiveCharacter] = useState<Combatant | null>(null);
-  const [_selectedTarget, setSelectedTarget] = useState<Combatant | null>(null);
+  const [waitingForInput, setWaitingForInput] = useState(false);
+  const [activeCharacter, setActiveCharacter] = useState<Combatant | null>(null);
+  const [selectedTarget, setSelectedTarget] = useState<Combatant | null>(null);
   const [showDungeonVictory, setShowDungeonVictory] = useState(false);
   const [dungeonUpdateKey, setDungeonUpdateKey] = useState(0);
   const [, forceUpdate] = useState({});
+  const [quickCombatMetadata, setQuickCombatMetadata] = useState<any>(null);
+  const [quickCombatVictory, setQuickCombatVictory] = useState<{
+    gold: number;
+    xp: number;
+    levelUps: Array<{ heroName: string; newLevel: number }>;
+    items: any[];
+  } | null>(null);
+  const [quickCombatDefeat, setQuickCombatDefeat] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -255,6 +273,18 @@ export function Router() {
   };
 
   /**
+   * Handle exit from quick combat
+   */
+  const handleQuickCombatExit = () => {
+    setCombatActive(false);
+    setCombatLog([]);
+    setWaitingForInput(false);
+    setActiveCharacter(null);
+    setSelectedTarget(null);
+    setQuickCombatMetadata(null);
+  };
+
+  /**
    * Handle combat start from dungeon
    *
    * Initializes combat engine with current party and enemies, sets up combat UI,
@@ -262,6 +292,176 @@ export function Router() {
    *
    * @param enemies - Array of Enemy instances for this combat encounter
    */
+  /**
+   * Run auto combat for quick encounters
+   */
+  const runQuickAutoCombat = async () => {
+    while (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
+      combatEngine.executeTurn();
+      setCombatLog([...combatEngine.combatLog]);
+      forceUpdate({});
+
+      // Wait between turns for visibility
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  };
+
+  /**
+   * Handle quick combat from worldmap (rare spawns, wandering monsters)
+   *
+   * Starts combat directly without entering a dungeon.
+   *
+   * @param enemies - Array of enemies to fight
+   * @param combatType - Type of combat encounter
+   * @param metadata - Additional data about the encounter
+   */
+  const handleQuickCombat = (enemies: Enemy[], combatType: 'rare_spawn' | 'wandering_monster', metadata?: any) => {
+    console.log(`⚔️ Quick combat starting: ${combatType}`, enemies.length, 'enemies');
+    console.log('📋 Combat metadata:', metadata);
+
+    const activeHeroes = gameState.activeParty || [];
+
+    // Get combat mode from metadata (default to auto if not specified)
+    const mode = metadata?.mode || 'auto';
+    const isManual = mode === 'manual';
+
+    setCurrentEnemies(enemies);
+    setQuickCombatMetadata(metadata);
+    setCombatActive(true);
+
+    // Use setTimeout to ensure state updates have processed before initializing combat
+    setTimeout(() => {
+      // Initialize combat
+      combatEngine.initialize(activeHeroes, enemies);
+      combatEngine.isManualMode = isManual;
+      setCombatLog([...combatEngine.combatLog]);
+
+      // Set callback for combat end - use quick combat handler
+      combatEngine.onCombatEnd = handleQuickCombatEnd;
+
+      if (isManual) {
+        // Execute enemy turns until we reach first hero
+        while (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
+          combatEngine.executeTurn();
+          setCombatLog([...combatEngine.combatLog]);
+        }
+
+        if (combatEngine.waitingForPlayerInput) {
+          setWaitingForInput(true);
+          setActiveCharacter(combatEngine.currentCharacter);
+        }
+      } else {
+        // Auto mode - start combat loop
+        runQuickAutoCombat();
+      }
+    }, 0);
+  };
+
+  /**
+   * Handle quick combat end (without dungeon context)
+   */
+  const handleQuickCombatEnd = async () => {
+    console.log('✅ Quick combat completed');
+
+    // Check if it's a defeat (all heroes dead)
+    const allHeroesDead = gameState.activeParty.every(hero => !hero.isAlive);
+
+    if (allHeroesDead) {
+      // Handle defeat
+      setCombatActive(true);
+      setWaitingForInput(false);
+      setActiveCharacter(null);
+      setSelectedTarget(null);
+      forceUpdate({});
+
+      // Show defeat modal
+      setTimeout(() => {
+        setQuickCombatDefeat(true);
+        // Set heroes to 10% HP (they need to go heal in town)
+        gameState.activeParty.forEach(hero => {
+          hero.currentHP = Math.max(1, Math.floor(hero.maxHP * 0.1));
+          hero.isAlive = true;
+          hero.resetCombatState();
+        });
+        setCombatActive(false);
+        setCombatLog([]);
+      }, 2000);
+
+      return;
+    }
+
+    // Victory! Mark monster/rare spawn as defeated
+    if (quickCombatMetadata) {
+      if (quickCombatMetadata.rareSpawnObject) {
+        quickCombatMetadata.rareSpawnObject.defeated = true;
+        console.log('🎯 Rare spawn marked as defeated');
+      }
+      if (quickCombatMetadata.monsterObject) {
+        quickCombatMetadata.monsterObject.defeated = true;
+        console.log('🎯 Wandering monster marked as defeated');
+      }
+      // Update worldmap
+      if (gameState.worldMap) {
+        await gameActions.updateWorldMap({ ...gameState.worldMap });
+      }
+    }
+
+    // Victory! Get rewards from combat engine
+    const loot = combatEngine.lootReward;
+    const goldReward = loot?.gold || 0;
+
+    // Calculate total XP awarded (from combat log or recalculate)
+    const totalEnemyLevel = currentEnemies.reduce((sum, enemy) => sum + enemy.level, 0);
+    const avgEnemyLevel = totalEnemyLevel / (currentEnemies.length || 1);
+    const numEnemies = currentEnemies.length;
+    const baseXP = 50;
+    const xpReward = Math.floor(baseXP * avgEnemyLevel * numEnemies);
+
+    console.log(`💰 Victory rewards: ${goldReward} gold, ${xpReward} XP, ${loot?.items.length || 0} items`);
+
+    // Award gold
+    await gameActions.addGold(goldReward);
+
+    // Add items to inventory
+    if (loot?.items && loot.items.length > 0) {
+      console.log(`📦 Adding ${loot.items.length} items to inventory...`);
+      for (const item of loot.items) {
+        await gameActions.addItem(item);
+        console.log(`  ✓ Added: ${item.name} (${item.rarity})`);
+      }
+    }
+
+    // Track level ups before saving
+    const levelUps: Array<{ heroName: string; newLevel: number }> = [];
+    const heroesBeforeSave = gameState.activeParty.map(h => ({ name: h.name, level: h.level }));
+
+    // Save updated heroes (XP already awarded by CombatEngine)
+    await gameActions.updateActiveParty(gameState.activeParty);
+    await gameActions.saveGame();
+
+    // Check for level ups
+    gameState.activeParty.forEach((hero, i) => {
+      if (hero.level > heroesBeforeSave[i].level) {
+        levelUps.push({ heroName: hero.name, newLevel: hero.level });
+      }
+    });
+
+    // Show victory modal instead of alert
+    setTimeout(() => {
+      setQuickCombatVictory({
+        gold: goldReward,
+        xp: xpReward,
+        levelUps,
+        items: loot?.items || []
+      });
+      setCombatActive(false);
+      setCombatLog([]);
+      setWaitingForInput(false);
+      setActiveCharacter(null);
+      setSelectedTarget(null);
+    }, 1000);
+  };
+
   const handleDungeonCombatStart = (enemies: Enemy[]) => {
     console.log('🗡️ Combat starting with', enemies.length, 'enemies');
 
@@ -341,6 +541,13 @@ export function Router() {
 
       // Show defeat alert and exit dungeon
       setTimeout(() => {
+        // Set heroes to 10% HP (they need to go heal in town)
+        gameState.activeParty.forEach(hero => {
+          hero.currentHP = Math.max(1, Math.floor(hero.maxHP * 0.1));
+          hero.isAlive = true;
+          hero.resetCombatState();
+        });
+
         alert(t('router.defeatAlert'));
         handleDungeonExit();
       }, COMBAT_CONFIG.DEFEAT_ALERT_DELAY);
@@ -440,6 +647,7 @@ export function Router() {
         <WorldMapDemo2
           userEmail={userEmail}
           onEnterDungeon={handleEnterDungeon}
+          onQuickCombat={handleQuickCombat}
         />
       </div>
 
@@ -467,15 +675,19 @@ export function Router() {
         />
       )}
 
-      {/* Combat Display - shown when combat is active */}
-      {inDungeon && currentDungeon && combatActive && (
+      {/* Combat Display - shown when combat is active (dungeon or quick combat) */}
+      {combatActive && (inDungeon && currentDungeon || !inDungeon) && (
           <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
             width: '100vw',
             height: '100vh',
             background: '#1a1a2e',
             color: '#fff',
             padding: '20px',
-            overflow: 'auto'
+            overflow: 'auto',
+            zIndex: 9999
           }}>
             {/* Combat Header */}
             <div style={{
@@ -519,7 +731,7 @@ export function Router() {
                   {t('router.defeatMessage')}
                 </p>
                 <button
-                  onClick={handleDungeonExit}
+                  onClick={inDungeon ? handleDungeonExit : handleQuickCombatExit}
                   style={{
                     width: '100%',
                     fontSize: '1.3em',
@@ -861,6 +1073,373 @@ export function Router() {
               </div>
             </div>
 
+            {/* Manual Combat Controls */}
+            {waitingForInput && activeCharacter && (
+              <div style={{
+                background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
+                padding: '16px',
+                borderRadius: '12px',
+                marginBottom: '20px',
+                border: '2px solid rgba(167, 139, 250, 0.5)',
+                boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)'
+              }}>
+                {/* Header with character name and auto switch */}
+                <div style={{
+                  background: 'rgba(0, 0, 0, 0.2)',
+                  padding: '10px 16px',
+                  borderRadius: '8px',
+                  marginBottom: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '12px'
+                }}>
+                  <h3 style={{
+                    margin: 0,
+                    fontSize: '1.1em',
+                    fontWeight: 'bold',
+                    color: '#fff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    flex: 1,
+                    justifyContent: 'center'
+                  }}>
+                    ⚔️ {activeCharacter.name}'s Turn
+                  </h3>
+                  <button
+                    onClick={() => {
+                      // If currently waiting for input, execute auto action for current character first
+                      if (activeCharacter && combatEngine.waitingForPlayerInput) {
+                        // Find a valid target (first alive enemy)
+                        const target = currentEnemies.find(e => e.isAlive);
+                        if (target && activeCharacter) {
+                          // Execute basic attack as auto action
+                          const action = activeCharacter.attack(target);
+                          if (action) {
+                            setCombatLog([...combatEngine.combatLog]);
+                          }
+                        }
+                      }
+
+                      // Switch to auto mode
+                      combatEngine.setManualMode(false);
+                      setWaitingForInput(false);
+                      setSelectedTarget(null);
+                      setActiveCharacter(null);
+
+                      // Continue combat in auto mode
+                      setTimeout(() => {
+                        if (combatEngine.isActive) {
+                          combatEngine.executeTurn();
+                          setCombatLog([...combatEngine.combatLog]);
+
+                          // Keep executing turns until combat ends
+                          const autoLoop = setInterval(() => {
+                            if (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
+                              combatEngine.executeTurn();
+                              setCombatLog([...combatEngine.combatLog]);
+                            } else {
+                              clearInterval(autoLoop);
+                            }
+                          }, 500);
+                        }
+                      }, 300);
+                    }}
+                    style={{
+                      padding: '6px 12px',
+                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                      color: '#fff',
+                      border: 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      fontSize: '0.85em',
+                      fontWeight: '600',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)',
+                      whiteSpace: 'nowrap'
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 4px 10px rgba(16, 185, 129, 0.5)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 2px 6px rgba(16, 185, 129, 0.3)';
+                    }}
+                  >
+                    🤖 Auto
+                  </button>
+                </div>
+
+                {/* Target Selection */}
+                {!selectedTarget ? (
+                  <div style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: '1px solid rgba(255, 255, 255, 0.1)'
+                  }}>
+                    <p style={{
+                      fontSize: '0.95em',
+                      marginBottom: '10px',
+                      textAlign: 'center',
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      fontWeight: '500'
+                    }}>
+                      🎯 Select Target
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {currentEnemies.filter(e => e.isAlive).map((enemy) => (
+                        <button
+                          key={enemy.id}
+                          onClick={() => setSelectedTarget(enemy)}
+                          style={{
+                            padding: '10px 14px',
+                            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%)',
+                            color: '#1a202c',
+                            border: '2px solid rgba(251, 191, 36, 0.6)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            fontSize: '0.95em',
+                            fontWeight: '600',
+                            transition: 'all 0.2s',
+                            textAlign: 'left',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.transform = 'translateX(4px)';
+                            e.currentTarget.style.borderColor = 'rgb(251, 191, 36)';
+                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(251, 191, 36, 0.4)';
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.transform = 'translateX(0)';
+                            e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.6)';
+                            e.currentTarget.style.boxShadow = 'none';
+                          }}
+                        >
+                          <span>{enemy.name}</span>
+                          <span style={{ fontSize: '0.85em', color: '#666' }}>
+                            HP: {enemy.currentHP}/{enemy.maxHP}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    {/* Target Display */}
+                    <div style={{
+                      background: 'rgba(251, 191, 36, 0.15)',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      marginBottom: '12px',
+                      border: '1px solid rgba(251, 191, 36, 0.3)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <span style={{ fontSize: '0.9em', color: 'rgba(255, 255, 255, 0.9)' }}>
+                        🎯 Target: <strong>{selectedTarget.name}</strong>
+                      </span>
+                      <button
+                        onClick={() => setSelectedTarget(null)}
+                        style={{
+                          padding: '4px 10px',
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '0.8em',
+                          color: '#fff',
+                          fontWeight: '500',
+                          transition: 'all 0.2s'
+                        }}
+                        onMouseOver={(e) => {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+                        }}
+                        onMouseOut={(e) => {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+                        }}
+                      >
+                        Change
+                      </button>
+                    </div>
+
+                    {/* Attack Button */}
+                    <button
+                      onClick={() => {
+                        if (activeCharacter && selectedTarget) {
+                          const result = activeCharacter.attack(selectedTarget);
+                          if (result) {
+                            setCombatLog([...combatEngine.combatLog]);
+                          }
+                          setSelectedTarget(null);
+                          setWaitingForInput(false);
+
+                          setTimeout(() => {
+                            if (combatEngine.isActive) {
+                              combatEngine.executeTurn();
+                              setCombatLog([...combatEngine.combatLog]);
+
+                              if (combatEngine.waitingForPlayerInput) {
+                                setWaitingForInput(true);
+                                setActiveCharacter(combatEngine.currentCharacter);
+                              }
+                            }
+                          }, 500);
+                        }
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '14px',
+                        marginBottom: '12px',
+                        background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        cursor: 'pointer',
+                        fontSize: '1.05em',
+                        fontWeight: 'bold',
+                        transition: 'all 0.2s',
+                        boxShadow: '0 2px 8px rgba(220, 38, 38, 0.3)'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.5)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(220, 38, 38, 0.3)';
+                      }}
+                    >
+                      ⚔️ Attack
+                    </button>
+
+                    {/* Skills Section */}
+                    {'getSkills' in activeCharacter && activeCharacter.getSkills().length > 0 && (
+                      <div>
+                        <p style={{
+                          fontSize: '0.85em',
+                          marginBottom: '8px',
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          textAlign: 'center',
+                          fontWeight: '500'
+                        }}>
+                          Skills:
+                        </p>
+                        <div style={{
+                          display: 'grid',
+                          gridTemplateColumns: activeCharacter.getSkills().length === 1 ? '1fr' : 'repeat(auto-fit, minmax(140px, 1fr))',
+                          gap: '8px'
+                        }}>
+                          {activeCharacter.getSkills().map((skill: any, index: number) => {
+                            const isOnCooldown = skill.currentCooldown > 0;
+                            const canUse = !isOnCooldown;
+
+                            return (
+                              <button
+                                key={index}
+                                onClick={() => {
+                                  if (canUse && activeCharacter && 'useSkill' in activeCharacter) {
+                                    const targets = skill.targetType === 'all_enemies'
+                                      ? currentEnemies.filter(e => e.isAlive)
+                                      : skill.targetType === 'all_allies'
+                                      ? gameState.activeParty.filter(h => h.isAlive)
+                                      : skill.targetType === 'self'
+                                      ? [activeCharacter]
+                                      : [selectedTarget];
+
+                                    activeCharacter.useSkill(index, targets);
+                                    setCombatLog([...combatEngine.combatLog]);
+                                    setSelectedTarget(null);
+                                    setWaitingForInput(false);
+
+                                    setTimeout(() => {
+                                      if (combatEngine.isActive) {
+                                        combatEngine.executeTurn();
+                                        setCombatLog([...combatEngine.combatLog]);
+
+                                        if (combatEngine.waitingForPlayerInput) {
+                                          setWaitingForInput(true);
+                                          setActiveCharacter(combatEngine.currentCharacter);
+                                        }
+                                      }
+                                    }, 500);
+                                  }
+                                }}
+                                disabled={!canUse}
+                                style={{
+                                  padding: '12px 10px',
+                                  background: isOnCooldown
+                                    ? 'linear-gradient(135deg, #4b5563 0%, #374151 100%)'
+                                    : 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)',
+                                  color: '#fff',
+                                  border: isOnCooldown ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(167, 139, 250, 0.3)',
+                                  borderRadius: '6px',
+                                  cursor: canUse ? 'pointer' : 'not-allowed',
+                                  fontSize: '0.9em',
+                                  fontWeight: '600',
+                                  transition: 'all 0.2s',
+                                  opacity: isOnCooldown ? 0.6 : 1,
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '4px',
+                                  minHeight: '60px',
+                                  boxShadow: isOnCooldown ? 'none' : '0 2px 6px rgba(139, 92, 246, 0.3)'
+                                }}
+                                onMouseOver={(e) => {
+                                  if (canUse) {
+                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.5)';
+                                  }
+                                }}
+                                onMouseOut={(e) => {
+                                  if (canUse) {
+                                    e.currentTarget.style.transform = 'translateY(0)';
+                                    e.currentTarget.style.boxShadow = '0 2px 6px rgba(139, 92, 246, 0.3)';
+                                  }
+                                }}
+                              >
+                                <span style={{ fontSize: '1.1em' }}>
+                                  {skill.icon || '🔮'} {skill.name}
+                                </span>
+                                {isOnCooldown ? (
+                                  <span style={{
+                                    fontSize: '0.75em',
+                                    color: '#fbbf24',
+                                    fontWeight: '600',
+                                    background: 'rgba(0, 0, 0, 0.2)',
+                                    padding: '2px 8px',
+                                    borderRadius: '10px'
+                                  }}>
+                                    CD: {skill.currentCooldown}
+                                  </span>
+                                ) : skill.cooldown > 0 && (
+                                  <span style={{
+                                    fontSize: '0.7em',
+                                    color: 'rgba(255, 255, 255, 0.6)',
+                                    fontWeight: '500'
+                                  }}>
+                                    CD: {skill.cooldown}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* Combat Log */}
             <div style={{
               background: '#0d0d1a',
@@ -884,6 +1463,98 @@ export function Router() {
             </div>
           </div>
         )}
+
+      {/* Quick Combat Victory Modal */}
+      <GameModal
+        isOpen={!!quickCombatVictory}
+        title="Victory!"
+        icon="🎉"
+        onClose={() => {
+          setQuickCombatVictory(null);
+          setQuickCombatMetadata(null);
+        }}
+      >
+        {quickCombatVictory && (
+          <>
+            <ModalText>
+              You have successfully defeated the enemies!
+            </ModalText>
+            <ModalDivider />
+            <ModalInfoRow label="💰 Gold Earned:" value={quickCombatVictory.gold} valueColor="gold" />
+            <ModalInfoRow label="⭐ Experience:" value={quickCombatVictory.xp} valueColor="info" />
+
+            {quickCombatVictory.items && quickCombatVictory.items.length > 0 && (
+              <>
+                <ModalDivider />
+                <ModalInfoBox variant="info">
+                  <strong>🎁 Items Dropped:</strong>
+                  {quickCombatVictory.items.map((item, i) => (
+                    <div key={i} style={{ marginTop: '4px', fontSize: '13px' }}>
+                      {item.icon} {item.name} ({item.rarity}, Lv.{item.level})
+                    </div>
+                  ))}
+                </ModalInfoBox>
+              </>
+            )}
+
+            {quickCombatVictory.levelUps.length > 0 && (
+              <>
+                <ModalDivider />
+                <ModalInfoBox variant="success">
+                  <strong>🎊 Level Up!</strong>
+                  {quickCombatVictory.levelUps.map((levelUp, i) => (
+                    <div key={i} style={{ marginTop: '4px', fontSize: '13px' }}>
+                      {levelUp.heroName} reached level {levelUp.newLevel}!
+                    </div>
+                  ))}
+                </ModalInfoBox>
+              </>
+            )}
+
+            <ModalDivider />
+            <ModalButton
+              onClick={() => {
+                setQuickCombatVictory(null);
+                setQuickCombatMetadata(null);
+              }}
+              variant="primary"
+              fullWidth
+            >
+              Continue
+            </ModalButton>
+          </>
+        )}
+      </GameModal>
+
+      {/* Quick Combat Defeat Modal */}
+      <GameModal
+        isOpen={quickCombatDefeat}
+        title="Defeat"
+        icon="💀"
+        onClose={() => {
+          setQuickCombatDefeat(false);
+          setQuickCombatMetadata(null);
+        }}
+      >
+        <ModalText>
+          {t('combat.allHeroesDead')}
+        </ModalText>
+        <ModalDivider />
+        <ModalInfoBox variant="warning">
+          Your heroes have been revived and are ready to fight again!
+        </ModalInfoBox>
+        <ModalDivider />
+        <ModalButton
+          onClick={() => {
+            setQuickCombatDefeat(false);
+            setQuickCombatMetadata(null);
+          }}
+          variant="primary"
+          fullWidth
+        >
+          Continue
+        </ModalButton>
+      </GameModal>
     </>
   );
 }

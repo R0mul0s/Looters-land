@@ -270,10 +270,22 @@ export class Enemy {
     };
   }
 
+  /**
+   * Reset combat state (status effects) without healing
+   * Use this between combats to prepare for next fight while keeping current HP
+   */
+  resetCombatState(): void {
+    this.statusEffects = [];
+  }
+
+  /**
+   * Full reset including HP restoration
+   * Use this only when enemy should be fully healed (e.g., new spawn, revival)
+   */
   reset(): void {
     this.currentHP = this.maxHP;
     this.isAlive = true;
-    this.statusEffects = [];
+    this.resetCombatState();
   }
 
   // Required for Combatant interface compatibility

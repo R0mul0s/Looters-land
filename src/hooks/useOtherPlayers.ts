@@ -24,6 +24,7 @@ export interface OtherPlayer {
   level: number;
   x: number;
   y: number;
+  avatar?: string; // Player avatar filename (e.g., 'hero1.png')
   chatMessage?: string;
   chatTimestamp?: Date;
 }
@@ -49,7 +50,7 @@ export function useOtherPlayers(currentUserId: string | undefined): OtherPlayer[
     const fetchOnlinePlayers = async () => {
       const { data, error} = await supabase
         .from('player_profiles')
-        .select('id, nickname, player_level, current_map_x, current_map_y, current_chat_message, chat_message_timestamp, user_id')
+        .select('id, nickname, player_level, current_map_x, current_map_y, avatar, current_chat_message, chat_message_timestamp, user_id')
         .eq('is_online', true)
         .neq('user_id', currentUserId)
         .not('current_map_x', 'is', null)
@@ -66,6 +67,7 @@ export function useOtherPlayers(currentUserId: string | undefined): OtherPlayer[
         level: p.player_level || 1,
         x: p.current_map_x!,
         y: p.current_map_y!,
+        avatar: p.avatar || 'hero1.png',
         chatMessage: p.current_chat_message || undefined,
         chatTimestamp: p.chat_message_timestamp ? new Date(p.chat_message_timestamp) : undefined
       }));
@@ -111,6 +113,7 @@ export function useOtherPlayers(currentUserId: string | undefined): OtherPlayer[
                     level: updated.player_level || 1,
                     x: updated.current_map_x,
                     y: updated.current_map_y,
+                    avatar: updated.avatar || 'hero1.png',
                     chatMessage: updated.current_chat_message || undefined,
                     chatTimestamp: updated.chat_message_timestamp
                       ? new Date(updated.chat_message_timestamp)

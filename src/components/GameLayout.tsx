@@ -23,6 +23,7 @@ interface GameLayoutProps {
   playerName: string;
   playerEmail?: string;
   userId?: string; // For leaderboards
+  playerAvatar?: string; // Avatar image filename (e.g., 'hero1.png', 'hero2.png')
   gold: number;
   gems: number;
   energy: number;
@@ -67,6 +68,7 @@ export function GameLayout({
   playerName,
   playerEmail,
   userId,
+  playerAvatar = 'hero1.png',
   gold,
   gems,
   energy,
@@ -161,6 +163,7 @@ export function GameLayout({
               playerName={playerName}
               playerEmail={playerEmail}
               playerLevel={playerLevel}
+              playerAvatar={playerAvatar}
               gold={gold}
               gems={gems}
               heroCount={heroCount}

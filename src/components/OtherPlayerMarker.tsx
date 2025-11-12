@@ -1,7 +1,7 @@
 /**
  * Other Player Marker Component
  *
- * Displays other online players on the world map with their nickname and level.
+ * Displays other online players on the world map with their nickname and combat power.
  * Shows player avatar image with text label above.
  *
  * @author Roman Hlaváček - rhsoft.cz
@@ -20,26 +20,26 @@ import hero5Img from '../assets/images/hero/hero5.png';
 
 interface OtherPlayerMarkerProps {
   nickname: string;
-  level: number;
+  combatPower: number;
   avatar?: string; // Avatar filename (e.g., 'hero1.png')
   color?: string; // Optional color for fallback icon
   scale?: number; // Scale factor based on zoom level
 }
 
 /**
- * Renders a player marker with nickname and level
+ * Renders a player marker with nickname and combat power
  *
  * @param props - Component props
  * @returns React component
  *
  * @example
  * ```tsx
- * <OtherPlayerMarker nickname="Dragon123" level={15} avatar="hero2.png" />
+ * <OtherPlayerMarker nickname="Dragon123" combatPower={1250} avatar="hero2.png" />
  * ```
  */
 export function OtherPlayerMarker({
   nickname,
-  level,
+  combatPower,
   avatar = 'hero1.png',
   color = '#3b82f6', // Blue by default
   scale = 1 // Default scale
@@ -70,14 +70,14 @@ export function OtherPlayerMarker({
   const iconSize = Math.floor(32 * scale * 1.2);
   const labelPadding = `${Math.floor(4 * scale)}px ${Math.floor(8 * scale)}px`;
   const nicknameFontSize = Math.max(9, Math.floor(11 * scale));
-  const levelFontSize = Math.max(8, Math.floor(9 * scale));
+  const combatPowerFontSize = Math.max(8, Math.floor(9 * scale));
 
   return (
     <div style={styles.container}>
-      {/* Nickname and Level Label */}
+      {/* Nickname and Combat Power Label */}
       <div style={{ ...styles.label, padding: labelPadding }}>
         <span style={{ ...styles.nickname, fontSize: `${nicknameFontSize}px` }}>{nickname}</span>
-        <span style={{ ...styles.level, fontSize: `${levelFontSize}px` }}>Lv.{level}</span>
+        <span style={{ ...styles.combatPower, fontSize: `${combatPowerFontSize}px` }}>⚔️ {combatPower}</span>
       </div>
 
       {/* Player Avatar Image */}
@@ -136,10 +136,10 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: 'nowrap',
     textShadow: '0 1px 2px rgba(0, 0, 0, 0.8)'
   },
-  level: {
+  combatPower: {
     fontSize: '9px',
     fontWeight: '600',
-    color: '#fbbf24',
+    color: '#ef4444',
     marginTop: '1px'
   },
   playerIcon: {

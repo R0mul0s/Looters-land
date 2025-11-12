@@ -762,8 +762,11 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         ...prev,
         combatPower: Math.floor(totalScore)
       }));
+
+      // Trigger save if combat power changed (ensures it gets saved to database)
+      scheduleAutoSave();
     }
-  }, [state.activeParty, state.activeParty.length]);
+  }, [state.activeParty, state.activeParty.length, scheduleAutoSave]);
 
   return [state, actions];
 }

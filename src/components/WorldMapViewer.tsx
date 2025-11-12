@@ -876,6 +876,25 @@ function WorldMapViewerComponent({
         } else {
           ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
         }
+      } else if (objectType === 'rareSpawn' && objectName === 'Frost Giant') {
+        // Use Frost Giant image for Frost Giant rare spawn
+        if (monsterImages.frostGiant) {
+          // Add yellow glow effect
+          ctx.shadowColor = '#ffff00';
+          ctx.shadowBlur = 15;
+
+          // Make Frost Giant larger (1.3x tile size) and center it
+          const giantSize = TILE_SIZE * 1.3;
+          const giantOffsetX = screenX - (giantSize - TILE_SIZE) / 2;
+          const giantOffsetY = screenY - (giantSize - TILE_SIZE) / 2;
+
+          ctx.drawImage(monsterImages.frostGiant, giantOffsetX, giantOffsetY, giantSize, giantSize);
+
+          // Reset shadow
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+        }
       } else {
         // Draw emoji for other object types
         ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);

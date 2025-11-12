@@ -19,6 +19,7 @@ export interface PlayerProfile {
   gems: number;
   energy: number;
   max_energy: number;
+  combat_power: number; // Total party combat power
   current_world_x: number;
   current_world_y: number;
   world_map_data?: any;
@@ -40,6 +41,7 @@ export interface PlayerProfileUpdate {
   gems?: number;
   energy?: number;
   max_energy?: number;
+  combat_power?: number; // Total party combat power
   current_world_x?: number;
   current_world_y?: number;
   world_map_data?: any;

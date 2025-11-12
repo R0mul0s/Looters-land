@@ -103,30 +103,40 @@ export function useOtherPlayers(currentUserId: string | undefined): OtherPlayer[
             if (updated.current_map_x == null || updated.current_map_y == null) return;
 
             setOtherPlayers(prev => {
-              const filtered = prev.filter(p => p.id !== updated.id);
-
-              // If player is online, add them
-              if (updated.is_online) {
-                return [
-                  ...filtered,
-                  {
-                    id: updated.id,
-                    nickname: updated.nickname || 'Unknown',
-                    level: updated.player_level || 1,
-                    combatPower: updated.combat_power || 0,
-                    x: updated.current_map_x,
-                    y: updated.current_map_y,
-                    avatar: updated.avatar || 'hero1.png',
-                    chatMessage: updated.current_chat_message || undefined,
-                    chatTimestamp: updated.chat_message_timestamp
-                      ? new Date(updated.chat_message_timestamp)
-                      : undefined
-                  }
-                ];
+              // If player went offline, remove them
+              if (!updated.is_online) {
+                return prev.filter(p => p.id !== updated.id);
               }
 
-              // If player went offline, remove them
-              return filtered;
+              // Create updated player data
+              const updatedPlayer = {
+                id: updated.id,
+                nickname: updated.nickname || 'Unknown',
+                level: updated.player_level || 1,
+                combatPower: updated.combat_power || 0,
+                x: updated.current_map_x,
+                y: updated.current_map_y,
+                avatar: updated.avatar || 'hero1.png',
+                chatMessage: updated.current_chat_message || undefined,
+                chatTimestamp: updated.chat_message_timestamp
+                  ? new Date(updated.chat_message_timestamp)
+                  : undefined
+              };
+
+              // Debug log to check combat_power
+              console.log('Updating player:', updatedPlayer.nickname, 'CP:', updatedPlayer.combatPower, 'Pos:', `(${updatedPlayer.x}, ${updatedPlayer.y})`);
+
+              // Find existing player index
+              const existingIndex = prev.findIndex(p => p.id === updated.id);
+
+              // If player exists, update in place; otherwise add to end
+              if (existingIndex >= 0) {
+                const newPlayers = [...prev];
+                newPlayers[existingIndex] = updatedPlayer;
+                return newPlayers;
+              } else {
+                return [...prev, updatedPlayer];
+              }
             });
           } else if (payload.eventType === 'DELETE') {
             const deleted = payload.old as any;

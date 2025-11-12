@@ -7,7 +7,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-09
+ * @lastModified 2025-11-10
  */
 
 import React, { useEffect, useState } from 'react';
@@ -22,16 +22,20 @@ import { TeleportMenu } from './TeleportMenu';
 import { ChatBox } from './ChatBox';
 import { GameModal } from './ui/GameModal';
 import { ModalText, ModalDivider, ModalInfoBox, ModalInfoRow, ModalButton, ModalButtonGroup } from './ui/ModalContent';
+import { ItemDisplay } from './ui/ItemDisplay';
 import { InventoryHelper } from '../engine/item/InventoryHelper';
+import { LootGenerator } from '../engine/loot/LootGenerator';
 import { useGameState } from '../hooks/useGameState';
 import { useEnergyRegeneration } from '../hooks/useEnergyRegeneration';
 import { useOtherPlayers } from '../hooks/useOtherPlayers';
 import { supabase } from '../lib/supabase';
 import { t } from '../localization/i18n';
-import type { StaticObject, Town, DungeonEntrance } from '../types/worldmap.types';
+import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, DynamicObject, WanderingMonster, TravelingMerchant } from '../types/worldmap.types';
+import { DEBUG_CONFIG } from '../config/DEBUG_CONFIG';
 
 interface WorldMapDemo2Props {
   onEnterDungeon?: (dungeon: DungeonEntrance) => void;
+  onQuickCombat?: (enemies: any[], combatType: 'rare_spawn' | 'wandering_monster', metadata?: any) => void;
   userEmail?: string;
 }
 
@@ -55,7 +59,7 @@ interface WorldMapDemo2Props {
  * />
  * ```
  */
-export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: WorldMapDemo2Props) {
+export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEmailProp }: WorldMapDemo2Props) {
   // Use centralized game state with database sync
   const [gameState, gameActions] = useGameState(userEmailProp);
 
@@ -70,6 +74,25 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
   const [showTeleportMenu, setShowTeleportMenu] = useState(false);
   const [enchantItem, setEnchantItem] = useState<any | null>(null);
   const [equipmentMessage, setEquipmentMessage] = useState<string | null>(null);
+  const [showTreasureChestModal, setShowTreasureChestModal] = useState<{ chest: TreasureChest; loot: any } | null>(null);
+  const [showHiddenPathModal, setShowHiddenPathModal] = useState<{ path: HiddenPath; loot: any } | null>(null);
+  const [showMerchantModal, setShowMerchantModal] = useState<TravelingMerchant | null>(null);
+  const [showMessageModal, setShowMessageModal] = useState<string | null>(null);
+  const [showQuickCombatModal, setShowQuickCombatModal] = useState<{
+    enemies: any[];
+    enemyName: string;
+    enemyLevel: number;
+    difficulty: string;
+    combatType: 'rare_spawn' | 'wandering_monster';
+    metadata: any;
+  } | null>(null);
+
+  // Debug: Log when message modal state changes
+  React.useEffect(() => {
+    if (showMessageModal) {
+      console.log('📢 Message modal state changed:', showMessageModal);
+    }
+  }, [showMessageModal]);
 
   // Location tracking: Player is "in town" when town modal is open
   const isInTown = showTownModal !== null;
@@ -232,6 +255,17 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
       return;
     }
 
+    // Check if clicking on a dynamic object (wandering monster, traveling merchant)
+    if (gameState.worldMap) {
+      const dynamicObject = gameState.worldMap.dynamicObjects.find(
+        obj => obj.position.x === x && obj.position.y === y && obj.isActive
+      );
+      if (dynamicObject) {
+        handleDynamicObjectClick(dynamicObject, x, y);
+        return;
+      }
+    }
+
     console.log(`Clicked tile (${x}, ${y}) - ${tile.terrain}`);
 
     // Calculate Manhattan distance (simple grid distance)
@@ -241,9 +275,11 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
     const baseCostPerTile = Math.ceil(tile.movementCost / 100);
     const movementCost = distance * baseCostPerTile;
 
-    if (gameState.energy >= movementCost) {
+    if (gameState.energy >= movementCost || DEBUG_CONFIG.UNLIMITED_ENERGY) {
       gameActions.updatePlayerPos(x, y);
-      gameActions.setEnergy(gameState.energy - movementCost);
+      if (!DEBUG_CONFIG.UNLIMITED_ENERGY) {
+        gameActions.setEnergy(gameState.energy - movementCost);
+      }
 
       // Reveal area around player
       for (let dy = -3; dy <= 3; dy++) {
@@ -292,7 +328,7 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
     // Check dungeon energy requirements BEFORE moving
     if (object.type === 'dungeon') {
       const energyCost = 10;
-      if (gameState.energy < energyCost) {
+      if (gameState.energy < energyCost && !DEBUG_CONFIG.UNLIMITED_ENERGY) {
         setShowEnergyModal({
           message: t('worldmap.notEnoughEnergyDungeon'),
           required: energyCost
@@ -337,13 +373,348 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
       gameActions.updateWorldMap({ ...gameState.worldMap }); // Force re-render
     }
 
-    // Then show the appropriate modal
+    // Then show the appropriate modal or perform action
     if (object.type === 'town') {
       const town = object as Town;
       setShowTownModal(town);
     } else if (object.type === 'dungeon') {
       const dungeon = object as DungeonEntrance;
       setShowDungeonModal(dungeon);
+    } else if (object.type === 'portal') {
+      handlePortalTeleport(object as Portal);
+    } else if (object.type === 'hiddenPath') {
+      handleHiddenPathDiscovery(object as HiddenPath);
+    } else if (object.type === 'treasureChest') {
+      handleTreasureChestOpen(object as TreasureChest);
+    } else if (object.type === 'rareSpawn') {
+      const rareSpawn = object as RareSpawn;
+      handleRareSpawnCombat(rareSpawn);
+    }
+  };
+
+  /**
+   * Handle dynamic object click (wandering monsters, traveling merchants, events)
+   *
+   * @param object - Dynamic object that was clicked
+   * @param x - Object X coordinate
+   * @param y - Object Y coordinate
+   */
+  const handleDynamicObjectClick = (object: any, x: number, y: number) => {
+    console.log('Clicked dynamic object:', object);
+
+    // Move player to the object location
+    gameActions.updatePlayerPos(x, y);
+
+    // Handle different dynamic object types
+    if (object.type === 'wanderingMonster') {
+      handleWanderingMonsterCombat(object as WanderingMonster);
+    } else if (object.type === 'travelingMerchant') {
+      handleTravelingMerchantShop(object as TravelingMerchant);
+    } else if (object.type === 'event') {
+      // TODO: Implement random events
+      setShowMessageModal(t('worldmap.randomEventComingSoon', { eventType: object.eventType }));
+    }
+  };
+
+  /**
+   * Handle treasure chest opening
+   */
+  const handleTreasureChestOpen = (chest: TreasureChest) => {
+    // Check if already opened
+    if (chest.opened) {
+      console.log('🚫 Treasure chest already opened, showing message modal');
+      setShowMessageModal(t('worldmap.treasureChestAlreadyOpened'));
+      return;
+    }
+
+    console.log('📦 Opening treasure chest:', chest);
+
+    // Get player level for loot generation
+    const playerLevel = gameState.activeParty?.[0]?.level || 1;
+
+    // Generate loot
+    const loot = LootGenerator.generateTreasureChestLoot(chest.lootQuality, playerLevel);
+
+    // Show loot modal (marking as opened happens when loot is collected)
+    setShowTreasureChestModal({ chest, loot });
+  };
+
+  /**
+   * Handle treasure chest loot collection
+   */
+  const handleCollectTreasureLoot = async () => {
+    if (!showTreasureChestModal) return;
+
+    const { chest, loot } = showTreasureChestModal;
+
+    // Add gold
+    await gameActions.addGold(loot.gold);
+
+    // Add items to inventory
+    for (const item of loot.items) {
+      const result = gameState.inventory.addItem(item);
+      if (!result.success) {
+        console.warn(`⚠️ Failed to add item ${item.name}: ${result.message}`);
+      }
+    }
+
+    console.log(`💰 Collected ${loot.gold} gold and ${loot.items.length} items`);
+
+    // Save inventory changes to database
+    await gameActions.saveGame();
+
+    // Mark chest as opened in worldmap NOW (after collection)
+    chest.opened = true;
+    if (gameState.worldMap) {
+      gameActions.updateWorldMap({ ...gameState.worldMap });
+    }
+
+    // Close modal
+    setShowTreasureChestModal(null);
+  };
+
+  /**
+   * Handle hidden path discovery
+   */
+  const handleHiddenPathDiscovery = (path: HiddenPath) => {
+    // Check if already discovered
+    if (path.discovered) {
+      setShowMessageModal(t('worldmap.hiddenPathAlreadyDiscovered'));
+      return;
+    }
+
+    // Check level requirement
+    const playerLevel = gameState.activeParty?.[0]?.level || 1;
+    if (playerLevel < path.requiredLevel) {
+      setShowMessageModal(t('worldmap.hiddenPathLevelRequired', { requiredLevel: path.requiredLevel, playerLevel }));
+      return;
+    }
+
+    console.log('🗝️ Discovering hidden path:', path);
+
+    // Generate loot
+    const loot = LootGenerator.generateHiddenPathLoot(path.lootQuality, playerLevel);
+
+    // Show loot modal (marking as discovered happens when loot is collected)
+    setShowHiddenPathModal({ path, loot });
+  };
+
+  /**
+   * Handle hidden path loot collection
+   */
+  const handleCollectHiddenPathLoot = async () => {
+    if (!showHiddenPathModal) return;
+
+    const { path, loot } = showHiddenPathModal;
+
+    // Add gold
+    await gameActions.addGold(loot.gold);
+
+    // Add items to inventory
+    for (const item of loot.items) {
+      const result = gameState.inventory.addItem(item);
+      if (!result.success) {
+        console.warn(`⚠️ Failed to add item ${item.name}: ${result.message}`);
+      }
+    }
+
+    console.log(`💰 Collected ${loot.gold} gold and ${loot.items.length} items`);
+
+    // Save inventory changes to database
+    await gameActions.saveGame();
+
+    // Mark path as discovered in worldmap NOW (after collection)
+    path.discovered = true;
+    if (gameState.worldMap) {
+      gameActions.updateWorldMap({ ...gameState.worldMap });
+    }
+
+    // Close modal
+    setShowHiddenPathModal(null);
+  };
+
+  /**
+   * Handle portal teleportation
+   */
+  const handlePortalTeleport = (portal: Portal) => {
+    if (!portal.linkedPortalId || !gameState.worldMap) {
+      setShowMessageModal(t('worldmap.portalNotConnected'));
+      return;
+    }
+
+    // Find linked portal
+    const linkedPortal = gameState.worldMap.staticObjects.find(
+      obj => obj.id === portal.linkedPortalId
+    ) as Portal | undefined;
+
+    if (!linkedPortal) {
+      setShowMessageModal(t('worldmap.portalNotFound'));
+      return;
+    }
+
+    // Check energy cost
+    const energyCost = portal.energyCost;
+    if (gameState.energy < energyCost && !DEBUG_CONFIG.UNLIMITED_ENERGY) {
+      setShowEnergyModal({
+        message: `Not enough energy to use portal!\nRequired: ${energyCost}\nCurrent: ${gameState.energy}`,
+        required: energyCost
+      });
+      return;
+    }
+
+    console.log(`🌀 Teleporting from ${portal.name} to ${linkedPortal.name}`);
+
+    // Deduct energy
+    if (!DEBUG_CONFIG.UNLIMITED_ENERGY) {
+      gameActions.setEnergy(gameState.energy - energyCost);
+    }
+
+    // Teleport player
+    gameActions.updatePlayerPos(linkedPortal.position.x, linkedPortal.position.y);
+
+    // Reveal area around destination
+    for (let dy = -3; dy <= 3; dy++) {
+      for (let dx = -3; dx <= 3; dx++) {
+        const newX = linkedPortal.position.x + dx;
+        const newY = linkedPortal.position.y + dy;
+        const tile = gameState.worldMap.tiles[newY]?.[newX];
+        if (tile) {
+          tile.isExplored = true;
+        }
+      }
+    }
+
+    gameActions.updateWorldMap({ ...gameState.worldMap });
+  };
+
+  /**
+   * Handle rare spawn combat encounter
+   *
+   * Starts quick combat with a special rare enemy that has guaranteed high-quality loot drops.
+   * Combat happens directly on the map with 2-3 powerful enemies.
+   * Marks the rare spawn as defeated after combat completes.
+   */
+  const handleRareSpawnCombat = async (rareSpawn: RareSpawn) => {
+    // Check if already defeated
+    if (rareSpawn.defeated) {
+      setShowMessageModal(t('worldmap.rareSpawnDefeated'));
+      return;
+    }
+
+    console.log('⚔️ Preparing rare spawn combat:', rareSpawn);
+
+    // Generate 2-3 powerful enemies for quick combat
+    const { generateEnemyGroup } = await import('../engine/combat/Enemy');
+    const enemyCount = 2 + Math.floor(Math.random() * 2); // 2-3 enemies
+    const enemies = generateEnemyGroup(enemyCount, rareSpawn.enemyLevel, ['elite', 'boss']);
+
+    // Show pre-combat modal with enemy info and combat mode selection
+    setShowQuickCombatModal({
+      enemies,
+      enemyName: `${rareSpawn.name} - ${rareSpawn.enemyName}`,
+      enemyLevel: rareSpawn.enemyLevel,
+      difficulty: rareSpawn.guaranteedDrop || 'Elite',
+      combatType: 'rare_spawn',
+      metadata: {
+        name: rareSpawn.name,
+        guaranteedDrop: rareSpawn.guaranteedDrop,
+        position: rareSpawn.position,
+        rareSpawnObject: rareSpawn
+      }
+    });
+  };
+
+  /**
+   * Handle wandering monster fast combat
+   *
+   * Quick combat encounter with wandering monsters on the worldmap.
+   * Combat happens directly on the map with 1-2 enemies.
+   * Monster respawns after a certain time period.
+   */
+  const handleWanderingMonsterCombat = async (monster: WanderingMonster) => {
+    // Check if already defeated (and waiting to respawn)
+    if (monster.defeated) {
+      setShowMessageModal(t('worldmap.monsterDefeated'));
+      return;
+    }
+
+    console.log('⚔️ Preparing wandering monster combat:', monster);
+
+    // Generate 1-2 enemies for quick combat
+    const { generateEnemyGroup } = await import('../engine/combat/Enemy');
+    const enemyCount = monster.difficulty === 'Elite' ? 2 : 1;
+    const enemyTypes: import('../types/combat.types').EnemyType[] = monster.difficulty === 'Elite' ? ['elite'] : ['normal'];
+    const enemies = generateEnemyGroup(enemyCount, monster.enemyLevel, enemyTypes);
+
+    // Show pre-combat modal with enemy info and combat mode selection
+    setShowQuickCombatModal({
+      enemies,
+      enemyName: monster.enemyName,
+      enemyLevel: monster.enemyLevel,
+      difficulty: monster.difficulty,
+      combatType: 'wandering_monster',
+      metadata: {
+        name: monster.enemyName,
+        difficulty: monster.difficulty,
+        respawnMinutes: monster.respawnMinutes,
+        position: monster.position,
+        monsterObject: monster
+      }
+    });
+  };
+
+  /**
+   * Handle traveling merchant shop
+   *
+   * Opens shop modal where player can purchase items from the merchant.
+   */
+  const handleTravelingMerchantShop = (merchant: TravelingMerchant) => {
+    console.log('🛒 Opening traveling merchant shop:', merchant);
+    setShowMerchantModal(merchant);
+  };
+
+  /**
+   * Purchase item from traveling merchant
+   */
+  const handleMerchantPurchase = async (itemIndex: number) => {
+    if (!showMerchantModal) return;
+
+    const item = showMerchantModal.inventory[itemIndex];
+
+    // Check gold
+    if (gameState.gold < item.price) {
+      setShowMessageModal(t('worldmap.notEnoughGold', { required: item.price, current: gameState.gold }));
+      return;
+    }
+
+    console.log(`💰 Purchasing ${item.itemType} for ${item.price} gold`);
+
+    // Deduct gold
+    await gameActions.removeGold(item.price);
+
+    // Generate item using ItemGenerator
+    const { ItemGenerator } = await import('../engine/item/ItemGenerator');
+    const playerLevel = gameState.activeParty?.[0]?.level || 1;
+    const generatedItem = ItemGenerator.generate(playerLevel, item.rarity);
+
+    // Add to inventory
+    const result = gameState.inventory.addItem(generatedItem);
+    if (!result.success) {
+      console.warn(`⚠️ Failed to add item ${generatedItem.name}: ${result.message}`);
+    }
+
+    // Save changes to database
+    await gameActions.saveGame();
+
+    // Remove item from merchant inventory
+    showMerchantModal.inventory.splice(itemIndex, 1);
+
+    // Update modal
+    if (showMerchantModal.inventory.length === 0) {
+      setShowMessageModal(t('worldmap.merchantSoldOut'));
+      setShowMerchantModal(null);
+    } else {
+      setShowMerchantModal({ ...showMerchantModal });
     }
   };
 
@@ -355,7 +726,7 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
   const handleTeleport = (location: { name: string; x: number; y: number; type: 'town' | 'dungeon' }) => {
     const TELEPORT_COST = 40;
 
-    if (gameState.energy < TELEPORT_COST) {
+    if (gameState.energy < TELEPORT_COST && !DEBUG_CONFIG.UNLIMITED_ENERGY) {
       setShowEnergyModal({
         message: t('worldmap.notEnoughEnergyTeleport', { required: TELEPORT_COST }),
         required: TELEPORT_COST
@@ -364,7 +735,9 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
     }
 
     // Deduct energy and move player
-    gameActions.setEnergy(gameState.energy - TELEPORT_COST);
+    if (!DEBUG_CONFIG.UNLIMITED_ENERGY) {
+      gameActions.setEnergy(gameState.energy - TELEPORT_COST);
+    }
     gameActions.updatePlayerPos(location.x, location.y);
 
     // Close teleport menu
@@ -437,6 +810,49 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
     );
   }
 
+  // Helper functions for weather and time display
+  const getWeatherIcon = (weather: string): string => {
+    const icons: Record<string, string> = {
+      'clear': '☀️',
+      'rain': '🌧️',
+      'storm': '⛈️',
+      'fog': '🌫️',
+      'snow': '❄️'
+    };
+    return icons[weather] || '🌤️';
+  };
+
+  const getWeatherLabel = (weather: string): string => {
+    const labels: Record<string, string> = {
+      'clear': 'Clear',
+      'rain': 'Rainy',
+      'storm': 'Storm',
+      'fog': 'Foggy',
+      'snow': 'Snowy'
+    };
+    return labels[weather] || weather;
+  };
+
+  const getTimeIcon = (time: string): string => {
+    const icons: Record<string, string> = {
+      'day': '☀️',
+      'night': '🌙',
+      'dawn': '🌅',
+      'dusk': '🌆'
+    };
+    return icons[time] || '🌤️';
+  };
+
+  const getTimeLabel = (time: string): string => {
+    const labels: Record<string, string> = {
+      'day': 'Day',
+      'night': 'Night',
+      'dawn': 'Dawn',
+      'dusk': 'Dusk'
+    };
+    return labels[time] || time;
+  };
+
   const worldmapContent = (
     <div style={styles.container}>
       {gameState.worldMap ? (
@@ -444,6 +860,7 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
           <WorldMapViewer
             worldMap={gameState.worldMap}
             playerPosition={gameState.playerPos}
+            playerAvatar={gameState.profile?.avatar || 'hero1.png'}
             otherPlayers={otherPlayers}
             playerChatMessage={myChatMessage}
             playerChatTimestamp={myChatTimestamp}
@@ -476,6 +893,18 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
               <span style={styles.infoIcon}>💰</span>
               <span style={styles.infoText}>{gameState.gold.toLocaleString()} Gold</span>
             </div>
+            {gameState.worldMap && (
+              <>
+                <div style={styles.infoItem}>
+                  <span style={styles.infoIcon}>{getWeatherIcon(gameState.worldMap.weather.current)}</span>
+                  <span style={styles.infoText}>{getWeatherLabel(gameState.worldMap.weather.current)}</span>
+                </div>
+                <div style={styles.infoItem}>
+                  <span style={styles.infoIcon}>{getTimeIcon(gameState.worldMap.timeOfDay.current)}</span>
+                  <span style={styles.infoText}>{getTimeLabel(gameState.worldMap.timeOfDay.current)}</span>
+                </div>
+              </>
+            )}
             {gameState.saving && (
               <div style={styles.infoItem}>
                 <span style={styles.infoIcon}>💾</span>
@@ -601,6 +1030,7 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
         playerName={gameState.playerName}
         playerEmail={playerEmail}
         userId={gameState.profile?.user_id}
+        playerAvatar={gameState.profile?.avatar || 'hero1.png'}
         playerLevel={gameState.playerLevel}
         combatPower={gameState.combatPower}
         gold={gameState.gold}
@@ -749,6 +1179,129 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
         </ModalButton>
       </GameModal>
 
+      {/* Treasure Chest Loot Modal */}
+      <GameModal
+        isOpen={!!showTreasureChestModal}
+        title="Treasure Chest Opened!"
+        icon="📦"
+        onClose={() => setShowTreasureChestModal(null)}
+      >
+        {showTreasureChestModal && (
+          <>
+            <ModalText>You found a {showTreasureChestModal.chest.lootQuality} treasure chest!</ModalText>
+            <ModalDivider />
+            <ModalInfoRow label="💰 Gold:" value={showTreasureChestModal.loot.gold} valueColor="gold" />
+            <ModalInfoRow label="🎒 Items:" value={showTreasureChestModal.loot.items.length} />
+            <ModalDivider />
+            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+              {showTreasureChestModal.loot.items.map((item: any, i: number) => (
+                <ItemDisplay key={i} item={item} compact />
+              ))}
+            </div>
+            <ModalButton onClick={handleCollectTreasureLoot} variant="primary" fullWidth>
+              Collect Loot
+            </ModalButton>
+          </>
+        )}
+      </GameModal>
+
+      {/* Hidden Path Loot Modal */}
+      <GameModal
+        isOpen={!!showHiddenPathModal}
+        title="Hidden Path Discovered!"
+        icon="🗝️"
+        onClose={() => setShowHiddenPathModal(null)}
+      >
+        {showHiddenPathModal && (
+          <>
+            <ModalText>You discovered a {showHiddenPathModal.path.lootQuality} hidden path!</ModalText>
+            <ModalDivider />
+            <ModalInfoRow label="💰 Gold:" value={showHiddenPathModal.loot.gold} valueColor="gold" />
+            <ModalInfoRow label="🎒 Items:" value={showHiddenPathModal.loot.items.length} />
+            <ModalDivider />
+            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+              {showHiddenPathModal.loot.items.map((item: any, i: number) => (
+                <ItemDisplay key={i} item={item} compact />
+              ))}
+            </div>
+            <ModalButton onClick={handleCollectHiddenPathLoot} variant="primary" fullWidth>
+              Collect Loot
+            </ModalButton>
+          </>
+        )}
+      </GameModal>
+
+      {/* Traveling Merchant Shop Modal */}
+      <GameModal
+        isOpen={!!showMerchantModal}
+        title="Traveling Merchant"
+        icon="🛒"
+        onClose={() => setShowMerchantModal(null)}
+      >
+        {showMerchantModal && (
+          <>
+            <ModalText>Welcome, traveler! {showMerchantModal.merchantName} has rare items for sale!</ModalText>
+            <ModalDivider />
+            <ModalInfoRow label="💰 Your Gold:" value={gameState.gold} valueColor="gold" />
+            <ModalInfoRow label="🛍️ Items Available:" value={showMerchantModal.inventory.length} />
+            <ModalDivider />
+            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
+              {showMerchantModal.inventory.map((merchantItem, i) => {
+                const rarityColors: Record<string, string> = {
+                  uncommon: '#22c55e',
+                  rare: '#3b82f6',
+                  epic: '#a855f7'
+                };
+                return (
+                  <div key={i} style={{
+                    padding: '12px',
+                    margin: '8px 0',
+                    background: `${rarityColors[merchantItem.rarity]}10`,
+                    borderRadius: '8px',
+                    border: `1px solid ${rarityColors[merchantItem.rarity]}`,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    gap: '12px'
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                        <strong style={{ color: rarityColors[merchantItem.rarity], fontSize: '14px' }}>
+                          {merchantItem.itemType}
+                        </strong>
+                        <span style={{
+                          padding: '2px 6px',
+                          background: `${rarityColors[merchantItem.rarity]}20`,
+                          borderRadius: '4px',
+                          fontSize: '10px',
+                          color: rarityColors[merchantItem.rarity],
+                          fontWeight: '600'
+                        }}>
+                          {merchantItem.rarity}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#f59e0b', fontWeight: '600' }}>
+                        💰 {merchantItem.price} gold
+                      </div>
+                    </div>
+                    <ModalButton
+                      onClick={() => handleMerchantPurchase(i)}
+                      variant={gameState.gold >= merchantItem.price ? 'primary' : 'secondary'}
+                    >
+                      {gameState.gold >= merchantItem.price ? '🛒 Buy' : '🔒 Locked'}
+                    </ModalButton>
+                  </div>
+                );
+              })}
+            </div>
+            <ModalDivider />
+            <ModalButton onClick={() => setShowMerchantModal(null)} variant="secondary" fullWidth>
+              Leave Shop
+            </ModalButton>
+          </>
+        )}
+      </GameModal>
+
       {/* Equipment Message Modal */}
       <GameModal
         isOpen={!!equipmentMessage}
@@ -830,11 +1383,11 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
                     onClick={() => {
                       const result = enchantItem.enchant();
                       if (result.success) {
-                        alert(`✨ ${result.message}\nSuccess rate was ${result.chance}%`);
+                        setShowMessageModal(`✨ ${result.message}\nSuccess rate was ${result.chance}%`);
                         gameActions.saveGame();
                         setEnchantItem({ ...enchantItem }); // Force re-render
                       } else {
-                        alert(`❌ ${result.message}\nSuccess rate was ${result.chance}%`);
+                        setShowMessageModal(`❌ ${result.message}\nSuccess rate was ${result.chance}%`);
                       }
                     }}
                   >
@@ -881,9 +1434,10 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
                       await gameActions.addGold(sellPrice);
                       // Save game
                       await gameActions.saveGame();
+                      // Show message
+                      setShowMessageModal(t('worldmap.itemSold', { itemName: enchantItem.getDisplayName(), gold: sellPrice }));
                       // Close modal
                       setEnchantItem(null);
-                      alert(`✅ Sold ${enchantItem.getDisplayName()} for ${sellPrice} gold!`);
                     }
                   }}
                 >
@@ -902,6 +1456,109 @@ export function WorldMapDemo2({ onEnterDungeon, userEmail: userEmailProp }: Worl
                 onClick={() => setEnchantItem(null)}
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Quick Combat Pre-Combat Modal */}
+      <GameModal
+        isOpen={!!showQuickCombatModal}
+        title={showQuickCombatModal?.enemyName || 'Enemy Encounter'}
+        icon="⚔️"
+        onClose={() => setShowQuickCombatModal(null)}
+      >
+        {showQuickCombatModal && (
+          <>
+            <ModalText>
+              You have encountered a powerful {showQuickCombatModal.difficulty.toLowerCase()} enemy on the world map!
+            </ModalText>
+            <ModalDivider />
+            <ModalInfoRow label="Enemy:" value={showQuickCombatModal.enemyName} />
+            <ModalInfoRow label="Level:" value={showQuickCombatModal.enemyLevel} />
+            <ModalInfoRow label="Difficulty:" value={showQuickCombatModal.difficulty} valueColor={
+              showQuickCombatModal.difficulty === 'Elite' || showQuickCombatModal.difficulty === 'Boss' ? 'warning' : 'info'
+            } />
+            <ModalInfoRow label="Enemy Count:" value={showQuickCombatModal.enemies.length} />
+            <ModalDivider />
+
+            {/* Party comparison */}
+            <div style={{
+              padding: '12px',
+              background: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              borderRadius: '6px',
+              fontSize: '13px',
+              color: '#cbd5e1'
+            }}>
+              <div><strong>Your Party:</strong></div>
+              {gameState.activeParty.map((hero) => (
+                <div key={hero.id} style={{ marginTop: '4px', fontSize: '12px' }}>
+                  {hero.name} (Lv {hero.level}) - ❤️{hero.currentHP}/{hero.maxHP}
+                </div>
+              ))}
+            </div>
+
+            <ModalDivider />
+            <ModalText>
+              Choose your combat mode:
+            </ModalText>
+
+            <ModalButtonGroup>
+              <ModalButton
+                onClick={() => {
+                  const { enemies, combatType, metadata } = showQuickCombatModal;
+                  setShowQuickCombatModal(null);
+                  if (onQuickCombat) {
+                    onQuickCombat(enemies, combatType, { ...metadata, mode: 'auto' });
+                  }
+                }}
+                variant="primary"
+                fullWidth={false}
+              >
+                ⚡ Auto Combat
+              </ModalButton>
+              <ModalButton
+                onClick={() => {
+                  const { enemies, combatType, metadata } = showQuickCombatModal;
+                  setShowQuickCombatModal(null);
+                  if (onQuickCombat) {
+                    onQuickCombat(enemies, combatType, { ...metadata, mode: 'manual' });
+                  }
+                }}
+                variant="secondary"
+                fullWidth={false}
+              >
+                🎮 Manual Combat
+              </ModalButton>
+            </ModalButtonGroup>
+
+            <ModalButton onClick={() => setShowQuickCombatModal(null)} variant="secondary" fullWidth>
+              Cancel
+            </ModalButton>
+          </>
+        )}
+      </GameModal>
+
+      {/* Message Modal - Generic information/alert modal */}
+      {showMessageModal && (
+        <div style={styles.modal}>
+          <div style={styles.modalContent}>
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>ℹ️ {t('common.information')}</h2>
+            </div>
+            <div style={styles.modalBody}>
+              <p style={{ whiteSpace: 'pre-line', textAlign: 'center', fontSize: '14px', lineHeight: '1.6' }}>
+                {showMessageModal}
+              </p>
+            </div>
+            <div style={styles.modalFooter}>
+              <button
+                style={styles.okButton}
+                onClick={() => setShowMessageModal(null)}
+              >
+                {t('common.ok')}
               </button>
             </div>
           </div>

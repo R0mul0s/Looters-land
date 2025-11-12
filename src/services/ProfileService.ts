@@ -6,10 +6,11 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-09
+ * @lastModified 2025-11-10
  */
 
 import { supabase } from '../lib/supabase';
+import { ENERGY_CONFIG } from '../config/BALANCE_CONFIG';
 
 // ============================================================================
 // TYPES
@@ -19,6 +20,7 @@ export interface PlayerProfile {
   id: string;
   user_id: string;
   nickname: string | null;
+  avatar: string; // Avatar image filename (e.g., 'hero1.png', 'hero2.png')
   player_level: number;
   experience: number;
   gold: number;
@@ -165,6 +167,53 @@ export async function updateNickname(
 }
 
 /**
+ * Update player avatar
+ * @param userId - User ID
+ * @param avatar - Avatar filename (e.g., 'hero1.png', 'hero2.png')
+ * @returns Service result
+ */
+export async function updateAvatar(
+  userId: string,
+  avatar: string
+): Promise<ServiceResult<void>> {
+  try {
+    // Validate avatar filename
+    if (!avatar || !avatar.endsWith('.png')) {
+      return {
+        success: false,
+        error: 'Invalid avatar filename'
+      };
+    }
+
+    const { error } = await supabase
+      .from('player_profiles')
+      .upsert(
+        {
+          user_id: userId,
+          avatar: avatar,
+          updated_at: new Date().toISOString()
+        },
+        {
+          onConflict: 'user_id'
+        }
+      );
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      message: `Avatar updated to "${avatar}"`
+    };
+  } catch (error) {
+    console.error('Failed to update avatar:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
+  }
+}
+
+/**
  * Update player profile fields
  * @param userId - User ID
  * @param updates - Fields to update
@@ -284,8 +333,8 @@ export async function resetProgress(): Promise<ServiceResult<void>> {
         experience: 0,
         gold: 0,
         gems: 0,
-        energy: 100,
-        max_energy: 100,
+        energy: ENERGY_CONFIG.MAX_ENERGY,
+        max_energy: ENERGY_CONFIG.MAX_ENERGY,
         current_world_x: 25,
         current_world_y: 25,
         world_map_data: null,

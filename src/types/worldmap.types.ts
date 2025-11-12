@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-10
  */
 
 // ============================================================================
@@ -67,7 +67,7 @@ export interface Tile {
 // STATIC OBJECTS (Permanent)
 // ============================================================================
 
-export type StaticObjectType = 'town' | 'dungeon';
+export type StaticObjectType = 'town' | 'dungeon' | 'portal' | 'hiddenPath' | 'treasureChest' | 'rareSpawn';
 
 export interface StaticObject {
   id: string;
@@ -98,11 +98,39 @@ export interface DungeonEntrance extends StaticObject {
   theme: string;
 }
 
+export interface Portal extends StaticObject {
+  type: 'portal';
+  linkedPortalId: string | null; // ID of connected portal
+  energyCost: number;
+}
+
+export interface HiddenPath extends StaticObject {
+  type: 'hiddenPath';
+  discovered: boolean;
+  lootQuality: 'rare' | 'epic' | 'legendary';
+  requiredLevel: number;
+}
+
+export interface TreasureChest extends StaticObject {
+  type: 'treasureChest';
+  opened: boolean;
+  lootQuality: 'common' | 'uncommon' | 'rare' | 'epic';
+  goldAmount: number;
+}
+
+export interface RareSpawn extends StaticObject {
+  type: 'rareSpawn';
+  enemyName: string;
+  enemyLevel: number;
+  guaranteedDrop: 'rare' | 'epic';
+  defeated: boolean;
+}
+
 // ============================================================================
 // DYNAMIC OBJECTS (Spawn/Despawn)
 // ============================================================================
 
-export type DynamicObjectType = 'encounter' | 'resource' | 'event';
+export type DynamicObjectType = 'encounter' | 'resource' | 'event' | 'wanderingMonster' | 'travelingMerchant';
 
 export interface DynamicObject {
   id: string;
@@ -130,8 +158,34 @@ export interface ResourceNode extends DynamicObject {
 
 export interface RandomEvent extends DynamicObject {
   type: 'event';
-  eventType: 'TreasureChest' | 'Shrine' | 'Merchant' | 'QuestGiver';
+  eventType: 'RescueNPC' | 'BossFight' | 'TreasureHunt';
   oneTime: boolean;
+  completed: boolean;
+  reward: {
+    gold?: number;
+    items?: string[];
+    exp?: number;
+  };
+}
+
+export interface WanderingMonster extends DynamicObject {
+  type: 'wanderingMonster';
+  enemyName: string;
+  enemyLevel: number;
+  difficulty: 'Normal' | 'Elite';
+  defeated: boolean;
+  respawnMinutes: number;
+}
+
+export interface TravelingMerchant extends DynamicObject {
+  type: 'travelingMerchant';
+  merchantName: string;
+  inventory: {
+    itemType: string;
+    price: number;
+    rarity: 'uncommon' | 'rare' | 'epic';
+  }[];
+  staysUntil: Date;
 }
 
 // ============================================================================
@@ -150,6 +204,30 @@ export interface PlayerOnMap {
 }
 
 // ============================================================================
+// WEATHER & TIME
+// ============================================================================
+
+export type WeatherType = 'clear' | 'rain' | 'storm' | 'fog' | 'snow';
+export type TimeOfDay = 'day' | 'night' | 'dawn' | 'dusk';
+
+export interface WeatherState {
+  current: WeatherType;
+  changesAt: Date;
+  next: WeatherType;
+  spawnRateModifier: number; // 0.5 = half spawns, 2.0 = double spawns
+}
+
+export interface TimeState {
+  current: TimeOfDay;
+  changesAt: Date;
+  next: TimeOfDay;
+  enemyModifier: {
+    dayEnemies: boolean;
+    nightEnemies: boolean;
+  };
+}
+
+// ============================================================================
 // WORLDMAP
 // ============================================================================
 
@@ -162,6 +240,8 @@ export interface WorldMap {
   staticObjects: StaticObject[];
   dynamicObjects: DynamicObject[];
   players: PlayerOnMap[];
+  weather: WeatherState;
+  timeOfDay: TimeState;
   createdAt: Date;
 }
 

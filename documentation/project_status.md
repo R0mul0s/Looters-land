@@ -2,9 +2,9 @@
 
 ## 📊 Development Progress Overview
 
-**Overall Completion**: ~38% of full game design (v0.7.2)
-**Current Phase**: Mobile Optimizations & Sync Status Complete
-**Last Update**: 2025-11-10
+**Overall Completion**: ~40% of full game design (v0.7.3)
+**Current Phase**: Avatar System & Visual Enhancements Complete
+**Last Update**: 2025-11-12
 
 ---
 
@@ -240,7 +240,7 @@
 
 ---
 
-#### 12. UI/UX Enhancements ✅ (100% - v0.7.2)
+#### 12. UI/UX Enhancements ✅ (100% - v0.7.3)
 **Priority**: HIGH
 **Status**: Production-ready
 
@@ -272,14 +272,34 @@
   - Status icons: 💾 Saving, ✓ Saved, ⚠ Error
   - Relative timestamp display (před 2m)
   - Integrated into GameHeader
+- [x] **Avatar System (v0.7.3)**
+  - 5 hero avatars (Knight, Ranger, Mage, Shieldbearer, Bard)
+  - Avatar selection UI in ProfileScreen with preview cards
+  - Real-time avatar display on worldmap (main player and others)
+  - Database persistence with avatar column
+  - Avatar images scale with zoom (1.2x tile size)
+- [x] **Terrain Randomization (v0.7.3)**
+  - 2 variants per terrain type (forest, desert, plains, swamp, water, road)
+  - Perlin Noise distribution (scale 0.15) for organic patches
+  - Prevents checkerboard patterns, creates smooth grouped areas
+  - 12 total terrain images with seamless variants
+- [x] **Pulsating Glow Effect (v0.7.3)**
+  - Animated yellow glow on player avatar (20-35 blur intensity)
+  - Smooth sine wave pulsation at 60fps
+  - Improved player visibility and distinction from other players
 
 **Files**:
-- `src/components/WorldMapViewer.tsx` - Zoom, mobile fixes, high-DPI
+- `src/components/WorldMapViewer.tsx` - Zoom, mobile fixes, high-DPI, avatar rendering, terrain variants, pulsating glow
 - `src/components/ui/MainSidebar.tsx` - Keyboard shortcuts
-- `src/components/OtherPlayerMarker.tsx` - Scaling support
+- `src/components/OtherPlayerMarker.tsx` - Scaling support, avatar display
 - `src/components/SyncStatusIndicator.tsx` - Sync status component
 - `src/components/ui/GameHeader.tsx` - Status display
+- `src/components/ProfileScreen.tsx` - Avatar selection UI
+- `src/config/AVATAR_CONFIG.ts` - Avatar configuration
+- `src/services/ProfileService.ts` - updateAvatar() function
 - `src/hooks/useGameState.ts` - Sync status tracking
+- `src/hooks/useOtherPlayers.ts` - Avatar field in OtherPlayer interface
+- `supabase/migrations/20251112_add_avatar_field.sql` - Database schema
 
 ---
 
@@ -550,7 +570,8 @@
 | Dungeon Integration | ✅ Complete | v0.6.2 | 2025-11-08 |
 | Hero Collection & Gacha | ✅ Complete | v0.7.0 | 2025-11-09 |
 | Hero & Item Scoring | ✅ Complete | v0.7.1 | 2025-11-10 |
-| **Mobile & Sync Status** | ✅ Complete | **v0.7.2** | **2025-11-10** |
+| Mobile & Sync Status | ✅ Complete | v0.7.2 | 2025-11-10 |
+| **Avatar System & Visual Enhancements** | ✅ Complete | **v0.7.3** | **2025-11-12** |
 | Energy System & Daily Reset | 📋 Planned | v0.8.0 | TBD |
 | Leaderboards System | 📋 Planned | v0.8.0 | TBD |
 | Town System | 📋 Planned | v0.9.0 | TBD |
@@ -603,10 +624,10 @@
 
 ---
 
-**Last Updated**: 2025-11-09 (UI Enhancements Complete)
-**Next Review**: 2025-11-16
-**Current Version**: v0.6.1 (UI Polish & Keyboard Shortcuts)
-**Next Version**: v0.7.0 (Hero Collection & Gacha - 90% Complete)
+**Last Updated**: 2025-11-12 (Avatar System & Visual Enhancements Complete)
+**Next Review**: 2025-11-19
+**Current Version**: v0.7.3 (Avatar System, Terrain Randomization, Pulsating Glow)
+**Next Version**: v0.8.0 (Energy System & Daily Reset - Planned)
 
 ---
 

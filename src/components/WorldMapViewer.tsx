@@ -1188,6 +1188,7 @@ function WorldMapViewerComponent({
             <OtherPlayerMarker
               nickname={player.nickname}
               combatPower={player.combatPower}
+              level={player.level}
               avatar={player.avatar || 'hero1.png'}
               color="#3b82f6"
               scale={zoom}

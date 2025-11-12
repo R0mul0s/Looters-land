@@ -208,9 +208,10 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       const currentState = stateRef.current;
 
       console.log('💾 Saving game with', currentState.allHeroes.length, 'heroes');
+      console.log('[Save] Combat Power to save:', currentState.combatPower);
 
       // Save player profile (including gacha state, worldmap, and discovered locations)
-      await PlayerProfileService.updateProfile(userIdRef.current!, {
+      const profileUpdate = {
         nickname: currentState.playerName,
         player_level: currentState.playerLevel,
         gold: currentState.gold,
@@ -225,7 +226,10 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         gacha_summon_count: currentState.gachaState.summonCount,
         gacha_last_free_summon: currentState.gachaState.lastFreeSummonDate || null,
         gacha_pity_summons: currentState.gachaState.pitySummons
-      });
+      };
+
+      console.log('[Save] Profile update data:', JSON.stringify(profileUpdate, null, 2));
+      await PlayerProfileService.updateProfile(userIdRef.current!, profileUpdate);
 
       // Save game data (heroes, inventory, active party)
       await GameSaveService.saveGame(
@@ -743,21 +747,31 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
   };
 
   /**
-   * Calculate combat power whenever active party changes
+   * Calculate combat power whenever active party or heroes change
    *
    * Combat power = sum of all active party hero scores
+   *
+   * IMPORTANT: We need to depend on state.allHeroes because equipment changes
+   * mutate hero objects without changing the activeParty array reference.
+   * This ensures combat power recalculates when equipment is changed.
    */
   useEffect(() => {
     let totalScore = 0;
 
+    console.log('[Combat Power] Calculating combat power for active party:', state.activeParty.length, 'heroes');
     for (const hero of state.activeParty) {
       if (hero && hero.isAlive) {
-        totalScore += hero.getScore();
+        const heroScore = hero.getScore();
+        console.log(`[Combat Power] Hero ${hero.name}: Score = ${heroScore}, Level = ${hero.level}, Alive = ${hero.isAlive}`);
+        totalScore += heroScore;
       }
     }
 
+    console.log(`[Combat Power] Total calculated: ${totalScore}, Current state: ${state.combatPower}`);
+
     // Only update if changed to avoid infinite loops
     if (totalScore !== state.combatPower) {
+      console.log(`[Combat Power] Combat power changed from ${state.combatPower} to ${Math.floor(totalScore)}, triggering save`);
       setState(prev => ({
         ...prev,
         combatPower: Math.floor(totalScore)
@@ -766,7 +780,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       // Trigger save if combat power changed (ensures it gets saved to database)
       scheduleAutoSave();
     }
-  }, [state.activeParty, state.activeParty.length, scheduleAutoSave]);
+  }, [state.activeParty, state.activeParty.length, state.allHeroes, scheduleAutoSave]);
 
   return [state, actions];
 }

@@ -217,6 +217,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         gems: currentState.gems,
         energy: currentState.energy,
         max_energy: currentState.maxEnergy,
+        combat_power: currentState.combatPower, // Add combat power to database
         current_world_x: currentState.playerPos.x,
         current_world_y: currentState.playerPos.y,
         world_map_data: currentState.worldMap,

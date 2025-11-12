@@ -58,6 +58,10 @@ import direWolfImg from '../assets/images/monster/dire-wolf.png';
 import trollImg from '../assets/images/monster/troll.png';
 import ogreImg from '../assets/images/monster/ogre.png';
 import harpyImg from '../assets/images/monster/Harpy.png';
+import frostGiantImg from '../assets/images/monster/frost-giant.png';
+import manticoreImg from '../assets/images/monster/manticore.png';
+import wyvernImg from '../assets/images/monster/wyvern.png';
+import banditLeaderImg from '../assets/images/monster/bandit-leader.png';
 
 interface WorldMapViewerProps {
   worldMap: WorldMap;
@@ -163,12 +167,20 @@ function WorldMapViewerComponent({
     troll: HTMLImageElement | null;
     ogre: HTMLImageElement | null;
     harpy: HTMLImageElement | null;
+    frostGiant: HTMLImageElement | null;
+    manticore: HTMLImageElement | null;
+    wyvern: HTMLImageElement | null;
+    banditLeader: HTMLImageElement | null;
   }>({
     ancientGolem: null,
     direWolf: null,
     troll: null,
     ogre: null,
-    harpy: null
+    harpy: null,
+    frostGiant: null,
+    manticore: null,
+    wyvern: null,
+    banditLeader: null
   });
 
   // Perlin noise for smooth variant distribution (prevents checkerboard pattern)
@@ -309,7 +321,11 @@ function WorldMapViewerComponent({
       direWolf: new Image(),
       troll: new Image(),
       ogre: new Image(),
-      harpy: new Image()
+      harpy: new Image(),
+      frostGiant: new Image(),
+      manticore: new Image(),
+      wyvern: new Image(),
+      banditLeader: new Image()
     };
 
     images.ancientGolem.src = ancientGolemImg;
@@ -317,9 +333,13 @@ function WorldMapViewerComponent({
     images.troll.src = trollImg;
     images.ogre.src = ogreImg;
     images.harpy.src = harpyImg;
+    images.frostGiant.src = frostGiantImg;
+    images.manticore.src = manticoreImg;
+    images.wyvern.src = wyvernImg;
+    images.banditLeader.src = banditLeaderImg;
 
     let loadedCount = 0;
-    const totalImages = 5;
+    const totalImages = 9;
 
     const onLoad = () => {
       loadedCount++;
@@ -329,7 +349,11 @@ function WorldMapViewerComponent({
           direWolf: images.direWolf,
           troll: images.troll,
           ogre: images.ogre,
-          harpy: images.harpy
+          harpy: images.harpy,
+          frostGiant: images.frostGiant,
+          manticore: images.manticore,
+          wyvern: images.wyvern,
+          banditLeader: images.banditLeader
         });
         console.log('✅ All monster images loaded successfully');
       }
@@ -340,12 +364,20 @@ function WorldMapViewerComponent({
     images.troll.onload = onLoad;
     images.ogre.onload = onLoad;
     images.harpy.onload = onLoad;
+    images.frostGiant.onload = onLoad;
+    images.manticore.onload = onLoad;
+    images.wyvern.onload = onLoad;
+    images.banditLeader.onload = onLoad;
 
     images.ancientGolem.onerror = () => console.error('Failed to load ancient-golem.png');
     images.direWolf.onerror = () => console.error('Failed to load dire-wolf.png');
     images.troll.onerror = () => console.error('Failed to load troll.png');
     images.ogre.onerror = () => console.error('Failed to load ogre.png');
     images.harpy.onerror = () => console.error('Failed to load Harpy.png');
+    images.frostGiant.onerror = () => console.error('Failed to load frost-giant.png');
+    images.manticore.onerror = () => console.error('Failed to load manticore.png');
+    images.wyvern.onerror = () => console.error('Failed to load wyvern.png');
+    images.banditLeader.onerror = () => console.error('Failed to load bandit-leader.png');
   }, []);
 
   // Load all terrain images
@@ -656,6 +688,18 @@ function WorldMapViewerComponent({
               } else if (obj.enemyName === 'Harpy' && monsterImages.harpy) {
                 useImage = true;
                 imgToUse = monsterImages.harpy;
+              } else if (obj.enemyName === 'Frost Giant' && monsterImages.frostGiant) {
+                useImage = true;
+                imgToUse = monsterImages.frostGiant;
+              } else if (obj.enemyName === 'Manticore' && monsterImages.manticore) {
+                useImage = true;
+                imgToUse = monsterImages.manticore;
+              } else if (obj.enemyName === 'Wyvern' && monsterImages.wyvern) {
+                useImage = true;
+                imgToUse = monsterImages.wyvern;
+              } else if (obj.enemyName === 'Bandit Leader' && monsterImages.banditLeader) {
+                useImage = true;
+                imgToUse = monsterImages.banditLeader;
               }
             }
             break;

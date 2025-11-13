@@ -729,131 +729,9 @@ function WorldMapViewerComponent({
       }
     }
 
-    // Draw dynamic objects (wandering monsters, traveling merchants)
-    worldMap.dynamicObjects.forEach(obj => {
-      if (!obj.isActive) return;
+    // === RENDERING ORDER: Terrain (LAYER 1) → Static Objects (LAYER 2) → Dynamic Objects (LAYER 3) → Other Players (LAYER 4 via React) → Main Player (LAYER 5) ===
 
-      const screenX = (obj.position.x - viewport.x) * TILE_SIZE;
-      const screenY = (obj.position.y - viewport.y) * TILE_SIZE;
-
-      // Only render if in viewport
-      if (
-        screenX >= -TILE_SIZE &&
-        screenX <= VIEWPORT_WIDTH &&
-        screenY >= -TILE_SIZE &&
-        screenY <= VIEWPORT_HEIGHT
-      ) {
-        let icon = '';
-        let useImage = false;
-        let imgToUse: HTMLImageElement | null = null;
-
-        switch (obj.type) {
-          case 'wanderingMonster':
-            icon = '🐺';
-            // Check if this is a monster with an image and use it if available
-            if ('enemyName' in obj) {
-              if (obj.enemyName === 'Dire Wolf' && monsterImages.direWolf) {
-                useImage = true;
-                imgToUse = monsterImages.direWolf;
-              } else if (obj.enemyName === 'Troll' && monsterImages.troll) {
-                useImage = true;
-                imgToUse = monsterImages.troll;
-              } else if (obj.enemyName === 'Ogre' && monsterImages.ogre) {
-                useImage = true;
-                imgToUse = monsterImages.ogre;
-              } else if (obj.enemyName === 'Harpy' && monsterImages.harpy) {
-                useImage = true;
-                imgToUse = monsterImages.harpy;
-              } else if (obj.enemyName === 'Frost Giant' && monsterImages.frostGiant) {
-                useImage = true;
-                imgToUse = monsterImages.frostGiant;
-              } else if (obj.enemyName === 'Manticore' && monsterImages.manticore) {
-                useImage = true;
-                imgToUse = monsterImages.manticore;
-              } else if (obj.enemyName === 'Wyvern' && monsterImages.wyvern) {
-                useImage = true;
-                imgToUse = monsterImages.wyvern;
-              } else if (obj.enemyName === 'Bandit Leader' && monsterImages.banditLeader) {
-                useImage = true;
-                imgToUse = monsterImages.banditLeader;
-              } else if (obj.enemyName === 'Dark Knight' && monsterImages.darkKnight) {
-                useImage = true;
-                imgToUse = monsterImages.darkKnight;
-              }
-            }
-            break;
-          case 'travelingMerchant':
-            icon = '🛒';
-            break;
-          case 'event':
-            icon = '⭐';
-            break;
-        }
-
-        if (useImage && imgToUse) {
-          // Add yellow glow effect for monsters
-          ctx.shadowColor = '#ffff00';
-          ctx.shadowBlur = 15;
-
-          // Make monster larger (1.3x tile size) and center it
-          const monsterSize = TILE_SIZE * 1.3;
-          const monsterOffsetX = screenX - (monsterSize - TILE_SIZE) / 2;
-          const monsterOffsetY = screenY - (monsterSize - TILE_SIZE) / 2;
-
-          ctx.drawImage(imgToUse, monsterOffsetX, monsterOffsetY, monsterSize, monsterSize);
-
-          // Reset shadow
-          ctx.shadowBlur = 0;
-        } else if (icon) {
-          ctx.font = `${Math.floor(TILE_SIZE * 0.7)}px sans-serif`;
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
-        }
-      }
-    });
-
-    // Draw player - calculate exact position based on tile grid
-    // Player tile position relative to viewport
-    const playerTileOffsetX = playerPosition.x - viewport.x;
-    const playerTileOffsetY = playerPosition.y - viewport.y;
-
-    // Screen position (center of player's tile)
-    const playerScreenX = playerTileOffsetX * TILE_SIZE;
-    const playerScreenY = playerTileOffsetY * TILE_SIZE;
-
-    // Calculate pulsating glow effect
-    const elapsedTime = Date.now() - glowStartTimeRef.current;
-    const pulseSpeed = 0.003; // Speed of pulsation (lower = slower)
-    const minBlur = 20; // Minimum glow intensity
-    const maxBlur = 35; // Maximum glow intensity
-    const glowBlur = minBlur + (maxBlur - minBlur) * (0.5 + 0.5 * Math.sin(elapsedTime * pulseSpeed));
-
-    // Player glow effect with pulsation
-    ctx.shadowColor = '#ffff00';
-    ctx.shadowBlur = glowBlur;
-
-    // Draw player avatar - use image if loaded, otherwise fallback to emoji
-    if (heroImage) {
-      // Make hero slightly larger (1.2x tile size) and center it on the tile
-      const heroSize = TILE_SIZE * 1.2;
-      const heroOffsetX = playerScreenX - (heroSize - TILE_SIZE) / 2;
-      const heroOffsetY = playerScreenY - (heroSize - TILE_SIZE) / 2;
-
-      // Draw hero image centered on tile with increased size
-      ctx.drawImage(heroImage, heroOffsetX, heroOffsetY, heroSize, heroSize);
-    } else {
-      // Fallback to emoji if image not loaded yet
-      ctx.font = `${Math.floor(TILE_SIZE * 0.9)}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('🧙', playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE / 2);
-    }
-
-    // Reset shadow
-    ctx.shadowBlur = 0;
-
-    // Draw static objects (towns, dungeons, rare spawns, etc.) - on top of player
+    // Draw static objects (towns, dungeons, rare spawns, treasure chests, portals) - LAYER 2
     ctx.font = `${Math.floor(TILE_SIZE * 0.8)}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -1059,6 +937,130 @@ function WorldMapViewerComponent({
         ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
       }
     });
+
+    // Draw dynamic objects (wandering monsters, traveling merchants) - LAYER 3
+    worldMap.dynamicObjects.forEach(obj => {
+      if (!obj.isActive) return;
+
+      const screenX = (obj.position.x - viewport.x) * TILE_SIZE;
+      const screenY = (obj.position.y - viewport.y) * TILE_SIZE;
+
+      // Only render if in viewport
+      if (
+        screenX >= -TILE_SIZE &&
+        screenX <= VIEWPORT_WIDTH &&
+        screenY >= -TILE_SIZE &&
+        screenY <= VIEWPORT_HEIGHT
+      ) {
+        let icon = '';
+        let useImage = false;
+        let imgToUse: HTMLImageElement | null = null;
+
+        switch (obj.type) {
+          case 'wanderingMonster':
+            icon = '🐺';
+            // Check if this is a monster with an image and use it if available
+            if ('enemyName' in obj) {
+              if (obj.enemyName === 'Dire Wolf' && monsterImages.direWolf) {
+                useImage = true;
+                imgToUse = monsterImages.direWolf;
+              } else if (obj.enemyName === 'Troll' && monsterImages.troll) {
+                useImage = true;
+                imgToUse = monsterImages.troll;
+              } else if (obj.enemyName === 'Ogre' && monsterImages.ogre) {
+                useImage = true;
+                imgToUse = monsterImages.ogre;
+              } else if (obj.enemyName === 'Harpy' && monsterImages.harpy) {
+                useImage = true;
+                imgToUse = monsterImages.harpy;
+              } else if (obj.enemyName === 'Frost Giant' && monsterImages.frostGiant) {
+                useImage = true;
+                imgToUse = monsterImages.frostGiant;
+              } else if (obj.enemyName === 'Manticore' && monsterImages.manticore) {
+                useImage = true;
+                imgToUse = monsterImages.manticore;
+              } else if (obj.enemyName === 'Wyvern' && monsterImages.wyvern) {
+                useImage = true;
+                imgToUse = monsterImages.wyvern;
+              } else if (obj.enemyName === 'Bandit Leader' && monsterImages.banditLeader) {
+                useImage = true;
+                imgToUse = monsterImages.banditLeader;
+              } else if (obj.enemyName === 'Dark Knight' && monsterImages.darkKnight) {
+                useImage = true;
+                imgToUse = monsterImages.darkKnight;
+              }
+            }
+            break;
+          case 'travelingMerchant':
+            icon = '🛒';
+            break;
+          case 'event':
+            icon = '⭐';
+            break;
+        }
+
+        if (useImage && imgToUse) {
+          // Add yellow glow effect for monsters
+          ctx.shadowColor = '#ffff00';
+          ctx.shadowBlur = 15;
+
+          // Make monster larger (1.3x tile size) and center it
+          const monsterSize = TILE_SIZE * 1.3;
+          const monsterOffsetX = screenX - (monsterSize - TILE_SIZE) / 2;
+          const monsterOffsetY = screenY - (monsterSize - TILE_SIZE) / 2;
+
+          ctx.drawImage(imgToUse, monsterOffsetX, monsterOffsetY, monsterSize, monsterSize);
+
+          // Reset shadow
+          ctx.shadowBlur = 0;
+        } else if (icon) {
+          ctx.font = `${Math.floor(TILE_SIZE * 0.7)}px sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+        }
+      }
+    });
+
+    // === MAIN PLAYER - LAYER 5 (Topmost, always visible above everything) ===
+    // Calculate player's position on screen (center of viewport)
+    const playerTileOffsetX = playerPosition.x - viewport.x;
+    const playerTileOffsetY = playerPosition.y - viewport.y;
+
+    // Screen position (center of player's tile)
+    const playerScreenX = playerTileOffsetX * TILE_SIZE;
+    const playerScreenY = playerTileOffsetY * TILE_SIZE;
+
+    // Calculate pulsating glow effect
+    const elapsedTime = Date.now() - glowStartTimeRef.current;
+    const pulseSpeed = 0.003; // Speed of pulsation (lower = slower)
+    const minBlur = 20; // Minimum glow intensity
+    const maxBlur = 35; // Maximum glow intensity
+    const glowBlur = minBlur + (maxBlur - minBlur) * (0.5 + 0.5 * Math.sin(elapsedTime * pulseSpeed));
+
+    // Player glow effect with pulsation
+    ctx.shadowColor = '#ffff00';
+    ctx.shadowBlur = glowBlur;
+
+    // Draw player avatar - use image if loaded, otherwise fallback to emoji
+    if (heroImage) {
+      // Make hero slightly larger (1.2x tile size) and center it on the tile
+      const heroSize = TILE_SIZE * 1.2;
+      const heroOffsetX = playerScreenX - (heroSize - TILE_SIZE) / 2;
+      const heroOffsetY = playerScreenY - (heroSize - TILE_SIZE) / 2;
+
+      // Draw hero image centered on tile with increased size
+      ctx.drawImage(heroImage, heroOffsetX, heroOffsetY, heroSize, heroSize);
+    } else {
+      // Fallback to emoji if image not loaded yet
+      ctx.font = `${Math.floor(TILE_SIZE * 0.9)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('🧙', playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE / 2);
+    }
+
+    // Reset shadow
+    ctx.shadowBlur = 0;
 
     // === WEATHER & TIME OF DAY EFFECTS ===
 
@@ -1363,7 +1365,7 @@ function WorldMapViewerComponent({
             position: 'absolute',
             left: `${VIEWPORT_WIDTH / 2}px`,
             top: `${VIEWPORT_HEIGHT / 2}px`,
-            zIndex: 100
+            zIndex: -50 // Under canvas so weather effects (on canvas) cover it
           }}
         >
           <ChatBubble
@@ -1394,7 +1396,7 @@ function WorldMapViewerComponent({
               position: 'absolute',
               left: `${screenX}px`,
               top: `${screenY}px`,
-              zIndex: 50 + player.y // Players lower on map (higher Y) have higher z-index
+              zIndex: -100 + player.y // Negative z-index to render UNDER canvas (main player is on canvas)
             }}
           >
             {/* Chat Bubble (if message exists and recent) */}

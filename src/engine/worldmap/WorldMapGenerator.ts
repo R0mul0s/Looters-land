@@ -569,7 +569,7 @@ export class WorldMapGenerator {
         position: { x, y },
         discovered: false,
         lootQuality,
-        requiredLevel: lootQuality === 'legendary' ? 20 : lootQuality === 'epic' ? 15 : 10
+        requiredCombatPower: lootQuality === 'legendary' ? 15000 : lootQuality === 'epic' ? 8000 : 3000
       };
 
       tile.staticObject = hiddenPath;

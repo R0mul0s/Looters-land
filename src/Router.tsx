@@ -375,7 +375,7 @@ export function Router() {
       forceUpdate({});
 
       // Show defeat modal
-      setTimeout(() => {
+      setTimeout(async () => {
         setQuickCombatDefeat(true);
         // Set heroes to 10% HP (they need to go heal in town)
         gameState.activeParty.forEach(hero => {
@@ -383,6 +383,11 @@ export function Router() {
           hero.isAlive = true;
           hero.resetCombatState();
         });
+
+        // Save the updated hero HP to database
+        await gameActions.updateActiveParty(gameState.activeParty);
+        await gameActions.saveGame();
+
         setCombatActive(false);
         setCombatLog([]);
       }, 2000);
@@ -523,12 +528,16 @@ export function Router() {
   const handleDungeonCombatEnd = async () => {
     if (!currentDungeon) return;
 
-    const result = currentDungeon.completeCombat(gameState.activeParty || []);
+    // CRITICAL: Use combatEngine.heroes instead of gameState.activeParty
+    // because gameState might be stale due to re-renders during combat
+    const heroesAfterCombat = combatEngine.heroes as Hero[];
+
+    const result = currentDungeon.completeCombat(heroesAfterCombat);
     console.log('✅ Combat completed:', result.message);
     console.log('✅ Current room after combat:', currentDungeon.getCurrentRoom());
 
     // Check if it's a defeat (all heroes dead)
-    const allHeroesDead = gameState.activeParty.every(hero => !hero.isAlive);
+    const allHeroesDead = heroesAfterCombat.every(hero => !hero.isAlive);
 
     if (allHeroesDead) {
       // Handle defeat - keep combat screen but don't show victory
@@ -542,11 +551,14 @@ export function Router() {
       // Show defeat alert and exit dungeon
       setTimeout(() => {
         // Set heroes to 10% HP (they need to go heal in town)
-        gameState.activeParty.forEach(hero => {
+        heroesAfterCombat.forEach(hero => {
           hero.currentHP = Math.max(1, Math.floor(hero.maxHP * 0.1));
           hero.isAlive = true;
           hero.resetCombatState();
         });
+
+        // Update game state with healed heroes
+        gameActions.updateActiveParty(heroesAfterCombat, true);
 
         alert(t('router.defeatAlert'));
         handleDungeonExit();
@@ -564,8 +576,35 @@ export function Router() {
       }
 
       // Save hero changes (XP, level ups, HP) after victory
-      await gameActions.updateActiveParty(gameState.activeParty);
-      await gameActions.saveGame();
+      console.log('🔍 Router: Combat engine heroes after battle:', combatEngine.heroes.map((h: any) => ({
+        name: h.name,
+        hp: h.currentHP,
+        maxHP: h.maxHP,
+        level: h.level,
+        xp: h.experience,
+        id: h.id
+      })));
+
+      console.log('🔍 Router: gameState.activeParty after battle:', gameState.activeParty.map(h => ({
+        name: h.name,
+        hp: h.currentHP,
+        maxHP: h.maxHP,
+        level: h.level,
+        xp: h.experience,
+        id: h.id
+      })));
+
+      console.log('🔍 Router: Are they the same references?', combatEngine.heroes === gameState.activeParty);
+      console.log('🔍 Router: First hero same reference?', combatEngine.heroes[0] === gameState.activeParty[0]);
+
+      // CRITICAL FIX: Use heroes from combat engine (they have the updated stats)
+      // instead of gameState.activeParty which might be stale
+      const updatedHeroes = combatEngine.heroes as Hero[];
+
+      // Update active party and sync to allHeroes
+      // updateActiveParty() creates new array references and triggers setUpdateTrigger()
+      // which is sufficient for React to detect changes - no need for database reload!
+      await gameActions.updateActiveParty(updatedHeroes, false); // Allow auto-save
 
       // Show victory screen instead of immediately closing combat
       setCombatActive(true); // Explicitly keep combat screen visible
@@ -604,15 +643,15 @@ export function Router() {
     }
 
     // Award remaining loot to player (gold was already auto-collected on victory)
-    if (combatEngine.lootReward) {
-      // Add all remaining items to inventory
-      for (const item of combatEngine.lootReward.items) {
-        await gameActions.addItem(item);
-      }
+    if (combatEngine.lootReward && combatEngine.lootReward.items.length > 0) {
+      // OPTIMIZATION: Use batch addItems() instead of for-loop with individual addItem()
+      // This reduces multiple setState() calls to a single one = much faster!
+      console.log('📦 Adding', combatEngine.lootReward.items.length, 'items in batch...');
+      await gameActions.addItems(combatEngine.lootReward.items);
     }
 
-    // Save game to persist changes
-    await gameActions.saveGame();
+    // NOTE: No need to manually save here - scheduleAutoSave() already called by addItems()
+    // The auto-save will trigger in 2 seconds, which is fine since we're just continuing exploration
 
     // Close combat and victory screen
     setShowDungeonVictory(false);

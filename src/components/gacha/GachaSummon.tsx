@@ -33,6 +33,9 @@ export function GachaSummon({
   const canAffordSingle = playerGold >= GachaSystem.COST_SINGLE;
   const canAffordTen = playerGold >= GachaSystem.COST_TEN;
 
+  // Debug mode check
+  const isDebugMode = import.meta.env.DEV;
+
   const handleFreeSummon = () => {
     if (!canUseFreeSummon || summoning) return;
 
@@ -79,6 +82,25 @@ export function GachaSummon({
 
       onGachaStateChange(newGachaState);
       onGoldChange(playerGold - GachaSystem.COST_TEN);
+      onHeroesObtained(results);
+
+      setSummonResults(results);
+      setShowResults(true);
+      setSummoning(false);
+    }, 2000);
+  };
+
+  // Debug: Free 10x summon
+  const handleDebugTenSummon = () => {
+    if (summoning) return;
+
+    setSummoning(true);
+
+    setTimeout(() => {
+      const { results, newGachaState } = GachaSystem.summonTen(gachaState);
+
+      onGachaStateChange(newGachaState);
+      // Don't charge gold in debug mode
       onHeroesObtained(results);
 
       setSummonResults(results);
@@ -279,6 +301,25 @@ export function GachaSummon({
               </div>
               <div style={styles.guaranteeBadge}>Guaranteed Rare+</div>
             </button>
+
+            {/* Debug 10x Summon (Development only) */}
+            {isDebugMode && (
+              <button
+                style={{
+                  ...styles.summonButton,
+                  ...styles.debugSummonButton
+                }}
+                onClick={handleDebugTenSummon}
+                disabled={summoning}
+              >
+                <div style={styles.buttonIcon}>🔧</div>
+                <div style={styles.buttonContent}>
+                  <div style={styles.buttonTitle}>DEBUG: Free 10x Summon</div>
+                  <div style={styles.buttonSubtitle}>Development Mode Only</div>
+                </div>
+                <div style={styles.guaranteeBadge}>FREE</div>
+              </button>
+            )}
           </div>
 
           {/* Pity System Info */}
@@ -435,6 +476,12 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
     color: 'white',
     boxShadow: '0 4px 12px rgba(168, 85, 247, 0.3)'
+  },
+  debugSummonButton: {
+    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+    color: 'white',
+    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+    border: '2px dashed #fca5a5'
   },
   buttonIcon: {
     fontSize: '32px',

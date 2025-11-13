@@ -169,7 +169,7 @@ const styles: Record<string, React.CSSProperties> = {
   text: {
     margin: '0 0 15px 0',
     fontSize: '15px',
-    color: '#cbd5e1',
+    color: '#ffffff',
     lineHeight: '1.6'
   },
   divider: {
@@ -185,7 +185,7 @@ const styles: Record<string, React.CSSProperties> = {
   infoText: {
     margin: 0,
     fontSize: '14px',
-    color: '#94a3b8',
+    color: '#f1f5f9',
     lineHeight: '1.6'
   },
   infoRow: {
@@ -196,7 +196,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderBottom: '1px solid #1e293b'
   },
   label: {
-    color: '#94a3b8',
+    color: '#e2e8f0',
     fontSize: '14px',
     fontWeight: '500'
   },

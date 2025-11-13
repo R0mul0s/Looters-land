@@ -301,11 +301,73 @@ When adding new features:
 
 ---
 
-**Version**: 0.7.3
-**Last Updated**: 2025-11-12
+**Version**: 2.3.3
+**Last Updated**: 2025-11-13
 **Status**: Active development
 
-## Last Updates (2025-11-12)
+## Last Updates (2025-11-13)
+
+### Global Weather & Time System
+- ✅ **Real-Time Weather & Time** - Synchronized across all players
+  - Global weather states (Clear, Rain, Storm, Snow, Fog)
+  - Time of day system (Morning, Afternoon, Evening, Night)
+  - Automatic updates every 15 minutes via Supabase cron job
+  - Real-time subscriptions using useGlobalWorldState hook
+  - Weather & Time Widget with countdown timers
+  - Database table: global_world_state with RLS policies
+
+### Named Enemy System
+- ✅ **Rare Spawn Bosses** (Boss tier with 3x stats)
+  - Ancient Golem (Desert) - Drops legendary earth-themed items
+  - Frost Giant (Snow) - Drops legendary ice-themed items
+  - Shadow Dragon (Mountains) - Drops legendary shadow-themed items
+  - Phoenix (Volcano) - Drops legendary fire-themed items
+- ✅ **Wandering Monsters** (Elite tier with 1.5x stats)
+  - 8 different elite monsters (Dire Wolf, Troll, Ogre, Harpy, etc.)
+  - Spawn in groups of 1-3 enemies
+  - Higher drop rates than regular encounters
+
+### Quick Combat System
+- ✅ **Fast Worldmap Encounters**
+  - Auto-combat and Manual combat modes
+  - Victory/Defeat modals with loot display
+  - Enemy respawn tracking (24h cooldown for rare spawns)
+  - Proper hero HP saving after defeat (10% HP)
+  - Fixed hero XP/level synchronization after combat
+
+### Enhanced UI Components
+- ✅ **Modal System Improvements**
+  - ModalText, ModalDivider, ModalInfoBox (4 variants)
+  - ModalInfoRow for structured data display
+  - ModalButton with 3 variants (primary, secondary, danger)
+  - ModalButtonGroup for button layouts
+- ✅ **Visual Enhancements**
+  - Hidden path images (hidden-path1.png, hidden-path2.png)
+  - Improved treasure chest and secret visualization
+
+### Bug Fixes & Technical Improvements
+- ✅ **Combat System Fixes**
+  - Fixed hero HP not saving to database after defeat
+  - Fixed dungeon combat using stale gameState instead of combat engine
+  - Proper synchronization between combat engine and game state
+- ✅ **Technical Infrastructure**
+  - Added 5 new documentation files (GLOBAL_WORLD_STATE_SETUP, etc.)
+  - Created Supabase Edge Function for weather/time updates
+  - Added debug tools for cron job monitoring
+  - Improved game state management with updateActiveParty()
+
+### Files Modified (Technical Details)
+1. **src/Router.tsx** - Quick combat handlers, defeat/victory logic fixes
+2. **src/hooks/useGlobalWorldState.ts** - NEW: Real-time weather/time subscription
+3. **src/services/GlobalWorldStateService.ts** - NEW: Weather/time data management
+4. **src/engine/combat/NamedEnemies.ts** - NEW: Special boss and elite enemies
+5. **src/components/WeatherTimeWidget.tsx** - Live countdown widget
+6. **src/components/ui/ModalContent.tsx** - Enhanced modal components
+7. **supabase/migrations/20251113_add_global_world_state.sql** - NEW: Database migration
+8. **supabase/functions/update-global-world-state/** - NEW: Edge function for cron
+9. **docs/** - 5 new technical documentation files
+
+## Previous Updates (2025-11-12)
 
 ### Avatar System & Visual Enhancements
 - ✅ **Player Avatar System** - 5 hero avatars (Knight, Ranger, Mage, Shieldbearer, Bard)

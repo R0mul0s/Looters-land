@@ -77,29 +77,34 @@ export class Enemy {
     SPD: number;
     CRIT: number;
   } {
-    // Base stats scaling with level
-    const baseHP = 80;
-    const baseATK = 20;
-    const baseDEF = 15;
-    const baseSPD = 12;
-    const baseCRIT = 5;
+    // Base stats scaling with level - REBALANCED for better progression
+    // Level 1 enemies should be weak, higher levels scale more aggressively
+    const baseHP = 50;      // Reduced from 80 (weaker early game)
+    const baseATK = 12;     // Reduced from 20 (less threatening)
+    const baseDEF = 8;      // Reduced from 15 (easier to damage)
+    const baseSPD = 10;     // Reduced from 12
+    const baseCRIT = 3;     // Reduced from 5
 
-    // Type multipliers
+    // Type multipliers - REBALANCED
+    // Elite and Boss are now more distinct threats
     const typeMultipliers: Record<EnemyType, EnemyTypeMultipliers> = {
       normal: { hp: 1.0, atk: 1.0, def: 1.0 },
-      elite: { hp: 1.5, atk: 1.3, def: 1.2 },
-      boss: { hp: 3.0, atk: 1.5, def: 1.3 }
+      elite: { hp: 1.8, atk: 1.4, def: 1.3 },    // Increased from 1.5/1.3/1.2
+      boss: { hp: 3.5, atk: 1.7, def: 1.5 }      // Increased from 3.0/1.5/1.3
     };
 
     const multiplier = typeMultipliers[this.type];
 
-    // Calculate stats with level scaling
+    // Calculate stats with level scaling - MORE AGGRESSIVE scaling for higher levels
+    // This creates better progression where low level is easy, high level is challenging
+    const levelScaling = 1 + (this.level - 1) * 0.15; // 15% increase per level
+
     return {
-      maxHP: Math.floor((baseHP + 8 * (this.level - 1)) * multiplier.hp),
-      ATK: Math.floor((baseATK + 2 * (this.level - 1)) * multiplier.atk),
-      DEF: Math.floor((baseDEF + 1.5 * (this.level - 1)) * multiplier.def),
-      SPD: Math.floor(baseSPD + 1 * (this.level - 1)),
-      CRIT: baseCRIT + 0.5 * (this.level - 1)
+      maxHP: Math.floor((baseHP + 12 * (this.level - 1)) * multiplier.hp * levelScaling),
+      ATK: Math.floor((baseATK + 3 * (this.level - 1)) * multiplier.atk * levelScaling),
+      DEF: Math.floor((baseDEF + 2 * (this.level - 1)) * multiplier.def * levelScaling),
+      SPD: Math.floor(baseSPD + 1.5 * (this.level - 1)),
+      CRIT: baseCRIT + 0.8 * (this.level - 1)
     };
   }
 

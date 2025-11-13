@@ -380,6 +380,7 @@ export const en = {
     merchantSoldOut: 'The merchant has sold all their items!',
     randomEventComingSoon: 'Random Event: {{eventType}}\nFeature coming soon!',
     itemSold: '✅ Sold {{itemName}} for {{gold}} gold!',
+    cancelMovement: 'Cancel',
   },
 
   // ============================================================================
@@ -1041,6 +1042,34 @@ export const en = {
         item2: 'Row Level Security (RLS) policies',
         item3: 'Real-time updates',
         item4: 'Cloud saves',
+      },
+    },
+
+    // Version 2.3.3
+    v2_3_3: {
+      features: {
+        item1: 'Global Weather & Time System - Real-time synchronized weather and time across all players',
+        item2: 'Named Enemy System - Special bosses (Ancient Golem, Shadow Dragon, Frost Giant, Phoenix) and elite monsters',
+        item3: 'Quick Combat System - Fast worldmap encounters with auto/manual modes and loot collection',
+        item4: 'Enhanced Modal System - Reusable styled modal components (ModalText, ModalButton, ModalInfoBox)',
+        item5: 'Worldmap Visual Objects - Hidden path images and visual representation of secrets',
+        item6: 'Weather & Time Widget - Live countdown timers for next weather/time changes',
+        item7: 'Improved Gacha System - Daily free summons with 10% discount on 10x pulls',
+      },
+      fixes: {
+        item1: 'Fixed combat defeat - Heroes now properly saved to database at 10% HP after defeat',
+        item2: 'Fixed dungeon combat - Using combat engine heroes instead of stale gameState to prevent XP/level loss',
+        item3: 'Fixed hero HP after victory - Proper synchronization between combat engine and game state',
+      },
+      technical: {
+        item1: 'Added useGlobalWorldState hook for Supabase realtime subscriptions',
+        item2: 'Created GlobalWorldStateService for weather/time data management',
+        item3: 'Added Supabase Edge Function for automatic weather/time updates via cron',
+        item4: 'Implemented NamedEnemies.ts with themed enemy groups and stat multipliers',
+        item5: 'Added 5 new documentation files (GLOBAL_WORLD_STATE_SETUP, WORLDMAP_COMBAT_ARCHITECTURE, etc.)',
+        item6: 'Created SQL migration for global_world_state table with RLS policies',
+        item7: 'Added debug tools for weather/time cron monitoring',
+        item8: 'Improved game state management with better party synchronization',
       },
     },
 

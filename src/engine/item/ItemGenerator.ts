@@ -14,10 +14,12 @@ export class ItemGenerator {
       slot = slots[Math.floor(Math.random() * slots.length)];
     }
 
-    // Generate base stats
+    // Generate base stats - REBALANCED
+    // Level 1 items should be weak, higher level items should be significantly stronger
+    // Progressive scaling: Level 1 = base 3, Level 6 = base 18 (6x stronger!)
     const rarityMultiplier = Item.getRarityMultiplier(rarity);
-    const levelMultiplier = level / 5;
-    const baseStat = Math.floor(10 * levelMultiplier * rarityMultiplier);
+    const levelMultiplier = Math.pow(level, 1.2); // Exponential scaling for better progression
+    const baseStat = Math.floor(3 * levelMultiplier * rarityMultiplier);
 
     // Different slots have different stat distributions
     const stats = this.generateStatsForSlot(slot, baseStat);

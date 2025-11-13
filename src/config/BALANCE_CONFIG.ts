@@ -46,15 +46,15 @@ export const DUNGEON_CONFIG = {
     Nightmare: { min: 8, max: 12 },
   },
 
-  /** Difficulty scaling per floor (15% per floor) */
-  DIFFICULTY_SCALING_PER_FLOOR: 0.15,
+  /** Difficulty scaling per floor (10% per floor) - REDUCED for better balance */
+  DIFFICULTY_SCALING_PER_FLOOR: 0.10,
 
-  /** Enemy difficulty multipliers by dungeon difficulty */
+  /** Enemy difficulty multipliers by dungeon difficulty - REBALANCED */
   DIFFICULTY_MULTIPLIERS: {
-    Easy: 0.5,
-    Medium: 1.0,
-    Hard: 1.5,
-    Nightmare: 2.0,
+    Easy: 0.6,       // Increased from 0.5 (was too easy)
+    Medium: 1.0,     // Unchanged
+    Hard: 1.4,       // Reduced from 1.5 (was too hard)
+    Nightmare: 1.8,  // Reduced from 2.0 (was brutal)
   },
 
   /** Enemy probabilities by level difference */

@@ -22,6 +22,36 @@ interface HeroesScreenProps {
 }
 
 /**
+ * Get health bar color based on HP percentage
+ */
+function getHealthBarColor(hpPercent: number): string {
+  if (hpPercent > 0.6) {
+    return 'linear-gradient(90deg, #10b981 0%, #059669 100%)'; // Green
+  } else if (hpPercent > 0.4) {
+    return 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)'; // Orange
+  } else if (hpPercent > 0.2) {
+    return 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)'; // Red
+  } else {
+    return 'linear-gradient(90deg, #991b1b 0%, #7f1d1d 100%)'; // Dark red
+  }
+}
+
+/**
+ * Calculate average health percentage of active party
+ * @param activeParty - Array of heroes in active party
+ * @returns Average health percentage (0-100)
+ */
+export function getPartyAverageHealth(activeParty: Hero[]): number {
+  if (!activeParty || activeParty.length === 0) return 100;
+
+  const totalHealthPercent = activeParty.reduce((sum, hero) => {
+    return sum + (hero.currentHP / hero.maxHP) * 100;
+  }, 0);
+
+  return totalHealthPercent / activeParty.length;
+}
+
+/**
  * Heroes Screen Component
  *
  * @param props - Component props
@@ -94,6 +124,23 @@ export function HeroesScreen({
                     <div style={styles.partyHeroName}>{hero.name}</div>
                     <div style={styles.partyHeroClass}>{hero.class}</div>
                     <div style={styles.partyHeroLevel}>Level {hero.level}</div>
+
+                    {/* Health Bar */}
+                    <div style={styles.healthBarContainer}>
+                      <div style={styles.healthBarBackground}>
+                        <div
+                          style={{
+                            ...styles.healthBarFill,
+                            width: `${(hero.currentHP / hero.maxHP) * 100}%`,
+                            background: getHealthBarColor(hero.currentHP / hero.maxHP)
+                          }}
+                        />
+                      </div>
+                      <div style={styles.healthBarText}>
+                        {hero.currentHP} / {hero.maxHP}
+                      </div>
+                    </div>
+
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -641,5 +688,33 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'not-allowed',
     boxShadow: '0 2px 6px rgba(0, 0, 0, 0.2)',
     opacity: 0.7
+  },
+  healthBarContainer: {
+    marginTop: '8px',
+    marginBottom: '8px'
+  },
+  healthBarBackground: {
+    width: '100%',
+    height: '12px',
+    background: 'rgba(15, 23, 42, 0.8)',
+    borderRadius: '6px',
+    overflow: 'hidden',
+    border: '1px solid rgba(45, 212, 191, 0.3)',
+    boxShadow: 'inset 0 2px 4px rgba(0, 0, 0, 0.4)'
+  },
+  healthBarFill: {
+    height: '100%',
+    transition: 'width 0.3s ease, background 0.3s ease',
+    borderRadius: '6px',
+    boxShadow: '0 0 8px rgba(16, 185, 129, 0.6)',
+    position: 'relative' as const
+  },
+  healthBarText: {
+    fontSize: '11px',
+    color: '#cbd5e1',
+    textAlign: 'center' as const,
+    marginTop: '4px',
+    fontWeight: '500',
+    textShadow: '0 1px 2px rgba(0, 0, 0, 0.8)'
   }
 };

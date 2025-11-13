@@ -14,7 +14,7 @@ import React, { useEffect, useState } from 'react';
 import { GameLayout } from './GameLayout';
 import { WorldMapGenerator } from '../engine/worldmap/WorldMapGenerator';
 import { WorldMapViewer } from './WorldMapViewer';
-import { HeroesScreen } from './HeroesScreen';
+import { HeroesScreen, getPartyAverageHealth } from './HeroesScreen';
 import { InventoryScreen } from './InventoryScreen';
 import { TownScreen } from './TownScreen';
 import { LeaderboardScreen } from './LeaderboardScreen';
@@ -26,11 +26,10 @@ import { ModalText, ModalDivider, ModalInfoBox, ModalInfoRow, ModalButton, Modal
 import { ItemDisplay } from './ui/ItemDisplay';
 import { InventoryHelper } from '../engine/item/InventoryHelper';
 import { LootGenerator } from '../engine/loot/LootGenerator';
-import { WeatherSystem } from '../engine/worldmap/WeatherSystem';
-import { TimeOfDaySystem } from '../engine/worldmap/TimeOfDaySystem';
 import { useGameState } from '../hooks/useGameState';
 import { useEnergyRegeneration } from '../hooks/useEnergyRegeneration';
 import { useOtherPlayers } from '../hooks/useOtherPlayers';
+import { useGlobalWorldState } from '../hooks/useGlobalWorldState';
 import { supabase } from '../lib/supabase';
 import { t } from '../localization/i18n';
 import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, DynamicObject, WanderingMonster, TravelingMerchant } from '../types/worldmap.types';
@@ -66,6 +65,29 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
   // Use centralized game state with database sync
   const [gameState, gameActions] = useGameState(userEmailProp);
 
+  // Debug: Log gameState when it changes
+  useEffect(() => {
+    console.log('🎮 WorldMapDemo2: gameState updated', {
+      loading: gameState.loading,
+      allHeroesCount: gameState.allHeroes.length,
+      activePartyCount: gameState.activeParty.length,
+      heroNames: gameState.allHeroes.map(h => h.name).join(', ')
+    });
+  }, [gameState.loading, gameState.allHeroes.length, gameState.activeParty.length, gameState.allHeroes, gameState.activeParty]);
+
+  // Expose gameActions and gameState to window for debug commands
+  useEffect(() => {
+    (window as any).__gameActions = gameActions;
+    (window as any).__gameState = gameState;
+    return () => {
+      delete (window as any).__gameActions;
+      delete (window as any).__gameState;
+    };
+  }, [gameActions, gameState]);
+
+  // Use global world state (weather and time of day shared across all players)
+  const globalWorldState = useGlobalWorldState();
+
   // Use email from props or fallback to placeholder
   const playerEmail = userEmailProp || 'adventurer@lootersland.com';
 
@@ -81,6 +103,7 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
   const [showHiddenPathModal, setShowHiddenPathModal] = useState<{ path: HiddenPath; loot: any } | null>(null);
   const [showMerchantModal, setShowMerchantModal] = useState<TravelingMerchant | null>(null);
   const [showMessageModal, setShowMessageModal] = useState<string | null>(null);
+  const [showLowHealthWarning, setShowLowHealthWarning] = useState<{ type: 'dungeon' | 'combat'; action: () => void; averageHealth: number } | null>(null);
   const [showQuickCombatModal, setShowQuickCombatModal] = useState<{
     enemies: any[];
     enemyName: string;
@@ -135,35 +158,10 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
     return () => clearTimeout(timer);
   }, [myChatTimestamp]);
 
-  // Weather & Time of Day Update Loop (check every minute)
-  useEffect(() => {
-    if (!gameState.worldMap) return;
-
-    const updateWeatherAndTime = () => {
-      const updatedWeather = WeatherSystem.update(gameState.worldMap!.weather);
-      const updatedTime = TimeOfDaySystem.update(gameState.worldMap!.timeOfDay);
-
-      // Only update if something changed
-      if (
-        updatedWeather.current !== gameState.worldMap!.weather.current ||
-        updatedTime.current !== gameState.worldMap!.timeOfDay.current
-      ) {
-        gameActions.updateWorldMap({
-          ...gameState.worldMap!,
-          weather: updatedWeather,
-          timeOfDay: updatedTime
-        });
-      }
-    };
-
-    // Initial check
-    updateWeatherAndTime();
-
-    // Check every 60 seconds
-    const interval = setInterval(updateWeatherAndTime, 60000);
-
-    return () => clearInterval(interval);
-  }, [gameState.worldMap, gameActions]);
+  // Weather & Time of Day - Use global state (shared across all players)
+  // NOTE: We don't update gameState.worldMap when global weather/time changes!
+  // Instead, we pass globalWorldState directly to WorldMapViewer and WeatherTimeWidget.
+  // This prevents unnecessary map updates and player position resets.
 
   // Multiplayer: Heartbeat system - Update position and online status every 15 seconds
   useEffect(() => {
@@ -301,21 +299,22 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
           return;
         }
       }
+
+      // If this is a direct click (not path movement) and there's no object, don't do anything
+      // The pathfinding will be handled by WorldMapViewer
+      return;
     }
 
-    console.log(`Clicked tile (${x}, ${y}) - ${tile.terrain}`);
+    // This is path movement - update player position
+    console.log(`Moving to tile (${x}, ${y}) - ${tile.terrain}`);
 
-    // Calculate Manhattan distance (simple grid distance)
-    const distance = Math.abs(x - gameState.playerPos.x) + Math.abs(y - gameState.playerPos.y);
-
-    // Base movement cost per tile (simplified - could be improved with pathfinding)
+    // Calculate movement cost for this single step
     const baseCostPerTile = Math.ceil(tile.movementCost / 100);
-    const movementCost = distance * baseCostPerTile;
 
-    if (gameState.energy >= movementCost || DEBUG_CONFIG.UNLIMITED_ENERGY) {
+    if (gameState.energy >= baseCostPerTile || DEBUG_CONFIG.UNLIMITED_ENERGY) {
       gameActions.updatePlayerPos(x, y);
       if (!DEBUG_CONFIG.UNLIMITED_ENERGY) {
-        gameActions.setEnergy(gameState.energy - movementCost);
+        gameActions.setEnergy(gameState.energy - baseCostPerTile);
       }
 
       // Reveal area around player
@@ -343,8 +342,8 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
       gameActions.updateWorldMap({ ...gameState.worldMap }); // Force re-render
     } else {
       setShowEnergyModal({
-        message: t('worldmap.notEnoughEnergy', { required: movementCost, current: gameState.energy }),
-        required: movementCost
+        message: t('worldmap.notEnoughEnergy', { required: baseCostPerTile, current: gameState.energy }),
+        required: baseCostPerTile
       });
     }
   };
@@ -416,7 +415,21 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
       setShowTownModal(town);
     } else if (object.type === 'dungeon') {
       const dungeon = object as DungeonEntrance;
-      setShowDungeonModal(dungeon);
+
+      // Check party health before entering dungeon
+      const averageHealth = getPartyAverageHealth(gameState.activeParty || []);
+      if (averageHealth <= 40) {
+        setShowLowHealthWarning({
+          type: 'dungeon',
+          action: () => {
+            setShowLowHealthWarning(null);
+            setShowDungeonModal(dungeon);
+          },
+          averageHealth
+        });
+      } else {
+        setShowDungeonModal(dungeon);
+      }
     } else if (object.type === 'portal') {
       handlePortalTeleport(object as Portal);
     } else if (object.type === 'hiddenPath') {
@@ -520,16 +533,17 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
       return;
     }
 
-    // Check level requirement
-    const playerLevel = gameState.activeParty?.[0]?.level || 1;
-    if (playerLevel < path.requiredLevel) {
-      setShowMessageModal(t('worldmap.hiddenPathLevelRequired', { requiredLevel: path.requiredLevel, playerLevel }));
+    // Check combat power requirement
+    const playerCombatPower = gameState.combatPower || 0;
+    if (playerCombatPower < path.requiredCombatPower) {
+      setShowMessageModal(t('worldmap.hiddenPathCombatPowerRequired', { requiredPower: path.requiredCombatPower, playerPower: playerCombatPower }));
       return;
     }
 
     console.log('🗝️ Discovering hidden path:', path);
 
     // Generate loot
+    const playerLevel = gameState.activeParty?.[0]?.level || 1;
     const loot = LootGenerator.generateHiddenPathLoot(path.lootQuality, playerLevel);
 
     // Show loot modal (marking as discovered happens when loot is collected)
@@ -628,7 +642,7 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
    * Handle rare spawn combat encounter
    *
    * Starts quick combat with a special rare enemy that has guaranteed high-quality loot drops.
-   * Combat happens directly on the map with 2-3 powerful enemies.
+   * Combat happens directly on the map with a named boss + 3-4 elite minions.
    * Marks the rare spawn as defeated after combat completes.
    */
   const handleRareSpawnCombat = async (rareSpawn: RareSpawn) => {
@@ -640,32 +654,49 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
 
     console.log('⚔️ Preparing rare spawn combat:', rareSpawn);
 
-    // Generate 2-3 powerful enemies for quick combat
-    const { generateEnemyGroup } = await import('../engine/combat/Enemy');
-    const enemyCount = 2 + Math.floor(Math.random() * 2); // 2-3 enemies
-    const enemies = generateEnemyGroup(enemyCount, rareSpawn.enemyLevel, ['elite', 'boss']);
+    // Check party health before combat
+    const averageHealth = getPartyAverageHealth(gameState.activeParty || []);
 
-    // Show pre-combat modal with enemy info and combat mode selection
-    setShowQuickCombatModal({
-      enemies,
-      enemyName: `${rareSpawn.name} - ${rareSpawn.enemyName}`,
-      enemyLevel: rareSpawn.enemyLevel,
-      difficulty: rareSpawn.guaranteedDrop || 'Elite',
-      combatType: 'rare_spawn',
-      metadata: {
-        name: rareSpawn.name,
-        guaranteedDrop: rareSpawn.guaranteedDrop,
-        position: rareSpawn.position,
-        rareSpawnObject: rareSpawn
-      }
-    });
+    const startCombat = async () => {
+      // Generate named boss enemy with elite minions
+      const { generateRareSpawnEncounter } = await import('../engine/combat/NamedEnemies');
+      const enemies = generateRareSpawnEncounter(rareSpawn.enemyName, rareSpawn.enemyLevel);
+
+      // Show pre-combat modal with enemy info and combat mode selection
+      setShowQuickCombatModal({
+        enemies,
+        enemyName: `${rareSpawn.name} - ${rareSpawn.enemyName}`,
+        enemyLevel: rareSpawn.enemyLevel,
+        difficulty: rareSpawn.guaranteedDrop || 'Elite',
+        combatType: 'rare_spawn',
+        metadata: {
+          name: rareSpawn.name,
+          guaranteedDrop: rareSpawn.guaranteedDrop,
+          position: rareSpawn.position,
+          rareSpawnObject: rareSpawn
+        }
+      });
+    };
+
+    if (averageHealth <= 40) {
+      setShowLowHealthWarning({
+        type: 'combat',
+        action: () => {
+          setShowLowHealthWarning(null);
+          startCombat();
+        },
+        averageHealth
+      });
+    } else {
+      startCombat();
+    }
   };
 
   /**
    * Handle wandering monster fast combat
    *
    * Quick combat encounter with wandering monsters on the worldmap.
-   * Combat happens directly on the map with 1-2 enemies.
+   * Combat happens directly on the map with a named elite enemy + 2-3 normal minions.
    * Monster respawns after a certain time period.
    */
   const handleWanderingMonsterCombat = async (monster: WanderingMonster) => {
@@ -677,27 +708,43 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
 
     console.log('⚔️ Preparing wandering monster combat:', monster);
 
-    // Generate 1-2 enemies for quick combat
-    const { generateEnemyGroup } = await import('../engine/combat/Enemy');
-    const enemyCount = monster.difficulty === 'Elite' ? 2 : 1;
-    const enemyTypes: import('../types/combat.types').EnemyType[] = monster.difficulty === 'Elite' ? ['elite'] : ['normal'];
-    const enemies = generateEnemyGroup(enemyCount, monster.enemyLevel, enemyTypes);
+    // Check party health before combat
+    const averageHealth = getPartyAverageHealth(gameState.activeParty || []);
 
-    // Show pre-combat modal with enemy info and combat mode selection
-    setShowQuickCombatModal({
-      enemies,
-      enemyName: monster.enemyName,
-      enemyLevel: monster.enemyLevel,
-      difficulty: monster.difficulty,
-      combatType: 'wandering_monster',
-      metadata: {
-        name: monster.enemyName,
+    const startCombat = async () => {
+      // Generate named elite enemy with normal minions
+      const { generateWanderingMonsterEncounter } = await import('../engine/combat/NamedEnemies');
+      const enemies = generateWanderingMonsterEncounter(monster.enemyName, monster.enemyLevel, monster.difficulty);
+
+      // Show pre-combat modal with enemy info and combat mode selection
+      setShowQuickCombatModal({
+        enemies,
+        enemyName: monster.enemyName,
+        enemyLevel: monster.enemyLevel,
         difficulty: monster.difficulty,
-        respawnMinutes: monster.respawnMinutes,
-        position: monster.position,
-        monsterObject: monster
-      }
-    });
+        combatType: 'wandering_monster',
+        metadata: {
+          name: monster.enemyName,
+          difficulty: monster.difficulty,
+          respawnMinutes: monster.respawnMinutes,
+          position: monster.position,
+          monsterObject: monster
+        }
+      });
+    };
+
+    if (averageHealth <= 40) {
+      setShowLowHealthWarning({
+        type: 'combat',
+        action: () => {
+          setShowLowHealthWarning(null);
+          startCombat();
+        },
+        averageHealth
+      });
+    } else {
+      startCombat();
+    }
   };
 
   /**
@@ -819,6 +866,7 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
 
   // Show loading screen while loading
   if (gameState.loading) {
+    console.log('🖼️ WorldMapDemo2: Showing loading screen because gameState.loading =', gameState.loading);
     return (
       <div style={styles.loadingScreen}>
         <div style={styles.loadingContent}>
@@ -828,6 +876,8 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
       </div>
     );
   }
+
+  console.log('✅ WorldMapDemo2: gameState.loading is false, rendering game');
 
   // Show error if any
   if (gameState.error) {
@@ -901,15 +951,19 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
             otherPlayers={otherPlayers}
             playerChatMessage={myChatMessage}
             playerChatTimestamp={myChatTimestamp}
-            weather={gameState.worldMap.weather}
-            timeOfDay={gameState.worldMap.timeOfDay}
+            weather={globalWorldState.weather || gameState.worldMap.weather}
+            timeOfDay={globalWorldState.timeOfDay || gameState.worldMap.timeOfDay}
             onTileClick={handleTileClick}
+            onCancelMovement={() => {
+              console.log('Movement cancelled by user');
+              // No additional action needed - WorldMapViewer handles the state cleanup
+            }}
           />
 
           {/* Weather & Time Widget */}
           <WeatherTimeWidget
-            weather={gameState.worldMap.weather}
-            timeOfDay={gameState.worldMap.timeOfDay}
+            weather={globalWorldState.weather || gameState.worldMap.weather}
+            timeOfDay={globalWorldState.timeOfDay || gameState.worldMap.timeOfDay}
           />
 
           {/* Chat Box */}
@@ -938,15 +992,15 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
               <span style={styles.infoIcon}>💰</span>
               <span style={styles.infoText}>{gameState.gold.toLocaleString()} Gold</span>
             </div>
-            {gameState.worldMap && (
+            {globalWorldState.weather && globalWorldState.timeOfDay && (
               <>
                 <div style={styles.infoItem}>
-                  <span style={styles.infoIcon}>{getWeatherIcon(gameState.worldMap.weather.current)}</span>
-                  <span style={styles.infoText}>{getWeatherLabel(gameState.worldMap.weather.current)}</span>
+                  <span style={styles.infoIcon}>{getWeatherIcon(globalWorldState.weather.current)}</span>
+                  <span style={styles.infoText}>{getWeatherLabel(globalWorldState.weather.current)}</span>
                 </div>
                 <div style={styles.infoItem}>
-                  <span style={styles.infoIcon}>{getTimeIcon(gameState.worldMap.timeOfDay.current)}</span>
-                  <span style={styles.infoText}>{getTimeLabel(gameState.worldMap.timeOfDay.current)}</span>
+                  <span style={styles.infoIcon}>{getTimeIcon(globalWorldState.timeOfDay.current)}</span>
+                  <span style={styles.infoText}>{getTimeLabel(globalWorldState.timeOfDay.current)}</span>
                 </div>
               </>
             )}
@@ -964,14 +1018,21 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
     </div>
   );
 
-  const heroesContent = (
-    <HeroesScreen
-      heroes={gameState.allHeroes}
-      activeParty={gameState.activeParty}
-      onPartyChange={(heroes) => gameActions.updateActiveParty(heroes)}
-      isInTown={isInTown}
-    />
-  );
+  const heroesContent = (() => {
+    console.log('🎭 Rendering HeroesScreen with:', {
+      allHeroesCount: gameState.allHeroes.length,
+      activePartyCount: gameState.activeParty.length,
+      heroNames: gameState.allHeroes.map(h => h.name).join(', ')
+    });
+    return (
+      <HeroesScreen
+        heroes={gameState.allHeroes}
+        activeParty={gameState.activeParty}
+        onPartyChange={(heroes) => gameActions.updateActiveParty(heroes)}
+        isInTown={isInTown}
+      />
+    );
+  })();
 
   const inventoryContent = (
     <InventoryScreen
@@ -1555,6 +1616,9 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
                 onClick={() => {
                   const { enemies, combatType, metadata } = showQuickCombatModal;
                   setShowQuickCombatModal(null);
+
+                  // Start combat - enemy will be marked as defeated only after victory
+                  // Call external handler if provided
                   if (onQuickCombat) {
                     onQuickCombat(enemies, combatType, { ...metadata, mode: 'auto' });
                   }
@@ -1568,6 +1632,9 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
                 onClick={() => {
                   const { enemies, combatType, metadata } = showQuickCombatModal;
                   setShowQuickCombatModal(null);
+
+                  // Start combat - enemy will be marked as defeated only after victory
+                  // Call external handler if provided
                   if (onQuickCombat) {
                     onQuickCombat(enemies, combatType, { ...metadata, mode: 'manual' });
                   }
@@ -1582,6 +1649,82 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
             <ModalButton onClick={() => setShowQuickCombatModal(null)} variant="secondary" fullWidth>
               Cancel
             </ModalButton>
+          </>
+        )}
+      </GameModal>
+
+      {/* Low Health Warning Modal */}
+      <GameModal
+        isOpen={!!showLowHealthWarning}
+        title="⚠️ Low Party Health Warning"
+        icon="❤️"
+        onClose={() => setShowLowHealthWarning(null)}
+      >
+        {showLowHealthWarning && (
+          <>
+            <ModalInfoBox variant="warning">
+              Your party's average health is critically low!
+            </ModalInfoBox>
+
+            <ModalDivider />
+
+            <ModalInfoRow
+              label="Average Party Health:"
+              value={`${Math.round(showLowHealthWarning.averageHealth)}%`}
+              valueColor="warning"
+            />
+
+            <ModalDivider />
+
+            <ModalText>
+              {showLowHealthWarning.type === 'dungeon'
+                ? 'Entering a dungeon with low health is extremely dangerous! You should rest in town or use healing potions before proceeding.'
+                : 'Engaging in combat with low health is extremely dangerous! You should rest in town or use healing potions before fighting.'}
+            </ModalText>
+
+            <ModalDivider />
+
+            <div style={{
+              padding: '12px',
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '6px',
+              fontSize: '13px',
+              color: '#f87171'
+            }}>
+              <div><strong>Your Party Status:</strong></div>
+              {gameState.activeParty.map((hero) => {
+                const hpPercent = (hero.currentHP / hero.maxHP) * 100;
+                return (
+                  <div key={hero.id} style={{ marginTop: '4px', fontSize: '12px' }}>
+                    {hero.name} (Lv {hero.level}) - ❤️{hero.currentHP}/{hero.maxHP} ({Math.round(hpPercent)}%)
+                  </div>
+                );
+              })}
+            </div>
+
+            <ModalDivider />
+
+            <ModalButtonGroup>
+              <ModalButton
+                onClick={() => {
+                  if (showLowHealthWarning.action) {
+                    showLowHealthWarning.action();
+                  }
+                }}
+                variant="danger"
+                fullWidth={false}
+              >
+                ⚔️ Proceed Anyway
+              </ModalButton>
+              <ModalButton
+                onClick={() => setShowLowHealthWarning(null)}
+                variant="primary"
+                fullWidth={false}
+              >
+                🏃 Retreat
+              </ModalButton>
+            </ModalButtonGroup>
           </>
         )}
       </GameModal>
@@ -1710,7 +1853,8 @@ const styles: Record<string, React.CSSProperties> = {
     border: '1px solid #333',
     flexWrap: 'wrap',
     backdropFilter: 'blur(10px)',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)'
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+    zIndex: 200 // Above canvas (1), other players (100+), and chat bubbles (150)
   },
   infoItem: {
     display: 'flex',

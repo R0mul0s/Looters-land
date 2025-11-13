@@ -26,10 +26,36 @@ interface WeatherTimeWidgetProps {
  * @returns React component
  */
 export function WeatherTimeWidget({ weather, timeOfDay }: WeatherTimeWidgetProps) {
+  // Force re-render every second to update countdown
+  const [, forceUpdate] = React.useReducer(x => x + 1, 0);
+
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      forceUpdate();
+    }, 1000); // Update every second
+
+    return () => clearInterval(interval);
+  }, []);
+
   const weatherDisplay = WeatherSystem.getWeatherDisplay(weather.current);
   const timeDisplay = TimeOfDaySystem.getTimeDisplay(timeOfDay.current);
   const weatherTimeRemaining = WeatherSystem.getTimeUntilChange(weather);
   const timeTimeRemaining = TimeOfDaySystem.getTimeUntilChange(timeOfDay);
+
+  // Debug logging
+  if (weatherTimeRemaining === 'Soon' || timeTimeRemaining === 'Soon') {
+    console.log('⏰ Weather/Time Debug:', {
+      now: new Date().toISOString(),
+      weather: {
+        changesAt: weather.changesAt,
+        timeRemaining: weatherTimeRemaining
+      },
+      time: {
+        changesAt: timeOfDay.changesAt,
+        timeRemaining: timeTimeRemaining
+      }
+    });
+  }
 
   return (
     <div style={styles.container}>

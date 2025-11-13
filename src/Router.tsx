@@ -26,6 +26,7 @@ import type { DungeonEntrance } from './types/worldmap.types';
 import { Dungeon } from './engine/dungeon/Dungeon';
 import { DungeonExplorer } from './components/DungeonExplorer';
 import { useGameState } from './hooks/useGameState';
+import { Hero } from './engine/hero/Hero';
 import App from './App';
 import * as AuthService from './services/AuthService';
 import { CombatEngine } from './engine/combat/CombatEngine';

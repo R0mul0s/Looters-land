@@ -11,6 +11,7 @@
 
 import { supabase } from '../lib/supabase';
 import { ENERGY_CONFIG } from '../config/BALANCE_CONFIG';
+import { WorldMapGenerator } from '../engine/worldmap/WorldMapGenerator';
 
 // ============================================================================
 // TYPES
@@ -325,7 +326,10 @@ export async function resetProgress(): Promise<ServiceResult<void>> {
       }
     }
 
-    // 3. Reset player profile to default values
+    // 3. Get starting position (random town)
+    const startPos = WorldMapGenerator.getStartingPosition(50, 50);
+
+    // 4. Reset player profile to default values
     const { error: profileError } = await supabase
       .from('player_profiles')
       .update({
@@ -335,8 +339,8 @@ export async function resetProgress(): Promise<ServiceResult<void>> {
         gems: 0,
         energy: ENERGY_CONFIG.MAX_ENERGY,
         max_energy: ENERGY_CONFIG.MAX_ENERGY,
-        current_world_x: 25,
-        current_world_y: 25,
+        current_world_x: startPos.x,
+        current_world_y: startPos.y,
         world_map_data: null,
         discovered_locations: [],
         gacha_summon_count: 0,

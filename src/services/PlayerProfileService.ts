@@ -7,6 +7,7 @@
 
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { ENERGY_CONFIG } from '../config/BALANCE_CONFIG';
+import { WorldMapGenerator } from '../engine/worldmap/WorldMapGenerator';
 
 export interface PlayerProfile {
   id: string;
@@ -119,6 +120,9 @@ export class PlayerProfileService {
     }
 
     try {
+      // Get starting position (random town)
+      const startPos = WorldMapGenerator.getStartingPosition(50, 50);
+
       const { data, error } = await supabase
         .from('player_profiles')
         .insert({
@@ -131,8 +135,8 @@ export class PlayerProfileService {
           gems: 100, // Starting gems
           energy: ENERGY_CONFIG.MAX_ENERGY,
           max_energy: ENERGY_CONFIG.MAX_ENERGY,
-          current_world_x: 25,
-          current_world_y: 25
+          current_world_x: startPos.x,
+          current_world_y: startPos.y
         })
         .select()
         .single();

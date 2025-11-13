@@ -175,7 +175,7 @@ The game currently includes:
 19. **Sync Status Indicator** - Real-time database sync status with timestamp display
 20. **Avatar System** - 5 hero avatars (Knight, Ranger, Mage, Shieldbearer, Bard), avatar selection in profile
 21. **Terrain Randomization** - Perlin Noise-based terrain variant system for organic map generation (2 variants per terrain type)
-22. **Visual Enhancements** - Pulsating glow effect on player avatar for improved visibility
+22. **Visual Enhancements** - Pulsating glow effect on player avatar for improved visibility, color-coded glow effects (red for bosses, blue for safe zones, yellow for regular content)
 
 ## Migration Benefits
 
@@ -334,21 +334,39 @@ When adding new features:
   - Code organization: 100% (Clear engine/UI separation)
   - React standards: 90% (Good component structure)
 
+### Color-Coded Glow Effects
+- ✅ **Visual Differentiation System** - Three-tier glow color system for map objects
+  - **RED glow** (shadowBlur: 20): Strongest rare bosses
+    - Ancient Golem, Shadow Dragon, Frost Giant, Phoenix
+    - Indicates high-danger, high-reward encounters
+  - **BLUE glow** (shadowBlur: 18): Safe zones and transport
+    - Towns/Cities (shops, rest areas, upgrades)
+    - Portals (fast travel between locations)
+    - Clear visual indicator for safe areas
+  - **YELLOW glow** (shadowBlur: 15): Regular content (unchanged)
+    - Wandering monsters (random encounters)
+    - Dungeons (explorable instances)
+    - Treasure chests (loot pickups)
+  - Player can now easily distinguish object types at a glance
+  - Improves navigation and decision-making on worldmap
+
 ### Technical Implementation
 - ✅ Avatar loading with switch statement for proper image mapping
 - ✅ Terrain image preloading with batch loading system
 - ✅ Animation state management with useRef and useEffect
 - ✅ Proper cleanup of animation frames on component unmount
 - ✅ Z-index layering (terrain → dynamic → player → static objects)
+- ✅ Canvas shadow effects with dynamic color/blur values per object type
 
 ### Files Modified
-1. **src/components/WorldMapViewer.tsx** - Avatar rendering, terrain variants, pulsating glow
+1. **src/components/WorldMapViewer.tsx** - Avatar rendering, terrain variants, pulsating glow, color-coded glow effects
 2. **src/components/OtherPlayerMarker.tsx** - Avatar display for other players
 3. **src/components/ProfileScreen.tsx** - Avatar selection UI with grid layout
 4. **src/config/AVATAR_CONFIG.ts** - Centralized avatar configuration
 5. **src/services/ProfileService.ts** - updateAvatar() function
 6. **src/hooks/useOtherPlayers.ts** - Avatar field in OtherPlayer interface
-7. **supabase/migrations/20251112_add_avatar_field.sql** - Database schema migration
+7. **src/hooks/useGameState.ts** - Combat power calculation fix, debug logging
+8. **supabase/migrations/20251112_add_avatar_field.sql** - Database schema migration
 
 ## Previous Updates (2025-11-10)
 

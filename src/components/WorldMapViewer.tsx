@@ -1037,6 +1037,10 @@ function WorldMapViewerComponent({
     worldMap.dynamicObjects.forEach(obj => {
       if (!obj.isActive) return;
 
+      // Check if tile is explored (fog of war)
+      const tile = worldMap.tiles[obj.position.y]?.[obj.position.x];
+      if (!tile || !tile.isExplored) return;
+
       const screenX = (obj.position.x - viewport.x) * TILE_SIZE;
       const screenY = (obj.position.y - viewport.y) * TILE_SIZE;
 

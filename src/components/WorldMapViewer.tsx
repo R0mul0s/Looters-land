@@ -85,7 +85,7 @@ interface WorldMapViewerProps {
   playerChatTimestamp?: Date; // Timestamp of current player's chat message
   weather?: WeatherState; // Current weather state
   timeOfDay?: TimeState; // Current time of day state
-  onTileClick?: (x: number, y: number) => void;
+  onTileClick?: (x: number, y: number, isPathMovement?: boolean) => void;
   onObjectClick?: (object: StaticObject) => void;
 }
 
@@ -230,6 +230,7 @@ function WorldMapViewerComponent({
   const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[] | null>(null);
   const [isMoving, setIsMoving] = useState(false);
   const [movementProgress, setMovementProgress] = useState(0); // 0 to 1 for interpolation between tiles
+  const [facingLeft, setFacingLeft] = useState(false); // Track if player is facing left
 
   // Perlin noise for smooth variant distribution (prevents checkerboard pattern)
   const variantNoise = useRef<PerlinNoise | null>(null);
@@ -1207,17 +1208,49 @@ function WorldMapViewerComponent({
     if (heroImage) {
       // Make hero slightly larger (1.2x tile size) and center it on the tile
       const heroSize = TILE_SIZE * 1.2;
-      const heroOffsetX = playerScreenX - (heroSize - TILE_SIZE) / 2;
-      const heroOffsetY = playerScreenY - (heroSize - TILE_SIZE) / 2;
+      let heroOffsetX = playerScreenX - (heroSize - TILE_SIZE) / 2;
+      let heroOffsetY = playerScreenY - (heroSize - TILE_SIZE) / 2;
+
+      // Add bouncing animation when moving (like riding a horse)
+      if (isMoving && currentPath && currentPath.length > 0) {
+        const bounceSpeed = 0.01; // Speed of bouncing
+        const bounceAmount = TILE_SIZE * 0.1; // How high the bounce goes (10% of tile size)
+        const bounceOffset = Math.abs(Math.sin(elapsedTime * bounceSpeed)) * bounceAmount;
+        heroOffsetY -= bounceOffset; // Move up during bounce
+      }
+
+      // Apply horizontal flip if facing left
+      if (facingLeft) {
+        ctx.save();
+        ctx.translate(heroOffsetX + heroSize / 2, 0); // Move to center of hero
+        ctx.scale(-1, 1); // Flip horizontally
+        ctx.translate(-(heroOffsetX + heroSize / 2), 0); // Move back
+      }
 
       // Draw hero image centered on tile with increased size
       ctx.drawImage(heroImage, heroOffsetX, heroOffsetY, heroSize, heroSize);
+
+      // Restore context if we flipped
+      if (facingLeft) {
+        ctx.restore();
+      }
     } else {
       // Fallback to emoji if image not loaded yet
       ctx.font = `${Math.floor(TILE_SIZE * 0.9)}px sans-serif`;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('🧙', playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE / 2);
+
+      let emojiY = playerScreenY + TILE_SIZE / 2;
+
+      // Add bouncing animation when moving
+      if (isMoving && currentPath && currentPath.length > 0) {
+        const bounceSpeed = 0.01;
+        const bounceAmount = TILE_SIZE * 0.1;
+        const bounceOffset = Math.abs(Math.sin(elapsedTime * bounceSpeed)) * bounceAmount;
+        emojiY -= bounceOffset;
+      }
+
+      ctx.fillText('🧙', playerScreenX + TILE_SIZE / 2, emojiY);
     }
 
     // Reset shadow
@@ -1270,7 +1303,7 @@ function WorldMapViewerComponent({
       });
     }
 
-  }, [worldMap, playerPosition, viewport, zoom, TILE_SIZE, terrainImages, heroImage, dungeonImages, weather, timeOfDay, animationTrigger, currentPath]);
+  }, [worldMap, playerPosition, viewport, zoom, TILE_SIZE, terrainImages, heroImage, dungeonImages, weather, timeOfDay, animationTrigger, currentPath, isMoving, facingLeft]);
 
   /**
    * Animation loop for pulsating glow effect and weather particles
@@ -1315,9 +1348,18 @@ function WorldMapViewerComponent({
         // Move to next tile
         const nextPosition = currentPath[0];
 
+        // Update facing direction based on movement
+        if (nextPosition.x < playerPosition.x) {
+          setFacingLeft(true); // Moving left
+        } else if (nextPosition.x > playerPosition.x) {
+          setFacingLeft(false); // Moving right
+        }
+        // If moving only vertically (y direction), keep current facing direction
+
         // Call the onTileClick callback to actually move the player
+        // Pass true to indicate this is automatic path movement (don't trigger object interactions)
         if (onTileClick) {
-          onTileClick(nextPosition.x, nextPosition.y);
+          onTileClick(nextPosition.x, nextPosition.y, true);
         }
 
         // Remove the first position from the path
@@ -1339,7 +1381,7 @@ function WorldMapViewerComponent({
     const intervalId = setInterval(moveStep, 16); // ~60fps
 
     return () => clearInterval(intervalId);
-  }, [currentPath, isMoving, onTileClick]);
+  }, [currentPath, isMoving, onTileClick, playerPosition]);
 
   /**
    * Get terrain variant for a specific tile using Perlin noise

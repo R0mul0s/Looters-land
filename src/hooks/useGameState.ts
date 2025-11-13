@@ -14,6 +14,7 @@ import { Item } from '../engine/item/Item';
 import { PlayerProfileService } from '../services/PlayerProfileService';
 import type { PlayerProfile } from '../services/PlayerProfileService';
 import { GameSaveService } from '../services/GameSaveService';
+import { DynamicObjectUpdaterService } from '../services/DynamicObjectUpdaterService';
 import * as AuthService from '../services/AuthService';
 import type { WorldMap, StaticObjectType } from '../types/worldmap.types';
 import type { GachaState } from '../types/hero.types';
@@ -568,6 +569,45 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       supabase.removeChannel(profileSubscription);
     };
   }, [state.profile]);
+
+  /**
+   * Periodic update for dynamic objects (wandering monsters, traveling merchants)
+   * Runs every 5 minutes to check for respawns and despawns
+   */
+  useEffect(() => {
+    if (!state.worldMap || !userIdRef.current) return;
+
+    console.log('⏰ Starting dynamic object updater (5-minute interval)');
+
+    // Update immediately on mount
+    const updateDynamicObjects = () => {
+      const currentWorldMap = stateRef.current.worldMap;
+      if (!currentWorldMap) return;
+
+      console.log('🔄 Checking dynamic objects for updates...');
+      const result = DynamicObjectUpdaterService.updateDynamicObjects(currentWorldMap);
+
+      if (result.updated) {
+        console.log('✅ Dynamic objects updated, saving to database...');
+        setState(prev => ({ ...prev, worldMap: result.worldMap }));
+        // Auto-save will be triggered by the state change
+        scheduleAutoSave();
+      } else {
+        console.log('⏭️ No dynamic object updates needed');
+      }
+    };
+
+    // Run immediately
+    updateDynamicObjects();
+
+    // Then run every 5 minutes
+    const intervalId = setInterval(updateDynamicObjects, 5 * 60 * 1000);
+
+    return () => {
+      console.log('⏰ Cleaning up dynamic object updater');
+      clearInterval(intervalId);
+    };
+  }, [state.worldMap, scheduleAutoSave]);
 
   /**
    * Actions

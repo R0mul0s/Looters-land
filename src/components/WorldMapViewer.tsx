@@ -20,6 +20,7 @@ import type { OtherPlayer } from '../hooks/useOtherPlayers';
 import { t } from '../localization/i18n';
 import { PerlinNoise } from '../engine/worldmap/PerlinNoise';
 import { TimeOfDaySystem } from '../engine/worldmap/TimeOfDaySystem';
+import { findPath } from '../utils/pathfinding';
 
 // Import terrain images
 import forest1Img from '../assets/images/terrian/forest1.png';
@@ -224,6 +225,11 @@ function WorldMapViewerComponent({
     shadowDragon: null,
     phoenix: null
   });
+
+  // Pathfinding and movement state
+  const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[] | null>(null);
+  const [isMoving, setIsMoving] = useState(false);
+  const [movementProgress, setMovementProgress] = useState(0); // 0 to 1 for interpolation between tiles
 
   // Perlin noise for smooth variant distribution (prevents checkerboard pattern)
   const variantNoise = useRef<PerlinNoise | null>(null);
@@ -1121,6 +1127,62 @@ function WorldMapViewerComponent({
       }
     });
 
+    // === PATH VISUALIZATION - LAYER 4.5 (Between objects and player) ===
+    // Draw the movement path if it exists
+    if (currentPath && currentPath.length > 0) {
+      ctx.save();
+
+      // Draw path as connected line segments
+      ctx.strokeStyle = 'rgba(255, 255, 100, 0.8)'; // Yellow path
+      ctx.lineWidth = 4;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      ctx.beginPath();
+
+      // Start from player's current position
+      const startTileOffsetX = playerPosition.x - viewport.x;
+      const startTileOffsetY = playerPosition.y - viewport.y;
+      const startScreenX = startTileOffsetX * TILE_SIZE + TILE_SIZE / 2;
+      const startScreenY = startTileOffsetY * TILE_SIZE + TILE_SIZE / 2;
+      ctx.moveTo(startScreenX, startScreenY);
+
+      // Draw line through each path point
+      currentPath.forEach(point => {
+        const tileOffsetX = point.x - viewport.x;
+        const tileOffsetY = point.y - viewport.y;
+        const screenX = tileOffsetX * TILE_SIZE + TILE_SIZE / 2;
+        const screenY = tileOffsetY * TILE_SIZE + TILE_SIZE / 2;
+        ctx.lineTo(screenX, screenY);
+      });
+
+      ctx.stroke();
+
+      // Draw dots at each waypoint
+      currentPath.forEach((point, index) => {
+        const tileOffsetX = point.x - viewport.x;
+        const tileOffsetY = point.y - viewport.y;
+        const screenX = tileOffsetX * TILE_SIZE + TILE_SIZE / 2;
+        const screenY = tileOffsetY * TILE_SIZE + TILE_SIZE / 2;
+
+        // Draw a circle at each waypoint
+        ctx.fillStyle = 'rgba(255, 255, 100, 0.6)';
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Draw number for last waypoint (destination)
+        if (index === currentPath.length - 1) {
+          ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, 8, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      ctx.restore();
+    }
+
     // === MAIN PLAYER - LAYER 5 (Topmost, always visible above everything) ===
     // Calculate player's position on screen (center of viewport)
     const playerTileOffsetX = playerPosition.x - viewport.x;
@@ -1208,7 +1270,7 @@ function WorldMapViewerComponent({
       });
     }
 
-  }, [worldMap, playerPosition, viewport, zoom, TILE_SIZE, terrainImages, heroImage, dungeonImages, weather, timeOfDay, animationTrigger]);
+  }, [worldMap, playerPosition, viewport, zoom, TILE_SIZE, terrainImages, heroImage, dungeonImages, weather, timeOfDay, animationTrigger, currentPath]);
 
   /**
    * Animation loop for pulsating glow effect and weather particles
@@ -1230,6 +1292,54 @@ function WorldMapViewerComponent({
       }
     };
   }, []);
+
+  /**
+   * Movement animation system - handles step-by-step movement along the path
+   * Moves player one tile at a time with smooth animation
+   */
+  useEffect(() => {
+    if (!currentPath || currentPath.length === 0 || !isMoving) {
+      return;
+    }
+
+    const MOVEMENT_SPEED = 300; // milliseconds per tile
+    let animationStartTime = Date.now();
+
+    const moveStep = () => {
+      const elapsed = Date.now() - animationStartTime;
+      const progress = Math.min(elapsed / MOVEMENT_SPEED, 1);
+
+      setMovementProgress(progress);
+
+      if (progress >= 1) {
+        // Move to next tile
+        const nextPosition = currentPath[0];
+
+        // Call the onTileClick callback to actually move the player
+        if (onTileClick) {
+          onTileClick(nextPosition.x, nextPosition.y);
+        }
+
+        // Remove the first position from the path
+        const newPath = currentPath.slice(1);
+        setCurrentPath(newPath);
+
+        // If there are more positions, continue moving
+        if (newPath.length > 0) {
+          animationStartTime = Date.now();
+          setMovementProgress(0);
+        } else {
+          // Path complete
+          setIsMoving(false);
+          setMovementProgress(0);
+        }
+      }
+    };
+
+    const intervalId = setInterval(moveStep, 16); // ~60fps
+
+    return () => clearInterval(intervalId);
+  }, [currentPath, isMoving, onTileClick]);
 
   /**
    * Get terrain variant for a specific tile using Perlin noise
@@ -1279,7 +1389,7 @@ function WorldMapViewerComponent({
    * Handle canvas click
    *
    * @description Processes mouse click events on canvas, calculates clicked tile position,
-   * and triggers appropriate callbacks for tile or object clicks
+   * and triggers pathfinding to move player step-by-step to the destination
    * @param e - React mouse event from canvas
    *
    * @example
@@ -1290,6 +1400,9 @@ function WorldMapViewerComponent({
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>): void => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
+    // Don't allow new path while already moving
+    if (isMoving) return;
 
     const rect = canvas.getBoundingClientRect();
     const clickX = e.clientX - rect.left;
@@ -1302,10 +1415,23 @@ function WorldMapViewerComponent({
     if (tileX >= 0 && tileX < worldMap.width && tileY >= 0 && tileY < worldMap.height) {
       const tile = worldMap.tiles[tileY][tileX];
 
+      // If clicking on an object, handle object click
       if (tile.staticObject && onObjectClick) {
         onObjectClick(tile.staticObject);
-      } else if (onTileClick) {
-        onTileClick(tileX, tileY);
+        return;
+      }
+
+      // Otherwise, find path to the clicked tile
+      const path = findPath(worldMap, playerPosition.x, playerPosition.y, tileX, tileY);
+
+      if (path) {
+        // Set the path and start movement
+        setCurrentPath(path);
+        setIsMoving(true);
+        setMovementProgress(0);
+      } else {
+        // No path found (destination is unreachable)
+        console.log('No path found to destination');
       }
     }
   };

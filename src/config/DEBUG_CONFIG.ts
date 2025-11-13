@@ -138,6 +138,35 @@ if (typeof window !== 'undefined') {
     setTimeout(() => location.reload(), 1000);
   };
 
+  /**
+   * DISABLED - Fix duplicate heroes
+   * This function has been disabled due to bugs that deleted all heroes
+   */
+  (window as any).fixDuplicateHeroes = async () => {
+    console.error('❌ This function has been DISABLED due to bugs.');
+    console.error('   It incorrectly detected all heroes as duplicates.');
+    console.error('   Use window.showAllHeroes() to see your current heroes.');
+  };
+
+  /**
+   * Show all heroes in the collection
+   */
+  (window as any).showAllHeroes = () => {
+    const gameActions = (window as any).__gameActions;
+    const gameState = (window as any).__gameState;
+
+    if (!gameState) {
+      console.error('❌ Game not loaded yet');
+      return;
+    }
+
+    console.log('📋 All Heroes in Collection:');
+    console.log(`   Total: ${gameState.allHeroes.length} heroes`);
+    gameState.allHeroes.forEach((hero: any, index: number) => {
+      console.log(`   ${index + 1}. ${hero.name} (${hero.heroClass}) - Lv${hero.level} - ID: ${hero.id}`);
+    });
+  };
+
   console.log('🐛 Debug commands available:');
   console.log('  Energy:');
   console.log('    - window.enableUnlimitedEnergy()');
@@ -148,6 +177,8 @@ if (typeof window !== 'undefined') {
   console.log('  Gacha:');
   console.log('    - window.showGachaState() - Show current gacha state');
   console.log('    - window.resetDailyGacha() - Reset daily free summon');
+  console.log('  Heroes:');
+  console.log('    - window.fixDuplicateHeroes() - Fix duplicate heroes (converts to talents)');
   console.log('  World Map:');
   console.log('    - window.resetWorldMap() - Generate new world map');
 }

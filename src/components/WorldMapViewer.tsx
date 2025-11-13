@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import type { WorldMap, Tile, StaticObject, DynamicObject, WeatherState, TimeState } from '../types/worldmap.types';
+import type { WorldMap, Tile, DynamicObject, WeatherState, TimeState } from '../types/worldmap.types';
 import { TERRAIN_ICONS } from '../types/worldmap.types';
 import { OtherPlayerMarker } from './OtherPlayerMarker';
 import { ChatBubble } from './ChatBubble';
@@ -61,6 +61,11 @@ import portal1Img from '../assets/images/object/portal1.png';
 import portal2Img from '../assets/images/object/portal2.png';
 import portal3Img from '../assets/images/object/portal3.png';
 import portal4Img from '../assets/images/object/portal4.png';
+import travelingMerchant1Img from '../assets/images/object/traveling-merchant1.png';
+import travelingMerchant2Img from '../assets/images/object/traveling-merchant2.png';
+import travelingMerchant3Img from '../assets/images/object/traveling-merchant3.png';
+import hiddenPath1Img from '../assets/images/object/hidden-path1.png';
+import hiddenPath2Img from '../assets/images/object/hidden-path2.png';
 
 // Import monster images
 import ancientGolemImg from '../assets/images/monster/ancient-golem.png';
@@ -86,7 +91,7 @@ interface WorldMapViewerProps {
   weather?: WeatherState; // Current weather state
   timeOfDay?: TimeState; // Current time of day state
   onTileClick?: (x: number, y: number, isPathMovement?: boolean) => void;
-  onObjectClick?: (object: StaticObject) => void;
+  onCancelMovement?: () => void; // Callback when player cancels movement
 }
 
 /**
@@ -117,7 +122,7 @@ function WorldMapViewerComponent({
   weather,
   timeOfDay,
   onTileClick,
-  onObjectClick
+  onCancelMovement
 }: WorldMapViewerProps) {
   const [zoom, setZoom] = useState(1);
   const [viewport, setViewport] = useState({ x: 0, y: 0 });
@@ -195,6 +200,17 @@ function WorldMapViewerComponent({
     portal2: null,
     portal3: null,
     portal4: null
+  });
+
+  // Traveling merchant images
+  const [travelingMerchantImages, setTravelingMerchantImages] = useState<{
+    merchant1: HTMLImageElement | null;
+    merchant2: HTMLImageElement | null;
+    merchant3: HTMLImageElement | null;
+  }>({
+    merchant1: null,
+    merchant2: null,
+    merchant3: null
   });
 
   // Monster images
@@ -440,6 +456,42 @@ function WorldMapViewerComponent({
     images.portal4.onerror = () => console.error('Failed to load portal4.png');
   }, []);
 
+  // Load traveling merchant images
+  useEffect(() => {
+    const images = {
+      merchant1: new Image(),
+      merchant2: new Image(),
+      merchant3: new Image()
+    };
+
+    images.merchant1.src = travelingMerchant1Img;
+    images.merchant2.src = travelingMerchant2Img;
+    images.merchant3.src = travelingMerchant3Img;
+
+    let loadedCount = 0;
+    const totalImages = 3;
+
+    const onLoad = () => {
+      loadedCount++;
+      if (loadedCount === totalImages) {
+        setTravelingMerchantImages({
+          merchant1: images.merchant1,
+          merchant2: images.merchant2,
+          merchant3: images.merchant3
+        });
+        console.log('✅ All traveling merchant images loaded successfully');
+      }
+    };
+
+    images.merchant1.onload = onLoad;
+    images.merchant2.onload = onLoad;
+    images.merchant3.onload = onLoad;
+
+    images.merchant1.onerror = () => console.error('Failed to load traveling-merchant1.png');
+    images.merchant2.onerror = () => console.error('Failed to load traveling-merchant2.png');
+    images.merchant3.onerror = () => console.error('Failed to load traveling-merchant3.png');
+  }, []);
+
   // Load monster images
   useEffect(() => {
     const images = {
@@ -675,6 +727,7 @@ function WorldMapViewerComponent({
       screenY: number;
       objectType: string;
       objectId?: string;
+      isDefeatedOrOpened?: boolean;
       objectName?: string;
     }> = [];
 
@@ -782,7 +835,14 @@ function WorldMapViewerComponent({
               break;
           }
           if (icon) {
-            staticObjectsToRender.push({ icon, screenX, screenY, objectType, objectId, objectName });
+            // Check if object is defeated/opened for grayscale rendering
+            let isDefeatedOrOpened = false;
+            if (tile.staticObject.type === 'treasureChest' && 'opened' in tile.staticObject) {
+              isDefeatedOrOpened = tile.staticObject.opened === true;
+            } else if (tile.staticObject.type === 'rareSpawn' && 'defeated' in tile.staticObject) {
+              isDefeatedOrOpened = tile.staticObject.defeated === true;
+            }
+            staticObjectsToRender.push({ icon, screenX, screenY, objectType, objectId, objectName, isDefeatedOrOpened });
           }
         }
 
@@ -800,7 +860,12 @@ function WorldMapViewerComponent({
     ctx.font = `${Math.floor(TILE_SIZE * 0.8)}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    staticObjectsToRender.forEach(({ icon, screenX, screenY, objectType, objectId, objectName }) => {
+    staticObjectsToRender.forEach(({ icon, screenX, screenY, objectType, objectId, objectName, isDefeatedOrOpened }) => {
+      // Apply grayscale filter for defeated/opened objects
+      if (isDefeatedOrOpened) {
+        ctx.filter = 'grayscale(100%) brightness(0.6)';
+        ctx.globalAlpha = 0.6;
+      }
       // Use dungeon images for dungeons if available
       if (objectType === 'dungeon' && objectId) {
         // Select dungeon image based on dungeon ID (0 = dungeon1, 1 = dungeon2, etc.)
@@ -922,6 +987,41 @@ function WorldMapViewerComponent({
           ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
           ctx.shadowBlur = 0;
         }
+      } else if (objectType === 'hiddenPath' && objectId) {
+        // Use hidden path images for hidden paths if available
+        // Select image based on path ID (alternating between 2 images)
+        const pathIndex = parseInt(objectId.split('-')[2] || '0');
+
+        // Create image objects directly from imports
+        const path1 = new Image();
+        path1.src = hiddenPath1Img;
+        const path2 = new Image();
+        path2.src = hiddenPath2Img;
+
+        const hiddenPathImg = (pathIndex % 2 === 0) ? path1 : path2;
+
+        // Draw hidden path image
+        if (hiddenPathImg.complete) {
+          // Add GOLDEN glow effect for hidden paths (mysterious/valuable)
+          ctx.shadowColor = '#ffd700';
+          ctx.shadowBlur = 20;
+
+          // Make hidden path larger (1.4x tile size) and center it
+          const pathSize = TILE_SIZE * 1.4;
+          const pathOffsetX = screenX - (pathSize - TILE_SIZE) / 2;
+          const pathOffsetY = screenY - (pathSize - TILE_SIZE) / 2;
+
+          ctx.drawImage(hiddenPathImg, pathOffsetX, pathOffsetY, pathSize, pathSize);
+
+          // Reset shadow
+          ctx.shadowBlur = 0;
+        } else {
+          // Fallback to emoji if image not loaded
+          ctx.shadowColor = '#ffd700';
+          ctx.shadowBlur = 20;
+          ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+          ctx.shadowBlur = 0;
+        }
       } else if (objectType === 'rareSpawn' && objectName === 'Ancient Golem') {
         // Use Ancient Golem image for Ancient Golem rare spawn
         if (monsterImages.ancientGolem) {
@@ -1038,6 +1138,12 @@ function WorldMapViewerComponent({
         // Draw emoji for other object types
         ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
       }
+
+      // Reset filter and alpha for defeated/opened objects
+      if (isDefeatedOrOpened) {
+        ctx.filter = 'none';
+        ctx.globalAlpha = 1.0;
+      }
     });
 
     // Draw dynamic objects (wandering monsters, traveling merchants) - LAYER 3
@@ -1058,6 +1164,15 @@ function WorldMapViewerComponent({
         screenY >= -TILE_SIZE &&
         screenY <= VIEWPORT_HEIGHT
       ) {
+        // Check if monster is defeated for grayscale rendering
+        const isDefeated = obj.type === 'wanderingMonster' && 'defeated' in obj && obj.defeated === true;
+
+        // Apply grayscale filter for defeated monsters
+        if (isDefeated) {
+          ctx.filter = 'grayscale(100%) brightness(0.6)';
+          ctx.globalAlpha = 0.6;
+        }
+
         let icon = '';
         let useImage = false;
         let imgToUse: HTMLImageElement | null = null;
@@ -1099,6 +1214,30 @@ function WorldMapViewerComponent({
             break;
           case 'travelingMerchant':
             icon = '🛒';
+            // Use traveling merchant images with rotation (modulo 3)
+            if (obj.id) {
+              const merchantIndex = parseInt(obj.id.split('-')[1] || '0');
+              switch (merchantIndex % 3) {
+                case 0:
+                  if (travelingMerchantImages.merchant1) {
+                    useImage = true;
+                    imgToUse = travelingMerchantImages.merchant1;
+                  }
+                  break;
+                case 1:
+                  if (travelingMerchantImages.merchant2) {
+                    useImage = true;
+                    imgToUse = travelingMerchantImages.merchant2;
+                  }
+                  break;
+                case 2:
+                  if (travelingMerchantImages.merchant3) {
+                    useImage = true;
+                    imgToUse = travelingMerchantImages.merchant3;
+                  }
+                  break;
+              }
+            }
             break;
           case 'event':
             icon = '⭐';
@@ -1124,6 +1263,12 @@ function WorldMapViewerComponent({
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
           ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+        }
+
+        // Reset filter and alpha for defeated monsters
+        if (isDefeated) {
+          ctx.filter = 'none';
+          ctx.globalAlpha = 1.0;
         }
       }
     });
@@ -1371,9 +1516,24 @@ function WorldMapViewerComponent({
           animationStartTime = Date.now();
           setMovementProgress(0);
         } else {
-          // Path complete
+          // Path complete - check if there's an object at destination and interact with it
           setIsMoving(false);
           setMovementProgress(0);
+
+          // Check if we arrived at a tile with an object and trigger interaction
+          const destTile = worldMap.tiles[nextPosition.y]?.[nextPosition.x];
+          if (destTile) {
+            const hasStaticObject = destTile.staticObject;
+            const hasDynamicObject = worldMap.dynamicObjects.some(
+              obj => obj.position.x === nextPosition.x && obj.position.y === nextPosition.y && obj.isActive
+            );
+
+            // If there's an object at destination, call onTileClick with isPathMovement = false
+            // to trigger the object interaction (open chest, enter town, etc.)
+            if ((hasStaticObject || hasDynamicObject) && onTileClick) {
+              onTileClick(nextPosition.x, nextPosition.y, false);
+            }
+          }
         }
       }
     };
@@ -1428,6 +1588,27 @@ function WorldMapViewerComponent({
   };
 
   /**
+   * Handle cancel movement
+   *
+   * @description Stops current movement and clears the path at current position.
+   */
+  const handleCancelMovement = () => {
+    if (!isMoving || !currentPath) return;
+
+    console.log('⛔ Cancelling movement at current position');
+
+    // Stop movement and clear path
+    setIsMoving(false);
+    setCurrentPath(null);
+    setMovementProgress(0);
+
+    // Call parent callback if provided
+    if (onCancelMovement) {
+      onCancelMovement();
+    }
+  };
+
+  /**
    * Handle canvas click
    *
    * @description Processes mouse click events on canvas, calculates clicked tile position,
@@ -1457,13 +1638,24 @@ function WorldMapViewerComponent({
     if (tileX >= 0 && tileX < worldMap.width && tileY >= 0 && tileY < worldMap.height) {
       const tile = worldMap.tiles[tileY][tileX];
 
-      // If clicking on an object, handle object click
-      if (tile.staticObject && onObjectClick) {
-        onObjectClick(tile.staticObject);
-        return;
+      // Check if clicking on the player's current position
+      const isCurrentPosition = tileX === playerPosition.x && tileY === playerPosition.y;
+
+      // If clicking on current position with an object, interact with it directly (no movement needed)
+      if (isCurrentPosition && onTileClick) {
+        // Check for static or dynamic objects at current position
+        const hasObject = tile.staticObject || worldMap.dynamicObjects.some(
+          obj => obj.position.x === tileX && obj.position.y === tileY && obj.isActive
+        );
+
+        if (hasObject) {
+          // Call onTileClick with isPathMovement = false to trigger object interaction
+          onTileClick(tileX, tileY, false);
+          return;
+        }
       }
 
-      // Otherwise, find path to the clicked tile
+      // For any other click (different position), use pathfinding
       const path = findPath(worldMap, playerPosition.x, playerPosition.y, tileX, tileY);
 
       if (path) {
@@ -1662,7 +1854,7 @@ function WorldMapViewerComponent({
             position: 'absolute',
             left: `${VIEWPORT_WIDTH / 2}px`,
             top: `${VIEWPORT_HEIGHT / 2}px`,
-            zIndex: -50 // Under canvas so weather effects (on canvas) cover it
+            zIndex: 150 // Above canvas and other players
           }}
         >
           <ChatBubble
@@ -1670,6 +1862,53 @@ function WorldMapViewerComponent({
             timestamp={playerChatTimestamp}
             offsetY={-80}
           />
+        </div>
+      )}
+
+      {/* Cancel Movement Button - shown when player is moving */}
+      {isMoving && currentPath && currentPath.length > 0 && (
+        <div
+          style={{
+            position: 'absolute',
+            left: `${VIEWPORT_WIDTH / 2}px`,
+            top: `${VIEWPORT_HEIGHT / 2 + 45}px`, // Below player avatar
+            transform: 'translateX(-50%)', // Center horizontally
+            zIndex: 160 // Above everything
+          }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCancelMovement();
+            }}
+            style={{
+              padding: '6px 16px',
+              backgroundColor: 'rgba(239, 68, 68, 0.95)',
+              color: 'white',
+              border: '2px solid rgba(220, 38, 38, 1)',
+              borderRadius: '8px',
+              fontSize: '13px',
+              fontWeight: 'bold',
+              cursor: 'pointer',
+              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.4), 0 0 12px rgba(239, 68, 68, 0.6)',
+              transition: 'all 0.2s ease',
+              fontFamily: 'inherit',
+              whiteSpace: 'nowrap',
+              textShadow: '0 1px 2px rgba(0, 0, 0, 0.8)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 1)';
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.5), 0 0 16px rgba(239, 68, 68, 0.8)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.95)';
+              e.currentTarget.style.transform = 'scale(1)';
+              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.4), 0 0 12px rgba(239, 68, 68, 0.6)';
+            }}
+          >
+            ⛔ {t('worldmap.cancelMovement')}
+          </button>
         </div>
       )}
 
@@ -1693,7 +1932,7 @@ function WorldMapViewerComponent({
               position: 'absolute',
               left: `${screenX}px`,
               top: `${screenY}px`,
-              zIndex: -100 + player.y // Negative z-index to render UNDER canvas (main player is on canvas)
+              zIndex: 100 + player.y // Above canvas (zIndex: 1) but below UI elements (zIndex: 10+)
             }}
           >
             {/* Chat Bubble (if message exists and recent) */}
@@ -1797,6 +2036,8 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'crosshair',
     display: 'block',
     width: '100%',
-    height: '100%'
+    height: '100%',
+    position: 'relative',
+    zIndex: 1 // Base layer for canvas
   }
 };

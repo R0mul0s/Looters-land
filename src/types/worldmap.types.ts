@@ -108,7 +108,7 @@ export interface HiddenPath extends StaticObject {
   type: 'hiddenPath';
   discovered: boolean;
   lootQuality: 'rare' | 'epic' | 'legendary';
-  requiredLevel: number;
+  requiredCombatPower: number;
 }
 
 export interface TreasureChest extends StaticObject {

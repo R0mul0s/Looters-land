@@ -1,6 +1,6 @@
 # Looters Land - Documentation Index
 
-**Last Updated:** 2025-11-10
+**Last Updated:** 2025-11-13
 
 ---
 
@@ -34,6 +34,16 @@ Located in `technical/`:
 - **[LOCALIZATION.md](technical/LOCALIZATION.md)** - Internationalization (i18n) guide
 - **[SUPABASE_SETUP.md](technical/SUPABASE_SETUP.md)** - Database setup and configuration
 - **[DEPLOY_INSTRUCTIONS.md](technical/DEPLOY_INSTRUCTIONS.md)** - Deployment guide for production
+
+### Implementation Guides
+
+Located in `../docs/`:
+
+- **[GLOBAL_WORLD_STATE_SETUP.md](../docs/GLOBAL_WORLD_STATE_SETUP.md)** - Global weather & time system setup
+- **[WORLDMAP_COMBAT_ARCHITECTURE.md](../docs/WORLDMAP_COMBAT_ARCHITECTURE.md)** - Quick combat system architecture
+- **[HOW_TO_VIEW_EDGE_FUNCTION_LOGS.md](../docs/HOW_TO_VIEW_EDGE_FUNCTION_LOGS.md)** - Supabase Edge Function debugging
+- **[GLOBAL_WEATHER_TIME_FIX.md](../docs/GLOBAL_WEATHER_TIME_FIX.md)** - Weather/time system troubleshooting
+- **[DEBUG_WEATHER_TIME_UPDATES.md](../docs/DEBUG_WEATHER_TIME_UPDATES.md)** - Debugging weather/time cron jobs
 
 ---
 

@@ -382,6 +382,7 @@ export const cs: LocaleKeys = {
     merchantSoldOut: 'Obchodník vyprodal všechny své předměty!',
     randomEventComingSoon: 'Náhodná Událost: {{eventType}}\nFunkce připravujeme!',
     itemSold: '✅ Prodáno {{itemName}} za {{gold}} zlata!',
+    cancelMovement: 'Zrušit',
   },
 
   // ============================================================================
@@ -1043,6 +1044,34 @@ export const cs: LocaleKeys = {
         item2: 'Row Level Security (RLS) policies',
         item3: 'Real-time updates',
         item4: 'Cloud saves',
+      },
+    },
+
+    // Version 2.3.3
+    v2_3_3: {
+      features: {
+        item1: 'Globální systém počasí a času - Synchronizované počasí a denní doba napříč všemi hráči v reálném čase',
+        item2: 'Systém pojmenovaných nepřátel - Speciální bossové (Prastarý golem, Stínový drak, Mrazivý obr, Fénix) a elitní monstra',
+        item3: 'Systém rychlého boje - Rychlé boje na mapě světa s auto/manuálním režimem a sběrem kořisti',
+        item4: 'Vylepšený systém modálů - Znovu použitelné stylované modální komponenty (ModalText, ModalButton, ModalInfoBox)',
+        item5: 'Vizuální objekty na mapě - Obrázky skrytých cest a vizuální zobrazení tajemství',
+        item6: 'Widget počasí a času - Živé odpočty do další změny počasí/času',
+        item7: 'Vylepšený Gacha systém - Denní zdarma召唤 s 10% slevou na 10x召唤',
+      },
+      fixes: {
+        item1: 'Opravena porážka v boji - Hrdinové nyní správně uloženi do databáze s 10% HP po porážce',
+        item2: 'Opraven dungeon combat - Používání hrdinů z combat engine místo zastaralého gameState, aby se předešlo ztrátě XP/levelů',
+        item3: 'Opraveno HP hrdinů po vítězství - Správná synchronizace mezi combat engine a game state',
+      },
+      technical: {
+        item1: 'Přidán useGlobalWorldState hook pro Supabase realtime odběry',
+        item2: 'Vytvořen GlobalWorldStateService pro správu dat počasí/času',
+        item3: 'Přidána Supabase Edge funkce pro automatické aktualizace počasí/času přes cron',
+        item4: 'Implementován NamedEnemies.ts s tematickými skupinami nepřátel a násobiteli statů',
+        item5: 'Přidáno 5 nových dokumentačních souborů (GLOBAL_WORLD_STATE_SETUP, WORLDMAP_COMBAT_ARCHITECTURE, atd.)',
+        item6: 'Vytvořena SQL migrace pro tabulku global_world_state s RLS politikami',
+        item7: 'Přidány debug nástroje pro monitoring weather/time cron jobů',
+        item8: 'Vylepšena správa herního stavu s lepší synchronizací party',
       },
     },
 

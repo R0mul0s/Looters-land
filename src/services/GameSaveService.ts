@@ -135,23 +135,52 @@ export class GameSaveService {
         };
       });
 
+      console.log('💾 Inserting heroes into database:', {
+        heroCount: heroInserts.length,
+        heroes: heroInserts.map(h => ({
+          name: h.hero_name,
+          level: h.level,
+          hp: h.current_hp,
+          maxHP: h.max_hp,
+          xp: h.experience,
+          requiredXP: h.required_xp
+        }))
+      });
+
       const { data: savedHeroes, error: heroError } = await supabase
         .from('heroes')
         .insert(heroInserts)
         .select();
 
       if (heroError || !savedHeroes) {
-        console.error('Hero save error:', heroError);
+        console.error('❌ Hero save error:', heroError);
+        console.error('❌ Hero inserts that failed:', heroInserts);
         return {
           success: false,
           message: t('saveGame.heroSaveFailed')
         };
       }
 
+      console.log('✅ Heroes saved to database:', {
+        savedCount: savedHeroes.length,
+        dbIds: savedHeroes.map(h => h.id),
+        heroDetails: savedHeroes.map(h => ({
+          id: h.id,
+          name: h.hero_name,
+          level: h.level,
+          hp: h.current_hp,
+          maxHP: h.max_hp,
+          xp: h.experience,
+          requiredXP: h.required_xp
+        }))
+      });
+
       // 4. Save equipment slots for each hero
       const equipmentInserts: DBEquipmentSlotInsert[] = [];
       heroes.forEach((hero, index) => {
         const dbHeroId = savedHeroes[index].id;
+        console.log(`🎒 Processing equipment for hero ${hero.name} (memory ID: ${hero.id}, DB ID: ${dbHeroId})`);
+
         if (hero.equipment) {
           Object.entries(hero.equipment.slots).forEach(([slotName, item]) => {
             equipmentInserts.push({
@@ -174,18 +203,27 @@ export class GameSaveService {
         }
       });
 
+      console.log('🎒 Equipment inserts prepared:', {
+        count: equipmentInserts.length,
+        heroIds: [...new Set(equipmentInserts.map(e => e.hero_id))],
+        items: equipmentInserts.map(e => ({ heroId: e.hero_id, slot: e.slot_name, item: e.item_name }))
+      });
+
       if (equipmentInserts.length > 0) {
         const { error: equipError } = await supabase
           .from('equipment_slots')
           .insert(equipmentInserts);
 
         if (equipError) {
-          console.error('Equipment save error:', equipError);
+          console.error('❌ Equipment save error:', equipError);
+          console.error('❌ Equipment inserts that failed:', equipmentInserts);
           return {
             success: false,
             message: t('saveGame.equipmentSaveFailed')
           };
         }
+
+        console.log('✅ Equipment saved successfully');
       }
 
       // 5. Save inventory items

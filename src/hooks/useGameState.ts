@@ -73,11 +73,13 @@ interface GameStateActions {
   // Hero actions
   addHero: (hero: Hero) => Promise<void>;
   removeHero: (heroId: string) => Promise<void>;
-  updateActiveParty: (heroes: Hero[]) => Promise<void>;
+  updateActiveParty: (heroes: Hero[], skipAutoSave?: boolean) => Promise<void>;
   updateActivePartyIndices: (indices: number[]) => Promise<void>;
+  fixDuplicateHeroes: () => Promise<{ duplicatesFixed: number; talentPointsAdded: number }>;
 
   // Inventory actions
   addItem: (item: Item) => Promise<void>;
+  addItems: (items: Item[]) => Promise<void>; // Batch add items (optimized)
   removeItem: (itemId: string) => Promise<void>;
   updateInventory: (inventory: Inventory) => Promise<void>;
 
@@ -154,6 +156,9 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
   const userIdRef = useRef<string | null>(null);
   const stateRef = useRef<GameState>(state);
   const hasLoadedRef = useRef(false); // Track if we've loaded data to prevent duplicate loads
+  const isLoadingRef = useRef(false); // Track if we're currently loading to prevent concurrent loads
+  const isSavingRef = useRef(false); // Track if we're currently saving to prevent concurrent saves
+  const saveQueueRef = useRef<Promise<void> | null>(null); // Promise queue for sequential saves
 
   // Auto-save delay (ms)
   const AUTO_SAVE_DELAY = 2000;
@@ -202,9 +207,25 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
   const saveGameInternal = async () => {
     if (!userIdRef.current) return;
 
-    setState(prev => ({ ...prev, saving: true, syncStatus: 'saving' }));
+    // CRITICAL: Use promise queue to prevent concurrent saves
+    // Wait for any existing save to complete first
+    while (saveQueueRef.current) {
+      console.log('⏭️ Save already in progress, waiting...');
+      await saveQueueRef.current;
+      console.log('⏭️ Previous save completed');
+    }
+
+    // Create promise and set it IMMEDIATELY (synchronously) to prevent race condition
+    let resolveSave: () => void;
+    const savePromise = new Promise<void>((resolve) => {
+      resolveSave = resolve;
+    });
+    saveQueueRef.current = savePromise;
 
     try {
+      isSavingRef.current = true;
+      setState(prev => ({ ...prev, saving: true, syncStatus: 'saving' }));
+
       // Use stateRef to get the most current state
       const currentState = stateRef.current;
 
@@ -212,7 +233,9 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       console.log('[Save] Combat Power to save:', currentState.combatPower);
 
       // Save player profile (including gacha state, worldmap, and discovered locations)
-      const profileUpdate = {
+      // IMPORTANT: Never save world_map_data as null - this would trigger map regeneration on Realtime update!
+      // If worldMap is null during save (e.g., early combat power update), skip saving it.
+      const profileUpdate: any = {
         nickname: currentState.playerName,
         player_level: currentState.playerLevel,
         gold: currentState.gold,
@@ -222,12 +245,23 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         combat_power: currentState.combatPower, // Add combat power to database
         current_world_x: currentState.playerPos.x,
         current_world_y: currentState.playerPos.y,
-        world_map_data: currentState.worldMap,
         discovered_locations: currentState.discoveredLocations.map(loc => JSON.stringify(loc)),
         gacha_summon_count: currentState.gachaState.summonCount,
         gacha_last_free_summon: currentState.gachaState.lastFreeSummonDate || null,
         gacha_pity_summons: currentState.gachaState.pitySummons
       };
+
+      // Only include world_map_data if it exists (never overwrite with null)
+      if (currentState.worldMap) {
+        profileUpdate.world_map_data = currentState.worldMap;
+      }
+
+      // Log world map data for debugging
+      if (currentState.worldMap) {
+        const defeatedMonsters = currentState.worldMap.dynamicObjects.filter(obj => obj.type === 'wanderingMonster' && 'defeated' in obj && obj.defeated);
+        console.log(`[Save] World map - Defeated monsters: ${defeatedMonsters.length}/${currentState.worldMap.dynamicObjects.filter(obj => obj.type === 'wanderingMonster').length}`);
+        console.log(`[Save] Energy being saved: ${currentState.energy}/${currentState.maxEnergy}`);
+      }
 
       console.log('[Save] Profile update data:', JSON.stringify(profileUpdate, null, 2));
       await PlayerProfileService.updateProfile(userIdRef.current!, profileUpdate);
@@ -246,6 +280,13 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     } catch (error) {
       console.error('❌ Auto-save failed:', error);
       setState(prev => ({ ...prev, saving: false, syncStatus: 'error' }));
+    } finally {
+      // CRITICAL: Always release the save lock, even if save failed
+      isSavingRef.current = false;
+
+      // Clear queue and resolve promise
+      saveQueueRef.current = null;
+      resolveSave();
     }
   };
 
@@ -265,7 +306,14 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
    * ```
    */
   const loadGameData = async (userId: string) => {
+    // Prevent concurrent loads using ref (synchronous check)
+    if (isLoadingRef.current) {
+      console.log('⏭️ loadGameData already in progress, skipping');
+      return;
+    }
+
     console.log('🔄 loadGameData called with userId:', userId);
+    isLoadingRef.current = true;
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
@@ -395,6 +443,22 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
 
       console.log('📊 Final heroes array length:', heroes.length);
 
+      // Deduplicate heroes by name + class instead of ID
+      // This prevents duplicate heroes from appearing even if they have different IDs
+      const uniqueHeroKeys = new Set<string>();
+      const deduplicatedHeroes: Hero[] = [];
+      heroes.forEach(hero => {
+        const heroKey = `${hero.name}-${hero.class}`;
+        if (!uniqueHeroKeys.has(heroKey)) {
+          uniqueHeroKeys.add(heroKey);
+          deduplicatedHeroes.push(hero);
+        } else {
+          console.warn('⚠️ Duplicate hero detected during load (same name+class), skipping:', hero.name, hero.class, hero.id);
+        }
+      });
+      heroes = deduplicatedHeroes;
+      console.log('📊 After deduplication:', heroes.length, 'heroes (originally had', deduplicatedHeroes.length === heroes.length ? 'no duplicates' : heroes.length + ' duplicates removed', ')');
+
       // Build active party from party_order (if available)
       let activeParty: Hero[];
       let activePartyIndices: number[];
@@ -430,45 +494,183 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         });
       }
 
-      setState(prev => ({
-        ...prev,
-        profile,
-        profileLoading: false,
-        playerName: profile.nickname || 'Adventurer',
-        playerLevel: profile.player_level,
-        gold: profile.gold,
-        gems: profile.gems,
-        energy: Math.min(profile.energy, ENERGY_CONFIG.MAX_ENERGY),
-        maxEnergy: ENERGY_CONFIG.MAX_ENERGY,
-        allHeroes: heroes,
-        activeParty,
-        activePartyIndices,
-        inventory,
-        playerPos: { x: profile.current_world_x, y: profile.current_world_y },
-        worldMap: profile.world_map_data || null,
-        discoveredLocations: (profile.discovered_locations || []).map(str => {
-          try {
-            return JSON.parse(str);
-          } catch {
-            return { name: '', x: 0, y: 0, type: 'town' as const };
+      // Log world map data for debugging
+      if (profile.world_map_data) {
+        const defeatedMonsters = profile.world_map_data.dynamicObjects?.filter((obj: any) => obj.type === 'wanderingMonster' && obj.defeated) || [];
+        console.log(`[Load] World map - Defeated monsters: ${defeatedMonsters.length}/${profile.world_map_data.dynamicObjects?.filter((obj: any) => obj.type === 'wanderingMonster').length || 0}`);
+        console.log(`[Load] Energy being loaded: ${profile.energy}/${ENERGY_CONFIG.MAX_ENERGY}`);
+      }
+
+      setState(prev => {
+        console.log('📊 setState in loadGameData - prev.loading:', prev.loading);
+        console.log('   prev.allHeroes.length:', prev.allHeroes.length);
+        console.log('   prev.activeParty.length:', prev.activeParty.length);
+        console.log('   heroes to load:', heroes.length);
+        console.log('   activeParty to load:', activeParty.length);
+
+        // IMPORTANT: React StrictMode calls setState twice with the SAME prev state
+        // We need to check if we're in the middle of initial load and return early
+        // to prevent both calls from returning new state
+
+        // Skip duplicate detection if prev is empty (initial load)
+        // Both StrictMode calls will see empty prev, so we let both through
+        // React will automatically merge them correctly
+
+        // Additional safety check: detect duplicate loads
+        const existingHeroIds = new Set(prev.allHeroes.map(h => h.id));
+
+        // If we have existing heroes loaded AND they're not just starter heroes, check for duplicate load
+        if (prev.allHeroes.length >= 4 && heroes.length > 0) {
+          // Count how many heroes overlap
+          const overlapCount = heroes.filter(h => existingHeroIds.has(h.id)).length;
+          const overlapPercentage = (overlapCount / heroes.length) * 100;
+
+          // IMPORTANT: Only block if BOTH conditions are met:
+          // 1. High overlap (>80%)
+          // 2. Same or very similar hero count (within 20% difference)
+          const heroCountDiff = Math.abs(prev.allHeroes.length - heroes.length);
+          const maxDiff = Math.max(2, Math.ceil(heroes.length * 0.2));
+          const isSimilarCount = heroCountDiff <= maxDiff;
+
+          if (overlapPercentage > 80 && isSimilarCount) {
+            console.warn('⚠️ Detected duplicate load - ignoring!');
+            console.warn(`   Overlap: ${overlapCount}/${heroes.length} (${overlapPercentage.toFixed(0)}%)`);
+            console.warn(`   Count difference: ${heroCountDiff} (Existing: ${prev.allHeroes.length}, New: ${heroes.length})`);
+
+            // Check if prev already has data loaded - if yes, just ensure loading is false
+            if (prev.allHeroes.length > 0 && prev.activeParty.length > 0) {
+              console.warn('   ⚠️ Returning prev WITH loading: false (data already loaded)');
+              return {
+                ...prev,
+                loading: false,
+                profileLoading: false
+              };
+            } else {
+              // prev is empty (initial state) - allow load to proceed
+              console.warn('   ⚠️ prev is empty, allowing load to proceed');
+            }
+          } else if (overlapCount > 0 && overlapPercentage > 30 && isSimilarCount) {
+            // Moderate overlap with similar count - add only new heroes (gacha case)
+            const trulyNewHeroes = heroes.filter(h => !existingHeroIds.has(h.id));
+            if (trulyNewHeroes.length > 0) {
+              console.log(`   Partial overlap (${overlapPercentage.toFixed(0)}%), adding ${trulyNewHeroes.length} new heroes`);
+              heroes = [...prev.allHeroes, ...trulyNewHeroes];
+            } else {
+              console.log('   No new heroes to add');
+              console.warn('   ⚠️ Returning prev WITH loading: false to prevent stuck loading screen!');
+              return {
+                ...prev,
+                loading: false,
+                profileLoading: false
+              };
+            }
           }
-        }),
-        gachaState: {
-          summonCount: profile.gacha_summon_count || 0,
-          lastFreeSummonDate: profile.gacha_last_free_summon || '',
-          pitySummons: profile.gacha_pity_summons || 0
-        },
-        loading: false
-      }));
+          // Low overlap or different count - allow full reload
+        }
+
+        console.log('✅ setState returning NEW state with loading: false');
+        const newState = {
+          ...prev,
+          profile,
+          profileLoading: false,
+          playerName: profile.nickname || 'Adventurer',
+          playerLevel: profile.player_level,
+          gold: profile.gold,
+          gems: profile.gems,
+          energy: Math.min(profile.energy, ENERGY_CONFIG.MAX_ENERGY),
+          maxEnergy: ENERGY_CONFIG.MAX_ENERGY,
+          allHeroes: heroes,
+          activeParty,
+          activePartyIndices,
+          inventory,
+          playerPos: { x: profile.current_world_x, y: profile.current_world_y },
+          worldMap: profile.world_map_data || null,
+          discoveredLocations: (profile.discovered_locations || []).map(str => {
+            try {
+              return JSON.parse(str);
+            } catch {
+              return { name: '', x: 0, y: 0, type: 'town' as const };
+            }
+          }),
+          gachaState: {
+            summonCount: profile.gacha_summon_count || 0,
+            lastFreeSummonDate: profile.gacha_last_free_summon || '',
+            pitySummons: profile.gacha_pity_summons || 0
+          },
+          loading: false
+        };
+        console.log('✅ NEW STATE - allHeroes.length:', newState.allHeroes.length);
+        console.log('✅ NEW STATE - activeParty.length:', newState.activeParty.length);
+
+        // CRITICAL: Ensure loading is ALWAYS false after successful load
+        if (newState.loading !== false) {
+          console.error('❌ BUG: loading should be false but is', newState.loading);
+          newState.loading = false;
+        }
+
+        return newState;
+      });
 
       console.log('✅ Game data loaded', profileResult.isNew ? '(New Player)' : '(Existing Save)', `- ${heroes.length} heroes in state`);
+      console.log('🎯 Loading state should be false now (set in setState above)');
+
+      // CRITICAL: Verify state was actually updated
+      // In StrictMode, the second mount might interfere, so we verify after setState
+      setTimeout(() => {
+        console.log('🔍 Verification timeout running...');
+        const currentState = stateRef.current;
+        console.log('🔍 Current state:', {
+          loading: currentState.loading,
+          allHeroesLength: currentState.allHeroes.length,
+          heroesLoaded: heroes.length
+        });
+
+        if (currentState.allHeroes.length === 0 && heroes.length > 0) {
+          console.error('❌ CRITICAL: State was not updated! Forcing update...');
+          setState(prev => ({
+            ...prev,
+            allHeroes: heroes,
+            activeParty,
+            activePartyIndices,
+            loading: false,
+            profileLoading: false
+          }));
+          // Force re-render
+          setUpdateTrigger(prev => prev + 1);
+        } else if (currentState.loading === true) {
+          console.error('❌ CRITICAL: Loading stuck at true! Forcing false...');
+          setState(prev => ({ ...prev, loading: false, profileLoading: false }));
+          // Force re-render
+          setUpdateTrigger(prev => prev + 1);
+        } else {
+          console.log('✅ State is correct, no forced update needed');
+          // Force re-render anyway to ensure component gets the updated state
+          console.log('🔄 Forcing re-render to propagate state to component...');
+          // Create a new state object to force React to re-render
+          setState(prev => ({ ...prev }));
+        }
+      }, 100);
+
+      // DISABLED: Auto-fix duplicates - caused issues with deleting all heroes
+      // The function needs improvement to properly detect duplicates by ID, not name+class
+      // setTimeout(() => {
+      //   gameActions.fixDuplicateHeroes().then(result => {
+      //     if (result.duplicatesFixed > 0) {
+      //       console.log(`🔧 Auto-fixed ${result.duplicatesFixed} duplicate heroes on load`);
+      //     }
+      //   });
+      // }, 1000);
     } catch (error: any) {
       console.error('❌ Failed to load game:', error);
       setState(prev => ({
         ...prev,
         loading: false,
+        profileLoading: false,
         error: error.message
       }));
+    } finally {
+      // Reset loading flag
+      isLoadingRef.current = false;
     }
   };
 
@@ -480,9 +682,62 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       const session = await AuthService.getCurrentSession();
 
       if (session?.user?.id) {
+        const loadingFlagKey = `loading-${session.user.id}`;
+
+        // CRITICAL FIX: On component mount, clear any stale sessionStorage loading flags
+        // This ensures fresh start on each page load/refresh
+        if (!hasLoadedRef.current) {
+          const existingFlag = sessionStorage.getItem(loadingFlagKey);
+          if (existingFlag) {
+            console.log('🧹 Clearing stale loading flag on mount');
+            sessionStorage.removeItem(loadingFlagKey);
+            sessionStorage.removeItem(`${loadingFlagKey}-timestamp`);
+          }
+        }
+
         // Check if we already have this user's data loaded AND if user ID hasn't changed
         const isSameUser = userIdRef.current === session.user.id;
         const alreadyLoaded = hasLoadedRef.current && isSameUser;
+
+        // Additional check: prevent loading if we're currently loading
+        // But first, clean up stale loading flags (older than 10 seconds)
+        const loadingFlagTimestamp = sessionStorage.getItem(`${loadingFlagKey}-timestamp`);
+
+        if (loadingFlagTimestamp) {
+          const flagAge = Date.now() - parseInt(loadingFlagTimestamp);
+          if (flagAge > 10000) { // 10 seconds - flag is stale
+            console.log('🧹 Clearing stale loading flag (age: ' + Math.round(flagAge / 1000) + 's)');
+            sessionStorage.removeItem(loadingFlagKey);
+            sessionStorage.removeItem(`${loadingFlagKey}-timestamp`);
+            // Reset state to ensure UI updates after clearing stale flag
+            console.log('🔄 Resetting loading state after clearing stale flag');
+            setState(prev => ({ ...prev, loading: false, profileLoading: false }));
+          }
+        } else {
+          // If flag exists but has no timestamp (old version), clean it up
+          const currentlyLoading = sessionStorage.getItem(loadingFlagKey);
+          if (currentlyLoading === 'true') {
+            console.log('🧹 Clearing old loading flag without timestamp');
+            sessionStorage.removeItem(loadingFlagKey);
+            // Reset state to ensure UI updates after clearing old flag
+            console.log('🔄 Resetting loading state after clearing old flag');
+            setState(prev => ({ ...prev, loading: false, profileLoading: false }));
+          }
+        }
+
+        const currentlyLoading = sessionStorage.getItem(loadingFlagKey);
+        if (currentlyLoading === 'true') {
+          console.log('⏭️ Already loading data, skipping duplicate load');
+
+          // IMPORTANT: In StrictMode, the second mount may see loading: true
+          // Check if we actually have data loaded (from the first mount's completion)
+          // and ensure loading state reflects reality
+          if (hasLoadedRef.current && stateRef.current.allHeroes.length > 0) {
+            console.log('⏭️ Data already loaded by first mount, ensuring loading: false');
+            setState(prev => ({ ...prev, loading: false, profileLoading: false }));
+          }
+          return;
+        }
 
         if (!alreadyLoaded) {
           console.log('🔄 Loading game data for user:', session.user.id);
@@ -490,8 +745,17 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           // Set the flag IMMEDIATELY to prevent race conditions
           hasLoadedRef.current = true;
           userIdRef.current = session.user.id;
+          const loadingFlagKey = `loading-${session.user.id}`;
+          sessionStorage.setItem(loadingFlagKey, 'true');
+          sessionStorage.setItem(`${loadingFlagKey}-timestamp`, Date.now().toString());
 
-          await loadGameData(session.user.id);
+          try {
+            await loadGameData(session.user.id);
+          } finally {
+            // Clear loading flag and timestamp after completion
+            sessionStorage.removeItem(loadingFlagKey);
+            sessionStorage.removeItem(`${loadingFlagKey}-timestamp`);
+          }
         } else {
           console.log('⏭️ Skipping reload - data already loaded for same user');
           setState(prev => ({ ...prev, loading: false, profileLoading: false }));
@@ -510,8 +774,16 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
+
+      // IMPORTANT: In StrictMode, cleanup runs between double mounts
+      // Clear sessionStorage flags to ensure clean state for remount
+      if (userIdRef.current) {
+        const loadingFlagKey = `loading-${userIdRef.current}`;
+        sessionStorage.removeItem(loadingFlagKey);
+        sessionStorage.removeItem(`${loadingFlagKey}-timestamp`);
+      }
     };
-  }, [userEmail]);
+  }, []); // Empty deps - only run once on mount
 
   /**
    * Subscribe to real-time profile changes after userId is loaded
@@ -536,11 +808,12 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           const updatedProfile = payload.new as PlayerProfile;
 
           setState(prev => {
-            // Check if map was reset (world_map_data became null)
-            const wasMapReset = !updatedProfile.world_map_data && prev.worldMap;
-            if (wasMapReset) {
-              console.log('🗺️ World map reset detected - generating new daily map!');
-            }
+            // IMPORTANT: Ignore world_map_data from Realtime updates!
+            // World map should only be loaded during initial game load, not from profile updates.
+            // This prevents map regeneration caused by JSON serialization differences.
+
+            // CRITICAL: Always preserve allHeroes and activeParty from prev state!
+            // Realtime updates should NEVER overwrite hero data
 
             return {
               ...prev,
@@ -550,8 +823,12 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
               gold: updatedProfile.gold,
               gems: updatedProfile.gems,
               playerLevel: updatedProfile.player_level,
-              // Accept null to allow map reset
-              worldMap: updatedProfile.world_map_data ?? (wasMapReset ? null : prev.worldMap),
+              // KEEP current worldMap - do not overwrite from Realtime
+              worldMap: prev.worldMap,
+              // KEEP current heroes - do not overwrite from Realtime
+              allHeroes: prev.allHeroes,
+              activeParty: prev.activeParty,
+              activePartyIndices: prev.activePartyIndices,
               discoveredLocations: updatedProfile.discovered_locations
                 ? updatedProfile.discovered_locations.map(str => {
                     try { return JSON.parse(str); }
@@ -667,6 +944,13 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     addHero: async (hero: Hero) => {
       console.log('🎭 Adding hero to collection:', hero.name, hero.id);
       setState(prev => {
+        // Check if hero already exists (prevent duplicates)
+        const heroExists = prev.allHeroes.some(h => h.id === hero.id);
+        if (heroExists) {
+          console.warn('⚠️ Hero already exists in collection, skipping:', hero.name, hero.id);
+          return prev; // No change
+        }
+
         const newAllHeroes = [...prev.allHeroes, hero];
         console.log('📊 All heroes count after add:', newAllHeroes.length);
 
@@ -687,7 +971,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       scheduleAutoSave();
     },
 
-    updateActiveParty: async (heroes: Hero[]) => {
+    updateActiveParty: async (heroes: Hero[], skipAutoSave = false) => {
       // IMPORTANT: Remove duplicates and limit to 4 heroes to prevent data corruption
       const uniqueHeroes = heroes
         .filter((hero, index, self) =>
@@ -699,8 +983,46 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         console.warn(`⚠️ Prevented duplicate heroes in party! Original: ${heroes.length}, After dedup: ${uniqueHeroes.length}`);
       }
 
-      setState(prev => ({ ...prev, activeParty: uniqueHeroes }));
-      scheduleAutoSave();
+      setState(prev => {
+        // Sync updated heroes to allHeroes array
+        // Heroes are already mutated in-place, we just need to ensure the references are correct
+        const updatedHeroMap = new Map(uniqueHeroes.map(h => [h.id, h]));
+
+        const updatedAllHeroes = prev.allHeroes.map(hero => {
+          const updatedHero = updatedHeroMap.get(hero.id);
+          if (updatedHero) {
+            console.log(`🔄 Syncing hero ${hero.name}:`, {
+              hp: updatedHero.currentHP,
+              maxHP: updatedHero.maxHP,
+              level: updatedHero.level,
+              xp: updatedHero.experience
+            });
+            // Return the same hero reference (already mutated in combat)
+            return updatedHero;
+          }
+          return hero;
+        });
+
+        console.log('✅ Updated activeParty and synced changes to allHeroes');
+        console.log('📊 Active party heroes:', uniqueHeroes.map(h => ({ name: h.name, hp: h.currentHP, level: h.level, xp: h.experience })));
+        console.log('📊 All heroes after sync:', updatedAllHeroes.map(h => ({ name: h.name, hp: h.currentHP, level: h.level, xp: h.experience })));
+
+        return {
+          ...prev,
+          activeParty: [...uniqueHeroes], // New array reference to trigger React update
+          allHeroes: [...updatedAllHeroes] // New array reference to trigger React update
+        };
+      });
+
+      // Force re-render to propagate changes to components
+      setUpdateTrigger(prev => prev + 1);
+
+      // Only auto-save if not explicitly skipped (e.g., during combat flow where manual save follows)
+      if (!skipAutoSave) {
+        scheduleAutoSave();
+      } else {
+        console.log('⏭️ Skipping auto-save (manual save will follow)');
+      }
     },
 
     updateActivePartyIndices: async (indices: number[]) => {
@@ -718,6 +1040,20 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         const newInventory = new Inventory(prev.inventory.maxSlots);
         newInventory.gold = prev.inventory.gold;
         newInventory.items = [...prev.inventory.items, item];
+        return { ...prev, inventory: newInventory };
+      });
+      scheduleAutoSave();
+    },
+
+    // Batch add multiple items at once (optimized - single setState)
+    addItems: async (items: Item[]) => {
+      if (items.length === 0) return;
+
+      setState(prev => {
+        // Create a new inventory instance to trigger React re-render
+        const newInventory = new Inventory(prev.inventory.maxSlots);
+        newInventory.gold = prev.inventory.gold;
+        newInventory.items = [...prev.inventory.items, ...items];
         return { ...prev, inventory: newInventory };
       });
       scheduleAutoSave();
@@ -768,6 +1104,106 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       scheduleAutoSave();
     },
 
+    /**
+     * Fix duplicate heroes by converting duplicates to talent points
+     *
+     * @returns Object with fixed count and talent points added
+     *
+     * @example
+     * ```typescript
+     * const result = await gameActions.fixDuplicateHeroes();
+     * console.log(`Fixed ${result.duplicatesFixed} duplicates, added ${result.talentPointsAdded} talent points`);
+     * ```
+     */
+    fixDuplicateHeroes: async () => {
+      console.log('🔧 Checking for duplicate heroes...');
+
+      return new Promise<{ duplicatesFixed: number; talentPointsAdded: number }>((resolve) => {
+        setState(prev => {
+          const heroMap = new Map<string, Hero[]>();
+          let duplicatesFixed = 0;
+          let talentPointsAdded = 0;
+
+          // Group heroes by name+class (same hero type)
+          prev.allHeroes.forEach(hero => {
+            const key = `${hero.name}-${hero.class}`;
+            if (!heroMap.has(key)) {
+              heroMap.set(key, []);
+            }
+            heroMap.get(key)!.push(hero);
+          });
+
+          // Find duplicates and convert to talents
+          const uniqueHeroes: Hero[] = [];
+
+          heroMap.forEach((heroes, key) => {
+            if (heroes.length > 1) {
+              console.log(`🔍 Found ${heroes.length} duplicates of ${key}`);
+
+              // Sort by level and talent points (keep the best one)
+              heroes.sort((a, b) => {
+                if (a.level !== b.level) return b.level - a.level;
+                return (b.talentPoints || 0) - (a.talentPoints || 0);
+              });
+
+              // Keep the first (best) hero
+              const mainHero = heroes[0];
+              uniqueHeroes.push(mainHero);
+
+              // Convert duplicates to talent points
+              const duplicates = heroes.slice(1);
+              const talentPoints = duplicates.length; // 1 talent point per duplicate
+
+              mainHero.talentPoints = (mainHero.talentPoints || 0) + talentPoints;
+
+              duplicatesFixed += duplicates.length;
+              talentPointsAdded += talentPoints;
+
+              console.log(`  ✅ Kept ${mainHero.name} (Lv${mainHero.level}, Talents: ${mainHero.talentPoints})`);
+              console.log(`  🗑️ Removed ${duplicates.length} duplicates → +${talentPoints} talent points`);
+            } else {
+              // No duplicates, keep as is
+              uniqueHeroes.push(heroes[0]);
+            }
+          });
+
+          if (duplicatesFixed > 0) {
+            console.log(`✅ Fixed ${duplicatesFixed} duplicate heroes, added ${talentPointsAdded} talent points`);
+
+            // Update active party to remove any duplicates
+            const newActiveParty = prev.activeParty
+              .map(partyHero => {
+                // Find the kept version of this hero
+                return uniqueHeroes.find(h =>
+                  h.name === partyHero.name && h.class === partyHero.class
+                );
+              })
+              .filter(Boolean) as Hero[];
+
+            // Ensure no duplicates in active party
+            const uniqueActiveParty = newActiveParty.filter((hero, index, self) =>
+              index === self.findIndex(h => h.id === hero.id)
+            );
+
+            resolve({ duplicatesFixed, talentPointsAdded });
+
+            return {
+              ...prev,
+              allHeroes: uniqueHeroes,
+              activeParty: uniqueActiveParty
+            };
+          } else {
+            console.log('✅ No duplicate heroes found');
+            resolve({ duplicatesFixed: 0, talentPointsAdded: 0 });
+            return prev;
+          }
+        });
+
+        // Save after fixing
+        scheduleAutoSave();
+      });
+    },
+
     saveGame: async () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
@@ -796,6 +1232,12 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
    * This ensures combat power recalculates when equipment is changed.
    */
   useEffect(() => {
+    // Skip calculation during initial load to prevent race conditions
+    if (state.loading || state.profileLoading) {
+      console.log('[Combat Power] Skipping calculation during loading');
+      return;
+    }
+
     let totalScore = 0;
 
     console.log('[Combat Power] Calculating combat power for active party:', state.activeParty.length, 'heroes');
@@ -812,15 +1254,19 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     // Only update if changed to avoid infinite loops
     if (totalScore !== state.combatPower) {
       console.log(`[Combat Power] Combat power changed from ${state.combatPower} to ${Math.floor(totalScore)}, triggering save`);
-      setState(prev => ({
-        ...prev,
-        combatPower: Math.floor(totalScore)
-      }));
+      setState(prev => {
+        console.log('[Combat Power] setState - prev.allHeroes.length:', prev.allHeroes.length);
+        console.log('[Combat Power] setState - prev.activeParty.length:', prev.activeParty.length);
+        return {
+          ...prev,
+          combatPower: Math.floor(totalScore)
+        };
+      });
 
       // Trigger save if combat power changed (ensures it gets saved to database)
       scheduleAutoSave();
     }
-  }, [state.activeParty, state.activeParty.length, state.allHeroes, scheduleAutoSave]);
+  }, [state.activeParty, state.activeParty.length, state.allHeroes, state.loading, state.profileLoading, scheduleAutoSave]);
 
   return [state, actions];
 }

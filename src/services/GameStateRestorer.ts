@@ -36,10 +36,6 @@ export function restoreHero(
     savedHero.level
   );
 
-  // Restore HP
-  hero.currentHP = savedHero.currentHP;
-  hero.isAlive = savedHero.currentHP > 0;
-
   // Restore XP progression
   hero.experience = savedHero.experience || 0;
   hero.requiredXP = savedHero.requiredXP || hero.calculateRequiredXP(savedHero.level);
@@ -47,7 +43,7 @@ export function restoreHero(
   // Create equipment manager
   hero.equipment = new Equipment(hero);
 
-  // Restore equipped items
+  // Restore equipped items FIRST (before restoring HP)
   if (savedHero.equippedItems && savedHero.equippedItems.length > 0) {
     savedHero.equippedItems.forEach((equipped: any) => {
       // Restore the item from saved data
@@ -63,6 +59,10 @@ export function restoreHero(
     hero.equipment.recalculateStats();
     hero.updateStatsWithEquipment();
   }
+
+  // Restore HP AFTER equipment is loaded (so maxHP is correct)
+  hero.currentHP = savedHero.currentHP;
+  hero.isAlive = savedHero.currentHP > 0;
 
   return hero;
 }

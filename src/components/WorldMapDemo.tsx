@@ -157,7 +157,6 @@ export function WorldMapDemo() {
               worldMap={worldMap}
               playerPosition={playerPos}
               onTileClick={handleTileClick}
-              onObjectClick={handleObjectClick}
             />
           </div>
 

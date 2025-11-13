@@ -270,7 +270,7 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
    * @param x - Tile X coordinate
    * @param y - Tile Y coordinate
    */
-  const handleTileClick = (x: number, y: number) => {
+  const handleTileClick = (x: number, y: number, isPathMovement: boolean = false) => {
     if (!gameState.worldMap) return;
 
     const tile = gameState.worldMap.tiles[y]?.[x];
@@ -282,20 +282,24 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
       return;
     }
 
-    // Check if clicking on a static object (town or dungeon)
-    if (tile.staticObject) {
-      handleObjectClick(tile.staticObject, x, y);
-      return;
-    }
-
-    // Check if clicking on a dynamic object (wandering monster, traveling merchant)
-    if (gameState.worldMap) {
-      const dynamicObject = gameState.worldMap.dynamicObjects.find(
-        obj => obj.position.x === x && obj.position.y === y && obj.isActive
-      );
-      if (dynamicObject) {
-        handleDynamicObjectClick(dynamicObject, x, y);
+    // Only interact with objects if this is NOT an automatic path movement
+    // (i.e., only on direct clicks, not when passing through during pathfinding)
+    if (!isPathMovement) {
+      // Check if clicking on a static object (town or dungeon)
+      if (tile.staticObject) {
+        handleObjectClick(tile.staticObject, x, y);
         return;
+      }
+
+      // Check if clicking on a dynamic object (wandering monster, traveling merchant)
+      if (gameState.worldMap) {
+        const dynamicObject = gameState.worldMap.dynamicObjects.find(
+          obj => obj.position.x === x && obj.position.y === y && obj.isActive
+        );
+        if (dynamicObject) {
+          handleDynamicObjectClick(dynamicObject, x, y);
+          return;
+        }
       }
     }
 

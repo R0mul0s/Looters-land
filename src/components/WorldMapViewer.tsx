@@ -12,7 +12,7 @@
  */
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import type { WorldMap, Tile, StaticObject, WeatherState, TimeState } from '../types/worldmap.types';
+import type { WorldMap, Tile, StaticObject, DynamicObject, WeatherState, TimeState } from '../types/worldmap.types';
 import { TERRAIN_ICONS } from '../types/worldmap.types';
 import { OtherPlayerMarker } from './OtherPlayerMarker';
 import { ChatBubble } from './ChatBubble';
@@ -1373,8 +1373,9 @@ function WorldMapViewerComponent({
    * Calculate distance and cost for hovered tile (memoized)
    *
    * @description Computes travel distance and energy cost from player position to hovered tile.
+   * Also checks for dynamic objects (wandering monsters, traveling merchants) at the hovered position.
    * Memoized to prevent unnecessary recalculations on unrelated state changes.
-   * @returns Object with tile info, distance, cost, and explored status, or null if no hover
+   * @returns Object with tile info, distance, cost, explored status, and optional dynamic object, or null if no hover
    *
    * @example
    * ```typescript
@@ -1383,7 +1384,7 @@ function WorldMapViewerComponent({
    * }
    * ```
    */
-  const hoverInfo = useMemo((): { tile: Tile; distance: number; totalCost: number; isExplored: boolean } | null => {
+  const hoverInfo = useMemo((): { tile: Tile; distance: number; totalCost: number; isExplored: boolean; dynamicObject?: DynamicObject } | null => {
     if (!hoveredTile) return null;
     const tile = worldMap.tiles[hoveredTile.y]?.[hoveredTile.x];
     if (!tile) return null;
@@ -1392,13 +1393,19 @@ function WorldMapViewerComponent({
     const costPerTile = Math.ceil(tile.movementCost / 100);
     const totalCost = distance * costPerTile;
 
+    // Check if there's an active dynamic object at this position
+    const dynamicObject = worldMap.dynamicObjects.find(
+      obj => obj.isActive && obj.position.x === hoveredTile.x && obj.position.y === hoveredTile.y
+    );
+
     return {
       tile,
       distance,
       totalCost,
-      isExplored: tile.isExplored
+      isExplored: tile.isExplored,
+      dynamicObject
     };
-  }, [hoveredTile, worldMap.tiles, playerPosition.x, playerPosition.y]);
+  }, [hoveredTile, worldMap.tiles, worldMap.dynamicObjects, playerPosition.x, playerPosition.y]);
 
   return (
     <div ref={containerRef} style={styles.container}>
@@ -1412,6 +1419,26 @@ function WorldMapViewerComponent({
       {/* Hover Info Tooltip */}
       {hoverInfo && hoverInfo.isExplored && (
         <div style={styles.tooltip}>
+          {/* Dynamic Object Info (wandering monsters, traveling merchants) */}
+          {hoverInfo.dynamicObject && (
+            <div style={styles.tooltipRow}>
+              <span>
+                {hoverInfo.dynamicObject.type === 'wanderingMonster' && '👾'}
+                {hoverInfo.dynamicObject.type === 'travelingMerchant' && '🧳'}
+                {hoverInfo.dynamicObject.type === 'encounter' && '⚔️'}
+                {hoverInfo.dynamicObject.type === 'resource' && '🪵'}
+                {hoverInfo.dynamicObject.type === 'event' && '❗'}
+              </span>
+              <span style={{ ...styles.tooltipValue, color: '#f59e0b', fontWeight: 'bold' }}>
+                {hoverInfo.dynamicObject.type === 'wanderingMonster' && 'Wandering Monster'}
+                {hoverInfo.dynamicObject.type === 'travelingMerchant' && 'Traveling Merchant'}
+                {hoverInfo.dynamicObject.type === 'encounter' && 'Encounter'}
+                {hoverInfo.dynamicObject.type === 'resource' && 'Resource'}
+                {hoverInfo.dynamicObject.type === 'event' && 'Event'}
+              </span>
+            </div>
+          )}
+          {/* Static Object Info (towns, dungeons, portals, etc.) */}
           {hoverInfo.tile.staticObject && (
             <div style={styles.tooltipRow}>
               <span>
@@ -1427,10 +1454,13 @@ function WorldMapViewerComponent({
               </span>
             </div>
           )}
-          <div style={styles.tooltipRow}>
-            <span>{t('worldmap.terrain')}:</span>
-            <span style={styles.tooltipValue}>{hoverInfo.tile.terrain}</span>
-          </div>
+          {/* Terrain Info (always show if no dynamic object) */}
+          {!hoverInfo.dynamicObject && (
+            <div style={styles.tooltipRow}>
+              <span>{t('worldmap.terrain')}:</span>
+              <span style={styles.tooltipValue}>{hoverInfo.tile.terrain}</span>
+            </div>
+          )}
           <div style={styles.tooltipRow}>
             <span>{t('worldmap.distance')}:</span>
             <span style={styles.tooltipValue}>{hoverInfo.distance} {t('worldmap.tiles')}</span>

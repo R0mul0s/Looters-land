@@ -878,4 +878,35 @@ export class WorldMapGenerator {
       }
     };
   }
+
+  /**
+   * Get starting position for a new player
+   * Returns coordinates of a random town so the player starts in a safe location
+   *
+   * @param width - Map width
+   * @param height - Map height
+   * @returns Starting coordinates { x, y }
+   *
+   * @example
+   * ```typescript
+   * const startPos = WorldMapGenerator.getStartingPosition(50, 50);
+   * console.log(`Player starts at (${startPos.x}, ${startPos.y})`);
+   * ```
+   */
+  static getStartingPosition(width: number = 50, height: number = 50): { x: number; y: number } {
+    // Define same town positions as in placeTowns() method
+    const townPositions = [
+      { x: Math.floor(width / 2), y: Math.floor(height / 2) }, // Capital (center)
+      { x: Math.floor(width * 0.2), y: Math.floor(height * 0.2) }, // Mountain Stronghold (northwest)
+      { x: Math.floor(width * 0.5), y: Math.floor(height * 0.9) }, // Desert Oasis (south)
+      { x: Math.floor(width * 0.1), y: Math.floor(height * 0.5) } // Forest Outpost (west)
+    ];
+
+    // Pick a random town
+    const randomTown = townPositions[Math.floor(Math.random() * townPositions.length)];
+
+    console.log(`🎯 Starting position selected: (${randomTown.x}, ${randomTown.y})`);
+
+    return randomTown;
+  }
 }

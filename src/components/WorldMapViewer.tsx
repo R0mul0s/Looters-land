@@ -68,6 +68,8 @@ import manticoreImg from '../assets/images/monster/manticore.png';
 import wyvernImg from '../assets/images/monster/wyvern.png';
 import banditLeaderImg from '../assets/images/monster/bandit-leader.png';
 import darkKnightImg from '../assets/images/monster/dark-knight.png';
+import shadowDragonImg from '../assets/images/monster/shadow-dragon.png';
+import phoenixImg from '../assets/images/monster/pheonix.png';
 
 interface WorldMapViewerProps {
   worldMap: WorldMap;
@@ -166,6 +168,17 @@ function WorldMapViewerComponent({
     city5: null
   });
 
+  // Treasure chest object images
+  const [treasureChestImages, setTreasureChestImages] = useState<{
+    chest1: HTMLImageElement | null;
+    chest2: HTMLImageElement | null;
+    chest3: HTMLImageElement | null;
+  }>({
+    chest1: null,
+    chest2: null,
+    chest3: null
+  });
+
   // Monster images
   const [monsterImages, setMonsterImages] = useState<{
     ancientGolem: HTMLImageElement | null;
@@ -178,6 +191,8 @@ function WorldMapViewerComponent({
     wyvern: HTMLImageElement | null;
     banditLeader: HTMLImageElement | null;
     darkKnight: HTMLImageElement | null;
+    shadowDragon: HTMLImageElement | null;
+    phoenix: HTMLImageElement | null;
   }>({
     ancientGolem: null,
     direWolf: null,
@@ -188,7 +203,9 @@ function WorldMapViewerComponent({
     manticore: null,
     wyvern: null,
     banditLeader: null,
-    darkKnight: null
+    darkKnight: null,
+    shadowDragon: null,
+    phoenix: null
   });
 
   // Perlin noise for smooth variant distribution (prevents checkerboard pattern)
@@ -322,6 +339,42 @@ function WorldMapViewerComponent({
     images.city5.onerror = () => console.error('Failed to load city5.png');
   }, []);
 
+  // Load treasure chest images
+  useEffect(() => {
+    const images = {
+      chest1: new Image(),
+      chest2: new Image(),
+      chest3: new Image()
+    };
+
+    images.chest1.src = treasureChest1Img;
+    images.chest2.src = treasureChest2Img;
+    images.chest3.src = treasureChest3Img;
+
+    let loadedCount = 0;
+    const totalImages = 3;
+
+    const onLoad = () => {
+      loadedCount++;
+      if (loadedCount === totalImages) {
+        setTreasureChestImages({
+          chest1: images.chest1,
+          chest2: images.chest2,
+          chest3: images.chest3
+        });
+        console.log('✅ All treasure chest images loaded successfully');
+      }
+    };
+
+    images.chest1.onload = onLoad;
+    images.chest2.onload = onLoad;
+    images.chest3.onload = onLoad;
+
+    images.chest1.onerror = () => console.error('Failed to load treasure-chest1.png');
+    images.chest2.onerror = () => console.error('Failed to load treasure-chest2.png');
+    images.chest3.onerror = () => console.error('Failed to load treasure-chest3.png');
+  }, []);
+
   // Load monster images
   useEffect(() => {
     const images = {
@@ -334,7 +387,9 @@ function WorldMapViewerComponent({
       manticore: new Image(),
       wyvern: new Image(),
       banditLeader: new Image(),
-      darkKnight: new Image()
+      darkKnight: new Image(),
+      shadowDragon: new Image(),
+      phoenix: new Image()
     };
 
     images.ancientGolem.src = ancientGolemImg;
@@ -347,9 +402,11 @@ function WorldMapViewerComponent({
     images.wyvern.src = wyvernImg;
     images.banditLeader.src = banditLeaderImg;
     images.darkKnight.src = darkKnightImg;
+    images.shadowDragon.src = shadowDragonImg;
+    images.phoenix.src = phoenixImg;
 
     let loadedCount = 0;
-    const totalImages = 10;
+    const totalImages = 12;
 
     const onLoad = () => {
       loadedCount++;
@@ -364,7 +421,9 @@ function WorldMapViewerComponent({
           manticore: images.manticore,
           wyvern: images.wyvern,
           banditLeader: images.banditLeader,
-          darkKnight: images.darkKnight
+          darkKnight: images.darkKnight,
+          shadowDragon: images.shadowDragon,
+          phoenix: images.phoenix
         });
         console.log('✅ All monster images loaded successfully');
       }
@@ -380,6 +439,8 @@ function WorldMapViewerComponent({
     images.wyvern.onload = onLoad;
     images.banditLeader.onload = onLoad;
     images.darkKnight.onload = onLoad;
+    images.shadowDragon.onload = onLoad;
+    images.phoenix.onload = onLoad;
 
     images.ancientGolem.onerror = () => console.error('Failed to load ancient-golem.png');
     images.direWolf.onerror = () => console.error('Failed to load dire-wolf.png');
@@ -391,6 +452,8 @@ function WorldMapViewerComponent({
     images.wyvern.onerror = () => console.error('Failed to load wyvern.png');
     images.banditLeader.onerror = () => console.error('Failed to load bandit-leader.png');
     images.darkKnight.onerror = () => console.error('Failed to load dark-knight.png');
+    images.shadowDragon.onerror = () => console.error('Failed to load shadow-dragon.png');
+    images.phoenix.onerror = () => console.error('Failed to load pheonix.png');
   }, []);
 
   // Load all terrain images
@@ -857,12 +920,12 @@ function WorldMapViewerComponent({
 
         // Draw city image if loaded, otherwise fall back to emoji
         if (cityImg) {
-          // Add yellow glow effect
-          ctx.shadowColor = '#ffff00';
-          ctx.shadowBlur = 15;
+          // Add BLUE glow effect for towns
+          ctx.shadowColor = '#0099ff';
+          ctx.shadowBlur = 18;
 
-          // Make city larger (1.3x tile size) and center it
-          const citySize = TILE_SIZE * 1.3;
+          // Make city larger (1.6x tile size) and center it
+          const citySize = TILE_SIZE * 1.6;
           const cityOffsetX = screenX - (citySize - TILE_SIZE) / 2;
           const cityOffsetY = screenY - (citySize - TILE_SIZE) / 2;
 
@@ -873,12 +936,18 @@ function WorldMapViewerComponent({
         } else {
           ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
         }
+      } else if (objectType === 'portal') {
+        // Portal with BLUE glow effect
+        ctx.shadowColor = '#0099ff';
+        ctx.shadowBlur = 18;
+        ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+        ctx.shadowBlur = 0;
       } else if (objectType === 'rareSpawn' && objectName === 'Ancient Golem') {
         // Use Ancient Golem image for Ancient Golem rare spawn
         if (monsterImages.ancientGolem) {
-          // Add yellow glow effect
-          ctx.shadowColor = '#ffff00';
-          ctx.shadowBlur = 15;
+          // Add RED glow effect for powerful bosses
+          ctx.shadowColor = '#ff0000';
+          ctx.shadowBlur = 20;
 
           // Make Ancient Golem larger (1.3x tile size) and center it
           const golemSize = TILE_SIZE * 1.3;
@@ -895,9 +964,9 @@ function WorldMapViewerComponent({
       } else if (objectType === 'rareSpawn' && objectName === 'Frost Giant') {
         // Use Frost Giant image for Frost Giant rare spawn
         if (monsterImages.frostGiant) {
-          // Add yellow glow effect
-          ctx.shadowColor = '#ffff00';
-          ctx.shadowBlur = 15;
+          // Add RED glow effect for powerful bosses
+          ctx.shadowColor = '#ff0000';
+          ctx.shadowBlur = 20;
 
           // Make Frost Giant larger (1.3x tile size) and center it
           const giantSize = TILE_SIZE * 1.3;
@@ -905,6 +974,80 @@ function WorldMapViewerComponent({
           const giantOffsetY = screenY - (giantSize - TILE_SIZE) / 2;
 
           ctx.drawImage(monsterImages.frostGiant, giantOffsetX, giantOffsetY, giantSize, giantSize);
+
+          // Reset shadow
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+        }
+      } else if (objectType === 'rareSpawn' && objectName === 'Shadow Dragon') {
+        // Use Shadow Dragon image for Shadow Dragon rare spawn
+        if (monsterImages.shadowDragon) {
+          // Add RED glow effect for powerful bosses
+          ctx.shadowColor = '#ff0000';
+          ctx.shadowBlur = 20;
+
+          // Make Shadow Dragon larger (1.3x tile size) and center it
+          const dragonSize = TILE_SIZE * 1.3;
+          const dragonOffsetX = screenX - (dragonSize - TILE_SIZE) / 2;
+          const dragonOffsetY = screenY - (dragonSize - TILE_SIZE) / 2;
+
+          ctx.drawImage(monsterImages.shadowDragon, dragonOffsetX, dragonOffsetY, dragonSize, dragonSize);
+
+          // Reset shadow
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+        }
+      } else if (objectType === 'rareSpawn' && objectName === 'Phoenix') {
+        // Use Phoenix image for Phoenix rare spawn
+        if (monsterImages.phoenix) {
+          // Add RED glow effect for powerful bosses
+          ctx.shadowColor = '#ff0000';
+          ctx.shadowBlur = 20;
+
+          // Make Phoenix larger (1.3x tile size) and center it
+          const phoenixSize = TILE_SIZE * 1.3;
+          const phoenixOffsetX = screenX - (phoenixSize - TILE_SIZE) / 2;
+          const phoenixOffsetY = screenY - (phoenixSize - TILE_SIZE) / 2;
+
+          ctx.drawImage(monsterImages.phoenix, phoenixOffsetX, phoenixOffsetY, phoenixSize, phoenixSize);
+
+          // Reset shadow
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+        }
+      } else if (objectType === 'treasureChest' && objectId) {
+        // Use treasure chest images for treasure chests if available
+        // Select chest image based on chest ID (0 = chest1, 1 = chest2, etc.)
+        const chestIndex = parseInt(objectId.split('-')[1] || '0');
+        let chestImg: HTMLImageElement | null = null;
+
+        switch (chestIndex % 3) {
+          case 0:
+            chestImg = treasureChestImages.chest1;
+            break;
+          case 1:
+            chestImg = treasureChestImages.chest2;
+            break;
+          case 2:
+            chestImg = treasureChestImages.chest3;
+            break;
+        }
+
+        // Draw treasure chest image if loaded, otherwise fall back to emoji
+        if (chestImg) {
+          // Add yellow glow effect
+          ctx.shadowColor = '#ffff00';
+          ctx.shadowBlur = 15;
+
+          // Make treasure chest larger (1.3x tile size) and center it
+          const chestSize = TILE_SIZE * 1.3;
+          const chestOffsetX = screenX - (chestSize - TILE_SIZE) / 2;
+          const chestOffsetY = screenY - (chestSize - TILE_SIZE) / 2;
+
+          ctx.drawImage(chestImg, chestOffsetX, chestOffsetY, chestSize, chestSize);
 
           // Reset shadow
           ctx.shadowBlur = 0;

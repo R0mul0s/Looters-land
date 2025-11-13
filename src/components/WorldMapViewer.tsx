@@ -56,6 +56,10 @@ import city5Img from '../assets/images/building/city5.png';
 import treasureChest1Img from '../assets/images/object/treasure-chest1.png';
 import treasureChest2Img from '../assets/images/object/treasure-chest2.png';
 import treasureChest3Img from '../assets/images/object/treasure-chest3.png';
+import portal1Img from '../assets/images/object/portal1.png';
+import portal2Img from '../assets/images/object/portal2.png';
+import portal3Img from '../assets/images/object/portal3.png';
+import portal4Img from '../assets/images/object/portal4.png';
 
 // Import monster images
 import ancientGolemImg from '../assets/images/monster/ancient-golem.png';
@@ -177,6 +181,19 @@ function WorldMapViewerComponent({
     chest1: null,
     chest2: null,
     chest3: null
+  });
+
+  // Portal images
+  const [portalImages, setPortalImages] = useState<{
+    portal1: HTMLImageElement | null;
+    portal2: HTMLImageElement | null;
+    portal3: HTMLImageElement | null;
+    portal4: HTMLImageElement | null;
+  }>({
+    portal1: null,
+    portal2: null,
+    portal3: null,
+    portal4: null
   });
 
   // Monster images
@@ -373,6 +390,47 @@ function WorldMapViewerComponent({
     images.chest1.onerror = () => console.error('Failed to load treasure-chest1.png');
     images.chest2.onerror = () => console.error('Failed to load treasure-chest2.png');
     images.chest3.onerror = () => console.error('Failed to load treasure-chest3.png');
+  }, []);
+
+  // Load portal images
+  useEffect(() => {
+    const images = {
+      portal1: new Image(),
+      portal2: new Image(),
+      portal3: new Image(),
+      portal4: new Image()
+    };
+
+    images.portal1.src = portal1Img;
+    images.portal2.src = portal2Img;
+    images.portal3.src = portal3Img;
+    images.portal4.src = portal4Img;
+
+    let loadedCount = 0;
+    const totalImages = 4;
+
+    const onLoad = () => {
+      loadedCount++;
+      if (loadedCount === totalImages) {
+        setPortalImages({
+          portal1: images.portal1,
+          portal2: images.portal2,
+          portal3: images.portal3,
+          portal4: images.portal4
+        });
+        console.log('✅ All portal images loaded successfully');
+      }
+    };
+
+    images.portal1.onload = onLoad;
+    images.portal2.onload = onLoad;
+    images.portal3.onload = onLoad;
+    images.portal4.onload = onLoad;
+
+    images.portal1.onerror = () => console.error('Failed to load portal1.png');
+    images.portal2.onerror = () => console.error('Failed to load portal2.png');
+    images.portal3.onerror = () => console.error('Failed to load portal3.png');
+    images.portal4.onerror = () => console.error('Failed to load portal4.png');
   }, []);
 
   // Load monster images
@@ -814,12 +872,49 @@ function WorldMapViewerComponent({
         } else {
           ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
         }
-      } else if (objectType === 'portal') {
-        // Portal with BLUE glow effect
-        ctx.shadowColor = '#0099ff';
-        ctx.shadowBlur = 18;
-        ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
-        ctx.shadowBlur = 0;
+      } else if (objectType === 'portal' && objectId) {
+        // Use portal images for portals if available
+        // Select portal image based on portal ID (0 = portal1, 1 = portal2, etc.)
+        const portalIndex = parseInt(objectId.split('-')[1] || '0');
+        let portalImg: HTMLImageElement | null = null;
+
+        switch (portalIndex % 4) {
+          case 0:
+            portalImg = portalImages.portal1;
+            break;
+          case 1:
+            portalImg = portalImages.portal2;
+            break;
+          case 2:
+            portalImg = portalImages.portal3;
+            break;
+          case 3:
+            portalImg = portalImages.portal4;
+            break;
+        }
+
+        // Draw portal image if loaded, otherwise fall back to emoji
+        if (portalImg) {
+          // Add BLUE glow effect for portals
+          ctx.shadowColor = '#0099ff';
+          ctx.shadowBlur = 18;
+
+          // Make portal larger (1.4x tile size) and center it
+          const portalSize = TILE_SIZE * 1.4;
+          const portalOffsetX = screenX - (portalSize - TILE_SIZE) / 2;
+          const portalOffsetY = screenY - (portalSize - TILE_SIZE) / 2;
+
+          ctx.drawImage(portalImg, portalOffsetX, portalOffsetY, portalSize, portalSize);
+
+          // Reset shadow
+          ctx.shadowBlur = 0;
+        } else {
+          // Fallback to emoji if image not loaded
+          ctx.shadowColor = '#0099ff';
+          ctx.shadowBlur = 18;
+          ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+          ctx.shadowBlur = 0;
+        }
       } else if (objectType === 'rareSpawn' && objectName === 'Ancient Golem') {
         // Use Ancient Golem image for Ancient Golem rare spawn
         if (monsterImages.ancientGolem) {

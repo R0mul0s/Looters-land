@@ -7,7 +7,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2025-11-13
  */
 
 import React, { useEffect, useState } from 'react';
@@ -34,6 +34,7 @@ import { supabase } from '../lib/supabase';
 import { t } from '../localization/i18n';
 import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, DynamicObject, WanderingMonster, TravelingMerchant } from '../types/worldmap.types';
 import { DEBUG_CONFIG } from '../config/DEBUG_CONFIG';
+import logo from '../assets/images/logo.png';
 
 interface WorldMapDemo2Props {
   onEnterDungeon?: (dungeon: DungeonEntrance) => void;
@@ -870,7 +871,7 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
     return (
       <div style={styles.loadingScreen}>
         <div style={styles.loadingContent}>
-          <div style={styles.loadingSpinner}>⚔️</div>
+          <img src={logo} alt="Looters Land" style={styles.loadingLogo} />
           <div style={styles.loadingText}>{t('worldmap.loading')}</div>
         </div>
       </div>
@@ -1796,14 +1797,17 @@ const styles: Record<string, React.CSSProperties> = {
   loadingContent: {
     textAlign: 'center'
   },
-  loadingSpinner: {
-    fontSize: '64px',
-    marginBottom: '20px',
+  loadingLogo: {
+    width: '300px',
+    height: 'auto',
+    marginBottom: '30px',
+    filter: 'drop-shadow(0 0 20px rgba(45, 212, 191, 0.4))',
     animation: 'pulse 2s ease-in-out infinite'
   },
   loadingText: {
     fontSize: '20px',
-    color: '#94a3b8'
+    color: '#94a3b8',
+    marginTop: '20px'
   },
   errorScreen: {
     width: '100vw',

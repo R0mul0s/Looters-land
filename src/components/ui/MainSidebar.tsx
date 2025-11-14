@@ -7,11 +7,12 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-08
+ * @lastModified 2025-11-13
  */
 
 import React, { useState, useEffect } from 'react';
 import { t } from '../../localization/i18n';
+import logo from '../../assets/images/logo.png';
 
 type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport' | 'updates';
 
@@ -100,14 +101,13 @@ export function MainSidebar({
       {/* Logo / Game Title */}
       {!isCompact && (
         <div style={styles.header}>
-          <div style={styles.logo}>🗡️</div>
-          <div style={styles.title}>Looters<br />Land</div>
+          <img src={logo} alt="Looters Land" style={styles.logoImage} />
         </div>
       )}
 
       {isCompact && (
         <div style={styles.headerCompact}>
-          <div style={styles.logoCompact}>🗡️</div>
+          <img src={logo} alt="Looters Land" style={styles.logoImageCompact} />
         </div>
       )}
 
@@ -199,23 +199,16 @@ const styles: Record<string, React.CSSProperties> = {
   header: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
+    justifyContent: 'center',
     padding: '20px',
     background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
     borderBottom: '1px solid rgba(45, 212, 191, 0.2)'
   },
-  logo: {
-    fontSize: '32px',
-    filter: 'drop-shadow(0 0 8px rgba(45, 212, 191, 0.5))'
-  },
-  title: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-    lineHeight: '1.2',
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    backgroundClip: 'text'
+  logoImage: {
+    width: '100%',
+    maxWidth: '180px',
+    height: 'auto',
+    filter: 'drop-shadow(0 0 8px rgba(45, 212, 191, 0.3))'
   },
   levelBadge: {
     display: 'flex',
@@ -323,9 +316,10 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
     borderBottom: '1px solid rgba(45, 212, 191, 0.2)'
   },
-  logoCompact: {
-    fontSize: '28px',
-    filter: 'drop-shadow(0 0 8px rgba(45, 212, 191, 0.5))'
+  logoImageCompact: {
+    width: '50px',
+    height: 'auto',
+    filter: 'drop-shadow(0 0 8px rgba(45, 212, 191, 0.3))'
   },
   levelBadgeCompact: {
     display: 'flex',

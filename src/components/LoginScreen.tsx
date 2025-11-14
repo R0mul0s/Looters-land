@@ -13,11 +13,12 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-13
  */
 
 import { useState } from 'react';
 import * as AuthService from '../services/AuthService';
+import logo from '../assets/images/logo.png';
 
 interface LoginScreenProps {
   onLoginSuccess: (userId: string) => void;
@@ -117,14 +118,16 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
       }}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <h1 style={{
-            fontSize: '32px',
-            margin: '0 0 10px 0',
-            color: '#fff',
-            textShadow: '0 2px 4px rgba(0,0,0,0.5)'
-          }}>
-            ⚔️ Looters Land
-          </h1>
+          <img
+            src={logo}
+            alt="Looters Land"
+            style={{
+              width: '250px',
+              height: 'auto',
+              marginBottom: '15px',
+              filter: 'drop-shadow(0 0 15px rgba(45, 212, 191, 0.4))'
+            }}
+          />
           <p style={{
             margin: 0,
             color: 'rgba(255, 255, 255, 0.7)',

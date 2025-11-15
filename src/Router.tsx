@@ -10,6 +10,7 @@
  * - Combat UI rendering (heroes, enemies, manual controls)
  * - Victory/defeat modals with rewards display
  * - Authentication state management
+ * - Single useGameState instance passed to WorldMapDemo2 (shared state pattern)
  *
  * Routes:
  * - / -> WorldMapDemo2 (main game)
@@ -17,7 +18,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-12
+ * @lastModified 2025-11-15
  */
 
 import { useState, useEffect } from 'react';
@@ -267,8 +268,14 @@ export function Router() {
    * Handle exit from dungeon back to worldmap
    *
    * Clears current dungeon state and switches UI back to worldmap view.
+   * IMPORTANT: Saves heroes before exiting to persist any progress (XP, levels, HP changes).
    */
-  const handleDungeonExit = () => {
+  const handleDungeonExit = async () => {
+    // Save heroes before exiting to ensure all progress is persisted
+    // This includes XP gains, level ups, and HP changes during dungeon exploration
+    const updatedHeroes = combatEngine?.heroes as Hero[] || gameState.activeParty;
+    await gameActions.updateActiveParty(updatedHeroes, false); // Allow auto-save
+
     setCurrentDungeon(null);
     setInDungeon(false);
   };
@@ -311,10 +318,21 @@ export function Router() {
    * Handle quick combat from worldmap (rare spawns, wandering monsters)
    *
    * Starts combat directly without entering a dungeon.
+   * Supports both manual and auto combat modes.
+   * Uses closure pattern to capture metadata and pass to combat end callback.
    *
    * @param enemies - Array of enemies to fight
-   * @param combatType - Type of combat encounter
-   * @param metadata - Additional data about the encounter
+   * @param combatType - Type of combat encounter ('rare_spawn' or 'wandering_monster')
+   * @param metadata - Combat metadata including position, mode, and object references
+   *
+   * @example
+   * ```typescript
+   * handleQuickCombat(
+   *   [goblin1, goblin2],
+   *   'wandering_monster',
+   *   { position: {x: 5, y: 10}, mode: 'auto', monsterObject: {...} }
+   * );
+   * ```
    */
   const handleQuickCombat = (enemies: Enemy[], combatType: 'rare_spawn' | 'wandering_monster', metadata?: any) => {
     console.log(`⚔️ Quick combat starting: ${combatType}`, enemies.length, 'enemies');
@@ -330,6 +348,9 @@ export function Router() {
     setQuickCombatMetadata(metadata);
     setCombatActive(true);
 
+    // IMPORTANT: Capture metadata in closure to avoid null reference later
+    const capturedMetadata = metadata;
+
     // Use setTimeout to ensure state updates have processed before initializing combat
     setTimeout(() => {
       // Initialize combat
@@ -337,8 +358,8 @@ export function Router() {
       combatEngine.isManualMode = isManual;
       setCombatLog([...combatEngine.combatLog]);
 
-      // Set callback for combat end - use quick combat handler
-      combatEngine.onCombatEnd = handleQuickCombatEnd;
+      // Set callback for combat end - use quick combat handler with captured metadata
+      combatEngine.onCombatEnd = () => handleQuickCombatEnd(capturedMetadata);
 
       if (isManual) {
         // Execute enemy turns until we reach first hero
@@ -360,9 +381,29 @@ export function Router() {
 
   /**
    * Handle quick combat end (without dungeon context)
+   *
+   * Processes combat results for worldmap encounters.
+   * On victory: awards loot, XP, marks monster as defeated
+   * On defeat: restores heroes to 10% HP
+   * Uses closure pattern - metadata passed as parameter to avoid React state issues.
+   *
+   * @param metadata - Combat metadata from combat start (position, type, object references)
+   *                   Passed directly as parameter to avoid null state closure issues
+   *
+   * @example
+   * ```typescript
+   * // Called from combat engine callback
+   * combatEngine.onCombatEnd = () => handleQuickCombatEnd(capturedMetadata);
+   * ```
    */
-  const handleQuickCombatEnd = async () => {
+  const handleQuickCombatEnd = async (metadata?: any) => {
     console.log('✅ Quick combat completed');
+    console.log('🔍 DEBUG: handleQuickCombatEnd called');
+    console.log('🔍 DEBUG: metadata parameter:', metadata);
+    console.log('🔍 DEBUG: quickCombatMetadata state:', quickCombatMetadata);
+
+    // Use metadata parameter if provided, otherwise fall back to state
+    const combatMetadata = metadata || quickCombatMetadata;
 
     // Check if it's a defeat (all heroes dead)
     const allHeroesDead = gameState.activeParty.every(hero => !hero.isAlive);
@@ -378,16 +419,18 @@ export function Router() {
       // Show defeat modal
       setTimeout(async () => {
         setQuickCombatDefeat(true);
+        // Get heroes from combat engine (they have the actual state)
+        const heroesAfterCombat = combatEngine.heroes as Hero[];
+
         // Set heroes to 10% HP (they need to go heal in town)
-        gameState.activeParty.forEach(hero => {
+        heroesAfterCombat.forEach(hero => {
           hero.currentHP = Math.max(1, Math.floor(hero.maxHP * 0.1));
           hero.isAlive = true;
           hero.resetCombatState();
         });
 
         // Save the updated hero HP to database
-        await gameActions.updateActiveParty(gameState.activeParty);
-        await gameActions.saveGame();
+        await gameActions.updateActiveParty(heroesAfterCombat, false);
 
         setCombatActive(false);
         setCombatLog([]);
@@ -396,20 +439,53 @@ export function Router() {
       return;
     }
 
-    // Victory! Mark monster/rare spawn as defeated
-    if (quickCombatMetadata) {
-      if (quickCombatMetadata.rareSpawnObject) {
-        quickCombatMetadata.rareSpawnObject.defeated = true;
-        console.log('🎯 Rare spawn marked as defeated');
+    // Victory! Mark monster/rare spawn as defeated in worldMap
+    if (combatMetadata && gameState.worldMap) {
+      console.log('🔍 DEBUG: Starting to mark monster as defeated');
+      console.log('🔍 DEBUG: combatMetadata:', combatMetadata);
+      console.log('🔍 DEBUG: Current worldMap dynamicObjects count:', gameState.worldMap.dynamicObjects.length);
+
+      const updatedWorldMap = { ...gameState.worldMap };
+
+      // Find and mark the specific object as defeated in the worldMap's dynamicObjects
+      if (combatMetadata.position) {
+        const pos = combatMetadata.position;
+        console.log('🔍 DEBUG: Looking for object at position:', pos);
+
+        const objectIndex = updatedWorldMap.dynamicObjects.findIndex(
+          obj => obj.position.x === pos.x && obj.position.y === pos.y
+        );
+
+        console.log('🔍 DEBUG: Found object at index:', objectIndex);
+
+        if (objectIndex !== -1) {
+          const beforeDefeated = updatedWorldMap.dynamicObjects[objectIndex].defeated;
+          console.log('🔍 DEBUG: Object defeated status BEFORE update:', beforeDefeated);
+
+          // Create new array with updated object
+          updatedWorldMap.dynamicObjects = [...updatedWorldMap.dynamicObjects];
+          updatedWorldMap.dynamicObjects[objectIndex] = {
+            ...updatedWorldMap.dynamicObjects[objectIndex],
+            defeated: true
+          };
+
+          console.log('🔍 DEBUG: Object defeated status AFTER update:', updatedWorldMap.dynamicObjects[objectIndex].defeated);
+
+          if (combatMetadata.rareSpawnObject) {
+            console.log('🎯 Rare spawn marked as defeated at position', pos);
+          } else if (combatMetadata.monsterObject) {
+            console.log('🎯 Wandering monster marked as defeated at position', pos);
+          }
+        } else {
+          console.error('❌ DEBUG: Could not find object at position:', pos);
+        }
       }
-      if (quickCombatMetadata.monsterObject) {
-        quickCombatMetadata.monsterObject.defeated = true;
-        console.log('🎯 Wandering monster marked as defeated');
-      }
-      // Update worldmap
-      if (gameState.worldMap) {
-        await gameActions.updateWorldMap({ ...gameState.worldMap });
-      }
+
+      // Update worldmap with defeated status
+      console.log('🔍 DEBUG: Calling updateWorldMap with defeated monsters count:',
+        updatedWorldMap.dynamicObjects.filter(obj => obj.defeated).length);
+      await gameActions.updateWorldMap(updatedWorldMap);
+      console.log('🔍 DEBUG: updateWorldMap completed');
     }
 
     // Victory! Get rewards from combat engine
@@ -437,16 +513,19 @@ export function Router() {
       }
     }
 
+    // Get heroes from combat engine (they have the actual updated state with XP)
+    const heroesAfterCombat = combatEngine.heroes as Hero[];
+
     // Track level ups before saving
     const levelUps: Array<{ heroName: string; newLevel: number }> = [];
-    const heroesBeforeSave = gameState.activeParty.map(h => ({ name: h.name, level: h.level }));
+    const heroesBeforeSave = heroesAfterCombat.map(h => ({ name: h.name, level: h.level }));
 
     // Save updated heroes (XP already awarded by CombatEngine)
-    await gameActions.updateActiveParty(gameState.activeParty);
-    await gameActions.saveGame();
+    // Pass heroesAfterCombat to ensure we save the correct state
+    await gameActions.updateActiveParty(heroesAfterCombat, false);
 
     // Check for level ups
-    gameState.activeParty.forEach((hero, i) => {
+    heroesAfterCombat.forEach((hero, i) => {
       if (hero.level > heroesBeforeSave[i].level) {
         levelUps.push({ heroName: hero.name, newLevel: hero.level });
       }
@@ -550,7 +629,7 @@ export function Router() {
       forceUpdate({});
 
       // Show defeat alert and exit dungeon
-      setTimeout(() => {
+      setTimeout(async () => {
         // Set heroes to 10% HP (they need to go heal in town)
         heroesAfterCombat.forEach(hero => {
           hero.currentHP = Math.max(1, Math.floor(hero.maxHP * 0.1));
@@ -558,8 +637,9 @@ export function Router() {
           hero.resetCombatState();
         });
 
-        // Update game state with healed heroes
-        gameActions.updateActiveParty(heroesAfterCombat, true);
+        // Update game state with healed heroes AND SAVE (don't skip auto-save!)
+        // This ensures level ups and XP gained before death are persisted
+        await gameActions.updateActiveParty(heroesAfterCombat, false);
 
         alert(t('router.defeatAlert'));
         handleDungeonExit();
@@ -651,8 +731,11 @@ export function Router() {
       await gameActions.addItems(combatEngine.lootReward.items);
     }
 
-    // NOTE: No need to manually save here - scheduleAutoSave() already called by addItems()
-    // The auto-save will trigger in 2 seconds, which is fine since we're just continuing exploration
+    // CRITICAL: Save heroes BEFORE continuing exploration
+    // This ensures level ups, XP, and HP changes from combat are persisted
+    // even if player continues exploring and doesn't manually exit dungeon
+    const updatedHeroes = combatEngine.heroes as Hero[];
+    await gameActions.updateActiveParty(updatedHeroes, false); // Allow auto-save
 
     // Close combat and victory screen
     setShowDungeonVictory(false);
@@ -688,6 +771,8 @@ export function Router() {
           userEmail={userEmail}
           onEnterDungeon={handleEnterDungeon}
           onQuickCombat={handleQuickCombat}
+          gameState={gameState}
+          gameActions={gameActions}
         />
       </div>
 

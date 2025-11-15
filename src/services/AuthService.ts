@@ -290,7 +290,6 @@ export function onAuthStateChange(
   callback: (event: string, session: Session | null) => void
 ) {
   const { data } = supabase.auth.onAuthStateChange((event: string, session: Session | null) => {
-    console.log(`🔐 Auth event: ${event}`);
     callback(event, session);
   });
 

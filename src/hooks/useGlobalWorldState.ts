@@ -39,7 +39,6 @@ export function useGlobalWorldState(): GlobalWorldStateHook {
       const result = await GlobalWorldStateService.getGlobalWorldState();
 
       if (result.success && result.state) {
-        console.log('🌍 Global world state loaded:', result.state);
         setWeather(GlobalWorldStateService.convertToWeatherState(result.state));
         setTimeOfDay(GlobalWorldStateService.convertToTimeState(result.state));
       } else {
@@ -97,7 +96,6 @@ export function useGlobalWorldState(): GlobalWorldStateHook {
 
     // Cleanup subscription and polling on unmount
     return () => {
-      console.log('🌍 Cleaning up global world state subscription and polling');
       unsubscribe();
       clearInterval(pollInterval);
     };

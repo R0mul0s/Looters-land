@@ -31,14 +31,11 @@ export class Item {
   goldValue: number;
   icon: string;
 
-  // Static counter to ensure truly unique IDs
-  private static _idCounter: number = 0;
-
   constructor(config: ItemConfig) {
-    // Generate truly unique ID using timestamp, random, and counter
+    // Generate UUID for database compatibility
+    // Use crypto.randomUUID() which generates RFC 4122 compliant UUIDs
     if (!config.id) {
-      Item._idCounter++;
-      this.id = `item_${Date.now()}_${Math.random()}_${Item._idCounter}`;
+      this.id = crypto.randomUUID();
     } else {
       this.id = config.id;
     }

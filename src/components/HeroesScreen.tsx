@@ -63,6 +63,13 @@ export function HeroesScreen({
   onPartyChange,
   isInTown = true
 }: HeroesScreenProps) {
+  // DEBUG: Log when HeroesScreen renders with new props
+  console.log('🎨 HeroesScreen RENDER with props:', {
+    heroesCount: heroes.length,
+    activePartyCount: activeParty.length,
+    heroData: heroes.map(h => ({ name: h.name, level: h.level, xp: h.experience, hp: h.currentHP }))
+  });
+
   const [selectedHero, setSelectedHero] = useState<Hero | null>(null);
   const [filterClass, setFilterClass] = useState<HeroClass | 'all'>('all');
 

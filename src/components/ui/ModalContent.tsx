@@ -64,7 +64,7 @@ export function ModalInfoBox({
 
   return (
     <div style={{ ...styles.infoBox, ...variantStyles[variant] }}>
-      <p style={styles.infoText}>{children}</p>
+      <div style={styles.infoText}>{children}</div>
     </div>
   );
 }

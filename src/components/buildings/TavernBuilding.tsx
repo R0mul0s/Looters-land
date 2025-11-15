@@ -61,8 +61,8 @@ export function TavernBuilding({
         // New hero - create instance
         const hero = new Hero(template.name, template.class, 1, template.rarity);
 
-        // Override with template data
-        hero.id = `${template.id}_${Date.now()}_${Math.random()}`;
+        // Override with template data (ID is already generated as UUID in Hero constructor)
+        // DO NOT override hero.id - it's already a proper UUID from crypto.randomUUID()
         hero.description = template.description;
         hero.specialAbility = template.specialAbility;
         hero.faction = template.faction;

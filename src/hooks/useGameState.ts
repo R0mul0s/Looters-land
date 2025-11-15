@@ -1,9 +1,16 @@
 /**
  * useGameState Hook - Centralized game state management with database sync
  *
+ * Contains:
+ * - GameState interface (exported) - Complete game state structure
+ * - GameStateActions interface (exported) - All game state modification functions
+ * - useGameState hook - Main state management hook with auto-save
+ * - Auto-save with 2-second debouncing
+ * - Database sync via GameSaveService
+ *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2025-11-14
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -22,7 +29,7 @@ import { supabase } from '../lib/supabase';
 import type { SyncStatus } from '../components/SyncStatusIndicator';
 import { ENERGY_CONFIG } from '../config/BALANCE_CONFIG';
 
-interface GameState {
+export interface GameState {
   // Player profile
   profile: PlayerProfile | null;
   profileLoading: boolean;
@@ -58,7 +65,7 @@ interface GameState {
   lastSaveTime: Date | null;
 }
 
-interface GameStateActions {
+export interface GameStateActions {
   // Profile actions
   updateNickname: (nickname: string) => Promise<void>;
   updatePlayerLevel: (level: number) => Promise<void>;
@@ -179,14 +186,26 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
    * scheduleAutoSave(); // Will save after 2000ms
    * ```
    */
-  const scheduleAutoSave = useCallback(() => {
+  // Track if we're currently updating heroes to prevent stale saves
+  const isUpdatingHeroesRef = useRef(false);
+  const lastHeroUpdateTimeRef = useRef(0);
+
+  const scheduleAutoSave = useCallback((stateToSave?: GameState) => {
+    // If we're updating heroes and this is a save WITHOUT state parameter,
+    // skip it to avoid saving stale data
+    const timeSinceLastHeroUpdate = Date.now() - lastHeroUpdateTimeRef.current;
+    if (!stateToSave && timeSinceLastHeroUpdate < 1000) {
+      console.log('⏭️ Skipping auto-save without state parameter - hero update in progress');
+      return;
+    }
+
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
 
     saveTimeoutRef.current = setTimeout(async () => {
       if (userIdRef.current && !stateRef.current.profileLoading) {
-        await saveGameInternal();
+        await saveGameInternal(stateToSave);
       }
     }, AUTO_SAVE_DELAY);
   }, []);
@@ -204,7 +223,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
    * await saveGameInternal(); // Manual save trigger
    * ```
    */
-  const saveGameInternal = async () => {
+  const saveGameInternal = async (providedState?: GameState) => {
     if (!userIdRef.current) return;
 
     // CRITICAL: Use promise queue to prevent concurrent saves
@@ -226,11 +245,9 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       isSavingRef.current = true;
       setState(prev => ({ ...prev, saving: true, syncStatus: 'saving' }));
 
-      // Use stateRef to get the most current state
-      const currentState = stateRef.current;
-
-      console.log('💾 Saving game with', currentState.allHeroes.length, 'heroes');
-      console.log('[Save] Combat Power to save:', currentState.combatPower);
+      // Use provided state if available (to avoid stale stateRef), otherwise fall back to stateRef
+      // CRITICAL: This fixes race condition where stateRef.current hasn't been updated by useEffect yet
+      const currentState = providedState || stateRef.current;
 
       // Save player profile (including gacha state, worldmap, and discovered locations)
       // IMPORTANT: Never save world_map_data as null - this would trigger map regeneration on Realtime update!
@@ -256,14 +273,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         profileUpdate.world_map_data = currentState.worldMap;
       }
 
-      // Log world map data for debugging
-      if (currentState.worldMap) {
-        const defeatedMonsters = currentState.worldMap.dynamicObjects.filter(obj => obj.type === 'wanderingMonster' && 'defeated' in obj && obj.defeated);
-        console.log(`[Save] World map - Defeated monsters: ${defeatedMonsters.length}/${currentState.worldMap.dynamicObjects.filter(obj => obj.type === 'wanderingMonster').length}`);
-        console.log(`[Save] Energy being saved: ${currentState.energy}/${currentState.maxEnergy}`);
-      }
-
-      console.log('[Save] Profile update data:', JSON.stringify(profileUpdate, null, 2));
       await PlayerProfileService.updateProfile(userIdRef.current!, profileUpdate);
 
       // Save game data (heroes, inventory, active party)
@@ -275,7 +284,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         currentState.activeParty
       );
 
-      console.log('✅ Auto-save completed');
       setState(prev => ({ ...prev, saving: false, syncStatus: 'success', lastSaveTime: new Date() }));
     } catch (error) {
       console.error('❌ Auto-save failed:', error);
@@ -312,44 +320,27 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       return;
     }
 
-    console.log('🔄 loadGameData called with userId:', userId);
     isLoadingRef.current = true;
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
       // Get or create profile
-      console.log('📝 Getting or creating profile...');
       const profileResult = await PlayerProfileService.getOrCreateProfile(userId);
-      console.log('📝 Profile result:', profileResult);
 
       if (!profileResult.success || !profileResult.profile) {
         throw new Error(profileResult.message);
       }
 
       const profile = profileResult.profile;
-      console.log('👤 Profile loaded:', {
-        nickname: profile.nickname,
-        level: profile.player_level,
-        isNew: profileResult.isNew
-      });
 
       // Try to load saved game
-      console.log('💾 Loading game save...');
       const saveResult = await GameSaveService.loadGame(userId, 'Auto Save');
-      console.log('💾 Save result:', {
-        success: saveResult.success,
-        hasData: !!saveResult.data,
-        heroCount: saveResult.data?.heroes.length || 0,
-        message: saveResult.message
-      });
 
       let heroes: Hero[] = [];
       let inventory = new Inventory(50);
       inventory.gold = profile.gold;
 
       if (saveResult.success && saveResult.data && saveResult.data.heroes.length > 0) {
-        console.log('🎮 Loading heroes from save data...');
-
         // Create a map to store hero with their party order
         const heroesWithPartyOrder: Array<{hero: Hero, partyOrder: number | null}> = [];
 
@@ -424,10 +415,8 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         });
 
         inventory.maxSlots = saveResult.data.gameSave.inventory_max_slots;
-        console.log(`✅ Loaded ${heroes.length} heroes from database`);
       } else {
         // No heroes in save or new player - create starter heroes
-        console.log('🆕 Creating starter heroes...', profileResult.isNew ? '(New Player)' : '(Empty Save)');
         heroes = [
           new Hero('Theron', 'warrior', 1),
           new Hero('Lyra', 'archer', 1),
@@ -438,10 +427,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         heroes.forEach(hero => {
           hero.equipment = new Equipment(hero);
         });
-        console.log(`✅ Created ${heroes.length} starter heroes`);
       }
-
-      console.log('📊 Final heroes array length:', heroes.length);
 
       // Deduplicate heroes by name + class instead of ID
       // This prevents duplicate heroes from appearing even if they have different IDs
@@ -457,7 +443,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         }
       });
       heroes = deduplicatedHeroes;
-      console.log('📊 After deduplication:', heroes.length, 'heroes (originally had', deduplicatedHeroes.length === heroes.length ? 'no duplicates' : heroes.length + ' duplicates removed', ')');
 
       // Build active party from party_order (if available)
       let activeParty: Hero[];
@@ -475,11 +460,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
 
         activeParty = heroesWithPartyOrder.map(item => item.hero);
         activePartyIndices = heroesWithPartyOrder.map(item => item.index);
-
-        console.log('🎯 Loaded active party from party_order:', {
-          partySize: activeParty.length,
-          partyNames: activeParty.map(h => h.name).join(', ')
-        });
       } else {
         // New player - default party (first 4 heroes)
         activeParty = heroes.slice(0, 4);
@@ -495,18 +475,9 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       }
 
       // Log world map data for debugging
-      if (profile.world_map_data) {
-        const defeatedMonsters = profile.world_map_data.dynamicObjects?.filter((obj: any) => obj.type === 'wanderingMonster' && obj.defeated) || [];
-        console.log(`[Load] World map - Defeated monsters: ${defeatedMonsters.length}/${profile.world_map_data.dynamicObjects?.filter((obj: any) => obj.type === 'wanderingMonster').length || 0}`);
-        console.log(`[Load] Energy being loaded: ${profile.energy}/${ENERGY_CONFIG.MAX_ENERGY}`);
-      }
+      // World map data loaded silently
 
       setState(prev => {
-        console.log('📊 setState in loadGameData - prev.loading:', prev.loading);
-        console.log('   prev.allHeroes.length:', prev.allHeroes.length);
-        console.log('   prev.activeParty.length:', prev.activeParty.length);
-        console.log('   heroes to load:', heroes.length);
-        console.log('   activeParty to load:', activeParty.length);
 
         // IMPORTANT: React StrictMode calls setState twice with the SAME prev state
         // We need to check if we're in the middle of initial load and return early
@@ -568,7 +539,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           // Low overlap or different count - allow full reload
         }
 
-        console.log('✅ setState returning NEW state with loading: false');
         const newState = {
           ...prev,
           profile,
@@ -599,8 +569,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           },
           loading: false
         };
-        console.log('✅ NEW STATE - allHeroes.length:', newState.allHeroes.length);
-        console.log('✅ NEW STATE - activeParty.length:', newState.activeParty.length);
 
         // CRITICAL: Ensure loading is ALWAYS false after successful load
         if (newState.loading !== false) {
@@ -611,19 +579,10 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         return newState;
       });
 
-      console.log('✅ Game data loaded', profileResult.isNew ? '(New Player)' : '(Existing Save)', `- ${heroes.length} heroes in state`);
-      console.log('🎯 Loading state should be false now (set in setState above)');
-
       // CRITICAL: Verify state was actually updated
       // In StrictMode, the second mount might interfere, so we verify after setState
       setTimeout(() => {
-        console.log('🔍 Verification timeout running...');
         const currentState = stateRef.current;
-        console.log('🔍 Current state:', {
-          loading: currentState.loading,
-          allHeroesLength: currentState.allHeroes.length,
-          heroesLoaded: heroes.length
-        });
 
         if (currentState.allHeroes.length === 0 && heroes.length > 0) {
           console.error('❌ CRITICAL: State was not updated! Forcing update...');
@@ -643,9 +602,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           // Force re-render
           setUpdateTrigger(prev => prev + 1);
         } else {
-          console.log('✅ State is correct, no forced update needed');
           // Force re-render anyway to ensure component gets the updated state
-          console.log('🔄 Forcing re-render to propagate state to component...');
           // Create a new state object to force React to re-render
           setState(prev => ({ ...prev }));
         }
@@ -689,7 +646,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         if (!hasLoadedRef.current) {
           const existingFlag = sessionStorage.getItem(loadingFlagKey);
           if (existingFlag) {
-            console.log('🧹 Clearing stale loading flag on mount');
             sessionStorage.removeItem(loadingFlagKey);
             sessionStorage.removeItem(`${loadingFlagKey}-timestamp`);
           }
@@ -706,42 +662,29 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         if (loadingFlagTimestamp) {
           const flagAge = Date.now() - parseInt(loadingFlagTimestamp);
           if (flagAge > 10000) { // 10 seconds - flag is stale
-            console.log('🧹 Clearing stale loading flag (age: ' + Math.round(flagAge / 1000) + 's)');
             sessionStorage.removeItem(loadingFlagKey);
             sessionStorage.removeItem(`${loadingFlagKey}-timestamp`);
             // Reset state to ensure UI updates after clearing stale flag
-            console.log('🔄 Resetting loading state after clearing stale flag');
             setState(prev => ({ ...prev, loading: false, profileLoading: false }));
           }
         } else {
           // If flag exists but has no timestamp (old version), clean it up
           const currentlyLoading = sessionStorage.getItem(loadingFlagKey);
           if (currentlyLoading === 'true') {
-            console.log('🧹 Clearing old loading flag without timestamp');
             sessionStorage.removeItem(loadingFlagKey);
-            // Reset state to ensure UI updates after clearing old flag
-            console.log('🔄 Resetting loading state after clearing old flag');
             setState(prev => ({ ...prev, loading: false, profileLoading: false }));
           }
         }
 
         const currentlyLoading = sessionStorage.getItem(loadingFlagKey);
         if (currentlyLoading === 'true') {
-          console.log('⏭️ Already loading data, skipping duplicate load');
-
-          // IMPORTANT: In StrictMode, the second mount may see loading: true
-          // Check if we actually have data loaded (from the first mount's completion)
-          // and ensure loading state reflects reality
           if (hasLoadedRef.current && stateRef.current.allHeroes.length > 0) {
-            console.log('⏭️ Data already loaded by first mount, ensuring loading: false');
             setState(prev => ({ ...prev, loading: false, profileLoading: false }));
           }
           return;
         }
 
         if (!alreadyLoaded) {
-          console.log('🔄 Loading game data for user:', session.user.id);
-
           // Set the flag IMMEDIATELY to prevent race conditions
           hasLoadedRef.current = true;
           userIdRef.current = session.user.id;
@@ -791,8 +734,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
   useEffect(() => {
     if (!userIdRef.current) return;
 
-    console.log('🔌 Setting up Realtime subscription for user:', userIdRef.current);
-
     const profileSubscription = supabase
       .channel(`profile:${userIdRef.current}`)
       .on(
@@ -804,7 +745,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           filter: `user_id=eq.${userIdRef.current}`
         },
         (payload) => {
-          console.log('🔄 Profile updated via realtime:', payload.new);
           const updatedProfile = payload.new as PlayerProfile;
 
           setState(prev => {
@@ -842,7 +782,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       .subscribe();
 
     return () => {
-      console.log('🔌 Cleaning up Realtime subscription');
       supabase.removeChannel(profileSubscription);
     };
   }, [state.profile]);
@@ -854,23 +793,17 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
   useEffect(() => {
     if (!state.worldMap || !userIdRef.current) return;
 
-    console.log('⏰ Starting dynamic object updater (5-minute interval)');
-
     // Update immediately on mount
     const updateDynamicObjects = () => {
       const currentWorldMap = stateRef.current.worldMap;
       if (!currentWorldMap) return;
 
-      console.log('🔄 Checking dynamic objects for updates...');
       const result = DynamicObjectUpdaterService.updateDynamicObjects(currentWorldMap);
 
       if (result.updated) {
-        console.log('✅ Dynamic objects updated, saving to database...');
         setState(prev => ({ ...prev, worldMap: result.worldMap }));
         // Auto-save will be triggered by the state change
         scheduleAutoSave();
-      } else {
-        console.log('⏭️ No dynamic object updates needed');
       }
     };
 
@@ -901,44 +834,74 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     },
 
     addGold: async (amount: number) => {
-      setState(prev => ({
-        ...prev,
-        gold: prev.gold + amount,
-        inventory: (() => {
-          const inv = prev.inventory;
-          inv.gold += amount;
-          return inv;
-        })()
-      }));
-      scheduleAutoSave();
+      let newState: GameState | undefined;
+      setState(prev => {
+        newState = {
+          ...prev,
+          gold: prev.gold + amount,
+          inventory: (() => {
+            const inv = prev.inventory;
+            inv.gold += amount;
+            return inv;
+          })()
+        };
+        // CRITICAL: Update stateRef synchronously BEFORE scheduling save
+        stateRef.current = newState;
+        return newState;
+      });
+      setTimeout(() => scheduleAutoSave(newState), 0);
     },
 
     removeGold: async (amount: number) => {
-      setState(prev => ({
-        ...prev,
-        gold: Math.max(0, prev.gold - amount),
-        inventory: (() => {
-          const inv = prev.inventory;
-          inv.gold = Math.max(0, inv.gold - amount);
-          return inv;
-        })()
-      }));
-      scheduleAutoSave();
+      let newState: GameState | undefined;
+      setState(prev => {
+        newState = {
+          ...prev,
+          gold: Math.max(0, prev.gold - amount),
+          inventory: (() => {
+            const inv = prev.inventory;
+            inv.gold = Math.max(0, inv.gold - amount);
+            return inv;
+          })()
+        };
+        // CRITICAL: Update stateRef synchronously BEFORE scheduling save
+        stateRef.current = newState;
+        return newState;
+      });
+      setTimeout(() => scheduleAutoSave(newState), 0);
     },
 
     addGems: async (amount: number) => {
-      setState(prev => ({ ...prev, gems: prev.gems + amount }));
-      scheduleAutoSave();
+      let newState: GameState | undefined;
+      setState(prev => {
+        newState = { ...prev, gems: prev.gems + amount };
+        // CRITICAL: Update stateRef synchronously BEFORE scheduling save
+        stateRef.current = newState;
+        return newState;
+      });
+      setTimeout(() => scheduleAutoSave(newState), 0);
     },
 
     removeGems: async (amount: number) => {
-      setState(prev => ({ ...prev, gems: Math.max(0, prev.gems - amount) }));
-      scheduleAutoSave();
+      let newState: GameState | undefined;
+      setState(prev => {
+        newState = { ...prev, gems: Math.max(0, prev.gems - amount) };
+        // CRITICAL: Update stateRef synchronously BEFORE scheduling save
+        stateRef.current = newState;
+        return newState;
+      });
+      setTimeout(() => scheduleAutoSave(newState), 0);
     },
 
     setEnergy: async (amount: number) => {
-      setState(prev => ({ ...prev, energy: Math.min(amount, prev.maxEnergy) }));
-      scheduleAutoSave();
+      let newState: GameState | undefined;
+      setState(prev => {
+        newState = { ...prev, energy: Math.min(amount, prev.maxEnergy) };
+        // CRITICAL: Update stateRef synchronously BEFORE scheduling save
+        stateRef.current = newState;
+        return newState;
+      });
+      setTimeout(() => scheduleAutoSave(newState), 0);
     },
 
     addHero: async (hero: Hero) => {
@@ -972,6 +935,9 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     },
 
     updateActiveParty: async (heroes: Hero[], skipAutoSave = false) => {
+      // Mark that we're updating heroes to prevent stale auto-saves
+      lastHeroUpdateTimeRef.current = Date.now();
+
       // IMPORTANT: Remove duplicates and limit to 4 heroes to prevent data corruption
       const uniqueHeroes = heroes
         .filter((hero, index, self) =>
@@ -983,9 +949,13 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         console.warn(`⚠️ Prevented duplicate heroes in party! Original: ${heroes.length}, After dedup: ${uniqueHeroes.length}`);
       }
 
+      // Capture the new state to pass to scheduleAutoSave
+      let newState: GameState | undefined;
+
       setState(prev => {
         // Sync updated heroes to allHeroes array
-        // Heroes are already mutated in-place, we just need to ensure the references are correct
+        // CRITICAL FIX: Create NEW Hero instances (clones) to trigger React re-renders
+        // React compares objects by reference, so we need new instances even though properties changed
         const updatedHeroMap = new Map(uniqueHeroes.map(h => [h.id, h]));
 
         const updatedAllHeroes = prev.allHeroes.map(hero => {
@@ -995,31 +965,64 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
               hp: updatedHero.currentHP,
               maxHP: updatedHero.maxHP,
               level: updatedHero.level,
-              xp: updatedHero.experience
+              xp: updatedHero.experience,
+              'Input hero XP': uniqueHeroes.find(h => h.id === hero.id)?.experience,
+              'Prev hero XP': hero.experience
             });
-            // Return the same hero reference (already mutated in combat)
-            return updatedHero;
+            // CRITICAL FIX: Create a completely NEW object by spreading all properties
+            // This creates a new object reference that React will detect as changed
+            const clonedHero = { ...updatedHero } as Hero;
+            // Restore the prototype chain to keep Hero class methods
+            Object.setPrototypeOf(clonedHero, Object.getPrototypeOf(updatedHero));
+            console.log(`✅ Cloned ${hero.name} - XP after clone:`, clonedHero.experience);
+            return clonedHero;
           }
           return hero;
         });
 
-        console.log('✅ Updated activeParty and synced changes to allHeroes');
-        console.log('📊 Active party heroes:', uniqueHeroes.map(h => ({ name: h.name, hp: h.currentHP, level: h.level, xp: h.experience })));
+        // Also clone the active party heroes to ensure UI updates
+        const clonedActiveParty = uniqueHeroes.map(hero => {
+          const clonedHero = { ...hero } as Hero;
+          Object.setPrototypeOf(clonedHero, Object.getPrototypeOf(hero));
+          return clonedHero;
+        });
+
+        console.log('✅ Updated activeParty and synced changes to allHeroes (with cloned instances)');
+        console.log('📊 Active party heroes:', clonedActiveParty.map(h => ({ name: h.name, hp: h.currentHP, level: h.level, xp: h.experience })));
         console.log('📊 All heroes after sync:', updatedAllHeroes.map(h => ({ name: h.name, hp: h.currentHP, level: h.level, xp: h.experience })));
 
-        return {
+        // Verify cloning worked by checking object references
+        if (uniqueHeroes.length > 0) {
+          console.log('🔍 Clone verification - Original vs Clone are different objects?', uniqueHeroes[0] !== clonedActiveParty[0]);
+        }
+
+        newState = {
           ...prev,
-          activeParty: [...uniqueHeroes], // New array reference to trigger React update
-          allHeroes: [...updatedAllHeroes] // New array reference to trigger React update
+          activeParty: clonedActiveParty, // New hero instances to trigger React update
+          allHeroes: updatedAllHeroes // New hero instances to trigger React update
         };
+
+        // CRITICAL: Update stateRef.current synchronously BEFORE returning
+        // This ensures any code that reads stateRef.current gets the NEW hero data
+        stateRef.current = newState;
+
+        console.log('🔄 setState callback: Returning NEW state with updated heroes:', {
+          activePartyLength: newState.activeParty.length,
+          allHeroesLength: newState.allHeroes.length,
+          activePartyData: newState.activeParty.map(h => ({ name: h.name, level: h.level, xp: h.experience })),
+          allHeroesData: newState.allHeroes.map(h => ({ name: h.name, level: h.level, xp: h.experience }))
+        });
+
+        return newState;
       });
 
       // Force re-render to propagate changes to components
       setUpdateTrigger(prev => prev + 1);
 
-      // Only auto-save if not explicitly skipped (e.g., during combat flow where manual save follows)
+      // CRITICAL FIX: Pass the captured newState to scheduleAutoSave to avoid stale stateRef.current
+      // This ensures we save the CURRENT hero data (XP, levels, HP) instead of OLD data
       if (!skipAutoSave) {
-        scheduleAutoSave();
+        setTimeout(() => scheduleAutoSave(newState), 0);
       } else {
         console.log('⏭️ Skipping auto-save (manual save will follow)');
       }
@@ -1049,14 +1052,17 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     addItems: async (items: Item[]) => {
       if (items.length === 0) return;
 
+      let newState: GameState | undefined;
+
       setState(prev => {
         // Create a new inventory instance to trigger React re-render
         const newInventory = new Inventory(prev.inventory.maxSlots);
         newInventory.gold = prev.inventory.gold;
         newInventory.items = [...prev.inventory.items, ...items];
-        return { ...prev, inventory: newInventory };
+        newState = { ...prev, inventory: newInventory };
+        return newState;
       });
-      scheduleAutoSave();
+      scheduleAutoSave(newState);
     },
 
     removeItem: async (itemId: string) => {
@@ -1234,37 +1240,32 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
   useEffect(() => {
     // Skip calculation during initial load to prevent race conditions
     if (state.loading || state.profileLoading) {
-      console.log('[Combat Power] Skipping calculation during loading');
       return;
     }
 
     let totalScore = 0;
 
-    console.log('[Combat Power] Calculating combat power for active party:', state.activeParty.length, 'heroes');
     for (const hero of state.activeParty) {
       if (hero && hero.isAlive) {
-        const heroScore = hero.getScore();
-        console.log(`[Combat Power] Hero ${hero.name}: Score = ${heroScore}, Level = ${hero.level}, Alive = ${hero.isAlive}`);
-        totalScore += heroScore;
+        totalScore += hero.getScore();
       }
     }
 
-    console.log(`[Combat Power] Total calculated: ${totalScore}, Current state: ${state.combatPower}`);
-
     // Only update if changed to avoid infinite loops
     if (totalScore !== state.combatPower) {
-      console.log(`[Combat Power] Combat power changed from ${state.combatPower} to ${Math.floor(totalScore)}, triggering save`);
+      let newState: GameState | undefined;
       setState(prev => {
-        console.log('[Combat Power] setState - prev.allHeroes.length:', prev.allHeroes.length);
-        console.log('[Combat Power] setState - prev.activeParty.length:', prev.activeParty.length);
-        return {
+        newState = {
           ...prev,
           combatPower: Math.floor(totalScore)
         };
+        // CRITICAL: Update stateRef synchronously BEFORE scheduling save
+        stateRef.current = newState;
+        return newState;
       });
 
       // Trigger save if combat power changed (ensures it gets saved to database)
-      scheduleAutoSave();
+      setTimeout(() => scheduleAutoSave(newState), 0);
     }
   }, [state.activeParty, state.activeParty.length, state.allHeroes, state.loading, state.profileLoading, scheduleAutoSave]);
 

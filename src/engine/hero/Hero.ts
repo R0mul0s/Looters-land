@@ -34,9 +34,6 @@ export class Hero {
   rarity: HeroRarity;
   level: number;
 
-  // Static counter to ensure truly unique IDs
-  private static _idCounter: number = 0;
-
   // Hero metadata (from template)
   role?: 'tank' | 'dps' | 'healer' | 'support';
   description?: string;
@@ -85,9 +82,9 @@ export class Hero {
   equipment?: Equipment;
 
   constructor(name: string, heroClass: HeroClass, level: number = 1, rarity: HeroRarity = 'common') {
-    // Generate truly unique ID using timestamp, random, and counter
-    Hero._idCounter++;
-    this.id = `hero_${Date.now()}_${Math.random()}_${Hero._idCounter}`;
+    // Generate UUID for database compatibility
+    // Use crypto.randomUUID() which generates RFC 4122 compliant UUIDs
+    this.id = crypto.randomUUID();
     this.name = name;
     this.class = heroClass;
     this.rarity = rarity;

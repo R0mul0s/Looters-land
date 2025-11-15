@@ -20,7 +20,6 @@ import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import { t } from '../localization/i18n';
 import type { Hero } from '../engine/hero/Hero';
 import type { Inventory } from '../engine/item/Inventory';
-import type { Item } from '../engine/item/Item';
 import type { GameSave, DBHero, DBInventoryItem, DBEquipmentSlot, GameSaveInsert, DBHeroInsert, DBInventoryItemInsert, DBEquipmentSlotInsert } from '../types/database.types';
 import { LeaderboardService } from './LeaderboardService';
 
@@ -89,34 +88,15 @@ export class GameSaveService {
 
       const gameSaveId = gameSave.id;
 
-      // 2. Delete existing data for this save
-      // IMPORTANT: Delete heroes FIRST (this will cascade delete equipment_slots due to FK constraint)
-      // Then delete inventory items
-      const { error: deleteHeroesError } = await supabase
-        .from('heroes')
-        .delete()
-        .eq('game_save_id', gameSaveId);
-
-      if (deleteHeroesError) {
-        console.error('Delete heroes error:', deleteHeroesError);
-      }
-
-      const { error: deleteItemsError } = await supabase
-        .from('inventory_items')
-        .delete()
-        .eq('game_save_id', gameSaveId);
-
-      if (deleteItemsError) {
-        console.error('Delete inventory error:', deleteItemsError);
-      }
-
-      // 3. Save heroes with party_order
-      const heroInserts: DBHeroInsert[] = heroes.map(hero => {
+      // 2. Use UPSERT for heroes (UPDATE existing or INSERT new)
+      // This is safer and faster than DELETE + INSERT pattern
+      const heroUpserts: DBHeroInsert[] = heroes.map(hero => {
         // Find if hero is in active party and get its position
         const partyIndex = activeParty?.findIndex(h => h.id === hero.id) ?? -1;
         const party_order = partyIndex >= 0 ? partyIndex : null;
 
         return {
+          id: hero.id, // CRITICAL: Include ID for upsert to work
           game_save_id: gameSaveId,
           hero_name: hero.name,
           hero_class: hero.class,
@@ -135,55 +115,43 @@ export class GameSaveService {
         };
       });
 
-      console.log('💾 Inserting heroes into database:', {
-        heroCount: heroInserts.length,
-        heroes: heroInserts.map(h => ({
-          name: h.hero_name,
-          level: h.level,
-          hp: h.current_hp,
-          maxHP: h.max_hp,
-          xp: h.experience,
-          requiredXP: h.required_xp
-        }))
-      });
-
       const { data: savedHeroes, error: heroError } = await supabase
         .from('heroes')
-        .insert(heroInserts)
+        .upsert(heroUpserts, {
+          onConflict: 'id', // Use hero ID as conflict key
+          ignoreDuplicates: false // Update existing records
+        })
         .select();
 
       if (heroError || !savedHeroes) {
         console.error('❌ Hero save error:', heroError);
-        console.error('❌ Hero inserts that failed:', heroInserts);
         return {
           success: false,
           message: t('saveGame.heroSaveFailed')
         };
       }
 
-      console.log('✅ Heroes saved to database:', {
-        savedCount: savedHeroes.length,
-        dbIds: savedHeroes.map(h => h.id),
-        heroDetails: savedHeroes.map(h => ({
-          id: h.id,
-          name: h.hero_name,
-          level: h.level,
-          hp: h.current_hp,
-          maxHP: h.max_hp,
-          xp: h.experience,
-          requiredXP: h.required_xp
-        }))
+      // Verify XP integrity (only log errors if mismatch detected)
+      heroUpserts.forEach((input, index) => {
+        const returned = savedHeroes[index];
+        if (input.experience !== returned.experience) {
+          console.error(`❌ XP MISMATCH for ${input.hero_name}:`, {
+            sent: input.experience,
+            returned: returned.experience,
+            difference: returned.experience - input.experience
+          });
+        }
       });
 
       // 4. Save equipment slots for each hero
-      const equipmentInserts: DBEquipmentSlotInsert[] = [];
+      // Use UPSERT pattern (same as heroes) - safer and faster than DELETE + INSERT
+      const equipmentUpserts: DBEquipmentSlotInsert[] = [];
       heroes.forEach((hero, index) => {
         const dbHeroId = savedHeroes[index].id;
-        console.log(`🎒 Processing equipment for hero ${hero.name} (memory ID: ${hero.id}, DB ID: ${dbHeroId})`);
 
         if (hero.equipment) {
           Object.entries(hero.equipment.slots).forEach(([slotName, item]) => {
-            equipmentInserts.push({
+            equipmentUpserts.push({
               hero_id: dbHeroId,
               slot_name: slotName,
               item_id: item?.id || null,
@@ -203,30 +171,35 @@ export class GameSaveService {
         }
       });
 
-      console.log('🎒 Equipment inserts prepared:', {
-        count: equipmentInserts.length,
-        heroIds: [...new Set(equipmentInserts.map(e => e.hero_id))],
-        items: equipmentInserts.map(e => ({ heroId: e.hero_id, slot: e.slot_name, item: e.item_name }))
-      });
-
-      if (equipmentInserts.length > 0) {
+      if (equipmentUpserts.length > 0) {
         const { error: equipError } = await supabase
           .from('equipment_slots')
-          .insert(equipmentInserts);
+          .upsert(equipmentUpserts, {
+            onConflict: 'hero_id,slot_name', // Use composite unique key
+            ignoreDuplicates: false // Update existing records
+          });
 
         if (equipError) {
           console.error('❌ Equipment save error:', equipError);
-          console.error('❌ Equipment inserts that failed:', equipmentInserts);
           return {
             success: false,
             message: t('saveGame.equipmentSaveFailed')
           };
         }
-
-        console.log('✅ Equipment saved successfully');
       }
 
       // 5. Save inventory items
+      // For inventory, we keep DELETE + INSERT because items can be added/removed frequently
+      // and we don't have a stable composite key (items can be duplicates with same item_id)
+      const { error: deleteItemsError } = await supabase
+        .from('inventory_items')
+        .delete()
+        .eq('game_save_id', gameSaveId);
+
+      if (deleteItemsError) {
+        console.error('❌ Delete inventory error:', deleteItemsError);
+      }
+
       const itemInserts: DBInventoryItemInsert[] = inventory.items.map(item => ({
         game_save_id: gameSaveId,
         item_id: item.id,

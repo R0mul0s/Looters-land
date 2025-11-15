@@ -76,7 +76,9 @@ export interface DBEquipmentSlot {
 
 // Insert types (without auto-generated fields)
 export type GameSaveInsert = Omit<GameSave, 'id' | 'created_at' | 'updated_at'>;
-export type DBHeroInsert = Omit<DBHero, 'id' | 'created_at' | 'updated_at'>;
+// DBHeroInsert MUST include 'id' for UPSERT operations to work correctly
+// Otherwise heroes won't be properly updated and may be duplicated or lost
+export type DBHeroInsert = Omit<DBHero, 'created_at' | 'updated_at'>;
 export type DBInventoryItemInsert = Omit<DBInventoryItem, 'id' | 'created_at' | 'updated_at'>;
 export type DBEquipmentSlotInsert = Omit<DBEquipmentSlot, 'id' | 'created_at' | 'updated_at'>;
 

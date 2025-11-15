@@ -1045,6 +1045,24 @@ export const en = {
       },
     },
 
+    // Version 2.3.4
+    v2_3_4: {
+      features: {
+        item1: 'Complete weather and time of day localization - All weather texts (Clear, Rain, Storm, Fog, Snow) and time of day (Dawn, Day, Dusk, Night) now fully translated to Czech',
+        item2: 'Localized UI elements - "Next:", "Soon" and other weather widget texts fully localized',
+      },
+      technical: {
+        item1: 'Added weather and timeOfDay sections to localization files (en.ts, cs.ts)',
+        item2: 'Updated WeatherSystem.getWeatherDisplay() with optional translation parameter',
+        item3: 'Updated TimeOfDaySystem.getTimeDisplay() with optional translation parameter',
+        item4: 'WeatherTimeWidget now uses useTranslation() hook for all text translations',
+        item5: 'WorldMapDemo2 helper functions updated to use WeatherSystem and TimeOfDaySystem with translations',
+        item6: 'Added JSDoc headers to WeatherSystem.ts and TimeOfDaySystem.ts',
+        item7: 'Updated @lastModified dates to 2025-11-15 in all modified files',
+        item8: 'All changes verified against coding_rules.md standards',
+      },
+    },
+
     // Version 2.3.3
     v2_3_3: {
       features: {
@@ -1106,6 +1124,26 @@ export const en = {
     hero3: 'Mage',
     hero4: 'Shieldbearer',
     hero5: 'Bard',
+  },
+
+  // ============================================================================
+  // WEATHER & TIME OF DAY
+  // ============================================================================
+  weather: {
+    clear: 'Clear',
+    rain: 'Rain',
+    storm: 'Storm',
+    fog: 'Fog',
+    snow: 'Snow',
+    next: 'Next:',
+    soon: 'Soon',
+  },
+
+  timeOfDay: {
+    dawn: 'Dawn',
+    day: 'Day',
+    dusk: 'Dusk',
+    night: 'Night',
   },
 } as const;
 

@@ -1047,6 +1047,24 @@ export const cs: LocaleKeys = {
       },
     },
 
+    // Version 2.3.4
+    v2_3_4: {
+      features: {
+        item1: 'Kompletní lokalizace počasí a denní doby - Všechny texty počasí (Jasno, Déšť, Bouřka, Mlha, Sníh) a denní doby (Úsvit, Den, Soumrak, Noc) nyní přeloženy do češtiny',
+        item2: 'Přeložené UI prvky - "Další:", "Brzy" a další texty ve widgetu počasí plně lokalizovány',
+      },
+      technical: {
+        item1: 'Přidána sekce weather a timeOfDay do lokalizačních souborů (en.ts, cs.ts)',
+        item2: 'Aktualizován WeatherSystem.getWeatherDisplay() s volitelným parametrem pro lokalizaci',
+        item3: 'Aktualizován TimeOfDaySystem.getTimeDisplay() s volitelným parametrem pro lokalizaci',
+        item4: 'WeatherTimeWidget nyní používá useTranslation() hook pro překlad všech textů',
+        item5: 'WorldMapDemo2 helper funkce aktualizovány na použití WeatherSystem a TimeOfDaySystem s překlady',
+        item6: 'Přidány JSDoc hlavičky do WeatherSystem.ts a TimeOfDaySystem.ts',
+        item7: 'Aktualizována @lastModified data na 2025-11-15 ve všech upravených souborech',
+        item8: 'Všechny změny ověřeny podle coding_rules.md standardů',
+      },
+    },
+
     // Version 2.3.3
     v2_3_3: {
       features: {
@@ -1108,5 +1126,25 @@ export const cs: LocaleKeys = {
     hero3: 'Kouzelník',
     hero4: 'Štítonoš',
     hero5: 'Bard',
+  },
+
+  // ============================================================================
+  // WEATHER & TIME OF DAY
+  // ============================================================================
+  weather: {
+    clear: 'Jasno',
+    rain: 'Déšť',
+    storm: 'Bouřka',
+    fog: 'Mlha',
+    snow: 'Sníh',
+    next: 'Další:',
+    soon: 'Brzy',
+  },
+
+  timeOfDay: {
+    dawn: 'Úsvit',
+    day: 'Den',
+    dusk: 'Soumrak',
+    night: 'Noc',
   },
 };

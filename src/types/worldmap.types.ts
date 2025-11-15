@@ -146,6 +146,7 @@ export interface MapEncounter extends DynamicObject {
   enemyLevel: number;
   enemyCount: number;
   difficulty: 'Normal' | 'Elite' | 'Boss';
+  defeated: boolean;
 }
 
 export interface ResourceNode extends DynamicObject {

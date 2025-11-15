@@ -459,7 +459,8 @@ export function Router() {
         console.log('🔍 DEBUG: Found object at index:', objectIndex);
 
         if (objectIndex !== -1) {
-          const beforeDefeated = updatedWorldMap.dynamicObjects[objectIndex].defeated;
+          const obj = updatedWorldMap.dynamicObjects[objectIndex];
+          const beforeDefeated = (obj.type === 'encounter' || obj.type === 'wanderingMonster') ? (obj as any).defeated : undefined;
           console.log('🔍 DEBUG: Object defeated status BEFORE update:', beforeDefeated);
 
           // Create new array with updated object
@@ -467,9 +468,10 @@ export function Router() {
           updatedWorldMap.dynamicObjects[objectIndex] = {
             ...updatedWorldMap.dynamicObjects[objectIndex],
             defeated: true
-          };
+          } as any;
 
-          console.log('🔍 DEBUG: Object defeated status AFTER update:', updatedWorldMap.dynamicObjects[objectIndex].defeated);
+          const updatedObj = updatedWorldMap.dynamicObjects[objectIndex];
+          console.log('🔍 DEBUG: Object defeated status AFTER update:', (updatedObj.type === 'encounter' || updatedObj.type === 'wanderingMonster') ? (updatedObj as any).defeated : undefined);
 
           if (combatMetadata.rareSpawnObject) {
             console.log('🎯 Rare spawn marked as defeated at position', pos);
@@ -483,7 +485,7 @@ export function Router() {
 
       // Update worldmap with defeated status
       console.log('🔍 DEBUG: Calling updateWorldMap with defeated monsters count:',
-        updatedWorldMap.dynamicObjects.filter(obj => obj.defeated).length);
+        updatedWorldMap.dynamicObjects.filter(obj => (obj.type === 'encounter' || obj.type === 'wanderingMonster') && (obj as any).defeated).length);
       await gameActions.updateWorldMap(updatedWorldMap);
       console.log('🔍 DEBUG: updateWorldMap completed');
     }

@@ -21,6 +21,9 @@ dist-ssr
 # Supabase temporary files
 supabase/.temp/
 
+# Supabase secrets (should use .example or template instead)
+supabase/setup-vault-secrets.sql
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

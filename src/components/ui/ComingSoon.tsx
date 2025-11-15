@@ -5,10 +5,12 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-08
+ * @lastModified 2025-11-15
  */
 
 import React from 'react';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, BLUR } from '../../styles/tokens';
+import { flexCenter } from '../../styles/common';
 
 interface ComingSoonProps {
   title: string;
@@ -41,13 +43,11 @@ export function ComingSoon({
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    ...flexCenter,
     width: '100%',
     height: '100%',
-    background: 'linear-gradient(135deg, #0a0f1e 0%, #0f172a 50%, #0a0f1e 100%)',
-    padding: '40px',
+    background: `linear-gradient(135deg, ${COLORS.bgDarkSolid} 0%, ${COLORS.bgDarkAlt} 50%, ${COLORS.bgDarkSolid} 100%)`,
+    padding: SPACING[10],
     position: 'relative',
     overflow: 'hidden'
   },
@@ -58,42 +58,42 @@ const styles: Record<string, React.CSSProperties> = {
     zIndex: 1
   },
   icon: {
-    fontSize: '96px',
-    marginBottom: '24px',
+    fontSize: FONT_SIZE['9xl'],
+    marginBottom: SPACING[6],
     filter: 'drop-shadow(0 4px 24px rgba(45, 212, 191, 0.4))',
     animation: 'pulse 2s ease-in-out infinite'
   },
   title: {
-    fontSize: '40px',
-    fontWeight: '800',
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
+    fontSize: FONT_SIZE['5xl'],
+    fontWeight: FONT_WEIGHT.bold,
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     backgroundClip: 'text',
-    marginBottom: '20px',
+    marginBottom: SPACING.lg,
     letterSpacing: '0.5px',
     textShadow: '0 0 40px rgba(45, 212, 191, 0.3)'
   },
   description: {
-    fontSize: '18px',
-    color: '#94a3b8',
-    marginBottom: '36px',
+    fontSize: FONT_SIZE.lg,
+    color: COLORS.textGray,
+    marginBottom: SPACING[9],
     lineHeight: '1.8',
-    fontWeight: '400',
+    fontWeight: FONT_WEIGHT.normal,
     letterSpacing: '0.3px'
   },
   badge: {
     display: 'inline-block',
-    padding: '14px 40px',
+    padding: `${SPACING[3.5]} ${SPACING[10]}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.15) 0%, rgba(20, 184, 166, 0.08) 100%)',
     border: '2px solid rgba(45, 212, 191, 0.5)',
-    borderRadius: '32px',
-    color: '#2dd4bf',
-    fontSize: '15px',
-    fontWeight: '700',
+    borderRadius: BORDER_RADIUS.round,
+    color: COLORS.primary,
+    fontSize: FONT_SIZE[15],
+    fontWeight: FONT_WEIGHT.bold,
     textTransform: 'uppercase',
     letterSpacing: '2px',
     boxShadow: '0 8px 32px rgba(45, 212, 191, 0.2), inset 0 1px 0 rgba(45, 212, 191, 0.2)',
-    backdropFilter: 'blur(10px)'
+    backdropFilter: BLUR.md
   }
 };

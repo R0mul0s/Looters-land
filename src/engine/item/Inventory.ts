@@ -1,6 +1,10 @@
 /**
  * Inventory Manager - Manages player's item collection
  * Migrated from vanilla JS to TypeScript
+ *
+ * @author Roman Hlaváček - rhsoft.cz
+ * @copyright 2025
+ * @lastModified 2025-11-15
  */
 
 import { Item } from './Item';
@@ -126,7 +130,7 @@ export class Inventory {
     // Apply sorting
     filtered.sort((a, b) => {
       switch (this.sortBy) {
-        case 'rarity':
+        case 'rarity': {
           const rarityOrder: Record<ItemRarity, number> = {
             common: 0,
             uncommon: 1,
@@ -135,7 +139,11 @@ export class Inventory {
             legendary: 4,
             mythic: 5
           };
-          return (rarityOrder[b.rarity] || 0) - (rarityOrder[a.rarity] || 0);
+          const rarityDiff = (rarityOrder[b.rarity] || 0) - (rarityOrder[a.rarity] || 0);
+          // If same rarity, sort by level (descending)
+          if (rarityDiff !== 0) return rarityDiff;
+          return b.level - a.level;
+        }
 
         case 'level':
           return b.level - a.level;

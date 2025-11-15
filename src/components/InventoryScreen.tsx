@@ -7,7 +7,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2025-11-15
  */
 
 import React, { useState } from 'react';
@@ -16,6 +16,8 @@ import type { Item } from '../engine/item/Item';
 import type { Inventory } from '../engine/item/Inventory';
 import { CLASS_ICONS, RARITY_COLORS } from '../types/hero.types';
 import { t } from '../localization/i18n';
+import { COLORS, SPACING } from '../styles/tokens';
+import { flexCenter } from '../styles/common';
 import '../App.css';
 
 /**
@@ -68,12 +70,10 @@ export function InventoryScreen({
   if (!selectedHero || heroes.length === 0) {
     return (
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
+        ...flexCenter,
         height: '100%',
-        fontSize: '18px',
-        color: '#888'
+        fontSize: SPACING[4.5],
+        color: COLORS.textMuted
       }}>
         {t('inventoryScreen.loading')}
       </div>
@@ -244,7 +244,7 @@ export function InventoryScreen({
           <div className="equipment-slots">
             {Object.entries(selectedHero.equipment?.slots || {}).map(([slotName, item]) => (
               <div
-                key={slotName}
+                key={`equipped-${slotName}-${item?.id || 'empty'}`}
                 className={`equipment-slot ${item ? 'has-item' : 'empty'}`}
                 onMouseEnter={(e) => item && showTooltip(item, e)}
                 onMouseMove={(e) => item && updateTooltipPosition(e)}
@@ -292,10 +292,10 @@ export function InventoryScreen({
               <p style={{ color: '#999', fontSize: '0.9em' }}>{t('inventoryScreen.equipment.noSetBonuses')}</p>
             ) : (
               selectedHero.equipment?.getActiveSetBonuses().map((setInfo, index) => (
-                <div key={index} className="set-bonus-item">
+                <div key={`setbonus-${setInfo.setId}-${index}`} className="set-bonus-item">
                   <h5>{setInfo.setName} ({setInfo.pieces} pieces)</h5>
                   {setInfo.bonuses.map((bonus, bIndex) => (
-                    <div key={bIndex} className={`bonus-line ${bonus.active ? 'active' : 'inactive'}`}>
+                    <div key={`bonus-${setInfo.setId}-${bonus.pieces}-${bIndex}`} className={`bonus-line ${bonus.active ? 'active' : 'inactive'}`}>
                       {bonus.pieces} pieces: {Object.entries(bonus.bonus)
                         .filter(([key]) => key !== 'special')
                         .map(([stat, value]) => `${stat} +${value}`)
@@ -338,7 +338,7 @@ export function InventoryScreen({
             ) : (
               inventory.getFilteredItems().map((item) => (
                 <div
-                  key={item.id}
+                  key={`inventory-${item.id}`}
                   className={`inventory-item rarity-${item.rarity}`}
                   onClick={() => onEquipItem(selectedHero, item)}
                   onContextMenu={(e) => {
@@ -456,9 +456,9 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     height: '100%',
-    background: 'linear-gradient(135deg, #0a0f1e 0%, #0f172a 100%)',
+    background: `linear-gradient(135deg, ${COLORS.bgDarkSolid} 0%, ${COLORS.bgDarkAlt} 100%)`,
     overflow: 'auto',
-    padding: '20px',
+    padding: SPACING.lg,
     boxSizing: 'border-box'
   }
 };

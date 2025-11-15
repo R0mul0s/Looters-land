@@ -6,11 +6,13 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-12
+ * @lastModified 2025-11-15
  */
 
 import React, { memo } from 'react';
 import { t } from '../../localization/i18n';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
+import { flexBetween, flexColumn } from '../../styles/common';
 
 interface ChangelogEntry {
   version: string;
@@ -291,107 +293,102 @@ export const LastUpdates = memo(function LastUpdates({ onClose }: LastUpdatesPro
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
+    ...flexColumn,
     width: '100%',
     height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    color: '#f1f5f9',
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight,
     overflow: 'hidden'
   },
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '20px',
-    borderBottom: '2px solid #2dd4bf',
+    ...flexBetween,
+    padding: SPACING[5],
+    borderBottom: `2px solid ${COLORS.primary}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
   },
   title: {
     margin: 0,
-    fontSize: '24px',
-    fontWeight: '700'
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold
   },
   closeButton: {
-    background: 'transparent',
-    border: '2px solid #334155',
-    color: '#94a3b8',
-    fontSize: '24px',
+    background: COLORS.transparent,
+    border: `2px solid ${COLORS.bgSurfaceLight}`,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE['2xl'],
     cursor: 'pointer',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    transition: 'all 0.2s'
+    padding: `${SPACING[2]} ${SPACING[4]}`,
+    borderRadius: BORDER_RADIUS.md,
+    transition: TRANSITIONS.allBase
   },
   content: {
     flex: 1,
     overflowY: 'auto',
-    padding: '20px'
+    padding: SPACING[5]
   },
   versionBlock: {
-    marginBottom: '20px'
+    marginBottom: SPACING[5]
   },
   versionHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '15px',
-    paddingBottom: '10px',
+    ...flexBetween,
+    marginBottom: SPACING[4],
+    paddingBottom: SPACING[3],
     borderBottom: '1px solid rgba(45, 212, 191, 0.2)'
   },
   versionBadge: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: '#2dd4bf',
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.primary,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.2) 0%, rgba(20, 184, 166, 0.1) 100%)',
-    padding: '6px 12px',
-    borderRadius: '8px',
+    padding: `${SPACING[2]} ${SPACING[3]}`,
+    borderRadius: BORDER_RADIUS.md,
     border: '1px solid rgba(45, 212, 191, 0.3)'
   },
   versionDate: {
-    fontSize: '13px',
-    color: '#94a3b8',
-    fontWeight: '500'
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textGray,
+    fontWeight: FONT_WEIGHT.medium
   },
   section: {
-    marginBottom: '15px'
+    marginBottom: SPACING[4]
   },
   sectionTitle: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#2dd4bf',
-    marginBottom: '8px'
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.primary,
+    marginBottom: SPACING[2]
   },
   list: {
     margin: '0',
-    paddingLeft: '20px',
+    paddingLeft: SPACING[5],
     listStyleType: 'none'
   },
   listItem: {
-    fontSize: '13px',
-    color: '#cbd5e1',
-    marginBottom: '6px',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textSlate,
+    marginBottom: SPACING[2],
     lineHeight: '1.5',
     position: 'relative',
-    paddingLeft: '16px'
+    paddingLeft: SPACING[4]
   },
   divider: {
     height: '1px',
     background: 'linear-gradient(90deg, transparent 0%, rgba(45, 212, 191, 0.2) 50%, transparent 100%)',
-    margin: '20px 0'
+    margin: `${SPACING[5]} 0`
   },
   footer: {
-    padding: '15px 20px',
+    padding: `${SPACING[4]} ${SPACING[5]}`,
     borderTop: '1px solid rgba(45, 212, 191, 0.1)',
     background: 'linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.5) 100%)',
     textAlign: 'center'
   },
   footerText: {
-    fontSize: '12px',
-    color: '#64748b'
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textDarkGray
   },
   link: {
-    color: '#2dd4bf',
+    color: COLORS.primary,
     textDecoration: 'none',
-    fontWeight: '600'
+    fontWeight: FONT_WEIGHT.semibold
   }
 };

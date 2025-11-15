@@ -3,7 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-15
  */
 
 import type {
@@ -54,8 +54,13 @@ export class DungeonGenerator {
     // Connect start room to first generated room
     if (generatedRooms.length > 0) {
       this.connectRooms(startRoom, generatedRooms[0]);
+      console.log('🔗 Start room position:', startRoom.position);
+      console.log('🔗 First room position:', generatedRooms[0].position);
+      console.log('🔗 Distance:', Math.abs(startRoom.position.x - generatedRooms[0].position.x) + Math.abs(startRoom.position.y - generatedRooms[0].position.y));
       console.log('🔗 Start room connections:', startRoom.connections);
       console.log('🔗 First room connections:', generatedRooms[0].connections);
+    } else {
+      console.error('❌ ERROR: No rooms generated! This will create an inaccessible dungeon.');
     }
 
     rooms.push(...generatedRooms);
@@ -77,15 +82,16 @@ export class DungeonGenerator {
       this.connectRooms(rooms[rooms.length - 2], bossRoom);
     }
 
-    // Create exit room
+    // Create exit room with unique position
     const exitRoom = this.createRoom(
       'exit',
-      rooms[rooms.length - 1].position,
+      { x: 0, y: 0 }, // Temporary position, will be updated by positionExitRoom
       'easy',
       floorNumber,
       difficulty,
       heroLevel
     );
+    // Position exit room ensuring it doesn't overlap with any existing room (including boss)
     this.positionExitRoom(exitRoom, rooms[rooms.length - 1], gridSize, rooms);
     rooms.push(exitRoom);
 
@@ -123,7 +129,9 @@ export class DungeonGenerator {
     const rooms: Room[] = [];
     const occupiedPositions = new Set<string>([`${startPosition.x},${startPosition.y}`]);
 
-    let currentPosition = { ...startPosition };
+    // CRITICAL: Start from a position adjacent to startPosition, not from startPosition itself
+    // This ensures the first room is always connected to the start room
+    let currentPosition = this.findNextPosition(startPosition, occupiedPositions, gridSize);
 
     for (let i = 0; i < count; i++) {
       // Determine room type
@@ -440,9 +448,19 @@ export class DungeonGenerator {
     difficulty: RoomDifficulty,
     difficultyMultiplier: number
   ): void {
-    const enemyLevel = Math.max(1, Math.floor(floorNumber * difficultyMultiplier));
-    const enemyCount = difficulty === 'easy' ? 1 : difficulty === 'elite' ? 3 : 2;
+    // Calculate enemy level based on floor and room difficulty
+    // Base level is floor number, modified by room difficulty
+    const difficultyModifier = {
+      easy: 0.7,    // 70% of floor level
+      normal: 1.0,  // 100% of floor level
+      hard: 1.3,    // 130% of floor level
+      elite: 1.5    // 150% of floor level
+    };
 
+    const baseLevel = floorNumber * difficultyMultiplier;
+    const enemyLevel = Math.max(1, Math.floor(baseLevel * difficultyModifier[difficulty]));
+
+    const enemyCount = difficulty === 'easy' ? 1 : difficulty === 'elite' ? 3 : 2;
     const enemyType = difficulty === 'elite' ? 'elite' : 'normal';
 
     room.enemies = [];
@@ -519,8 +537,9 @@ export class DungeonGenerator {
     difficultyMultiplier: number,
     heroLevel?: number
   ): void {
-    const floorBasedLevel = Math.max(1, Math.floor(floorNumber * difficultyMultiplier) + 1);
-    const bossLevel = heroLevel ? Math.max(floorBasedLevel, heroLevel) : floorBasedLevel;
+    // Boss should be very challenging (1.6x floor level)
+    const baseLevel = floorNumber * difficultyMultiplier;
+    const bossLevel = Math.max(1, Math.floor(baseLevel * 1.6));
 
     room.enemies = [generateRandomEnemy(bossLevel, 'boss')];
     room.combatCompleted = false;
@@ -594,8 +613,9 @@ export class DungeonGenerator {
     difficultyMultiplier: number,
     heroLevel?: number
   ): void {
-    const floorBasedLevel = Math.max(1, Math.floor(floorNumber * difficultyMultiplier) + 1);
-    const enemyLevel = heroLevel ? Math.max(floorBasedLevel, heroLevel) : floorBasedLevel;
+    // Elite rooms should always be challenging (1.4x floor level)
+    const baseLevel = floorNumber * difficultyMultiplier;
+    const enemyLevel = Math.max(1, Math.floor(baseLevel * 1.4));
     const enemyCount = Math.random() < 0.5 ? 1 : 2; // 1-2 elite enemies
 
     room.enemies = [];
@@ -606,7 +626,7 @@ export class DungeonGenerator {
     room.combatCompleted = false;
 
     // Better rewards - guaranteed rare+ item and more gold
-    const itemLevel = heroLevel ? Math.max(floorBasedLevel, heroLevel) : floorBasedLevel;
+    const itemLevel = heroLevel ? Math.max(enemyLevel, heroLevel) : enemyLevel;
     const rarities: Array<'rare' | 'epic' | 'legendary'> = ['rare', 'epic', 'legendary'];
     const rarity = rarities[Math.min(Math.floor(Math.random() * 2), rarities.length - 1)]; // Mostly rare/epic
 
@@ -625,13 +645,14 @@ export class DungeonGenerator {
     difficultyMultiplier: number,
     heroLevel?: number
   ): void {
-    const floorBasedLevel = Math.max(1, Math.floor(floorNumber * difficultyMultiplier) + 1);
-    const miniBossLevel = heroLevel ? Math.max(floorBasedLevel, heroLevel) : floorBasedLevel;
+    // Mini-boss is stronger than elite but weaker than boss (1.5x floor level)
+    const baseLevel = floorNumber * difficultyMultiplier;
+    const miniBossLevel = Math.max(1, Math.floor(baseLevel * 1.5));
 
-    // Mini-boss is stronger than elite but weaker than boss
+    // Create elite enemy and boost stats for mini-boss
     const miniBoss = generateRandomEnemy(miniBossLevel, 'elite');
 
-    // Boost stats for mini-boss
+    // Boost stats for mini-boss (stronger than regular elite)
     miniBoss.maxHP = Math.floor(miniBoss.maxHP * 1.5);
     miniBoss.currentHP = miniBoss.maxHP;
     miniBoss.ATK = Math.floor(miniBoss.ATK * 1.3);

@@ -14,10 +14,12 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-09
+ * @lastModified 2025-11-15
  */
 
 import React from 'react';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../../styles/tokens';
+import { flexBetween } from '../../styles/common';
 
 /**
  * Styled text paragraph for modal body
@@ -45,20 +47,20 @@ export function ModalInfoBox({
 }) {
   const variantStyles = {
     info: {
-      background: 'rgba(59, 130, 246, 0.1)',
-      border: '1px solid rgba(59, 130, 246, 0.3)'
+      background: `${COLORS.info}1A`,
+      border: `1px solid ${COLORS.info}4D`
     },
     warning: {
-      background: 'rgba(251, 191, 36, 0.1)',
-      border: '1px solid rgba(251, 191, 36, 0.3)'
+      background: `${COLORS.goldLight}1A`,
+      border: `1px solid ${COLORS.goldLight}4D`
     },
     success: {
-      background: 'rgba(16, 185, 129, 0.1)',
-      border: '1px solid rgba(16, 185, 129, 0.3)'
+      background: `${COLORS.success}1A`,
+      border: `1px solid ${COLORS.success}4D`
     },
     error: {
-      background: 'rgba(239, 68, 68, 0.1)',
-      border: '1px solid rgba(239, 68, 68, 0.3)'
+      background: `${COLORS.danger}1A`,
+      border: `1px solid ${COLORS.danger}4D`
     }
   };
 
@@ -82,11 +84,11 @@ export function ModalInfoRow({
   valueColor?: 'default' | 'energy' | 'warning' | 'gold' | 'info';
 }) {
   const valueColors = {
-    default: '#f1f5f9',
-    energy: '#fbbf24',
-    warning: '#ef4444',
-    gold: '#fbbf24',
-    info: '#3b82f6'
+    default: COLORS.textLight,
+    energy: COLORS.goldLight,
+    warning: COLORS.danger,
+    gold: COLORS.goldLight,
+    info: COLORS.info
   };
 
   return (
@@ -124,27 +126,27 @@ export function ModalButton({
 }) {
   const variantStyles = {
     primary: {
-      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-      color: 'white',
-      boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)'
+      background: `linear-gradient(135deg, ${COLORS.success} 0%, ${COLORS.successDark} 100%)`,
+      color: COLORS.white,
+      boxShadow: SHADOWS.md
     },
     secondary: {
-      background: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
-      color: '#f1f5f9',
-      boxShadow: '0 2px 8px rgba(71, 85, 105, 0.4)'
+      background: `linear-gradient(135deg, ${COLORS.bgSurfaceLighter} 0%, ${COLORS.bgSurfaceLight} 100%)`,
+      color: COLORS.textLight,
+      boxShadow: SHADOWS.md
     },
     danger: {
-      background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-      color: 'white',
-      boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)'
+      background: `linear-gradient(135deg, ${COLORS.danger} 0%, ${COLORS.dangerDark} 100%)`,
+      color: COLORS.white,
+      boxShadow: SHADOWS.md
     }
   };
 
   const disabledStyle = disabled
     ? {
-        background: '#475569',
+        background: COLORS.bgSurfaceLighter,
         cursor: 'not-allowed',
-        boxShadow: 'none',
+        boxShadow: SHADOWS.none,
         opacity: 0.5
       }
     : {};
@@ -167,57 +169,55 @@ export function ModalButton({
 
 const styles: Record<string, React.CSSProperties> = {
   text: {
-    margin: '0 0 15px 0',
-    fontSize: '15px',
-    color: '#ffffff',
+    margin: `0 0 ${SPACING[4]} 0`,
+    fontSize: FONT_SIZE[15],
+    color: COLORS.white,
     lineHeight: '1.6'
   },
   divider: {
     height: '1px',
-    background: 'linear-gradient(90deg, transparent, #334155, transparent)',
-    margin: '15px 0'
+    background: `linear-gradient(90deg, transparent, ${COLORS.bgSurfaceLight}, transparent)`,
+    margin: `${SPACING[4]} 0`
   },
   infoBox: {
-    padding: '12px 16px',
-    borderRadius: '8px',
-    marginBottom: '15px'
+    padding: `${SPACING[3]} ${SPACING[4]}`,
+    borderRadius: BORDER_RADIUS.md,
+    marginBottom: SPACING[4]
   },
   infoText: {
     margin: 0,
-    fontSize: '14px',
-    color: '#f1f5f9',
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textLight,
     lineHeight: '1.6'
   },
   infoRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '10px 0',
-    borderBottom: '1px solid #1e293b'
+    ...flexBetween,
+    padding: `${SPACING[2]} 0`,
+    borderBottom: `1px solid ${COLORS.bgSurface}`
   },
   label: {
-    color: '#e2e8f0',
-    fontSize: '14px',
-    fontWeight: '500'
+    color: COLORS.textLighter,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.medium
   },
   value: {
-    fontSize: '14px',
-    fontWeight: '600'
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold
   },
   buttonGroup: {
     display: 'flex',
-    gap: '10px',
-    marginTop: '15px'
+    gap: SPACING[2],
+    marginTop: SPACING[4]
   },
   button: {
     width: '100%',
-    padding: '12px 24px',
-    fontSize: '16px',
-    fontWeight: '700',
+    padding: `${SPACING[3]} ${SPACING[6]}`,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold,
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
-    transition: 'all 0.2s',
-    marginTop: '10px'
+    transition: TRANSITIONS.allBase,
+    marginTop: SPACING[2]
   }
 };

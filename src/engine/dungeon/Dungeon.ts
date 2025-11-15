@@ -3,7 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-15
  */
 
 import type {
@@ -91,11 +91,20 @@ export class Dungeon implements IDungeon {
    * Generate a new floor
    */
   private generateFloor(floorNumber: number): Floor {
+    // Progressive room count: increases with floor number
+    // Formula: base rooms + (floor - 1) * 0.5 rooms per floor
+    // Example: Floor 1 = 4-6 rooms, Floor 5 = 6-8 rooms, Floor 10 = 8-11 rooms
+    const baseMin = this.config.roomsPerFloor.min;
+    const baseMax = this.config.roomsPerFloor.max;
+    const roomsPerFloor = Math.floor((floorNumber - 1) * 0.5);
+
+    const adjustedMin = baseMin + roomsPerFloor;
+    const adjustedMax = baseMax + roomsPerFloor;
+
     const roomCount =
       Math.floor(
-        Math.random() *
-          (this.config.roomsPerFloor.max - this.config.roomsPerFloor.min + 1)
-      ) + this.config.roomsPerFloor.min;
+        Math.random() * (adjustedMax - adjustedMin + 1)
+      ) + adjustedMin;
 
     const difficulty = 1 + (floorNumber - 1) * this.config.difficultyScaling;
 
@@ -357,6 +366,7 @@ export class Dungeon implements IDungeon {
    */
   useShrine(): RoomEventResult {
     const currentRoom = this.getCurrentRoom();
+    const currentFloor = this.getCurrentFloor();
 
     if (!currentRoom) {
       return { success: false, message: 'No active room' };
@@ -372,16 +382,25 @@ export class Dungeon implements IDungeon {
 
     currentRoom.shrineUsed = true;
 
+    // Add buff to current floor
+    const buffType = currentRoom.shrineBuffType || 'damage';
+    if (currentFloor) {
+      if (!currentFloor.activeBuffs) {
+        currentFloor.activeBuffs = [];
+      }
+      currentFloor.activeBuffs.push(buffType);
+    }
+
     const buffMessages = {
       damage: '⚔️ The shrine grants +10% damage for this floor!',
       xp: '📖 The shrine grants +15% XP for this floor!',
       gold: '💰 The shrine grants +20% gold drops for this floor!',
-      stats: '✨ The shrine grants +1 to all stats for this floor!'
+      stats: '✨ The shrine grants +10% to all stats for this floor!'
     };
 
     return {
       success: true,
-      message: buffMessages[currentRoom.shrineBuffType || 'damage']
+      message: buffMessages[buffType]
     };
   }
 
@@ -506,6 +525,45 @@ export class Dungeon implements IDungeon {
     };
 
     return descriptions[room.type] || 'an unknown room';
+  }
+
+  /**
+   * Get active shrine buffs for current floor
+   *
+   * Returns an array of active buff types that were granted by shrines
+   * on the current floor. Buffs persist for the entire floor.
+   *
+   * @returns Array of active buff types (damage, xp, gold, stats)
+   *
+   * @example
+   * ```typescript
+   * const buffs = dungeon.getActiveBuffs();
+   * console.log(buffs); // ['damage', 'gold']
+   * ```
+   */
+  getActiveBuffs(): Array<'damage' | 'xp' | 'gold' | 'stats'> {
+    const currentFloor = this.getCurrentFloor();
+    return currentFloor?.activeBuffs || [];
+  }
+
+  /**
+   * Check if a specific shrine buff is active on current floor
+   *
+   * Used to determine if buff modifiers should be applied to
+   * combat calculations, XP rewards, or gold drops.
+   *
+   * @param buffType - Type of buff to check (damage/xp/gold/stats)
+   * @returns True if buff is active, false otherwise
+   *
+   * @example
+   * ```typescript
+   * if (dungeon.hasActiveBuff('gold')) {
+   *   goldAmount = Math.floor(goldAmount * 1.20); // +20% gold
+   * }
+   * ```
+   */
+  hasActiveBuff(buffType: 'damage' | 'xp' | 'gold' | 'stats'): boolean {
+    return this.getActiveBuffs().includes(buffType);
   }
 
   /**

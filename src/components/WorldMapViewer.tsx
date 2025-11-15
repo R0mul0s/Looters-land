@@ -8,10 +8,12 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-12
+ * @lastModified 2025-11-15
  */
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, Z_INDEX, TRANSITIONS } from '../styles/tokens';
+import { flexBetween, flexCenter } from '../styles/common';
 import type { WorldMap, Tile, DynamicObject, WeatherState, TimeState } from '../types/worldmap.types';
 import { TERRAIN_ICONS } from '../types/worldmap.types';
 import { OtherPlayerMarker } from './OtherPlayerMarker';
@@ -211,6 +213,15 @@ function WorldMapViewerComponent({
     merchant1: null,
     merchant2: null,
     merchant3: null
+  });
+
+  // Hidden path images
+  const [hiddenPathImages, setHiddenPathImages] = useState<{
+    path1: HTMLImageElement | null;
+    path2: HTMLImageElement | null;
+  }>({
+    path1: null,
+    path2: null
   });
 
   // Monster images
@@ -490,6 +501,37 @@ function WorldMapViewerComponent({
     images.merchant1.onerror = () => console.error('Failed to load traveling-merchant1.png');
     images.merchant2.onerror = () => console.error('Failed to load traveling-merchant2.png');
     images.merchant3.onerror = () => console.error('Failed to load traveling-merchant3.png');
+  }, []);
+
+  // Load hidden path images
+  useEffect(() => {
+    const images = {
+      path1: new Image(),
+      path2: new Image()
+    };
+
+    images.path1.src = hiddenPath1Img;
+    images.path2.src = hiddenPath2Img;
+
+    let loadedCount = 0;
+    const totalImages = 2;
+
+    const onLoad = () => {
+      loadedCount++;
+      if (loadedCount === totalImages) {
+        setHiddenPathImages({
+          path1: images.path1,
+          path2: images.path2
+        });
+        console.log('✅ All hidden path images loaded successfully');
+      }
+    };
+
+    images.path1.onload = onLoad;
+    images.path2.onload = onLoad;
+
+    images.path1.onerror = () => console.error('Failed to load hidden-path1.png');
+    images.path2.onerror = () => console.error('Failed to load hidden-path2.png');
   }, []);
 
   // Load monster images
@@ -835,12 +877,14 @@ function WorldMapViewerComponent({
               break;
           }
           if (icon) {
-            // Check if object is defeated/opened for grayscale rendering
+            // Check if object is defeated/opened/discovered for grayscale rendering
             let isDefeatedOrOpened = false;
             if (tile.staticObject.type === 'treasureChest' && 'opened' in tile.staticObject) {
               isDefeatedOrOpened = tile.staticObject.opened === true;
             } else if (tile.staticObject.type === 'rareSpawn' && 'defeated' in tile.staticObject) {
               isDefeatedOrOpened = tile.staticObject.defeated === true;
+            } else if (tile.staticObject.type === 'hiddenPath' && 'discovered' in tile.staticObject) {
+              isDefeatedOrOpened = tile.staticObject.discovered === true;
             }
             staticObjectsToRender.push({ icon, screenX, screenY, objectType, objectId, objectName, isDefeatedOrOpened });
           }
@@ -992,16 +1036,11 @@ function WorldMapViewerComponent({
         // Select image based on path ID (alternating between 2 images)
         const pathIndex = parseInt(objectId.split('-')[2] || '0');
 
-        // Create image objects directly from imports
-        const path1 = new Image();
-        path1.src = hiddenPath1Img;
-        const path2 = new Image();
-        path2.src = hiddenPath2Img;
+        // Use pre-loaded images from state
+        const hiddenPathImg = (pathIndex % 2 === 0) ? hiddenPathImages.path1 : hiddenPathImages.path2;
 
-        const hiddenPathImg = (pathIndex % 2 === 0) ? path1 : path2;
-
-        // Draw hidden path image
-        if (hiddenPathImg.complete) {
+        // Draw hidden path image if loaded, otherwise fall back to emoji
+        if (hiddenPathImg) {
           // Add GOLDEN glow effect for hidden paths (mysterious/valuable)
           ctx.shadowColor = '#ffd700';
           ctx.shadowBlur = 20;
@@ -1242,6 +1281,20 @@ function WorldMapViewerComponent({
           case 'event':
             icon = '⭐';
             break;
+          case 'encounter':
+            icon = '⚔️';
+            break;
+          case 'resource':
+            icon = '🪵'; // Default resource icon
+            // You can customize based on resource type
+            if ('resourceType' in obj) {
+              if (obj.resourceType === 'gold') icon = '💰';
+              else if (obj.resourceType === 'wood') icon = '🪵';
+              else if (obj.resourceType === 'stone') icon = '🪨';
+              else if (obj.resourceType === 'ore') icon = '⛏️';
+              else if (obj.resourceType === 'gems') icon = '💎';
+            }
+            break;
         }
 
         if (useImage && imgToUse) {
@@ -1448,7 +1501,7 @@ function WorldMapViewerComponent({
       });
     }
 
-  }, [worldMap, playerPosition, viewport, zoom, TILE_SIZE, terrainImages, heroImage, dungeonImages, weather, timeOfDay, animationTrigger, currentPath, isMoving, facingLeft]);
+  }, [worldMap, playerPosition, viewport, zoom, TILE_SIZE, terrainImages, heroImage, dungeonImages, treasureChestImages, portalImages, travelingMerchantImages, hiddenPathImages, monsterImages, cityImages, weather, timeOfDay, animationTrigger, currentPath, isMoving, facingLeft]);
 
   /**
    * Animation loop for pulsating glow effect and weather particles
@@ -1852,7 +1905,7 @@ function WorldMapViewerComponent({
         <div
           style={{
             position: 'absolute',
-            left: `${VIEWPORT_WIDTH / 2}px`,
+            left: `${VIEWPORT_WIDTH / 2 + 10}px`, // Offset 10px to the right to center above avatar head
             top: `${VIEWPORT_HEIGHT / 2}px`,
             zIndex: 150 // Above canvas and other players
           }}
@@ -1860,7 +1913,6 @@ function WorldMapViewerComponent({
           <ChatBubble
             message={playerChatMessage}
             timestamp={playerChatTimestamp}
-            offsetY={-80}
           />
         </div>
       )}
@@ -1882,29 +1934,29 @@ function WorldMapViewerComponent({
               handleCancelMovement();
             }}
             style={{
-              padding: '6px 16px',
-              backgroundColor: 'rgba(239, 68, 68, 0.95)',
-              color: 'white',
-              border: '2px solid rgba(220, 38, 38, 1)',
-              borderRadius: '8px',
-              fontSize: '13px',
-              fontWeight: 'bold',
+              padding: `${SPACING[1]} ${SPACING[4]}`,
+              backgroundColor: `${COLORS.danger}F2`,
+              color: COLORS.white,
+              border: `2px solid ${COLORS.dangerDark}`,
+              borderRadius: BORDER_RADIUS.md,
+              fontSize: FONT_SIZE[13],
+              fontWeight: FONT_WEIGHT.bold,
               cursor: 'pointer',
-              boxShadow: '0 4px 8px rgba(0, 0, 0, 0.4), 0 0 12px rgba(239, 68, 68, 0.6)',
-              transition: 'all 0.2s ease',
+              boxShadow: `${SHADOWS.md}, ${SHADOWS.glowRed}`,
+              transition: TRANSITIONS.allBase,
               fontFamily: 'inherit',
               whiteSpace: 'nowrap',
-              textShadow: '0 1px 2px rgba(0, 0, 0, 0.8)'
+              textShadow: SHADOWS.md
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(220, 38, 38, 1)';
+              e.currentTarget.style.backgroundColor = COLORS.dangerDark;
               e.currentTarget.style.transform = 'scale(1.05)';
-              e.currentTarget.style.boxShadow = '0 6px 12px rgba(0, 0, 0, 0.5), 0 0 16px rgba(239, 68, 68, 0.8)';
+              e.currentTarget.style.boxShadow = `${SHADOWS.lg}, ${SHADOWS.glowRed}`;
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'rgba(239, 68, 68, 0.95)';
+              e.currentTarget.style.backgroundColor = `${COLORS.danger}F2`;
               e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.4), 0 0 12px rgba(239, 68, 68, 0.6)';
+              e.currentTarget.style.boxShadow = `${SHADOWS.md}, ${SHADOWS.glowRed}`;
             }}
           >
             ⛔ {t('worldmap.cancelMovement')}
@@ -1940,7 +1992,6 @@ function WorldMapViewerComponent({
               <ChatBubble
                 message={player.chatMessage}
                 timestamp={player.chatTimestamp}
-                offsetY={-80 * zoom}
               />
             )}
 
@@ -1971,65 +2022,62 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'relative',
     width: '100%',
     height: '100%',
-    backgroundColor: '#0a0a0a',
-    color: '#fff'
+    backgroundColor: COLORS.bgDarkSolid,
+    color: COLORS.white
   },
   controls: {
     position: 'absolute',
-    top: '10px',
-    right: '10px',
-    display: 'flex',
-    gap: '8px',
-    alignItems: 'center',
+    top: SPACING[2],
+    right: SPACING[2],
+    ...flexCenter,
+    gap: SPACING[2],
     backgroundColor: 'rgba(26, 26, 26, 0.95)',
-    padding: '8px 12px',
-    borderRadius: '8px',
-    border: '1px solid #333',
-    zIndex: 10,
+    padding: `${SPACING[2]} ${SPACING[3]}`,
+    borderRadius: BORDER_RADIUS.md,
+    border: `1px solid ${COLORS.borderDark}`,
+    zIndex: Z_INDEX.sticky,
     backdropFilter: 'blur(10px)',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)'
+    boxShadow: SHADOWS.lg
   },
   button: {
-    padding: '6px 12px',
-    backgroundColor: '#4CAF50',
-    color: '#fff',
+    padding: `${SPACING[1]} ${SPACING[3]}`,
+    backgroundColor: COLORS.successLight,
+    color: COLORS.white,
     border: 'none',
-    borderRadius: '5px',
+    borderRadius: BORDER_RADIUS.sm,
     cursor: 'pointer',
-    fontSize: '16px',
-    fontWeight: 'bold',
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold,
     minWidth: '32px'
   },
   info: {
-    fontSize: '13px',
-    color: '#FFD700',
-    fontWeight: 'bold'
+    fontSize: FONT_SIZE[13],
+    color: COLORS.gold,
+    fontWeight: FONT_WEIGHT.bold
   },
   tooltip: {
     position: 'absolute',
-    top: '10px',
-    left: '10px',
+    top: SPACING[2],
+    left: SPACING[2],
     backgroundColor: 'rgba(30, 41, 59, 0.95)',
-    padding: '12px 16px',
-    borderRadius: '8px',
-    border: '2px solid #2dd4bf',
-    zIndex: 10,
+    padding: `${SPACING[3]} ${SPACING[4]}`,
+    borderRadius: BORDER_RADIUS.md,
+    border: `2px solid ${COLORS.primary}`,
+    zIndex: Z_INDEX.sticky,
     backdropFilter: 'blur(10px)',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
+    boxShadow: SHADOWS.lg,
     minWidth: '180px'
   },
   tooltipRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '6px',
-    fontSize: '13px',
-    color: '#94a3b8',
-    gap: '12px'
+    ...flexBetween,
+    marginBottom: SPACING[1],
+    fontSize: FONT_SIZE[13],
+    color: COLORS.textGray,
+    gap: SPACING[3]
   },
   tooltipValue: {
-    fontWeight: '700',
-    color: '#f1f5f9',
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight,
     textTransform: 'capitalize'
   },
   canvas: {
@@ -2038,6 +2086,6 @@ const styles: Record<string, React.CSSProperties> = {
     width: '100%',
     height: '100%',
     position: 'relative',
-    zIndex: 1 // Base layer for canvas
+    zIndex: Z_INDEX.base
   }
 };

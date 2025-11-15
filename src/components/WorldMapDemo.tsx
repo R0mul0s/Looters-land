@@ -6,12 +6,14 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-15
  */
 
 import React, { useState } from 'react';
 import { WorldMapGenerator } from '../engine/worldmap/WorldMapGenerator';
 import { WorldMapViewer } from './WorldMapViewer';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../styles/tokens';
+import { flexColumn, flexCenter } from '../styles/common';
 import type { WorldMap, StaticObject, Town, DungeonEntrance } from '../types/worldmap.types';
 
 /**
@@ -224,132 +226,131 @@ export function WorldMapDemo() {
 const styles: Record<string, React.CSSProperties> = {
   container: {
     minHeight: '100vh',
-    backgroundColor: '#0a0a0a',
-    color: '#fff',
-    padding: '20px'
+    backgroundColor: COLORS.bgDarkSolid,
+    color: COLORS.textPrimary,
+    padding: SPACING[5]
   },
   header: {
     textAlign: 'center',
-    marginBottom: '30px'
+    marginBottom: SPACING[6]
   },
   mainTitle: {
-    fontSize: '36px',
-    margin: '0 0 10px 0'
+    fontSize: FONT_SIZE['5xl'],
+    margin: `0 0 ${SPACING[2]} 0`
   },
   subtitle: {
-    fontSize: '16px',
-    color: '#aaa',
+    fontSize: FONT_SIZE.base,
+    color: COLORS.textSecondary,
     margin: 0
   },
   controls: {
     display: 'flex',
-    gap: '20px',
+    gap: SPACING[5],
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '30px',
+    marginBottom: SPACING[6],
     flexWrap: 'wrap'
   },
   inputGroup: {
     display: 'flex',
-    gap: '10px',
+    gap: SPACING[2],
     alignItems: 'center'
   },
   label: {
-    fontSize: '14px',
-    color: '#ccc'
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textSlate
   },
   input: {
-    padding: '8px 12px',
-    backgroundColor: '#2a2a2a',
-    border: '1px solid #444',
-    borderRadius: '5px',
-    color: '#fff',
-    fontSize: '14px',
+    padding: `${SPACING[2]} ${SPACING[3]}`,
+    backgroundColor: COLORS.bgInput,
+    border: `1px solid ${COLORS.borderDarker}`,
+    borderRadius: BORDER_RADIUS.md,
+    color: COLORS.textPrimary,
+    fontSize: FONT_SIZE.md,
     minWidth: '200px'
   },
   generateButton: {
-    padding: '10px 20px',
-    backgroundColor: '#4CAF50',
-    color: '#fff',
+    padding: `${SPACING[2]} ${SPACING[5]}`,
+    backgroundColor: COLORS.successLight,
+    color: COLORS.textPrimary,
     border: 'none',
-    borderRadius: '5px',
-    fontSize: '16px',
+    borderRadius: BORDER_RADIUS.md,
+    fontSize: FONT_SIZE.base,
     cursor: 'pointer',
-    fontWeight: 'bold'
+    fontWeight: FONT_WEIGHT.bold,
+    transition: TRANSITIONS.allFast
   },
   stats: {
     display: 'flex',
-    gap: '15px',
-    fontSize: '14px',
-    color: '#ccc'
+    gap: SPACING.md,
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textSlate
   },
   content: {
     display: 'grid',
     gridTemplateColumns: '1fr 350px',
-    gap: '20px'
+    gap: SPACING[5]
   },
   mapContainer: {
-    display: 'flex',
+    ...flexCenter,
     justifyContent: 'center'
   },
   sidebar: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px'
+    ...flexColumn,
+    gap: SPACING[5]
   },
   objectInfo: {
-    backgroundColor: '#1a1a1a',
-    padding: '20px',
-    borderRadius: '10px',
-    border: '2px solid #444'
+    backgroundColor: COLORS.bgCardDark,
+    padding: SPACING[5],
+    borderRadius: BORDER_RADIUS.lg,
+    border: `2px solid ${COLORS.borderDarker}`
   },
   objectTitle: {
-    margin: '0 0 15px 0',
-    fontSize: '20px'
+    margin: `0 0 ${SPACING.md} 0`,
+    fontSize: FONT_SIZE.xl
   },
   objectDetails: {
-    fontSize: '14px',
+    fontSize: FONT_SIZE.md,
     lineHeight: '1.8'
   },
   buildingList: {
-    margin: '5px 0 0 20px',
+    margin: `${SPACING.xs} 0 0 ${SPACING[5]}`,
     padding: 0
   },
   logContainer: {
-    backgroundColor: '#1a1a1a',
-    padding: '20px',
-    borderRadius: '10px',
-    border: '2px solid #444',
+    backgroundColor: COLORS.bgCardDark,
+    padding: SPACING[5],
+    borderRadius: BORDER_RADIUS.lg,
+    border: `2px solid ${COLORS.borderDarker}`,
     flex: 1
   },
   logTitle: {
-    margin: '0 0 15px 0',
-    fontSize: '18px'
+    margin: `0 0 ${SPACING.md} 0`,
+    fontSize: FONT_SIZE.lg
   },
   logContent: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '5px',
-    fontSize: '13px',
-    color: '#ccc',
+    ...flexColumn,
+    gap: SPACING.xs,
+    fontSize: FONT_SIZE[13],
+    color: COLORS.textSlate,
     maxHeight: '400px',
     overflowY: 'auto'
   },
   logEntry: {
-    padding: '5px 0',
-    borderBottom: '1px solid #333'
+    padding: `${SPACING.xs} 0`,
+    borderBottom: `1px solid ${COLORS.borderDark}`
   },
   placeholder: {
     textAlign: 'center',
-    padding: '60px 20px',
-    backgroundColor: '#1a1a1a',
-    borderRadius: '10px',
-    border: '2px dashed #444'
+    padding: `${SPACING[16]} ${SPACING[5]}`,
+    backgroundColor: COLORS.bgCardDark,
+    borderRadius: BORDER_RADIUS.lg,
+    border: `2px dashed ${COLORS.borderDarker}`
   },
   featureList: {
     textAlign: 'left',
     display: 'inline-block',
-    fontSize: '14px',
+    fontSize: FONT_SIZE.md,
     lineHeight: '2'
   }
 };

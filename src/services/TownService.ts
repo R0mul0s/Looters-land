@@ -3,6 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
+ * @lastModified 2025-11-15
  */
 
 import type { ServicePrices, MarketItem } from '../types/town.types';
@@ -73,6 +74,7 @@ export class TownService {
     }
 
     hero.currentHP = hero.maxHP;
+    hero.isAlive = true; // Revive hero if dead
     return {
       success: true,
       message: `${hero.name} fully healed!`,
@@ -94,6 +96,7 @@ export class TownService {
 
     heroes.forEach(hero => {
       hero.currentHP = hero.maxHP;
+      hero.isAlive = true; // Revive hero if dead
     });
 
     return {

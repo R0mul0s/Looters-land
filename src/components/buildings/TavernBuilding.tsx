@@ -3,6 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
+ * @lastModified 2025-11-15
  */
 
 import React, { useState } from 'react';
@@ -11,6 +12,9 @@ import type { GachaState, HeroTemplate } from '../../types/hero.types';
 import { GachaSummon } from '../gacha/GachaSummon';
 import { HeroCollection } from '../gacha/HeroCollection';
 import { PartyManager } from '../gacha/PartyManager';
+import { t } from '../../localization/i18n';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
+import { flexBetween, flexColumn } from '../../styles/common';
 
 interface TavernBuildingProps {
   heroes: Hero[];
@@ -78,7 +82,7 @@ export function TavernBuilding({
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h2 style={styles.title}>🍺 Tavern</h2>
+        <h2 style={styles.title}>🍺 {t('buildings.tavern.title')}</h2>
         <button style={styles.closeButton} onClick={onClose}>✕</button>
       </div>
 
@@ -91,7 +95,7 @@ export function TavernBuilding({
           }}
           onClick={() => setActiveTab('summon')}
         >
-          🎰 Summon Heroes
+          🎰 {t('buildings.tavern.tabs.summon')}
         </button>
         <button
           style={{
@@ -100,7 +104,7 @@ export function TavernBuilding({
           }}
           onClick={() => setActiveTab('collection')}
         >
-          📖 Collection
+          📖 {t('buildings.tavern.tabs.collection')}
         </button>
         <button
           style={{
@@ -109,7 +113,7 @@ export function TavernBuilding({
           }}
           onClick={() => setActiveTab('party')}
         >
-          ⚔️ Party Manager
+          ⚔️ {t('buildings.tavern.tabs.party')}
         </button>
       </div>
 
@@ -148,58 +152,55 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    color: '#f1f5f9',
+    ...flexColumn,
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight,
     overflow: 'hidden'
   },
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '20px',
-    borderBottom: '2px solid #2dd4bf',
+    ...flexBetween,
+    padding: SPACING.lg,
+    borderBottom: `2px solid ${COLORS.primary}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
   },
   title: {
     margin: 0,
-    fontSize: '24px',
-    fontWeight: '700'
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold
   },
   closeButton: {
-    background: 'transparent',
-    border: '2px solid #334155',
-    color: '#94a3b8',
-    fontSize: '24px',
+    background: COLORS.transparent,
+    border: `2px solid ${COLORS.bgSurfaceLight}`,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE['2xl'],
     cursor: 'pointer',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    transition: 'all 0.2s'
+    padding: `${SPACING[2]} ${SPACING[4]}`,
+    borderRadius: BORDER_RADIUS.md,
+    transition: TRANSITIONS.fast
   },
   tabBar: {
     display: 'flex',
-    gap: '0',
+    gap: 0,
     background: 'rgba(15, 23, 42, 0.5)',
-    borderBottom: '1px solid #334155',
-    padding: '0'
+    borderBottom: `1px solid ${COLORS.bgSurfaceLight}`,
+    padding: 0
   },
   tab: {
     flex: 1,
-    padding: '15px 20px',
-    fontSize: '15px',
-    fontWeight: '600',
-    background: 'transparent',
-    color: '#94a3b8',
+    padding: `${SPACING[3.5]} ${SPACING.lg}`,
+    fontSize: FONT_SIZE[15],
+    fontWeight: FONT_WEIGHT.semibold,
+    background: COLORS.transparent,
+    color: COLORS.textGray,
     border: 'none',
     borderBottom: '3px solid transparent',
     cursor: 'pointer',
-    transition: 'all 0.2s',
+    transition: TRANSITIONS.fast,
     whiteSpace: 'nowrap'
   },
   tabActive: {
-    color: '#2dd4bf',
-    borderBottom: '3px solid #2dd4bf',
+    color: COLORS.primary,
+    borderBottom: `3px solid ${COLORS.primary}`,
     background: 'rgba(45, 212, 191, 0.1)'
   },
   tabContent: {

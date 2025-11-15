@@ -21,11 +21,12 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-09
+ * @lastModified 2025-11-15
  */
 
 import React from 'react';
 import type { Item } from '../../engine/item/Item';
+import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, Z_INDEX } from '../../styles/tokens';
 
 interface ItemTooltipProps {
   item: Item;
@@ -57,69 +58,69 @@ export function ItemTooltip({
     >
       {/* Header */}
       <div className="tooltip-header">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-          <span style={{ fontSize: '32px' }}>{item.icon}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: SPACING[3], marginBottom: SPACING[2] }}>
+          <span style={{ fontSize: FONT_SIZE['4xl'] }}>{item.icon}</span>
           <div style={{ flex: 1 }}>
             <div
               className="tooltip-name"
               style={{
-                fontSize: '1.25em',
-                fontWeight: '700',
+                fontSize: FONT_SIZE.lg,
+                fontWeight: FONT_WEIGHT.bold,
                 color: item.getRarityColor(),
                 letterSpacing: '0.3px',
-                marginBottom: '4px'
+                marginBottom: SPACING[1]
               }}
             >
               {item.getDisplayName()}
             </div>
-            <div style={{ fontSize: '0.9em', color: '#94a3b8', textTransform: 'capitalize' }}>
+            <div style={{ fontSize: FONT_SIZE.md, color: COLORS.textGray, textTransform: 'capitalize' }}>
               {item.getRarityDisplayName()}
             </div>
           </div>
         </div>
 
-        <div style={{ fontSize: '0.85em', color: '#64748b', marginBottom: '6px' }}>
+        <div style={{ fontSize: FONT_SIZE.sm, color: COLORS.textDarkGray, marginBottom: SPACING[2] }}>
           {item.slot.charAt(0).toUpperCase() + item.slot.slice(1)} | Lv.{item.level}
         </div>
 
         {item.enchantLevel > 0 && (
-          <div style={{ fontSize: '0.85em', color: '#a855f7', fontWeight: '600', marginBottom: '4px' }}>
+          <div style={{ fontSize: FONT_SIZE.sm, color: '#a855f7', fontWeight: FONT_WEIGHT.semibold, marginBottom: SPACING[1] }}>
             +{item.enchantLevel} Enchant
           </div>
         )}
 
         {item.setName && (
-          <div style={{ fontSize: '0.85em', color: '#3b82f6', fontWeight: '600' }}>
+          <div style={{ fontSize: FONT_SIZE.sm, color: COLORS.info, fontWeight: FONT_WEIGHT.semibold }}>
             {item.setName} Set
           </div>
         )}
       </div>
 
       {/* Stats */}
-      <div className="tooltip-stats" style={{ padding: '12px', borderTop: '1px solid rgba(45, 212, 191, 0.2)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+      <div className="tooltip-stats" style={{ padding: SPACING[3], borderTop: '1px solid rgba(45, 212, 191, 0.2)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: SPACING[2] }}>
           {effectiveStats.HP > 0 && (
-            <div className="tooltip-stat stat-positive" style={{ color: '#2dd4bf', fontWeight: '600' }}>
+            <div className="tooltip-stat stat-positive" style={{ color: COLORS.primary, fontWeight: FONT_WEIGHT.semibold }}>
               ❤️ HP: +{effectiveStats.HP}
             </div>
           )}
           {effectiveStats.ATK > 0 && (
-            <div className="tooltip-stat stat-positive" style={{ color: '#2dd4bf', fontWeight: '600' }}>
+            <div className="tooltip-stat stat-positive" style={{ color: COLORS.primary, fontWeight: FONT_WEIGHT.semibold }}>
               ⚔️ ATK: +{effectiveStats.ATK}
             </div>
           )}
           {effectiveStats.DEF > 0 && (
-            <div className="tooltip-stat stat-positive" style={{ color: '#2dd4bf', fontWeight: '600' }}>
+            <div className="tooltip-stat stat-positive" style={{ color: COLORS.primary, fontWeight: FONT_WEIGHT.semibold }}>
               🛡️ DEF: +{effectiveStats.DEF}
             </div>
           )}
           {effectiveStats.SPD > 0 && (
-            <div className="tooltip-stat stat-positive" style={{ color: '#2dd4bf', fontWeight: '600' }}>
+            <div className="tooltip-stat stat-positive" style={{ color: COLORS.primary, fontWeight: FONT_WEIGHT.semibold }}>
               ⚡ SPD: +{effectiveStats.SPD}
             </div>
           )}
           {effectiveStats.CRIT > 0 && (
-            <div className="tooltip-stat stat-positive" style={{ color: '#2dd4bf', fontWeight: '600' }}>
+            <div className="tooltip-stat stat-positive" style={{ color: COLORS.primary, fontWeight: FONT_WEIGHT.semibold }}>
               💥 CRIT: +{effectiveStats.CRIT}%
             </div>
           )}
@@ -127,12 +128,12 @@ export function ItemTooltip({
 
         {/* Item Score */}
         <div style={{
-          marginTop: '12px',
-          paddingTop: '8px',
+          marginTop: SPACING[3],
+          paddingTop: SPACING[2],
           borderTop: '1px solid rgba(45, 212, 191, 0.15)',
           textAlign: 'center'
         }}>
-          <div style={{ color: '#ffd700', fontWeight: 'bold', fontSize: '0.95em' }}>
+          <div style={{ color: COLORS.gold, fontWeight: FONT_WEIGHT.bold, fontSize: FONT_SIZE.md }}>
             🏆 Item Score: {item.getScore().toLocaleString()}
           </div>
         </div>
@@ -143,14 +144,14 @@ export function ItemTooltip({
         <div
           className="tooltip-actions"
           style={{
-            padding: '10px 12px',
+            padding: `${SPACING[3]} ${SPACING[3]}`,
             borderTop: '1px solid rgba(45, 212, 191, 0.2)',
-            fontSize: '0.9em',
-            color: '#94a3b8'
+            fontSize: FONT_SIZE.md,
+            color: COLORS.textGray
           }}
         >
-          <div style={{ marginBottom: '4px' }}>💰 {item.goldValue}g</div>
-          <div style={{ fontSize: '0.85em', color: '#64748b' }}>
+          <div style={{ marginBottom: SPACING[1] }}>💰 {item.goldValue}g</div>
+          <div style={{ fontSize: FONT_SIZE.sm, color: COLORS.textDarkGray }}>
             {customActions || 'Left-click to equip | Right-click to enchant'}
           </div>
         </div>

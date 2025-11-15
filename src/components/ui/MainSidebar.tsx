@@ -7,12 +7,14 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-13
+ * @lastModified 2025-11-15
  */
 
 import React, { useState, useEffect } from 'react';
 import { t } from '../../localization/i18n';
 import logo from '../../assets/images/logo.png';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, BLUR, Z_INDEX, TRANSITIONS } from '../../styles/tokens';
+import { flexCenter } from '../../styles/common';
 
 type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport' | 'updates';
 
@@ -186,23 +188,21 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'column',
     width: '220px',
     height: '100%',
-    background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',
-    borderRight: '1px solid rgba(45, 212, 191, 0.2)',
-    boxShadow: '4px 0 24px rgba(0, 0, 0, 0.4), inset -1px 0 0 rgba(45, 212, 191, 0.1)',
+    background: `linear-gradient(180deg, ${COLORS.bgDarkAlt} 0%, ${COLORS.bgSurface} 100%)`,
+    borderRight: `1px solid rgba(45, 212, 191, 0.2)`,
+    boxShadow: `4px 0 24px rgba(0, 0, 0, 0.4), inset -1px 0 0 rgba(45, 212, 191, 0.1)`,
     overflow: 'hidden',
     boxSizing: 'border-box',
-    transition: 'width 0.3s ease'
+    transition: `width ${TRANSITIONS.base}`
   },
   containerCompact: {
     width: '70px'
   },
   header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '20px',
-    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
-    borderBottom: '1px solid rgba(45, 212, 191, 0.2)'
+    ...flexCenter,
+    padding: SPACING.lg,
+    background: `linear-gradient(135deg, ${COLORS.bgDarkAlt} 0%, ${COLORS.bgSurface} 100%)`,
+    borderBottom: `1px solid rgba(45, 212, 191, 0.2)`
   },
   logoImage: {
     width: '100%',
@@ -213,22 +213,22 @@ const styles: Record<string, React.CSSProperties> = {
   levelBadge: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    margin: '15px 20px',
-    padding: '10px 12px',
+    gap: SPACING[2],
+    margin: `${SPACING.md} ${SPACING.lg}`,
+    padding: `${SPACING.sm} ${SPACING[3]}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.15) 0%, rgba(20, 184, 166, 0.05) 100%)',
-    borderRadius: '10px',
+    borderRadius: SPACING.sm,
     border: '1px solid rgba(45, 212, 191, 0.3)',
     boxShadow: '0 4px 12px rgba(45, 212, 191, 0.1)'
   },
   levelIcon: {
-    fontSize: '20px',
+    fontSize: FONT_SIZE.xl,
     filter: 'drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))'
   },
   levelText: {
-    fontSize: '14px',
-    fontWeight: 'bold',
-    color: '#fbbf24',
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.goldLight,
     textShadow: '0 0 8px rgba(251, 191, 36, 0.4)'
   },
   menu: {
@@ -236,84 +236,84 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     gap: '6px',
-    padding: '10px',
+    padding: SPACING.sm,
     overflowY: 'auto',
     overflowX: 'hidden'
   },
   menuItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '12px',
-    paddingTop: '12px',
-    paddingRight: '15px',
-    paddingBottom: '12px',
-    paddingLeft: '15px',
-    background: 'transparent',
+    gap: SPACING[3],
+    paddingTop: SPACING[3],
+    paddingRight: SPACING.md,
+    paddingBottom: SPACING[3],
+    paddingLeft: SPACING.md,
+    background: COLORS.transparent,
     borderTop: 'none',
     borderRight: 'none',
     borderBottom: 'none',
     borderLeft: 'none',
-    borderRadius: '10px',
+    borderRadius: SPACING.sm,
     cursor: 'pointer',
     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    color: '#94a3b8',
+    color: COLORS.textGray,
     textAlign: 'left',
     position: 'relative'
   },
   menuItemActive: {
     background: 'linear-gradient(90deg, rgba(45, 212, 191, 0.2) 0%, rgba(45, 212, 191, 0.05) 100%)',
-    color: '#2dd4bf',
-    borderLeft: '3px solid #2dd4bf',
-    paddingLeft: '12px',
-    marginLeft: '-10px',
-    marginRight: '-10px',
+    color: COLORS.primary,
+    borderLeft: `3px solid ${COLORS.primary}`,
+    paddingLeft: SPACING[3],
+    marginLeft: `-${SPACING.sm}`,
+    marginRight: `-${SPACING.sm}`,
     paddingRight: '25px',
     boxShadow: '0 4px 12px rgba(45, 212, 191, 0.15), inset 0 1px 0 rgba(45, 212, 191, 0.2)'
   },
   menuIcon: {
-    fontSize: '20px',
+    fontSize: FONT_SIZE.xl,
     width: '24px',
     textAlign: 'center',
     transition: 'transform 0.2s'
   },
   menuLabel: {
     flex: 1,
-    fontSize: '14px',
-    fontWeight: '600',
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
     letterSpacing: '0.3px'
   },
   hotkey: {
-    fontSize: '10px',
-    color: '#64748b',
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textDarkGray,
     backgroundColor: 'rgba(15, 23, 42, 0.8)',
-    padding: '3px 7px',
-    borderRadius: '5px',
+    padding: `${SPACING[1]} 7px`,
+    borderRadius: SPACING.xs,
     border: '1px solid rgba(45, 212, 191, 0.2)',
-    fontWeight: '600',
+    fontWeight: FONT_WEIGHT.semibold,
     letterSpacing: '0.5px'
   },
   footer: {
-    padding: '15px 20px',
+    padding: `${SPACING.md} ${SPACING.lg}`,
     borderTop: '1px solid rgba(45, 212, 191, 0.1)',
     textAlign: 'center',
-    background: 'linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.5) 100%)'
+    background: `linear-gradient(180deg, transparent 0%, rgba(15, 23, 42, 0.5) 100%)`
   },
   version: {
-    fontSize: '12px',
-    color: '#64748b',
-    marginBottom: '5px',
-    fontWeight: '500'
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textDarkGray,
+    marginBottom: SPACING.xs,
+    fontWeight: FONT_WEIGHT.medium
   },
   copyright: {
-    fontSize: '10px',
-    color: '#475569'
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.bgSurfaceLighter
   },
   // Compact mode styles
   headerCompact: {
     display: 'flex',
     justifyContent: 'center',
-    padding: '15px 0',
-    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+    padding: `${SPACING.md} 0`,
+    background: `linear-gradient(135deg, ${COLORS.bgDarkAlt} 0%, ${COLORS.bgSurface} 100%)`,
     borderBottom: '1px solid rgba(45, 212, 191, 0.2)'
   },
   logoImageCompact: {
@@ -325,83 +325,83 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '2px',
-    margin: '10px 5px',
-    padding: '8px 5px',
+    gap: SPACING.xxs,
+    margin: `${SPACING.sm} ${SPACING.xs}`,
+    padding: `${SPACING[2]} ${SPACING.xs}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.15) 0%, rgba(20, 184, 166, 0.05) 100%)',
-    borderRadius: '10px',
+    borderRadius: SPACING.sm,
     border: '1px solid rgba(45, 212, 191, 0.3)',
     cursor: 'default',
     boxShadow: '0 4px 12px rgba(45, 212, 191, 0.1)'
   },
   levelIconCompact: {
-    fontSize: '16px',
+    fontSize: FONT_SIZE.base,
     filter: 'drop-shadow(0 0 6px rgba(245, 158, 11, 0.6))'
   },
   levelTextCompact: {
-    fontSize: '11px',
-    fontWeight: 'bold',
-    color: '#fbbf24',
+    fontSize: FONT_SIZE[11],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.goldLight,
     textShadow: '0 0 8px rgba(251, 191, 36, 0.4)'
   },
   combatPowerBadge: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    margin: '15px 20px',
-    padding: '10px 12px',
+    gap: SPACING[2],
+    margin: `${SPACING.md} ${SPACING.lg}`,
+    padding: `${SPACING.sm} ${SPACING[3]}`,
     background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(218, 165, 32, 0.05) 100%)',
-    borderRadius: '10px',
+    borderRadius: SPACING.sm,
     border: '1px solid rgba(255, 215, 0, 0.3)',
     boxShadow: '0 4px 12px rgba(255, 215, 0, 0.1)'
   },
   combatPowerIcon: {
-    fontSize: '18px',
+    fontSize: FONT_SIZE.lg,
     filter: 'drop-shadow(0 0 6px rgba(255, 215, 0, 0.6))'
   },
   combatPowerText: {
-    fontSize: '13px',
-    fontWeight: 'bold',
-    color: '#ffd700',
+    fontSize: FONT_SIZE[13],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.gold,
     textShadow: '0 0 8px rgba(255, 215, 0, 0.4)'
   },
   combatPowerBadgeCompact: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '2px',
-    margin: '0 5px 10px 5px',
-    padding: '8px 5px',
+    gap: SPACING.xxs,
+    margin: `0 ${SPACING.xs} ${SPACING.sm} ${SPACING.xs}`,
+    padding: `${SPACING[2]} ${SPACING.xs}`,
     background: 'linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(218, 165, 32, 0.05) 100%)',
-    borderRadius: '10px',
+    borderRadius: SPACING.sm,
     border: '1px solid rgba(255, 215, 0, 0.3)',
     cursor: 'default',
-    boxShadow: '0 2px 8px rgba(255, 215, 0, 0.1)'
+    boxShadow: SHADOWS.sm
   },
   combatPowerIconCompact: {
-    fontSize: '18px',
+    fontSize: FONT_SIZE.lg,
     filter: 'drop-shadow(0 0 6px rgba(255, 215, 0, 0.6))'
   },
   combatPowerTextCompact: {
-    fontSize: '10px',
-    fontWeight: 'bold',
-    color: '#ffd700',
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.gold,
     textShadow: '0 0 8px rgba(255, 215, 0, 0.4)'
   },
   menuItemCompact: {
     justifyContent: 'center',
-    padding: '12px 5px',
+    padding: `${SPACING[3]} ${SPACING.xs}`,
     gap: '0'
   },
   menuItemActiveCompact: {
     background: 'linear-gradient(90deg, rgba(45, 212, 191, 0.2) 0%, rgba(45, 212, 191, 0.05) 100%)',
-    color: '#2dd4bf',
-    borderLeft: '3px solid #2dd4bf',
-    paddingLeft: '2px',
+    color: COLORS.primary,
+    borderLeft: `3px solid ${COLORS.primary}`,
+    paddingLeft: SPACING.xxs,
     boxShadow: '0 4px 12px rgba(45, 212, 191, 0.15)'
   },
   menuIconCompact: {
-    fontSize: '24px',
+    fontSize: FONT_SIZE['2xl'],
     width: 'auto',
     textAlign: 'center'
   },
@@ -410,32 +410,32 @@ const styles: Record<string, React.CSSProperties> = {
     left: '70px',
     top: '50%',
     transform: 'translateY(-50%)',
-    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%)',
+    background: `linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%)`,
     border: '1px solid rgba(45, 212, 191, 0.4)',
-    borderRadius: '8px',
-    padding: '10px 14px',
+    borderRadius: BORDER_RADIUS.md,
+    padding: `${SPACING.sm} ${SPACING.md}`,
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
-    zIndex: 1000,
+    gap: SPACING.sm,
+    zIndex: Z_INDEX.modal,
     pointerEvents: 'none',
     whiteSpace: 'nowrap',
-    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(45, 212, 191, 0.1) inset',
-    backdropFilter: 'blur(16px)'
+    boxShadow: `${SHADOWS.lg}, 0 0 0 1px rgba(45, 212, 191, 0.1) inset`,
+    backdropFilter: BLUR.lg
   },
   tooltipText: {
-    fontSize: '13px',
-    fontWeight: '600',
-    color: '#f1f5f9',
+    fontSize: FONT_SIZE[13],
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.textLight,
     letterSpacing: '0.3px'
   },
   tooltipHotkey: {
-    fontSize: '11px',
-    color: '#2dd4bf',
+    fontSize: FONT_SIZE[11],
+    color: COLORS.primary,
     backgroundColor: 'rgba(15, 23, 42, 0.9)',
-    padding: '3px 7px',
-    borderRadius: '5px',
+    padding: `${SPACING[1]} 7px`,
+    borderRadius: SPACING.xs,
     border: '1px solid rgba(45, 212, 191, 0.3)',
-    fontWeight: '600'
+    fontWeight: FONT_WEIGHT.semibold
   }
 };

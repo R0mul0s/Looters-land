@@ -3,7 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-15
  */
 
 import type { Hero } from '../engine/hero/Hero';
@@ -102,6 +102,7 @@ export interface Floor {
   difficulty: number; // Multiplier for enemy stats
   explored: boolean;
   completed: boolean;
+  activeBuffs?: Array<'damage' | 'xp' | 'gold' | 'stats'>; // Active shrine buffs for this floor
 }
 
 /**

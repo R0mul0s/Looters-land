@@ -6,10 +6,12 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-12
+ * @lastModified 2025-11-15
  */
 
 import React, { useState, useEffect } from 'react';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../styles/tokens';
+import { flexColumn, flexCenter } from '../styles/common';
 
 // Import hero images
 import hero1Img from '../assets/images/hero/hero1.png';
@@ -116,45 +118,41 @@ export function OtherPlayerMarker({
 const styles: Record<string, React.CSSProperties> = {
   container: {
     position: 'absolute',
-    display: 'flex',
-    flexDirection: 'column',
+    ...flexColumn,
     alignItems: 'center',
     transform: 'translate(-50%, -50%)',
     pointerEvents: 'none',
     zIndex: 100
   },
   label: {
-    display: 'flex',
-    flexDirection: 'column',
+    ...flexColumn,
     alignItems: 'center',
-    background: 'rgba(0, 0, 0, 0.85)',
-    borderRadius: '6px',
-    padding: '4px 8px',
-    marginBottom: '4px',
-    border: '1px solid rgba(59, 130, 246, 0.5)',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
+    background: COLORS.bgOverlayDark,
+    borderRadius: BORDER_RADIUS.md,
+    padding: `${SPACING[1]} ${SPACING[2]}`,
+    marginBottom: SPACING[1],
+    border: `1px solid ${COLORS.info}80`,
+    boxShadow: SHADOWS.md,
     minWidth: '60px'
   },
   nickname: {
-    fontSize: '11px',
-    fontWeight: '700',
-    color: '#f1f5f9',
+    fontSize: FONT_SIZE[11],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight,
     whiteSpace: 'nowrap',
-    textShadow: '0 1px 2px rgba(0, 0, 0, 0.8)'
+    textShadow: SHADOWS.md
   },
   combatPower: {
-    fontSize: '9px',
-    fontWeight: '600',
-    color: '#ef4444',
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.danger,
     marginTop: '1px'
   },
   playerIcon: {
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    border: '2px solid rgba(255, 255, 255, 0.8)',
-    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+    borderRadius: BORDER_RADIUS.round,
+    ...flexCenter,
+    border: `2px solid rgba(255, 255, 255, 0.8)`,
+    boxShadow: SHADOWS.md,
     animation: 'pulse 2s ease-in-out infinite'
   },
   playerAvatar: {

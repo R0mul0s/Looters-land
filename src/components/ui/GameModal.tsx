@@ -26,10 +26,12 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-09
+ * @lastModified 2025-11-15
  */
 
 import React from 'react';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, BLUR, Z_INDEX } from '../../styles/tokens';
+import { flexBetween, flexCenter, flexColumn } from '../../styles/common';
 
 interface GameModalProps {
   isOpen: boolean;
@@ -112,51 +114,46 @@ const styles: Record<string, React.CSSProperties> = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    backdropFilter: 'blur(8px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-    padding: '20px'
+    backgroundColor: COLORS.bgOverlayDark,
+    backdropFilter: BLUR.md,
+    ...flexCenter,
+    zIndex: Z_INDEX.modal,
+    padding: SPACING.lg
   },
   modalContent: {
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    borderRadius: '12px',
-    border: '2px solid #2dd4bf',
-    boxShadow: '0 8px 32px rgba(45, 212, 191, 0.3)',
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    borderRadius: BORDER_RADIUS.lg,
+    border: `2px solid ${COLORS.primary}`,
+    boxShadow: SHADOWS.glowTeal,
     width: '100%',
     maxHeight: '80vh',
     overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column'
+    ...flexColumn
   },
   modalHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '20px',
-    borderBottom: '1px solid #334155',
+    ...flexBetween,
+    padding: SPACING.lg,
+    borderBottom: `1px solid ${COLORS.bgSurfaceLight}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
   },
   modalTitle: {
     margin: 0,
-    fontSize: '24px',
-    color: '#f1f5f9',
-    fontWeight: '700'
+    fontSize: FONT_SIZE['2xl'],
+    color: COLORS.textLight,
+    fontWeight: FONT_WEIGHT.bold
   },
   closeButton: {
-    background: 'transparent',
+    background: COLORS.transparent,
     border: 'none',
-    color: '#94a3b8',
-    fontSize: '24px',
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE['2xl'],
     cursor: 'pointer',
-    padding: '4px 8px',
+    padding: `${SPACING[1]} ${SPACING[2]}`,
     transition: 'all 0.2s',
-    borderRadius: '4px'
+    borderRadius: BORDER_RADIUS.sm
   },
   modalBody: {
-    padding: '20px',
+    padding: SPACING.lg,
     overflow: 'auto',
     flex: 1
   }

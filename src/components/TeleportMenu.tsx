@@ -3,12 +3,14 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-09
+ * @lastModified 2025-11-15
  */
 
 import React, { useState } from 'react';
 import { t } from '../localization/i18n';
 import type { StaticObjectType } from '../types/worldmap.types';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../styles/tokens';
+import { flexColumn, flexCenter, flexBetween } from '../styles/common';
 
 interface TeleportLocation {
   name: string;
@@ -173,99 +175,95 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    color: '#f1f5f9',
+    ...flexColumn,
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight,
     overflow: 'hidden'
   },
   header: {
-    padding: '20px',
-    borderBottom: '2px solid #2dd4bf',
+    padding: SPACING.lg,
+    borderBottom: `2px solid ${COLORS.primary}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
   },
   title: {
     margin: 0,
-    fontSize: '24px',
-    fontWeight: '700',
-    color: '#f1f5f9'
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight
   },
   infoBox: {
-    padding: '15px 20px',
+    padding: `${SPACING[3.5]} ${SPACING.lg}`,
     background: 'rgba(59, 130, 246, 0.1)',
     border: '1px solid rgba(59, 130, 246, 0.3)',
-    borderRadius: '8px',
-    margin: '20px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
+    borderRadius: BORDER_RADIUS.md,
+    margin: SPACING.lg,
+    ...flexColumn,
+    gap: SPACING[2]
   },
   infoRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
+    ...flexBetween,
     alignItems: 'center'
   },
   infoLabel: {
-    fontSize: '14px',
-    color: '#94a3b8',
-    fontWeight: '600'
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textGray,
+    fontWeight: FONT_WEIGHT.semibold
   },
   infoCost: {
-    fontSize: '16px',
-    fontWeight: '700',
-    color: '#fbbf24'
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.goldLight
   },
   infoValue: {
-    fontSize: '16px',
-    fontWeight: '700',
-    color: '#f1f5f9'
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight
   },
   filterSection: {
     display: 'flex',
-    gap: '10px',
-    padding: '0 20px',
-    marginBottom: '15px'
+    gap: SPACING[2.5],
+    padding: `0 ${SPACING.lg}`,
+    marginBottom: SPACING[3.5]
   },
   filterButton: {
     flex: 1,
-    padding: '10px 15px',
-    fontSize: '14px',
-    fontWeight: '600',
+    padding: `${SPACING[2.5]} ${SPACING[3.5]}`,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.semibold,
     background: 'rgba(51, 65, 85, 0.5)',
-    color: '#94a3b8',
-    border: '1px solid #475569',
-    borderRadius: '8px',
+    color: COLORS.textGray,
+    border: `1px solid ${COLORS.bgSurfaceLighter}`,
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.fast
   },
   filterButtonActive: {
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
-    color: '#0f172a',
-    border: '1px solid #2dd4bf',
-    boxShadow: '0 2px 8px rgba(45, 212, 191, 0.4)'
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
+    color: COLORS.bgDarkAlt,
+    border: `1px solid ${COLORS.primary}`,
+    boxShadow: SHADOWS.md
   },
   locationsList: {
     flex: 1,
     overflowY: 'auto',
-    padding: '0 20px 20px 20px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '10px'
+    padding: `0 ${SPACING.lg} ${SPACING.lg} ${SPACING.lg}`,
+    ...flexColumn,
+    gap: SPACING[2.5]
   },
   locationCard: {
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
-    padding: '15px',
-    background: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
-    border: '2px solid #475569',
-    borderRadius: '12px',
+    gap: SPACING[3.5],
+    padding: SPACING[3.5],
+    background: `linear-gradient(135deg, ${COLORS.bgSurfaceLight} 0%, ${COLORS.bgSurface} 100%)`,
+    border: `2px solid ${COLORS.bgSurfaceLighter}`,
+    borderRadius: BORDER_RADIUS.lg,
     cursor: 'pointer',
-    transition: 'all 0.2s',
+    transition: TRANSITIONS.fast,
     position: 'relative'
   },
   locationCardSelected: {
-    borderColor: '#2dd4bf',
+    borderColor: COLORS.primary,
     boxShadow: '0 0 20px rgba(45, 212, 191, 0.4)',
     transform: 'scale(1.02)'
   },
@@ -274,7 +272,7 @@ const styles: Record<string, React.CSSProperties> = {
     cursor: 'not-allowed'
   },
   locationIcon: {
-    fontSize: '40px',
+    fontSize: FONT_SIZE['5xl'],
     minWidth: '50px',
     textAlign: 'center'
   },
@@ -282,22 +280,22 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1
   },
   locationName: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: '#f1f5f9',
-    marginBottom: '4px'
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight,
+    marginBottom: SPACING[1]
   },
   locationMeta: {
-    fontSize: '13px',
-    color: '#94a3b8',
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textGray,
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: SPACING[2]
   },
   locationType: {
     textTransform: 'capitalize',
-    color: '#2dd4bf',
-    fontWeight: '600'
+    color: COLORS.primary,
+    fontWeight: FONT_WEIGHT.semibold
   },
   locationDivider: {
     opacity: 0.5
@@ -306,44 +304,42 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'monospace'
   },
   teleportButton: {
-    padding: '8px 16px',
-    fontSize: '14px',
-    fontWeight: '700',
-    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    padding: `${SPACING[2]} ${SPACING[4]}`,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.bold,
+    background: `linear-gradient(135deg, ${COLORS.success} 0%, ${COLORS.successDark} 100%)`,
     color: 'white',
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
-    transition: 'all 0.2s',
+    transition: TRANSITIONS.fast,
     boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)'
   },
   teleportButtonDisabled: {
-    background: '#475569',
+    background: COLORS.bgSurfaceLighter,
     cursor: 'not-allowed',
     boxShadow: 'none'
   },
   emptyState: {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
+    ...flexCenter,
+    ...flexColumn,
     textAlign: 'center',
-    padding: '40px 20px'
+    padding: `${SPACING[10]} ${SPACING.lg}`
   },
   emptyIcon: {
-    fontSize: '80px',
-    marginBottom: '20px'
+    fontSize: FONT_SIZE['8xl'],
+    marginBottom: SPACING.lg
   },
   emptyTitle: {
-    fontSize: '24px',
-    fontWeight: '700',
-    color: '#f1f5f9',
-    margin: '0 0 15px 0'
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight,
+    margin: `0 0 ${SPACING[3.5]} 0`
   },
   emptyText: {
-    fontSize: '16px',
-    color: '#94a3b8',
+    fontSize: FONT_SIZE.base,
+    color: COLORS.textGray,
     maxWidth: '400px',
     lineHeight: '1.6',
     margin: 0

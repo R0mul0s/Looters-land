@@ -1985,6 +1985,185 @@ const handleQuickCombatEnd = async (metadata?: any) => {
 
 ---
 
+### 15.18 CSS and Styling Standards
+
+**Rule:** Use design tokens and common style utilities instead of inline style objects to ensure consistency and maintainability.
+
+**Pattern:**
+
+```typescript
+// ❌ BAD - Hardcoded inline styles
+<div style={{
+  backgroundColor: 'rgba(30, 30, 30, 0.9)',
+  border: '2px solid #20b2aa',
+  borderRadius: '8px',
+  padding: '15px',
+  boxShadow: '0 4px 6px rgba(0, 0, 0, 0.3)'
+}}>
+  Content
+</div>
+
+// ✅ GOOD - Using design tokens and common styles
+import { COLORS, SPACING } from '../styles/tokens';
+import { cardStyle } from '../styles/common';
+
+<div style={cardStyle}>
+  Content
+</div>
+
+// ✅ GOOD - Combining common styles with dynamic values
+<div style={{
+  ...cardStyle,
+  borderColor: isActive ? COLORS.borderSuccess : COLORS.borderDark,
+  opacity: isCompleted ? 0.6 : 1
+}}>
+  Content
+</div>
+```
+
+**File Locations:**
+- **Design Tokens**: `src/styles/tokens.ts` - Colors, spacing, fonts, shadows, etc.
+- **Common Styles**: `src/styles/common.ts` - Reusable style objects (cards, buttons, flex utilities)
+
+**Design Tokens Available:**
+
+```typescript
+import {
+  COLORS,           // All color values (backgrounds, borders, text, rarity, etc.)
+  SPACING,          // Spacing scale (xxs to xxl)
+  BORDER_RADIUS,    // Border radius scale (sm to round)
+  FONT_SIZE,        // Font size scale (xs to xxxl)
+  FONT_WEIGHT,      // Font weights (normal to bold)
+  SHADOWS,          // Shadow presets (sm to glow)
+  Z_INDEX,          // Z-index scale (base to notification)
+  TRANSITIONS       // Transition presets (fast, base, slow)
+} from '../styles/tokens';
+```
+
+**Common Style Objects Available:**
+
+```typescript
+import {
+  cardStyle,                  // Standard card container
+  cardLightStyle,            // Light card variant
+  buttonStyle,               // Standard button
+  buttonDangerStyle,         // Danger button
+  buttonSuccessStyle,        // Success button
+  buttonDisabledStyle,       // Disabled button
+  flexCenter,                // Flex center alignment
+  flexRow,                   // Flex row
+  flexColumn,                // Flex column
+  flexBetween,               // Flex space-between
+  flexWrap,                  // Flex wrap with gap
+  inputStyle,                // Input field
+  modalBackdropStyle,        // Modal backdrop
+  modalContentStyle,         // Modal content
+  badgeStyle,                // Badge/tag
+  tooltipStyle,              // Tooltip
+  dividerStyle,              // Horizontal divider
+  iconButtonStyle,           // Icon button
+  progressBarContainerStyle, // Progress bar container
+  progressBarFillStyle,      // Progress bar fill
+  gridStyle,                 // Grid layout
+  gridColumns(n),            // Grid with n columns
+  getRarityColor(rarity),    // Get color for item rarity
+  getRoomColor(roomType)     // Get color for room type
+} from '../styles/common';
+```
+
+**When to Use Each Approach:**
+
+1. **Use Design Tokens** when:
+   - Setting colors, spacing, fonts, shadows
+   - Ensuring consistency across components
+   - Making the app themeable
+
+2. **Use Common Styles** when:
+   - Creating cards, buttons, modals
+   - Using flex layouts
+   - Needing standard UI components
+
+3. **Use Inline Styles** when:
+   - Values depend on props/state (dynamic styling)
+   - Combining common styles with component-specific overrides
+   - One-off styles that won't be reused
+
+**Example - Refactoring Component:**
+
+```typescript
+// Before
+const styles = {
+  container: {
+    backgroundColor: 'rgba(30, 30, 30, 0.9)',
+    border: '2px solid #20b2aa',
+    borderRadius: '8px',
+    padding: '15px'
+  },
+  button: {
+    background: 'linear-gradient(135deg, #2a2a3e 0%, #1a1a2e 100%)',
+    border: '2px solid #4a9eff',
+    borderRadius: '4px',
+    padding: '10px 15px',
+    color: '#ffffff',
+    cursor: 'pointer'
+  }
+};
+
+// After
+import { COLORS, SPACING } from '../styles/tokens';
+import { cardStyle, buttonStyle } from '../styles/common';
+
+const styles = {
+  container: cardStyle,
+  button: buttonStyle
+};
+
+// Or for dynamic styling
+<div style={{
+  ...cardStyle,
+  borderColor: isActive ? COLORS.borderSuccess : COLORS.borderTeal
+}}>
+```
+
+**Key Points:**
+- ✅ Always import from `src/styles/tokens.ts` for design constants
+- ✅ Always import from `src/styles/common.ts` for reusable styles
+- ✅ Use object spread (`{...cardStyle, ...}`) to compose styles
+- ✅ Keep dynamic values (from props/state) in inline styles
+- ✅ Document any new tokens or common styles added
+- ❌ Never hardcode colors, spacing, or shadows
+- ❌ Never duplicate common style patterns across components
+- ❌ Never use magic numbers (use tokens instead)
+
+**Helper Functions:**
+
+```typescript
+// Get rarity color dynamically
+import { getRarityColor } from '../styles/common';
+
+<span style={{ color: getRarityColor(item.rarity) }}>
+  {item.name}
+</span>
+
+// Get room color dynamically
+import { getRoomColor } from '../styles/common';
+
+<div style={{
+  ...cardStyle,
+  borderColor: getRoomColor(room.type)
+}}>
+```
+
+**Benefits:**
+- ✅ Consistent design across the entire app
+- ✅ Easy to change theme (update tokens file)
+- ✅ Reduced code duplication
+- ✅ Better maintainability
+- ✅ TypeScript type safety maintained
+- ✅ Easy to find and update specific styles
+
+---
+
 ## Resources
 
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
@@ -1996,4 +2175,4 @@ const handleQuickCombatEnd = async (metadata?: any) => {
 
 **Remember**: These rules exist to maintain code quality and consistency. If you find a rule that doesn't work, propose a change to this document rather than ignoring the rule.
 
-**Last Updated:** 2025-11-15 (React State Closure Pattern Added)
+**Last Updated:** 2025-11-15 (CSS and Styling Standards Added)

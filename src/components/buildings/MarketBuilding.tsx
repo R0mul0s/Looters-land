@@ -3,7 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-08
+ * @lastModified 2025-11-15
  */
 
 import React, { useState, useEffect } from 'react';
@@ -12,6 +12,9 @@ import type { Item } from '../../engine/item/Item';
 import { MarketService, type ShopItem } from '../../services/MarketService';
 import { RARITY_COLORS } from '../../types/item.types';
 import { ItemTooltip } from '../ui/ItemTooltip';
+import { t } from '../../localization/i18n';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
+import { flexBetween, flexColumn } from '../../styles/common';
 
 interface MarketBuildingProps {
   townLevel: number;
@@ -42,7 +45,27 @@ export function MarketBuilding({
   // Generate daily shop on mount
   useEffect(() => {
     const dateString = MarketService.getCurrentDateString();
-    const dailyShop = MarketService.generateDailyShop(playerLevel, dateString);
+    let dailyShop = MarketService.generateDailyShop(playerLevel, dateString);
+
+    // Sort shop items by rarity, then level
+    const rarityOrder: Record<string, number> = {
+      mythic: 6,
+      legendary: 5,
+      epic: 4,
+      rare: 3,
+      uncommon: 2,
+      common: 1
+    };
+
+    dailyShop = dailyShop.sort((a, b) => {
+      // First by rarity (descending)
+      const rarityDiff = (rarityOrder[b.item.rarity.toLowerCase()] || 0) - (rarityOrder[a.item.rarity.toLowerCase()] || 0);
+      if (rarityDiff !== 0) return rarityDiff;
+
+      // Then by level (descending)
+      return b.item.level - a.item.level;
+    });
+
     setShopItems(dailyShop);
   }, [playerLevel]);
 
@@ -89,7 +112,7 @@ export function MarketBuilding({
     <div style={styles.container}>
       {/* Header */}
       <div style={styles.header}>
-        <h2 style={styles.title}>🏪 Market</h2>
+        <h2 style={styles.title}>🏪 {t('buildings.market.title')}</h2>
         <div style={styles.goldDisplay}>
           💰 {playerGold.toLocaleString()}g
         </div>
@@ -105,7 +128,7 @@ export function MarketBuilding({
           }}
           onClick={() => setActiveTab('buy')}
         >
-          🛒 Buy Items
+          🛒 {t('buildings.market.tabs.buy')}
         </button>
         <button
           style={{
@@ -114,7 +137,7 @@ export function MarketBuilding({
           }}
           onClick={() => setActiveTab('sell')}
         >
-          💸 Sell Items
+          💸 {t('buildings.market.tabs.sell')}
         </button>
       </div>
 
@@ -190,7 +213,7 @@ export function MarketBuilding({
               onClick={() => handleBuyItem(shopItem)}
               disabled={playerGold < shopItem.price}
             >
-              {playerGold < shopItem.price ? 'Not Enough Gold' : 'Buy'}
+              {playerGold < shopItem.price ? t('buildings.market.buttons.notEnoughGold') : t('buildings.market.buttons.buy')}
             </button>
           </div>
         ))}
@@ -199,18 +222,37 @@ export function MarketBuilding({
   }
 
   function renderSellTab() {
+    // Sort inventory items by rarity, then level
+    const rarityOrder: Record<string, number> = {
+      mythic: 6,
+      legendary: 5,
+      epic: 4,
+      rare: 3,
+      uncommon: 2,
+      common: 1
+    };
+
+    const sortedItems = [...inventory.items].sort((a, b) => {
+      // First by rarity (descending)
+      const rarityDiff = (rarityOrder[b.rarity.toLowerCase()] || 0) - (rarityOrder[a.rarity.toLowerCase()] || 0);
+      if (rarityDiff !== 0) return rarityDiff;
+
+      // Then by level (descending)
+      return b.level - a.level;
+    });
+
     return (
       <div style={styles.inventoryGrid}>
-        {inventory.items.length === 0 ? (
+        {sortedItems.length === 0 ? (
           <div style={styles.emptyMessage}>
-            No items to sell. Go explore dungeons to find loot!
+            {t('buildings.market.empty.message')}
           </div>
         ) : (
-          inventory.items.map((item) => {
+          sortedItems.map((item) => {
             const sellPrice = MarketService.calculateSellPrice(item);
             return (
               <div
-                key={item.id}
+                key={`market-sell-${item.id}`}
                 style={{
                   ...styles.inventoryItemCard,
                   ...(selectedItem?.id === item.id ? styles.inventoryItemSelected : {})
@@ -238,7 +280,7 @@ export function MarketBuilding({
                   <div style={styles.enchantBadge}>+{item.enchantLevel}</div>
                 )}
 
-                <div style={styles.sellPrice}>Sell: {sellPrice}g</div>
+                <div style={styles.sellPrice}>{t('buildings.market.sellPrice')} {sellPrice}g</div>
 
                 <button
                   style={styles.sellButton}
@@ -247,7 +289,7 @@ export function MarketBuilding({
                     handleSellItem(item);
                   }}
                 >
-                  Sell
+                  {t('buildings.market.buttons.sell')}
                 </button>
               </div>
             );
@@ -262,73 +304,70 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    color: '#f1f5f9'
+    ...flexColumn,
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight
   },
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '20px',
-    borderBottom: '2px solid #2dd4bf',
+    ...flexBetween,
+    padding: SPACING.lg,
+    borderBottom: `2px solid ${COLORS.primary}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
   },
   title: {
     margin: 0,
-    fontSize: '24px',
-    fontWeight: '700'
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold
   },
   goldDisplay: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#fbbf24',
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.goldLight,
     background: 'rgba(251, 191, 36, 0.1)',
-    padding: '8px 16px',
-    borderRadius: '8px',
+    padding: `${SPACING[2]} ${SPACING[4]}`,
+    borderRadius: BORDER_RADIUS.md,
     border: '1px solid rgba(251, 191, 36, 0.3)'
   },
   closeButton: {
-    background: 'transparent',
-    border: '2px solid #334155',
-    color: '#94a3b8',
-    fontSize: '24px',
+    background: COLORS.transparent,
+    border: `2px solid ${COLORS.bgSurfaceLight}`,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE['2xl'],
     cursor: 'pointer',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    transition: 'all 0.2s'
+    padding: `${SPACING[2]} ${SPACING[4]}`,
+    borderRadius: BORDER_RADIUS.md,
+    transition: TRANSITIONS.allBase
   },
   tabs: {
     display: 'flex',
-    gap: '10px',
-    padding: '15px 20px',
+    gap: SPACING.sm,
+    padding: `${SPACING.md} ${SPACING.lg}`,
     borderBottom: '1px solid rgba(45, 212, 191, 0.2)'
   },
   tab: {
     flex: 1,
-    padding: '12px 20px',
+    padding: `${SPACING[3]} ${SPACING.lg}`,
     background: 'rgba(45, 212, 191, 0.1)',
     border: '1px solid rgba(45, 212, 191, 0.3)',
-    borderRadius: '8px',
-    color: '#94a3b8',
-    fontSize: '16px',
-    fontWeight: '600',
+    borderRadius: BORDER_RADIUS.md,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.allBase
   },
   tabActive: {
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
-    color: '#0f172a',
-    border: '1px solid #2dd4bf',
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
+    color: COLORS.bgDarkAlt,
+    border: `1px solid ${COLORS.primary}`,
     boxShadow: '0 4px 12px rgba(45, 212, 191, 0.4)'
   },
   message: {
-    padding: '12px 20px',
-    margin: '10px 20px',
-    borderRadius: '8px',
-    fontSize: '14px',
-    fontWeight: '600',
+    padding: `${SPACING[3]} ${SPACING.lg}`,
+    margin: `${SPACING.sm} ${SPACING.lg}`,
+    borderRadius: BORDER_RADIUS.md,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
     textAlign: 'center'
   },
   messageSuccess: {
@@ -344,142 +383,142 @@ const styles: Record<string, React.CSSProperties> = {
   content: {
     flex: 1,
     overflow: 'auto',
-    padding: '20px'
+    padding: SPACING.lg
   },
   shopGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-    gap: '15px'
+    gap: SPACING.md
   },
   shopItemCard: {
     position: 'relative',
     background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%)',
     border: '1px solid rgba(45, 212, 191, 0.2)',
-    borderRadius: '12px',
-    padding: '15px',
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
     textAlign: 'center',
-    transition: 'all 0.3s',
+    transition: TRANSITIONS.allSlow,
     cursor: 'pointer'
   },
   rarityBadge: {
     position: 'absolute',
-    top: '8px',
-    right: '8px',
-    padding: '4px 8px',
-    fontSize: '10px',
-    fontWeight: '700',
-    color: 'white',
-    borderRadius: '6px',
+    top: SPACING[2],
+    right: SPACING[2],
+    padding: `${SPACING[1]} ${SPACING[2]}`,
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.white,
+    borderRadius: BORDER_RADIUS.sm,
     textTransform: 'capitalize',
     boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3)',
     zIndex: 1
   },
   itemIcon: {
     fontSize: '48px',
-    marginBottom: '10px'
+    marginBottom: SPACING.sm
   },
   itemName: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#f1f5f9',
-    marginBottom: '4px'
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.textLight,
+    marginBottom: SPACING[1]
   },
   itemType: {
-    fontSize: '12px',
-    color: '#94a3b8',
-    marginBottom: '4px',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textGray,
+    marginBottom: SPACING[1],
     textTransform: 'capitalize'
   },
   itemLevel: {
-    fontSize: '11px',
-    color: '#64748b',
-    marginBottom: '8px'
+    fontSize: FONT_SIZE['11'],
+    color: COLORS.textDarkGray,
+    marginBottom: SPACING[2]
   },
   statsPreview: {
     display: 'flex',
     justifyContent: 'center',
-    gap: '8px',
-    fontSize: '11px',
-    color: '#2dd4bf',
-    marginBottom: '10px'
+    gap: SPACING[2],
+    fontSize: FONT_SIZE['11'],
+    color: COLORS.primary,
+    marginBottom: SPACING.sm
   },
   itemPrice: {
-    fontSize: '16px',
-    fontWeight: '700',
-    color: '#fbbf24',
-    marginBottom: '10px'
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.goldLight,
+    marginBottom: SPACING.sm
   },
   buyButton: {
     width: '100%',
-    padding: '10px',
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
+    padding: SPACING.sm,
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
     border: 'none',
-    borderRadius: '8px',
-    color: '#0f172a',
-    fontSize: '14px',
-    fontWeight: '600',
+    borderRadius: BORDER_RADIUS.md,
+    color: COLORS.bgDarkAlt,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.allBase
   },
   buyButtonDisabled: {
-    background: '#334155',
-    color: '#64748b',
+    background: COLORS.bgSurfaceLight,
+    color: COLORS.textDarkGray,
     cursor: 'not-allowed',
     opacity: 0.5
   },
   inventoryGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-    gap: '12px'
+    gap: SPACING[3]
   },
   inventoryItemCard: {
     position: 'relative',
     background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%)',
     border: '1px solid rgba(45, 212, 191, 0.2)',
-    borderRadius: '12px',
-    padding: '12px',
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING[3],
     textAlign: 'center',
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.allBase
   },
   inventoryItemSelected: {
-    border: '2px solid #2dd4bf',
+    border: `2px solid ${COLORS.primary}`,
     boxShadow: '0 0 15px rgba(45, 212, 191, 0.3)'
   },
   enchantBadge: {
     display: 'inline-block',
-    padding: '3px 8px',
+    padding: `${SPACING.xxs} ${SPACING[2]}`,
     background: 'rgba(251, 191, 36, 0.2)',
     border: '1px solid rgba(251, 191, 36, 0.4)',
-    borderRadius: '6px',
-    fontSize: '11px',
-    fontWeight: '700',
-    color: '#fbbf24',
-    marginBottom: '6px'
+    borderRadius: BORDER_RADIUS.sm,
+    fontSize: FONT_SIZE['11'],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.goldLight,
+    marginBottom: SPACING.sm
   },
   sellPrice: {
-    fontSize: '14px',
-    fontWeight: '600',
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
     color: '#22c55e',
-    marginBottom: '8px'
+    marginBottom: SPACING[2]
   },
   sellButton: {
     width: '100%',
-    padding: '8px',
+    padding: `${SPACING[2]} ${SPACING[4]}`,
     background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
     border: 'none',
-    borderRadius: '6px',
-    color: 'white',
-    fontSize: '13px',
-    fontWeight: '600',
+    borderRadius: BORDER_RADIUS.sm,
+    color: COLORS.white,
+    fontSize: FONT_SIZE['13'],
+    fontWeight: FONT_WEIGHT.semibold,
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.allBase
   },
   emptyMessage: {
     gridColumn: '1 / -1',
     textAlign: 'center',
-    padding: '60px 20px',
-    fontSize: '16px',
-    color: '#64748b'
+    padding: `${SPACING[16]} ${SPACING.lg}`,
+    fontSize: FONT_SIZE.base,
+    color: COLORS.textDarkGray
   }
 };

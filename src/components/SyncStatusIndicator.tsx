@@ -6,11 +6,12 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2025-11-15
  */
 
 import React from 'react';
 import { t, getLanguage } from '../localization/i18n';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../styles/tokens';
 
 export type SyncStatus = 'idle' | 'saving' | 'success' | 'error';
 
@@ -142,17 +143,17 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    padding: '6px 12px',
-    borderRadius: '6px',
+    gap: SPACING[2],
+    padding: `${SPACING[2]} ${SPACING[3]}`,
+    borderRadius: BORDER_RADIUS.md,
     border: '1px solid',
-    fontSize: '12px',
-    fontWeight: '500',
-    transition: 'all 0.2s ease',
-    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.medium,
+    transition: TRANSITIONS.allBase,
+    boxShadow: SHADOWS.subtle
   },
   icon: {
-    fontSize: '14px',
+    fontSize: FONT_SIZE.md,
     lineHeight: 1
   },
   text: {

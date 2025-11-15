@@ -7,13 +7,15 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2025-11-15
  */
 
 import React, { useState } from 'react';
 import type { Hero } from '../../engine/hero/Hero';
 import { RARITY_COLORS } from '../../types/hero.types';
 import { t } from '../../localization/i18n';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS, Z_INDEX } from '../../styles/tokens';
+import { flexBetween, flexColumn, flexCenter } from '../../styles/common';
 
 /**
  * Props for HeroCollection component
@@ -66,7 +68,10 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
         return b.level - a.level;
       case 'rarity': {
         const rarityOrder = { legendary: 4, epic: 3, rare: 2, common: 1 };
-        return (rarityOrder[b.rarity] || 0) - (rarityOrder[a.rarity] || 0);
+        const rarityDiff = (rarityOrder[b.rarity] || 0) - (rarityOrder[a.rarity] || 0);
+        // If same rarity, sort by level (descending)
+        if (rarityDiff !== 0) return rarityDiff;
+        return b.level - a.level;
       }
       case 'name':
         return a.name.localeCompare(b.name);
@@ -384,153 +389,151 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
+    ...flexColumn,
     width: '100%',
     height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    color: '#f1f5f9',
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight,
     overflow: 'hidden',
     position: 'relative'
   },
   header: {
-    padding: '20px',
-    borderBottom: '2px solid #2dd4bf',
+    padding: SPACING[5],
+    borderBottom: `2px solid ${COLORS.primary}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
   },
   title: {
-    margin: '0 0 10px 0',
-    fontSize: '24px',
-    fontWeight: '700'
+    margin: `0 0 ${SPACING[3]} 0`,
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold
   },
   collectionStats: {
     display: 'flex',
-    gap: '20px',
+    gap: SPACING[5],
     flexWrap: 'wrap'
   },
   statText: {
-    fontSize: '14px',
-    color: '#94a3b8',
-    fontWeight: '600'
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textGray,
+    fontWeight: FONT_WEIGHT.semibold
   },
   controlsSection: {
     display: 'flex',
-    gap: '15px',
-    padding: '15px 20px',
+    gap: SPACING[4],
+    padding: `${SPACING[4]} ${SPACING[5]}`,
     background: 'rgba(15, 23, 42, 0.5)',
-    borderBottom: '1px solid #334155',
+    borderBottom: `1px solid ${COLORS.bgSurfaceLight}`,
     flexWrap: 'wrap'
   },
   filterGroup: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: SPACING[2]
   },
   filterLabel: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#94a3b8'
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.textGray
   },
   select: {
-    padding: '6px 12px',
-    fontSize: '14px',
-    background: '#334155',
-    color: '#f1f5f9',
-    border: '1px solid #475569',
-    borderRadius: '6px',
+    padding: `${SPACING[2]} ${SPACING[3]}`,
+    fontSize: FONT_SIZE.md,
+    background: COLORS.bgSurfaceLight,
+    color: COLORS.textLight,
+    border: `1px solid ${COLORS.bgSurfaceLighter}`,
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
     outline: 'none'
   },
   content: {
     flex: 1,
-    padding: '20px',
+    padding: SPACING[5],
     overflow: 'auto'
   },
   heroesGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-    gap: '15px'
+    gap: SPACING[4]
   },
   heroCard: {
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '15px',
-    background: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
+    ...flexColumn,
+    padding: SPACING[4],
+    background: `linear-gradient(135deg, ${COLORS.bgSurfaceLight} 0%, ${COLORS.bgSurface} 100%)`,
     border: '3px solid',
-    borderRadius: '12px',
+    borderRadius: BORDER_RADIUS.lg,
     cursor: 'pointer',
-    transition: 'all 0.2s',
+    transition: TRANSITIONS.allBase,
     position: 'relative'
   },
   heroCardSelected: {
-    boxShadow: '0 0 20px rgba(45, 212, 191, 0.6)',
+    boxShadow: SHADOWS.glowTeal,
     transform: 'scale(1.03)'
   },
   activeBadge: {
     position: 'absolute',
-    top: '10px',
-    right: '10px',
-    padding: '3px 8px',
-    fontSize: '10px',
-    fontWeight: '700',
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
-    color: '#0f172a',
-    borderRadius: '4px',
+    top: SPACING[3],
+    right: SPACING[3],
+    padding: `${SPACING.xxs} ${SPACING[2]}`,
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.bold,
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
+    color: COLORS.bgDarkAlt,
+    borderRadius: BORDER_RADIUS.sm,
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
     zIndex: 2
   },
   talentBadge: {
     position: 'absolute',
-    top: '40px',
-    right: '10px',
-    padding: '4px 8px',
-    fontSize: '10px',
-    fontWeight: '700',
-    color: 'white',
-    borderRadius: '6px',
-    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-    boxShadow: '0 2px 8px rgba(245, 158, 11, 0.6)',
+    top: SPACING[10],
+    right: SPACING[3],
+    padding: `${SPACING[1]} ${SPACING[2]}`,
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.white,
+    borderRadius: BORDER_RADIUS.md,
+    background: `linear-gradient(135deg, ${COLORS.warning} 0%, ${COLORS.warningDark} 100%)`,
+    boxShadow: SHADOWS.card,
     zIndex: 1
   },
   rarityBadge: {
     position: 'absolute',
-    top: '10px',
-    left: '10px',
-    padding: '4px 10px',
-    fontSize: '11px',
-    fontWeight: '700',
-    color: 'white',
-    borderRadius: '4px',
+    top: SPACING[3],
+    left: SPACING[3],
+    padding: `${SPACING[1]} ${SPACING[3]}`,
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.white,
+    borderRadius: BORDER_RADIUS.sm,
     textTransform: 'capitalize',
     zIndex: 1
   },
   heroIcon: {
-    fontSize: '48px',
+    fontSize: FONT_SIZE['6xl'],
     textAlign: 'center',
-    marginBottom: '10px',
-    marginTop: '20px'
+    marginBottom: SPACING[3],
+    marginTop: SPACING[5]
   },
   heroInfo: {
     textAlign: 'center'
   },
   heroName: {
-    fontSize: '16px',
-    fontWeight: '700',
-    color: '#f1f5f9',
-    marginBottom: '6px',
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight,
+    marginBottom: SPACING[2],
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap'
   },
   heroMeta: {
-    fontSize: '12px',
-    color: '#94a3b8',
-    marginBottom: '4px',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textGray,
+    marginBottom: SPACING[1],
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '6px'
+    gap: SPACING[2]
   },
   heroClass: {
     textTransform: 'capitalize'
@@ -540,233 +543,224 @@ const styles: Record<string, React.CSSProperties> = {
   },
   heroRole: {
     textTransform: 'capitalize',
-    color: '#2dd4bf'
+    color: COLORS.primary
   },
   heroLevel: {
-    fontSize: '13px',
-    fontWeight: '700',
-    color: '#fbbf24',
-    marginBottom: '10px'
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.goldLight,
+    marginBottom: SPACING[3]
   },
   statsPreview: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    padding: '10px',
+    ...flexColumn,
+    gap: SPACING[1],
+    padding: SPACING[3],
     background: 'rgba(15, 23, 42, 0.6)',
-    borderRadius: '6px',
-    marginTop: '10px'
+    borderRadius: BORDER_RADIUS.md,
+    marginTop: SPACING[3]
   },
   statRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    fontSize: '12px'
+    ...flexBetween,
+    fontSize: FONT_SIZE.sm
   },
   statLabel: {
-    color: '#94a3b8',
-    fontWeight: '600'
+    color: COLORS.textGray,
+    fontWeight: FONT_WEIGHT.semibold
   },
   statValue: {
-    color: '#f1f5f9',
-    fontWeight: '700'
+    color: COLORS.textLight,
+    fontWeight: FONT_WEIGHT.bold
   },
   emptyState: {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
+    ...flexColumn,
+    ...flexCenter,
     textAlign: 'center',
-    padding: '40px'
+    padding: SPACING[10]
   },
   emptyIcon: {
-    fontSize: '80px',
-    marginBottom: '20px'
+    fontSize: FONT_SIZE['8xl'],
+    marginBottom: SPACING[5]
   },
   emptyTitle: {
-    fontSize: '24px',
-    fontWeight: '700',
-    color: '#f1f5f9',
-    margin: '0 0 15px 0'
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight,
+    margin: `0 0 ${SPACING[4]} 0`
   },
   emptyText: {
-    fontSize: '16px',
-    color: '#94a3b8',
+    fontSize: FONT_SIZE.base,
+    color: COLORS.textGray,
     maxWidth: '400px',
     lineHeight: '1.6',
     margin: 0
   },
   detailPanel: {
     position: 'absolute',
-    top: '20px',
-    right: '20px',
+    top: SPACING[5],
+    right: SPACING[5],
     width: '350px',
-    maxHeight: 'calc(100% - 40px)',
-    background: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
-    border: '2px solid #2dd4bf',
-    borderRadius: '12px',
-    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.5)',
-    display: 'flex',
-    flexDirection: 'column',
+    maxHeight: `calc(100% - ${SPACING[10]})`,
+    background: `linear-gradient(135deg, ${COLORS.bgSurfaceLight} 0%, ${COLORS.bgSurface} 100%)`,
+    border: `2px solid ${COLORS.primary}`,
+    borderRadius: BORDER_RADIUS.lg,
+    boxShadow: SHADOWS['2xl'],
+    ...flexColumn,
     overflow: 'hidden',
-    zIndex: 10
+    zIndex: Z_INDEX.dropdown
   },
   detailHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '15px',
-    borderBottom: '2px solid #2dd4bf',
+    ...flexBetween,
+    padding: SPACING[4],
+    borderBottom: `2px solid ${COLORS.primary}`,
     background: 'rgba(45, 212, 191, 0.1)'
   },
   detailTitle: {
     margin: 0,
-    fontSize: '18px',
-    fontWeight: '700',
-    color: '#f1f5f9'
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight
   },
   closeDetailButton: {
-    background: 'transparent',
+    background: COLORS.transparent,
     border: 'none',
-    color: '#94a3b8',
-    fontSize: '20px',
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE.xl,
     cursor: 'pointer',
-    padding: '4px 8px'
+    padding: `${SPACING[1]} ${SPACING[2]}`
   },
   detailContent: {
     flex: 1,
-    padding: '15px',
+    padding: SPACING[4],
     overflow: 'auto'
   },
   detailIconSection: {
     textAlign: 'center',
-    marginBottom: '15px',
+    marginBottom: SPACING[4],
     position: 'relative'
   },
   detailIcon: {
-    fontSize: '80px',
-    marginBottom: '10px'
+    fontSize: FONT_SIZE['8xl'],
+    marginBottom: SPACING[3]
   },
   detailRarityBadge: {
     display: 'inline-block',
-    padding: '6px 12px',
-    fontSize: '12px',
-    fontWeight: '700',
-    color: 'white',
-    borderRadius: '6px',
+    padding: `${SPACING[2]} ${SPACING[3]}`,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.white,
+    borderRadius: BORDER_RADIUS.md,
     letterSpacing: '0.5px'
   },
   detailInfo: {
-    marginBottom: '15px'
+    marginBottom: SPACING[4]
   },
   detailRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    padding: '8px 0',
+    ...flexBetween,
+    padding: `${SPACING[2]} 0`,
     borderBottom: '1px solid rgba(51, 65, 85, 0.5)'
   },
   detailLabel: {
-    fontSize: '14px',
-    color: '#94a3b8',
-    fontWeight: '600'
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textGray,
+    fontWeight: FONT_WEIGHT.semibold
   },
   detailValue: {
-    fontSize: '14px',
-    color: '#f1f5f9',
-    fontWeight: '700',
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textLight,
+    fontWeight: FONT_WEIGHT.bold,
     textTransform: 'capitalize'
   },
   detailStats: {
-    marginBottom: '15px'
+    marginBottom: SPACING[4]
   },
   statsTitle: {
-    margin: '0 0 10px 0',
-    fontSize: '16px',
-    fontWeight: '700',
-    color: '#2dd4bf'
+    margin: `0 0 ${SPACING[3]} 0`,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.primary
   },
   talentSection: {
-    marginBottom: '15px',
-    padding: '12px',
+    marginBottom: SPACING[4],
+    padding: SPACING[3],
     background: 'rgba(245, 158, 11, 0.1)',
-    border: '1px solid rgba(245, 158, 11, 0.3)',
-    borderRadius: '8px'
+    border: `1px solid rgba(245, 158, 11, 0.3)`,
+    borderRadius: BORDER_RADIUS.md
   },
   talentSectionTitle: {
-    margin: '0 0 8px 0',
-    fontSize: '16px',
-    fontWeight: '700',
-    color: '#f59e0b'
+    margin: `0 0 ${SPACING[2]} 0`,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.warning
   },
   talentInfo: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '6px'
+    ...flexColumn,
+    gap: SPACING[2]
   },
   talentCount: {
-    fontSize: '14px',
-    fontWeight: '700',
-    color: '#f59e0b'
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.warning
   },
   talentDescription: {
     margin: 0,
-    fontSize: '12px',
-    color: '#94a3b8',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textGray,
     lineHeight: '1.5'
   },
   statGrid: {
     display: 'grid',
     gridTemplateColumns: '1fr 1fr',
-    gap: '10px'
+    gap: SPACING[3]
   },
   detailStatItem: {
-    padding: '10px',
+    padding: SPACING[3],
     background: 'rgba(15, 23, 42, 0.6)',
-    borderRadius: '6px',
+    borderRadius: BORDER_RADIUS.md,
     textAlign: 'center'
   },
   detailStatLabel: {
-    fontSize: '12px',
-    color: '#94a3b8',
-    fontWeight: '600',
-    marginBottom: '4px'
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textGray,
+    fontWeight: FONT_WEIGHT.semibold,
+    marginBottom: SPACING[1]
   },
   detailStatValue: {
-    fontSize: '16px',
-    color: '#f1f5f9',
-    fontWeight: '700'
+    fontSize: FONT_SIZE.base,
+    color: COLORS.textLight,
+    fontWeight: FONT_WEIGHT.bold
   },
   detailDescription: {
-    marginBottom: '15px'
+    marginBottom: SPACING[4]
   },
   descriptionTitle: {
-    margin: '0 0 8px 0',
-    fontSize: '14px',
-    fontWeight: '700',
-    color: '#60a5fa'
+    margin: `0 0 ${SPACING[2]} 0`,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.infoLight
   },
   descriptionText: {
     margin: 0,
-    fontSize: '13px',
-    color: '#94a3b8',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textGray,
     lineHeight: '1.6'
   },
   specialAbilityBox: {
-    padding: '12px',
+    padding: SPACING[3],
     background: 'rgba(251, 191, 36, 0.1)',
-    border: '1px solid rgba(251, 191, 36, 0.3)',
-    borderRadius: '8px'
+    border: `1px solid rgba(251, 191, 36, 0.3)`,
+    borderRadius: BORDER_RADIUS.md
   },
   abilityTitle: {
-    margin: '0 0 8px 0',
-    fontSize: '14px',
-    fontWeight: '700',
-    color: '#fbbf24'
+    margin: `0 0 ${SPACING[2]} 0`,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.goldLight
   },
   abilityText: {
     margin: 0,
-    fontSize: '13px',
-    color: '#f1f5f9',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textLight,
     lineHeight: '1.6'
   }
 };

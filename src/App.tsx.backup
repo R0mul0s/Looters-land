@@ -23,11 +23,8 @@ import { WorldMapDemo } from './components/WorldMapDemo'
 import { WorldMapDemo2 } from './components/WorldMapDemo2'
 import { t } from './localization/i18n'
 import './config/DEBUG_CONFIG' // Load debug commands
-import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS, Z_INDEX, BLUR } from './styles/tokens';
-import { flexColumn, flexCenter, flexBetween } from './styles/common';
 
 function App() {
-  // @lastModified: 2025-11-15
   // ============================================================================
   // ALL HOOKS - MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // ============================================================================
@@ -939,10 +936,12 @@ function App() {
       <div style={{
         width: '100vw',
         height: '100vh',
-        ...flexCenter,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
         background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
-        color: COLORS.text.primary,
-        fontSize: FONT_SIZE.xl
+        color: '#fff',
+        fontSize: '20px'
       }}>
         Loading...
       </div>
@@ -961,24 +960,24 @@ function App() {
     <>
       <div className="container">
         <header>
-          <div style={{ ...flexBetween }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
               <h1>⚔️ Looters Land</h1>
               <h2>Idle RPG Adventure - Loot, Fight, Conquer!</h2>
             </div>
-            <div style={{ ...flexColumn, alignItems: 'flex-end', gap: SPACING[2] }}>
-              <span style={{ fontSize: FONT_SIZE.sm, color: COLORS.text.muted }}>{userEmail}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px' }}>
+              <span style={{ fontSize: '14px', color: '#888' }}>{userEmail}</span>
               <button
                 onClick={handleLogout}
                 style={{
                   padding: '8px 16px',
-                  background: COLORS.accent.error,
-                  color: COLORS.text.primary,
+                  background: '#dc2626',
+                  color: '#fff',
                   border: 'none',
-                  borderRadius: BORDER_RADIUS.md,
+                  borderRadius: '6px',
                   cursor: 'pointer',
-                  fontSize: FONT_SIZE.sm,
-                  fontWeight: FONT_WEIGHT.semibold
+                  fontSize: '14px',
+                  fontWeight: '600'
                 }}
               >
                 Logout
@@ -1046,19 +1045,19 @@ function App() {
       {/* Worldmap Mode v1.0 UI (OLD) */}
       {uiMode === 'worldmap' && (
         <>
-          <div style={{ textAlign: 'center', padding: SPACING[5], background: COLORS.background.elevated, borderRadius: SPACING[2.5], marginBottom: SPACING[5] }}>
+          <div style={{ textAlign: 'center', padding: '20px', background: '#2a2a2a', borderRadius: '10px', marginBottom: '20px' }}>
             <button
               onClick={() => setUiMode('worldmap2')}
               style={{
                 padding: '12px 24px',
-                background: COLORS.accent.gold,
-                color: COLORS.background.black,
+                background: '#FFD700',
+                color: '#000',
                 border: 'none',
-                borderRadius: BORDER_RADIUS.md,
+                borderRadius: '6px',
                 cursor: 'pointer',
-                fontSize: FONT_SIZE.base,
-                fontWeight: FONT_WEIGHT.bold,
-                marginRight: SPACING[2.5]
+                fontSize: '16px',
+                fontWeight: 'bold',
+                marginRight: '10px'
               }}
             >
               🆕 Try New UI (v2.0)
@@ -1067,14 +1066,14 @@ function App() {
               onClick={() => setUiMode('normal')}
               style={{
                 padding: '12px 24px',
-                background: COLORS.accent.blue,
-                color: COLORS.text.primary,
+                background: '#4a9eff',
+                color: '#fff',
                 border: 'none',
-                borderRadius: BORDER_RADIUS.md,
+                borderRadius: '6px',
                 cursor: 'pointer',
-                fontSize: FONT_SIZE.base,
-                fontWeight: FONT_WEIGHT.bold,
-                marginRight: SPACING[2.5]
+                fontSize: '16px',
+                fontWeight: 'bold',
+                marginRight: '10px'
               }}
             >
               ← Back to Game
@@ -1083,13 +1082,13 @@ function App() {
               onClick={startDungeon}
               style={{
                 padding: '12px 24px',
-                background: COLORS.accent.green,
-                color: COLORS.text.primary,
+                background: '#4CAF50',
+                color: '#fff',
                 border: 'none',
-                borderRadius: BORDER_RADIUS.md,
+                borderRadius: '6px',
                 cursor: 'pointer',
-                fontSize: FONT_SIZE.base,
-                fontWeight: FONT_WEIGHT.bold
+                fontSize: '16px',
+                fontWeight: 'bold'
               }}
             >
               🕳️ Enter Dungeon (Test)
@@ -1139,27 +1138,27 @@ function App() {
 
           {/* Hero Info */}
           <div className="hero-info">
-            <h2 style={{ margin: 0, marginBottom: SPACING[2.5] }}>
+            <h2 style={{ margin: 0, marginBottom: '10px' }}>
               {CLASS_ICONS[selectedHero.class]} {selectedHero.name}
             </h2>
 
             {/* XP Progress Bar */}
-            <div style={{ marginBottom: SPACING[3.5] }}>
+            <div style={{ marginBottom: '15px' }}>
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
-                marginBottom: SPACING[1.25],
+                marginBottom: '5px',
                 fontSize: '0.9em',
-                color: COLORS.text.secondary
+                color: '#ccc'
               }}>
                 <span>Level {selectedHero.level}</span>
                 <span>{selectedHero.experience}/{selectedHero.requiredXP} XP</span>
               </div>
               <div style={{
                 width: '100%',
-                height: SPACING[5],
+                height: '20px',
                 background: 'rgba(0, 0, 0, 0.3)',
-                borderRadius: SPACING[2.5],
+                borderRadius: '10px',
                 overflow: 'hidden',
                 border: '1px solid rgba(255, 255, 255, 0.2)'
               }}>
@@ -1168,10 +1167,12 @@ function App() {
                   height: '100%',
                   background: 'linear-gradient(90deg, #4a90e2, #63b3ed)',
                   transition: 'width 0.3s ease',
-                  ...flexCenter,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   fontSize: '0.75em',
                   color: 'white',
-                  fontWeight: FONT_WEIGHT.bold
+                  fontWeight: 'bold'
                 }}>
                   {((selectedHero.experience / selectedHero.requiredXP) * 100).toFixed(0)}%
                 </div>
@@ -1251,7 +1252,7 @@ function App() {
           <div className="set-bonuses">
             <h4>Set Bonuses</h4>
             {selectedHero.equipment?.getActiveSetBonuses().length === 0 ? (
-              <p style={{ color: COLORS.text.tertiary, fontSize: '0.9em' }}>No active set bonuses</p>
+              <p style={{ color: '#999', fontSize: '0.9em' }}>No active set bonuses</p>
             ) : (
               selectedHero.equipment?.getActiveSetBonuses().map((setInfo, index) => (
                 <div key={`setbonus-${setInfo.setId}-${index}`} className="set-bonus-item">
@@ -1271,7 +1272,7 @@ function App() {
           </div>
 
           {/* Equipment Actions */}
-          <div style={{ marginTop: SPACING[3.5], display: 'flex', gap: SPACING[2.5], flexWrap: 'wrap' }}>
+          <div style={{ marginTop: '15px', display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             <button className="btn btn-success" onClick={autoEquipBest}>
               Auto-Equip Best
             </button>
@@ -1293,7 +1294,7 @@ function App() {
           {/* Inventory Grid */}
           <div className="inventory-grid">
             {inventory.getFilteredItems().length === 0 ? (
-              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: SPACING[10], color: COLORS.text.tertiary }}>
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px', color: '#999' }}>
                 <p>Inventory is empty</p>
                 <p style={{ fontSize: '0.9em' }}>Generate some items below!</p>
               </div>
@@ -1332,10 +1333,10 @@ function App() {
       </div>
 
       {/* Save/Load Panel */}
-      <div className="testing-panel" style={{ marginBottom: SPACING[5] }}>
+      <div className="testing-panel" style={{ marginBottom: '20px' }}>
         <h3>💾 Save / Load Game</h3>
-        <div style={{ marginBottom: SPACING[3.5] }}>
-          <label htmlFor="saveName" style={{ display: 'block', marginBottom: SPACING[1.25], fontWeight: FONT_WEIGHT.bold }}>
+        <div style={{ marginBottom: '15px' }}>
+          <label htmlFor="saveName" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
             Save Name:
           </label>
           <input
@@ -1345,15 +1346,15 @@ function App() {
             onChange={(e) => setSaveName(e.target.value)}
             style={{
               width: '100%',
-              padding: SPACING[2],
-              borderRadius: SPACING[1.25],
+              padding: '8px',
+              borderRadius: '5px',
               border: '2px solid #2a5298',
               fontSize: '1em'
             }}
             placeholder="Enter save name..."
           />
         </div>
-        <div style={{ display: 'flex', gap: SPACING[2.5], flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
           <button
             className="btn btn-primary"
             onClick={saveGame}
@@ -1371,7 +1372,7 @@ function App() {
             {isLoading ? 'Loading...' : '📂 Load Game'}
           </button>
         </div>
-        <div style={{ marginTop: SPACING[2.5], fontSize: '0.85em', color: COLORS.text.disabled, fontStyle: 'italic' }}>
+        <div style={{ marginTop: '10px', fontSize: '0.85em', color: '#666', fontStyle: 'italic' }}>
           User ID: {userId.substring(0, 20)}...
         </div>
       </div>
@@ -1394,19 +1395,19 @@ function App() {
       </div>
 
       {/* Dungeon Entry */}
-      <div className="testing-panel" style={{ marginBottom: SPACING[5] }}>
+      <div className="testing-panel" style={{ marginBottom: '20px' }}>
         <h3>🏰 Dungeon System</h3>
 
         {/* Combat Mode Toggle */}
-        <div style={{ marginBottom: SPACING[3.5] }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: SPACING[2.5], cursor: 'pointer' }}>
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
             <input
               type="checkbox"
               checked={isManualMode}
               onChange={(e) => setIsManualMode(e.target.checked)}
-              style={{ cursor: 'pointer', width: SPACING[5], height: SPACING[5] }}
+              style={{ cursor: 'pointer', width: '20px', height: '20px' }}
             />
-            <span style={{ fontSize: FONT_SIZE.base }}>
+            <span style={{ fontSize: '16px' }}>
               🎮 Manual Combat Mode {isManualMode ? '(Choose actions)' : '(Auto combat)'}
             </span>
           </label>
@@ -1416,12 +1417,12 @@ function App() {
           className="btn btn-primary"
           onClick={startDungeon}
           style={{
-            fontSize: FONT_SIZE.lg,
+            fontSize: '18px',
             padding: '15px 30px',
-            backgroundColor: COLORS.accent.brown,
+            backgroundColor: '#8b4513',
             border: '2px solid #654321',
             width: '100%',
-            marginBottom: SPACING[3.5]
+            marginBottom: '15px'
           }}
         >
           🗝️ Enter Dungeon
@@ -1431,9 +1432,9 @@ function App() {
           className="btn btn-primary"
           onClick={() => setUiMode('worldmap')}
           style={{
-            fontSize: FONT_SIZE.lg,
+            fontSize: '18px',
             padding: '15px 30px',
-            backgroundColor: COLORS.accent.darkGreen,
+            backgroundColor: '#2d5016',
             border: '2px solid #1a3010',
             width: '100%'
           }}
@@ -1441,7 +1442,7 @@ function App() {
           🗺️ Open Worldmap (NEW!)
         </button>
 
-        <p style={{ marginTop: SPACING[2.5], fontSize: '0.9em', color: COLORS.text.muted }}>
+        <p style={{ marginTop: '10px', fontSize: '0.9em', color: '#888' }}>
           Explore procedurally generated dungeons with combat, treasure, traps, and bosses!
         </p>
       </div>
@@ -1452,7 +1453,7 @@ function App() {
 
       {/* Combat Display - Global (works in both Normal and Dungeon mode) */}
       {combatActive && (
-        <div className="combat-container" style={{ marginTop: SPACING[5] }}>
+        <div className="combat-container" style={{ marginTop: '20px' }}>
           <div className="combat-grid">
             {/* Combat Arena */}
             <div className="combat-arena">
@@ -1484,19 +1485,19 @@ function App() {
 
                 return (
                   <div style={{
-                    marginTop: SPACING[5],
-                    padding: SPACING[5],
+                    marginTop: '20px',
+                    padding: '20px',
                     background: 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)',
-                    borderRadius: BORDER_RADIUS.xl,
+                    borderRadius: '12px',
                     border: '3px solid #f0c000',
                     boxShadow: '0 4px 8px rgba(255, 215, 0, 0.3)'
                   }}>
                     <h3 style={{
-                      color: COLORS.accent.bronze,
-                      marginBottom: SPACING[3.5],
+                      color: '#8b6914',
+                      marginBottom: '15px',
                       textAlign: 'center',
                       fontSize: '1.5em',
-                      fontWeight: FONT_WEIGHT.bold
+                      fontWeight: 'bold'
                     }}>
                       💰 {t('dungeon.lootRewards')}
                     </h3>
@@ -1504,12 +1505,12 @@ function App() {
                     {/* Dungeon mode instruction */}
                     {uiMode === 'dungeon' && showDungeonVictory && (
                       <div style={{
-                        padding: SPACING[2.5],
+                        padding: '10px',
                         background: 'rgba(139, 105, 20, 0.1)',
-                        borderRadius: BORDER_RADIUS.lg,
-                        marginBottom: SPACING[3.5],
+                        borderRadius: '8px',
+                        marginBottom: '15px',
                         textAlign: 'center',
-                        color: COLORS.accent.bronze,
+                        color: '#8b6914',
                         fontSize: '0.9em'
                       }}>
                         💡 {t('dungeon.collectInstructions')}
@@ -1517,20 +1518,21 @@ function App() {
                     )}
 
                     <div style={{
-                      display: 'flex', gap: SPACING[5],
-                      marginBottom: SPACING[3.5]
+                      display: 'flex',
+                      gap: '20px',
+                      marginBottom: '15px'
                     }}>
                       {/* Gold Reward */}
                       <div style={{
                         flex: 1,
-                        padding: SPACING[3.5],
+                        padding: '15px',
                         background: 'rgba(255, 255, 255, 0.9)',
-                        borderRadius: BORDER_RADIUS.lg,
+                        borderRadius: '8px',
                         textAlign: 'center',
                         border: '2px solid #f0c000'
                       }}>
-                        <div style={{ fontSize: '2em', marginBottom: SPACING[1.25] }}>💰</div>
-                        <div style={{ fontSize: '1.5em', fontWeight: FONT_WEIGHT.bold, color: COLORS.accent.bronze }}>
+                        <div style={{ fontSize: '2em', marginBottom: '5px' }}>💰</div>
+                        <div style={{ fontSize: '1.5em', fontWeight: 'bold', color: '#8b6914' }}>
                           {actualLoot.gold} {t('dungeon.gold')}
                         </div>
                       </div>
@@ -1538,14 +1540,14 @@ function App() {
                       {/* Items Count */}
                       <div style={{
                         flex: 1,
-                        padding: SPACING[3.5],
+                        padding: '15px',
                         background: 'rgba(255, 255, 255, 0.9)',
-                        borderRadius: BORDER_RADIUS.lg,
+                        borderRadius: '8px',
                         textAlign: 'center',
                         border: '2px solid #f0c000'
                       }}>
-                        <div style={{ fontSize: '2em', marginBottom: SPACING[1.25] }}>🎁</div>
-                        <div style={{ fontSize: '1.5em', fontWeight: FONT_WEIGHT.bold, color: COLORS.accent.bronze }}>
+                        <div style={{ fontSize: '2em', marginBottom: '5px' }}>🎁</div>
+                        <div style={{ fontSize: '1.5em', fontWeight: 'bold', color: '#8b6914' }}>
                           {actualLoot.items.length} {actualLoot.items.length !== 1 ? t('dungeon.items') : t('dungeon.items').slice(0, -1)}
                         </div>
                       </div>
@@ -1556,18 +1558,18 @@ function App() {
                     <div style={{
                       display: 'grid',
                       gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                      gap: SPACING[2.5],
-                      padding: SPACING[3.5],
+                      gap: '10px',
+                      padding: '15px',
                       background: 'rgba(255, 255, 255, 0.7)',
-                      borderRadius: BORDER_RADIUS.lg
+                      borderRadius: '8px'
                     }}>
                       {actualLoot.items.map((item: any, index: number) => (
                         <div
                           key={`loot-${item.id || `loot-item-${index}`}`}
                           style={{
-                            padding: SPACING[2.5],
-                            background: COLORS.text.primary,
-                            borderRadius: BORDER_RADIUS.md,
+                            padding: '10px',
+                            background: '#fff',
+                            borderRadius: '6px',
                             border: `2px solid ${item.getRarityColor()}`,
                             textAlign: 'center',
                             cursor: 'pointer',
@@ -1585,23 +1587,23 @@ function App() {
                             setLootItemModal(item);
                           }}
                         >
-                          <div style={{ fontSize: '2em', marginBottom: SPACING[1.25] }}>{item.icon}</div>
+                          <div style={{ fontSize: '2em', marginBottom: '5px' }}>{item.icon}</div>
                           <div style={{
                             fontSize: '0.9em',
-                            fontWeight: FONT_WEIGHT.bold,
+                            fontWeight: 'bold',
                             color: item.getRarityColor(),
-                            marginBottom: BORDER_RADIUS.sm
+                            marginBottom: '3px'
                           }}>
                             {item.name}
                           </div>
-                          <div style={{ fontSize: '0.75em', color: COLORS.text.disabled }}>
+                          <div style={{ fontSize: '0.75em', color: '#666' }}>
                             {item.getRarityDisplayName()} | Lv.{item.level}
                           </div>
                           <div style={{
                             fontSize: '0.75em',
-                            color: COLORS.accent.brightBlue,
-                            marginTop: SPACING[1.25],
-                            fontWeight: FONT_WEIGHT.bold
+                            color: '#007bff',
+                            marginTop: '5px',
+                            fontWeight: 'bold'
                           }}>
                             Click for options
                           </div>
@@ -1612,7 +1614,7 @@ function App() {
 
                     {/* Collect All / Sell All Buttons */}
                     {actualLoot.items.length > 0 && (
-                      <div style={{ display: 'flex', gap: SPACING[2.5], marginTop: SPACING[3.5] }}>
+                      <div style={{ display: 'flex', gap: '10px', marginTop: '15px' }}>
                         <button
                           className="btn btn-success"
                           onClick={() => {
@@ -1643,7 +1645,7 @@ function App() {
                           style={{
                             flex: 1,
                             fontSize: '1.1em',
-                            padding: SPACING[3]
+                            padding: '12px'
                           }}
                         >
                           ✨ Collect All
@@ -1674,7 +1676,7 @@ function App() {
                           style={{
                             flex: 1,
                             fontSize: '1.1em',
-                            padding: SPACING[3]
+                            padding: '12px'
                           }}
                         >
                           💰 Sell All
@@ -1684,11 +1686,11 @@ function App() {
 
                     {actualLoot.items.length === 0 && actualLoot.gold === 0 && (
                       <div style={{
-                        padding: SPACING[3.5],
+                        padding: '15px',
                         background: 'rgba(255, 255, 255, 0.7)',
-                        borderRadius: BORDER_RADIUS.lg,
+                        borderRadius: '8px',
                         textAlign: 'center',
-                        color: COLORS.text.disabled,
+                        color: '#666',
                         fontStyle: 'italic'
                       }}>
                         ✅ All loot collected!
@@ -1703,13 +1705,13 @@ function App() {
                         style={{
                           width: '100%',
                           fontSize: '1.3em',
-                          padding: SPACING[3.5],
-                          marginTop: SPACING[5],
+                          padding: '15px',
+                          marginTop: '20px',
                           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                           border: 'none',
-                          fontWeight: FONT_WEIGHT.bold,
+                          fontWeight: 'bold',
                           boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)',
-                          transition: TRANSITIONS.base
+                          transition: 'all 0.3s ease'
                         }}
                         onMouseEnter={(e) => {
                           e.currentTarget.style.transform = 'scale(1.05)';
@@ -1730,11 +1732,12 @@ function App() {
               {/* Combat Mode Toggle - Hidden during dungeon victory screen */}
               {!combatEngine.combatResult && !(uiMode === 'dungeon' && showDungeonVictory) && (
                 <div style={{
-                  display: 'flex', gap: SPACING[2.5],
-                  marginBottom: SPACING[3.5],
-                  padding: SPACING[2.5],
+                  display: 'flex',
+                  gap: '10px',
+                  marginBottom: '15px',
+                  padding: '10px',
                   background: '#f8f9fa',
-                  borderRadius: BORDER_RADIUS.lg,
+                  borderRadius: '8px',
                   border: '1px solid #dee2e6'
                 }}>
                   <button
@@ -1814,7 +1817,7 @@ function App() {
                                 showStatusTooltip(hero, e);
                               }}
                               style={{
-                                marginLeft: SPACING[1.25],
+                                marginLeft: '5px',
                                 background: 'transparent',
                                 border: 'none',
                                 cursor: 'pointer',
@@ -1849,11 +1852,11 @@ function App() {
                       {/* XP Bar */}
                       <div style={{
                         width: '100%',
-                        height: SPACING[3],
+                        height: '12px',
                         background: 'rgba(0, 0, 0, 0.2)',
-                        borderRadius: BORDER_RADIUS.md,
+                        borderRadius: '6px',
                         overflow: 'hidden',
-                        marginTop: SPACING[1.25],
+                        marginTop: '5px',
                         border: '1px solid rgba(255, 255, 255, 0.15)'
                       }}>
                         <div style={{
@@ -1890,7 +1893,7 @@ function App() {
                           border: '3px solid #ff4444',
                           background: 'linear-gradient(135deg, #5a1515 0%, #3a1010 100%)',
                           boxShadow: '0 0 20px rgba(255, 68, 68, 0.5)',
-                          color: COLORS.text.primary
+                          color: '#ffffff'
                         };
                       } else if (enemy.type === 'elite') {
                         return {
@@ -1898,7 +1901,7 @@ function App() {
                           border: '3px solid #ffaa00',
                           background: 'linear-gradient(135deg, #5a3a10 0%, #3a2510 100%)',
                           boxShadow: '0 0 15px rgba(255, 170, 0, 0.4)',
-                          color: COLORS.text.primary
+                          color: '#ffffff'
                         };
                       }
                       return baseStyle;
@@ -1916,7 +1919,7 @@ function App() {
                       <div className="character-header">
                         <span
                           className="character-name"
-                          style={enemy.type !== 'normal' ? { color: COLORS.text.primary } : {}}
+                          style={enemy.type !== 'normal' ? { color: '#ffffff' } : {}}
                         >
                           {enemy.type === 'boss' && '💀 '}
                           {enemy.type === 'elite' && '⭐ '}
@@ -1928,7 +1931,7 @@ function App() {
                                 showStatusTooltip(enemy, e);
                               }}
                               style={{
-                                marginLeft: SPACING[1.25],
+                                marginLeft: '5px',
                                 background: 'transparent',
                                 border: 'none',
                                 cursor: 'pointer',
@@ -1957,7 +1960,7 @@ function App() {
                         />
                         <span
                           className="character-hp-text"
-                          style={enemy.type !== 'normal' ? { color: COLORS.text.primary } : {}}
+                          style={enemy.type !== 'normal' ? { color: '#ffffff' } : {}}
                         >
                           {enemy.currentHP}/{enemy.maxHP}
                         </span>
@@ -1966,19 +1969,19 @@ function App() {
                       <div className="character-stats">
                         <span
                           className="character-stat"
-                          style={enemy.type !== 'normal' ? { color: COLORS.text.primary } : {}}
+                          style={enemy.type !== 'normal' ? { color: '#ffffff' } : {}}
                         >
                           ⚔️ {enemy.ATK}
                         </span>
                         <span
                           className="character-stat"
-                          style={enemy.type !== 'normal' ? { color: COLORS.text.primary } : {}}
+                          style={enemy.type !== 'normal' ? { color: '#ffffff' } : {}}
                         >
                           🛡️ {enemy.DEF}
                         </span>
                         <span
                           className="character-stat"
-                          style={enemy.type !== 'normal' ? { color: COLORS.text.primary } : {}}
+                          style={enemy.type !== 'normal' ? { color: '#ffffff' } : {}}
                         >
                           ⚡ {enemy.SPD}
                         </span>
@@ -2008,19 +2011,19 @@ function App() {
 
               {/* Manual Control UI - shown when waiting for player input */}
               {waitingForInput && activeCharacter && (
-                <div style={{ marginBottom: SPACING[5], padding: SPACING[3.5], background: '#fff3cd', borderRadius: BORDER_RADIUS.lg, border: '2px solid #ffc107' }}>
+                <div style={{ marginBottom: '20px', padding: '15px', background: '#fff3cd', borderRadius: '8px', border: '2px solid #ffc107' }}>
                   <h5 style={{ margin: '0 0 10px 0', color: '#856404' }}>
                     🎯 {activeCharacter.name}'s Turn
                   </h5>
 
                   {/* Skills */}
-                  <div style={{ marginBottom: SPACING[3.5] }}>
-                    <div style={{ fontWeight: FONT_WEIGHT.bold, marginBottom: SPACING[2], fontSize: '0.9em' }}>Skills:</div>
-                    <div style={{ ...flexColumn, gap: SPACING[1.25] }}>
+                  <div style={{ marginBottom: '15px' }}>
+                    <div style={{ fontWeight: 'bold', marginBottom: '8px', fontSize: '0.9em' }}>Skills:</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                       {('getSkills' in activeCharacter) && (activeCharacter as any).getSkills().map((skill: any, index: number) => {
                         const cd = activeCharacter.cooldowns.get(skill.name) || 0;
                         return (
-                          <div key={index} style={{ display: 'flex', gap: SPACING[1.25], alignItems: 'center' }}>
+                          <div key={index} style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
                             <button
                               className="btn btn-sm btn-primary"
                               onClick={() => useSkill(index)}
@@ -2047,7 +2050,7 @@ function App() {
                                 style={{
                                   fontSize: '0.9em',
                                   padding: '4px 8px',
-                                  minWidth: SPACING[8]
+                                  minWidth: '32px'
                                 }}
                                 title="Show skill info"
                               >
@@ -2065,7 +2068,7 @@ function App() {
                     className="btn btn-success"
                     onClick={useBasicAttack}
                     disabled={!selectedTarget}
-                    style={{ width: '100%', marginBottom: SPACING[2.5] }}
+                    style={{ width: '100%', marginBottom: '10px' }}
                   >
                     ⚔️ Basic Attack {selectedTarget && `→ ${selectedTarget.name}`}
                   </button>
@@ -2144,16 +2147,16 @@ function App() {
             <div className="tooltip-name" style={{ color: tooltip.item.getRarityColor() }}>
               {tooltip.item.icon} {tooltip.item.getDisplayName()}
             </div>
-            <div style={{ fontSize: '0.9em', color: COLORS.text.disabled }}>
+            <div style={{ fontSize: '0.9em', color: '#666' }}>
               {tooltip.item.getRarityDisplayName()} {tooltip.item.slot.charAt(0).toUpperCase() + tooltip.item.slot.slice(1)} | Lv.{tooltip.item.level}
             </div>
             {tooltip.item.enchantLevel > 0 && (
-              <div style={{ fontSize: '0.9em', color: '#9c27b0', fontWeight: FONT_WEIGHT.bold }}>
+              <div style={{ fontSize: '0.9em', color: '#9c27b0', fontWeight: 'bold' }}>
                 +{tooltip.item.enchantLevel} Enchant
               </div>
             )}
             {tooltip.item.setName && (
-              <div style={{ fontSize: '0.9em', color: '#2196f3', fontWeight: FONT_WEIGHT.bold }}>
+              <div style={{ fontSize: '0.9em', color: '#2196f3', fontWeight: 'bold' }}>
                 {tooltip.item.setName} Set
               </div>
             )}
@@ -2201,7 +2204,7 @@ function App() {
 
           <div className="tooltip-actions">
             <div>💰 Value: {tooltip.item.goldValue} gold</div>
-            <div style={{ marginTop: SPACING[1.25], fontSize: '0.85em', fontStyle: 'italic' }}>
+            <div style={{ marginTop: '5px', fontSize: '0.85em', fontStyle: 'italic' }}>
               Left-click to equip | Right-click to enchant
             </div>
           </div>
@@ -2212,14 +2215,14 @@ function App() {
       {enchantingItem && (
         <div className="enchanting-panel" onClick={closeEnchantPanel}>
           <div className="enchanting-content" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ color: COLORS.accent.darkBlue, marginBottom: SPACING[5] }}>✨ Enchant Item</h2>
+            <h2 style={{ color: '#2a5298', marginBottom: '20px' }}>✨ Enchant Item</h2>
 
-            <div style={{ textAlign: 'center', marginBottom: SPACING[5] }}>
-              <div style={{ fontSize: '3em', marginBottom: SPACING[2.5] }}>{enchantingItem.icon}</div>
-              <div style={{ fontSize: '1.3em', fontWeight: FONT_WEIGHT.bold, color: enchantingItem.getRarityColor(), marginBottom: SPACING[1.25] }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ fontSize: '3em', marginBottom: '10px' }}>{enchantingItem.icon}</div>
+              <div style={{ fontSize: '1.3em', fontWeight: 'bold', color: enchantingItem.getRarityColor(), marginBottom: '5px' }}>
                 {enchantingItem.getDisplayName()}
               </div>
-              <div style={{ color: COLORS.text.disabled }}>
+              <div style={{ color: '#666' }}>
                 {enchantingItem.getRarityDisplayName()} {enchantingItem.slot.charAt(0).toUpperCase() + enchantingItem.slot.slice(1)} | Lv.{enchantingItem.level}
               </div>
             </div>
@@ -2259,14 +2262,14 @@ function App() {
       {lootItemModal && (
         <div className="enchanting-panel" onClick={() => setLootItemModal(null)}>
           <div className="enchanting-content" onClick={(e) => e.stopPropagation()}>
-            <h2 style={{ color: '#d4af37', marginBottom: SPACING[5] }}>💰 Loot Item</h2>
+            <h2 style={{ color: '#d4af37', marginBottom: '20px' }}>💰 Loot Item</h2>
 
-            <div style={{ textAlign: 'center', marginBottom: SPACING[5] }}>
-              <div style={{ fontSize: '3em', marginBottom: SPACING[2.5] }}>{lootItemModal.icon}</div>
-              <div style={{ fontSize: '1.3em', fontWeight: FONT_WEIGHT.bold, color: lootItemModal.getRarityColor(), marginBottom: SPACING[1.25] }}>
+            <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+              <div style={{ fontSize: '3em', marginBottom: '10px' }}>{lootItemModal.icon}</div>
+              <div style={{ fontSize: '1.3em', fontWeight: 'bold', color: lootItemModal.getRarityColor(), marginBottom: '5px' }}>
                 {lootItemModal.name}
               </div>
-              <div style={{ color: COLORS.text.disabled }}>
+              <div style={{ color: '#666' }}>
                 {lootItemModal.getRarityDisplayName()} {lootItemModal.slot.charAt(0).toUpperCase() + lootItemModal.slot.slice(1)} | Lv.{lootItemModal.level}
               </div>
             </div>
@@ -2276,7 +2279,7 @@ function App() {
               {(() => {
                 const stats = lootItemModal.getEffectiveStats();
                 return (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: SPACING[1.25] }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
                     {stats.HP > 0 && <div>HP: +{stats.HP}</div>}
                     {stats.ATK > 0 && <div>ATK: +{stats.ATK}</div>}
                     {stats.DEF > 0 && <div>DEF: +{stats.DEF}</div>}
@@ -2285,7 +2288,7 @@ function App() {
                   </div>
                 );
               })()}
-              <p style={{ marginTop: SPACING[2.5] }}><strong>Value:</strong> {lootItemModal.goldValue} gold</p>
+              <p style={{ marginTop: '10px' }}><strong>Value:</strong> {lootItemModal.goldValue} gold</p>
             </div>
 
             <div className="enchant-buttons">
@@ -2392,13 +2395,13 @@ function App() {
               <button
                 onClick={hideSkillTooltip}
                 style={{
-                  marginTop: SPACING[2.5],
+                  marginTop: '10px',
                   width: '100%',
-                  padding: SPACING[1.5],
+                  padding: '6px',
                   background: '#6c757d',
                   color: 'white',
                   border: 'none',
-                  borderRadius: SPACING[1.25],
+                  borderRadius: '5px',
                   fontSize: '0.85em',
                   cursor: 'pointer'
                 }}
@@ -2438,37 +2441,37 @@ function App() {
           >
             <div className="tooltip-header">
               <span className="tooltip-name">{statusTooltip.character.name}</span>
-              <span style={{ fontSize: '0.9em', color: COLORS.text.disabled }}>Status Effects</span>
+              <span style={{ fontSize: '0.9em', color: '#666' }}>Status Effects</span>
             </div>
 
             {statusTooltip.character.statusEffects && statusTooltip.character.statusEffects.length > 0 ? (
-              <div style={{ marginTop: SPACING[2.5] }}>
+              <div style={{ marginTop: '10px' }}>
                 {statusTooltip.character.statusEffects.map((effect: any, index: number) => (
                   <div
                     key={index}
                     style={{
-                      padding: SPACING[2],
-                      marginBottom: SPACING[1.25],
+                      padding: '8px',
+                      marginBottom: '5px',
                       background: effect.type === 'buff' ? '#d4edda' : '#f8d7da',
                       border: `1px solid ${effect.type === 'buff' ? '#c3e6cb' : '#f5c6cb'}`,
-                      borderRadius: SPACING[1.25]
+                      borderRadius: '5px'
                     }}
                   >
                     <div style={{
-                      fontWeight: FONT_WEIGHT.bold,
+                      fontWeight: 'bold',
                       color: effect.type === 'buff' ? '#155724' : '#721c24',
-                      marginBottom: BORDER_RADIUS.sm
+                      marginBottom: '3px'
                     }}>
                       {effect.type === 'buff' ? '✨' : '💀'} {effect.name}
                     </div>
-                    <div style={{ fontSize: '0.85em', color: COLORS.text.disabled }}>
+                    <div style={{ fontSize: '0.85em', color: '#666' }}>
                       Duration: {effect.duration} turns
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div style={{ padding: SPACING[2.5], color: COLORS.text.disabled, textAlign: 'center' }}>
+              <div style={{ padding: '10px', color: '#666', textAlign: 'center' }}>
                 No active status effects
               </div>
             )}
@@ -2478,13 +2481,13 @@ function App() {
               <button
                 onClick={hideStatusTooltip}
                 style={{
-                  marginTop: SPACING[2.5],
+                  marginTop: '10px',
                   width: '100%',
-                  padding: SPACING[1.5],
+                  padding: '6px',
                   background: '#6c757d',
                   color: 'white',
                   border: 'none',
-                  borderRadius: SPACING[1.25],
+                  borderRadius: '5px',
                   fontSize: '0.85em',
                   cursor: 'pointer'
                 }}

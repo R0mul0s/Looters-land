@@ -3,9 +3,13 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
+ * @lastModified 2025-11-15
  */
 
 import React from 'react';
+import { t } from '../../localization/i18n';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
+import { flexBetween, flexColumn } from '../../styles/common';
 
 interface BankBuildingProps {
   playerGold: number;
@@ -19,22 +23,22 @@ export function BankBuilding({ onClose }: BankBuildingProps) {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h2 style={styles.title}>🏦 Bank</h2>
+        <h2 style={styles.title}>🏦 {t('buildings.bank.title')}</h2>
         <button style={styles.closeButton} onClick={onClose}>✕</button>
       </div>
 
       <div style={styles.content}>
         <div style={styles.comingSoon}>
           <div style={styles.icon}>🚧</div>
-          <h3 style={styles.comingSoonTitle}>Coming Soon!</h3>
+          <h3 style={styles.comingSoonTitle}>{t('buildings.bank.comingSoon.title')}</h3>
           <p style={styles.comingSoonText}>
-            Bank system will be available in v0.9.0
+            {t('buildings.bank.comingSoon.version')}
           </p>
           <div style={styles.featuresList}>
-            <div style={styles.featureItem}>✨ Store gold securely</div>
-            <div style={styles.featureItem}>✨ Earn daily interest</div>
-            <div style={styles.featureItem}>✨ Deposit and withdraw services</div>
-            <div style={styles.featureItem}>✨ Transaction history tracking</div>
+            <div style={styles.featureItem}>✨ {t('buildings.bank.comingSoon.features.item1')}</div>
+            <div style={styles.featureItem}>✨ {t('buildings.bank.comingSoon.features.item2')}</div>
+            <div style={styles.featureItem}>✨ {t('buildings.bank.comingSoon.features.item3')}</div>
+            <div style={styles.featureItem}>✨ {t('buildings.bank.comingSoon.features.item4')}</div>
           </div>
         </div>
       </div>
@@ -46,40 +50,37 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    color: '#f1f5f9'
+    ...flexColumn,
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight
   },
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '20px',
-    borderBottom: '2px solid #2dd4bf',
+    ...flexBetween,
+    padding: SPACING.lg,
+    borderBottom: `2px solid ${COLORS.primary}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
   },
   title: {
     margin: 0,
-    fontSize: '24px',
-    fontWeight: '700'
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold
   },
   closeButton: {
-    background: 'transparent',
-    border: '2px solid #334155',
-    color: '#94a3b8',
-    fontSize: '24px',
+    background: COLORS.transparent,
+    border: `2px solid ${COLORS.bgSurfaceLight}`,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE['2xl'],
     cursor: 'pointer',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    transition: 'all 0.2s'
+    padding: `${SPACING[2]} ${SPACING[4]}`,
+    borderRadius: BORDER_RADIUS.md,
+    transition: TRANSITIONS.allBase
   },
   content: {
     flex: 1,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '40px'
+    padding: SPACING.xxl
   },
   comingSoon: {
     textAlign: 'center',
@@ -87,30 +88,29 @@ const styles: Record<string, React.CSSProperties> = {
   },
   icon: {
     fontSize: '80px',
-    marginBottom: '20px'
+    marginBottom: SPACING.lg
   },
   comingSoonTitle: {
-    fontSize: '32px',
-    fontWeight: '700',
-    color: '#2dd4bf',
-    margin: '0 0 15px 0'
+    fontSize: FONT_SIZE['4xl'],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.primary,
+    margin: `0 0 ${SPACING.md} 0`
   },
   comingSoonText: {
-    fontSize: '18px',
-    color: '#94a3b8',
-    margin: '0 0 30px 0'
+    fontSize: FONT_SIZE.lg,
+    color: COLORS.textGray,
+    margin: `0 0 ${SPACING.xl} 0`
   },
   featuresList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px'
+    ...flexColumn,
+    gap: SPACING[3]
   },
   featureItem: {
-    fontSize: '16px',
-    color: '#f1f5f9',
-    padding: '12px 20px',
+    fontSize: FONT_SIZE.base,
+    color: COLORS.textLight,
+    padding: `${SPACING[3]} ${SPACING.lg}`,
     background: 'rgba(45, 212, 191, 0.1)',
     border: '1px solid rgba(45, 212, 191, 0.3)',
-    borderRadius: '8px'
+    borderRadius: BORDER_RADIUS.md
   }
 };

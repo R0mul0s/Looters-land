@@ -7,12 +7,14 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2025-11-15
  */
 
 import React from 'react';
 import { SyncStatusIndicator, type SyncStatus } from '../SyncStatusIndicator';
 import { t } from '../../localization/i18n';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
+import { flexBetween, flexColumn } from '../../styles/common';
 
 /**
  * Props for GameHeader component
@@ -127,74 +129,71 @@ export function GameHeader({
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
-    backgroundColor: '#1a1a1a',
-    padding: '15px 20px',
-    borderBottom: '2px solid #333',
-    boxShadow: '0 2px 10px rgba(0,0,0,0.5)'
+    backgroundColor: COLORS.bgCardDark,
+    padding: `${SPACING.md} ${SPACING.lg}`,
+    borderBottom: `2px solid ${COLORS.borderDark}`,
+    boxShadow: SHADOWS.md
   },
   topRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '10px'
+    ...flexBetween,
+    marginBottom: SPACING.sm
   },
   playerName: {
-    fontSize: '18px',
-    fontWeight: 'bold',
-    color: '#4CAF50'
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.successLight
   },
   resources: {
     display: 'flex',
-    gap: '20px',
+    gap: SPACING.lg,
     alignItems: 'center'
   },
   resource: {
     display: 'flex',
     alignItems: 'center',
-    gap: '5px',
-    backgroundColor: '#2a2a2a',
-    padding: '5px 12px',
-    borderRadius: '5px',
-    border: '1px solid #444'
+    gap: SPACING.xs,
+    backgroundColor: COLORS.bgInput,
+    padding: `${SPACING.xs} ${SPACING[3]}`,
+    borderRadius: SPACING.xs,
+    border: `1px solid ${COLORS.borderDarker}`
   },
   resourceIcon: {
-    fontSize: '16px'
+    fontSize: FONT_SIZE.base
   },
   resourceValue: {
-    fontSize: '16px',
-    fontWeight: 'bold',
-    color: '#FFD700'
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.gold
   },
   settingsButton: {
-    fontSize: '20px',
-    background: 'none',
+    fontSize: FONT_SIZE.xl,
+    background: COLORS.transparent,
     border: 'none',
     cursor: 'pointer',
-    padding: '5px',
+    padding: SPACING.xs,
     opacity: 0.8,
-    transition: 'opacity 0.2s'
+    transition: TRANSITIONS.fast
   },
   energyContainer: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '5px'
+    ...flexColumn,
+    gap: SPACING.xs
   },
   energyLabel: {
-    fontSize: '14px',
-    color: '#ccc'
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textSlate
   },
   energyBarBackground: {
     width: '100%',
     height: '20px',
-    backgroundColor: '#2a2a2a',
-    borderRadius: '10px',
+    backgroundColor: COLORS.bgInput,
+    borderRadius: SPACING.sm,
     overflow: 'hidden',
-    border: '1px solid #444'
+    border: `1px solid ${COLORS.borderDarker}`
   },
   energyBarFill: {
     height: '100%',
-    backgroundColor: '#4CAF50',
-    transition: 'width 0.3s ease',
-    boxShadow: '0 0 10px rgba(76, 175, 80, 0.5)'
+    backgroundColor: COLORS.successLight,
+    transition: TRANSITIONS.base,
+    boxShadow: SHADOWS.glowGreen
   }
 };

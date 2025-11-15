@@ -7,7 +7,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-12
+ * @lastModified 2025-11-15
  */
 
 import React, { useState } from 'react';
@@ -15,6 +15,8 @@ import * as AuthService from '../services/AuthService';
 import { ProfileService, updateAvatar } from '../services/ProfileService';
 import { t, setLanguage, getLanguage, type Language } from '../localization/i18n';
 import { AVAILABLE_AVATARS, getAvatarDisplayName } from '../config/AVATAR_CONFIG';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../styles/tokens';
+import { flexBetween, flexColumn } from '../styles/common';
 import hero1Img from '../assets/images/hero/hero1.png';
 import hero2Img from '../assets/images/hero/hero2.png';
 import hero3Img from '../assets/images/hero/hero3.png';
@@ -708,232 +710,229 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    color: '#f1f5f9',
+    ...flexColumn,
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight,
     overflow: 'auto'
   },
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '20px',
-    borderBottom: '2px solid #2dd4bf',
+    ...flexBetween,
+    padding: SPACING.lg,
+    borderBottom: `2px solid ${COLORS.primary}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
   },
   title: {
     margin: 0,
-    fontSize: '24px',
-    fontWeight: '700'
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold
   },
   closeButton: {
-    background: 'transparent',
-    border: '2px solid #334155',
-    color: '#94a3b8',
-    fontSize: '24px',
+    background: COLORS.transparent,
+    border: `2px solid ${COLORS.bgSurfaceLight}`,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE['2xl'],
     cursor: 'pointer',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    transition: 'all 0.2s'
+    padding: `${SPACING[2]} ${SPACING[4]}`,
+    borderRadius: BORDER_RADIUS.md,
+    transition: TRANSITIONS.fast
   },
   logoutButton: {
-    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+    background: `linear-gradient(135deg, ${COLORS.warning} 0%, ${COLORS.warningDark} 100%)`,
     border: 'none',
-    color: '#fff',
-    fontSize: '14px',
-    fontWeight: '600',
+    color: COLORS.white,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
     cursor: 'pointer',
-    padding: '10px 16px',
-    borderRadius: '8px',
-    transition: 'all 0.2s',
+    padding: `${SPACING.sm} ${SPACING[4]}`,
+    borderRadius: BORDER_RADIUS.md,
+    transition: TRANSITIONS.fast,
     boxShadow: '0 2px 8px rgba(245, 158, 11, 0.3)'
   },
   editButton: {
-    background: 'transparent',
+    background: COLORS.transparent,
     border: '1px solid rgba(45, 212, 191, 0.4)',
-    color: '#2dd4bf',
-    fontSize: '16px',
+    color: COLORS.primary,
+    fontSize: FONT_SIZE.base,
     cursor: 'pointer',
-    padding: '4px 8px',
+    padding: `${SPACING[1]} ${SPACING[2]}`,
     borderRadius: '6px',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.fast
   },
   nameInput: {
     width: '100%',
-    padding: '10px',
+    padding: SPACING.sm,
     background: 'rgba(15, 23, 42, 0.8)',
     border: '2px solid rgba(45, 212, 191, 0.4)',
-    borderRadius: '8px',
-    color: '#f1f5f9',
-    fontSize: '14px',
+    borderRadius: BORDER_RADIUS.md,
+    color: COLORS.textLight,
+    fontSize: FONT_SIZE.md,
     fontFamily: 'inherit',
     outline: 'none',
     transition: 'border-color 0.2s'
   },
   saveButton: {
     flex: 1,
-    padding: '8px 12px',
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
+    padding: `${SPACING[2]} ${SPACING[3]}`,
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
     border: 'none',
     borderRadius: '6px',
-    color: '#fff',
-    fontSize: '13px',
-    fontWeight: '600',
+    color: COLORS.white,
+    fontSize: FONT_SIZE[13],
+    fontWeight: FONT_WEIGHT.semibold,
     cursor: 'pointer',
-    transition: 'all 0.2s',
-    boxShadow: '0 2px 8px rgba(45, 212, 191, 0.3)'
+    transition: TRANSITIONS.fast,
+    boxShadow: SHADOWS.glowTeal
   },
   cancelEditButton: {
     flex: 1,
-    padding: '8px 12px',
-    background: '#334155',
+    padding: `${SPACING[2]} ${SPACING[3]}`,
+    background: COLORS.bgSurfaceLight,
     border: 'none',
     borderRadius: '6px',
-    color: '#f1f5f9',
-    fontSize: '13px',
-    fontWeight: '600',
+    color: COLORS.textLight,
+    fontSize: FONT_SIZE[13],
+    fontWeight: FONT_WEIGHT.semibold,
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.fast
   },
   section: {
-    padding: '20px',
+    padding: SPACING.lg,
     borderBottom: '1px solid rgba(45, 212, 191, 0.1)'
   },
   sectionTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    marginBottom: '15px',
-    color: '#2dd4bf'
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.semibold,
+    marginBottom: SPACING.md,
+    color: COLORS.primary
   },
   infoGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '15px'
+    gap: SPACING.md
   },
   infoItem: {
     background: 'rgba(30, 41, 59, 0.5)',
-    padding: '12px',
-    borderRadius: '8px',
+    padding: SPACING[3],
+    borderRadius: BORDER_RADIUS.md,
     border: '1px solid rgba(45, 212, 191, 0.2)'
   },
   infoLabel: {
-    fontSize: '12px',
-    color: '#94a3b8',
-    marginBottom: '4px'
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textGray,
+    marginBottom: SPACING[1]
   },
   infoValue: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#f1f5f9'
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.textLight
   },
   errorMessage: {
-    margin: '10px 20px',
-    padding: '12px',
+    margin: `${SPACING.sm} ${SPACING.lg}`,
+    padding: SPACING[3],
     background: 'rgba(239, 68, 68, 0.2)',
     border: '1px solid rgba(239, 68, 68, 0.4)',
-    borderRadius: '8px',
+    borderRadius: BORDER_RADIUS.md,
     color: '#fca5a5',
-    fontSize: '14px'
+    fontSize: FONT_SIZE.md
   },
   dangerCard: {
     background: 'rgba(30, 41, 59, 0.5)',
     border: '2px solid rgba(239, 68, 68, 0.3)',
-    borderRadius: '12px',
-    padding: '20px',
-    marginBottom: '15px'
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.lg,
+    marginBottom: SPACING.md
   },
   dangerHeader: {
     display: 'flex',
-    gap: '15px',
-    marginBottom: '15px'
+    gap: SPACING.md,
+    marginBottom: SPACING.md
   },
   dangerIcon: {
-    fontSize: '32px'
+    fontSize: FONT_SIZE['4xl']
   },
   dangerTitle: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#ef4444',
-    marginBottom: '5px'
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.danger,
+    marginBottom: SPACING.xs
   },
   dangerDescription: {
-    fontSize: '14px',
-    color: '#94a3b8'
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textGray
   },
   dangerButton: {
     width: '100%',
-    padding: '12px',
-    background: '#ef4444',
+    padding: SPACING[3],
+    background: COLORS.danger,
     border: 'none',
-    borderRadius: '8px',
-    color: 'white',
-    fontSize: '14px',
-    fontWeight: '600',
+    borderRadius: BORDER_RADIUS.md,
+    color: COLORS.white,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.fast
   },
   confirmBox: {
     background: 'rgba(15, 23, 42, 0.8)',
-    padding: '15px',
-    borderRadius: '8px',
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
     border: '1px solid rgba(239, 68, 68, 0.4)'
   },
   confirmText: {
-    fontSize: '14px',
-    color: '#f1f5f9',
-    marginBottom: '15px',
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textLight,
+    marginBottom: SPACING.md,
     lineHeight: '1.6'
   },
   confirmButtons: {
     display: 'flex',
-    gap: '10px'
+    gap: SPACING.sm
   },
   cancelButton: {
     flex: 1,
-    padding: '10px',
-    background: '#334155',
+    padding: SPACING.sm,
+    background: COLORS.bgSurfaceLight,
     border: 'none',
-    borderRadius: '8px',
-    color: '#f1f5f9',
-    fontSize: '14px',
-    fontWeight: '600',
+    borderRadius: BORDER_RADIUS.md,
+    color: COLORS.textLight,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.fast
   },
   confirmButton: {
     flex: 1,
-    padding: '10px',
-    background: '#ef4444',
+    padding: SPACING.sm,
+    background: COLORS.danger,
     border: 'none',
-    borderRadius: '8px',
-    color: 'white',
-    fontSize: '14px',
-    fontWeight: '600',
+    borderRadius: BORDER_RADIUS.md,
+    color: COLORS.white,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.fast
   },
   languageContainer: {
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
+    gap: SPACING.md,
     background: 'rgba(30, 41, 59, 0.5)',
-    padding: '15px',
-    borderRadius: '8px',
+    padding: SPACING.md,
+    borderRadius: BORDER_RADIUS.md,
     border: '1px solid rgba(45, 212, 191, 0.2)'
   },
   languageSelect: {
     flex: 1,
-    padding: '10px 15px',
+    padding: `${SPACING.sm} ${SPACING.md}`,
     background: 'rgba(15, 23, 42, 0.8)',
     border: '2px solid rgba(45, 212, 191, 0.4)',
-    borderRadius: '8px',
-    color: '#f1f5f9',
-    fontSize: '14px',
-    fontWeight: '600',
+    borderRadius: BORDER_RADIUS.md,
+    color: COLORS.textLight,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
     cursor: 'pointer',
     outline: 'none',
-    transition: 'all 0.2s',
+    transition: TRANSITIONS.fast,
     fontFamily: 'inherit'
   },
   avatarContainer: {
@@ -942,55 +941,55 @@ const styles: Record<string, React.CSSProperties> = {
   avatarGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-    gap: '15px',
-    padding: '10px'
+    gap: SPACING.md,
+    padding: SPACING.sm
   },
   avatarOption: {
     background: 'rgba(30, 41, 59, 0.5)',
     border: '2px solid rgba(45, 212, 191, 0.2)',
-    borderRadius: '12px',
-    padding: '15px',
+    borderRadius: BORDER_RADIUS.lg,
+    padding: SPACING.md,
     display: 'flex',
     flexDirection: 'column' as const,
     alignItems: 'center',
-    gap: '10px',
-    transition: 'all 0.3s',
+    gap: SPACING.sm,
+    transition: TRANSITIONS.base,
     position: 'relative' as const
   },
   avatarOptionSelected: {
-    borderColor: '#2dd4bf',
+    borderColor: COLORS.primary,
     background: 'rgba(45, 212, 191, 0.15)',
-    boxShadow: '0 0 20px rgba(45, 212, 191, 0.3)'
+    boxShadow: SHADOWS.glowTeal
   },
   avatarPreview: {
     width: '96px',
     height: '96px',
     objectFit: 'contain' as const,
-    borderRadius: '8px',
+    borderRadius: BORDER_RADIUS.md,
     background: 'rgba(15, 23, 42, 0.6)'
   },
   avatarName: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#f1f5f9',
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.textLight,
     textAlign: 'center' as const
   },
   avatarSelectedBadge: {
     position: 'absolute' as const,
-    top: '10px',
-    right: '10px',
-    background: '#2dd4bf',
-    color: '#0f172a',
-    padding: '4px 8px',
-    borderRadius: '12px',
-    fontSize: '11px',
-    fontWeight: '700'
+    top: SPACING.sm,
+    right: SPACING.sm,
+    background: COLORS.primary,
+    color: COLORS.bgDarkAlt,
+    padding: `${SPACING[1]} ${SPACING[2]}`,
+    borderRadius: SPACING[3],
+    fontSize: FONT_SIZE[11],
+    fontWeight: FONT_WEIGHT.bold
   },
   savingIndicator: {
     textAlign: 'center' as const,
-    marginTop: '10px',
-    color: '#2dd4bf',
-    fontSize: '14px',
-    fontWeight: '600'
+    marginTop: SPACING.sm,
+    color: COLORS.primary,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold
   }
 };

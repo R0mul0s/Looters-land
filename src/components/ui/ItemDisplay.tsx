@@ -6,11 +6,12 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-11
+ * @lastModified 2025-11-15
  */
 
 import React from 'react';
 import type { Item } from '../../engine/item/Item';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
 
 interface ItemDisplayProps {
   item: Item;
@@ -35,13 +36,13 @@ export function ItemDisplay({ item, onClick, showPrice, compact = false }: ItemD
     <div
       onClick={onClick}
       style={{
-        padding: compact ? '8px' : '12px',
-        margin: compact ? '4px 0' : '8px 0',
+        padding: compact ? SPACING[2] : SPACING[3],
+        margin: compact ? `${SPACING[1]} 0` : `${SPACING[2]} 0`,
         background: `${rarityColor}10`,
         border: `1px solid ${rarityColor}`,
-        borderRadius: '6px',
+        borderRadius: BORDER_RADIUS.md,
         cursor: onClick ? 'pointer' : 'default',
-        transition: 'all 0.2s',
+        transition: TRANSITIONS.allBase,
         ...(onClick && {
           ':hover': {
             background: `${rarityColor}20`,
@@ -52,29 +53,29 @@ export function ItemDisplay({ item, onClick, showPrice, compact = false }: ItemD
       }}
     >
       {/* Item Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-        <span style={{ fontSize: compact ? '18px' : '24px' }}>{item.icon}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: SPACING[2], marginBottom: SPACING[2] }}>
+        <span style={{ fontSize: compact ? FONT_SIZE.lg : FONT_SIZE['2xl'] }}>{item.icon}</span>
         <div style={{ flex: 1 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
-            <strong style={{ color: rarityColor, fontSize: compact ? '13px' : '14px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: SPACING[2], flexWrap: 'wrap' }}>
+            <strong style={{ color: rarityColor, fontSize: compact ? FONT_SIZE.sm : FONT_SIZE.md }}>
               {item.getDisplayName()}
             </strong>
-            <span style={{ color: '#64748b', fontSize: '11px' }}>
+            <span style={{ color: COLORS.textDarkGray, fontSize: FONT_SIZE.xs }}>
               Lv{item.level}
             </span>
             <span style={{
-              padding: '2px 6px',
+              padding: `${SPACING.xxs} ${SPACING[2]}`,
               background: `${rarityColor}20`,
-              borderRadius: '4px',
-              fontSize: '10px',
+              borderRadius: BORDER_RADIUS.sm,
+              fontSize: FONT_SIZE.xs,
               color: rarityColor,
-              fontWeight: '600'
+              fontWeight: FONT_WEIGHT.semibold
             }}>
               {item.getRarityDisplayName()}
             </span>
           </div>
           {showPrice !== undefined && (
-            <div style={{ fontSize: '12px', color: '#f59e0b', marginTop: '2px' }}>
+            <div style={{ fontSize: FONT_SIZE.sm, color: COLORS.warning, marginTop: SPACING.xxs }}>
               💰 {showPrice} gold
             </div>
           )}
@@ -83,12 +84,12 @@ export function ItemDisplay({ item, onClick, showPrice, compact = false }: ItemD
 
       {/* Item Stats */}
       <div style={{
-        fontSize: compact ? '10px' : '11px',
-        color: '#94a3b8',
+        fontSize: compact ? FONT_SIZE.xs : FONT_SIZE.xs,
+        color: COLORS.textGray,
         display: 'flex',
-        gap: '10px',
+        gap: SPACING[3],
         flexWrap: 'wrap',
-        paddingLeft: compact ? '0' : '32px'
+        paddingLeft: compact ? '0' : SPACING[8]
       }}>
         {stats.HP > 0 && <span title="Health Points">❤️ +{stats.HP}</span>}
         {stats.ATK > 0 && <span title="Attack">⚔️ +{stats.ATK}</span>}

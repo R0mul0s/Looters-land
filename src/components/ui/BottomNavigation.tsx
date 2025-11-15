@@ -6,10 +6,12 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-08
+ * @lastModified 2025-11-15
  */
 
 import React from 'react';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
+import { flexColumn, flexCenter } from '../../styles/common';
 
 type NavigationTab = 'inventory' | 'heroes' | 'quests' | 'guild';
 
@@ -77,50 +79,49 @@ export function BottomNavigation({
 const styles: Record<string, React.CSSProperties> = {
   container: {
     display: 'flex',
-    backgroundColor: '#1a1a1a',
-    borderTop: '2px solid #333',
-    padding: '10px 0',
-    boxShadow: '0 -2px 10px rgba(0,0,0,0.5)'
+    backgroundColor: COLORS.bgCardDark,
+    borderTop: `2px solid ${COLORS.borderDark}`,
+    padding: `${SPACING.sm} 0`,
+    boxShadow: SHADOWS.md
   },
   tab: {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '5px',
-    backgroundColor: 'transparent',
+    ...flexColumn,
+    ...flexCenter,
+    gap: SPACING.xs,
+    backgroundColor: COLORS.transparent,
     border: 'none',
     cursor: 'pointer',
-    padding: '10px',
-    transition: 'all 0.2s',
-    color: '#888'
+    padding: SPACING.sm,
+    transition: TRANSITIONS.fast,
+    color: COLORS.textSecondary
   },
   tabActive: {
-    color: '#4CAF50'
+    color: COLORS.successLight
   },
   tabIcon: {
-    fontSize: '24px',
+    fontSize: FONT_SIZE['2xl'],
     position: 'relative'
   },
   badge: {
     position: 'absolute',
     top: '-5px',
     right: '-10px',
-    backgroundColor: '#f44336',
-    color: '#fff',
-    fontSize: '10px',
-    fontWeight: 'bold',
-    padding: '2px 5px',
-    borderRadius: '10px',
+    backgroundColor: COLORS.danger,
+    color: COLORS.white,
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.bold,
+    padding: `${SPACING.xxs} ${SPACING.xs}`,
+    borderRadius: SPACING.sm,
     minWidth: '16px',
     textAlign: 'center'
   },
   tabLabel: {
-    fontSize: '12px',
-    color: '#888'
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textSecondary
   },
   tabLabelActive: {
-    color: '#4CAF50',
-    fontWeight: 'bold'
+    color: COLORS.successLight,
+    fontWeight: FONT_WEIGHT.bold
   }
 };

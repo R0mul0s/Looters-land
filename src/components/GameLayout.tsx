@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-08
+ * @lastModified 2025-11-15
  */
 
 import React, { useState } from 'react';
@@ -16,6 +16,8 @@ import { ComingSoon } from './ui/ComingSoon';
 import { ProfileScreen } from './ProfileScreen';
 import { LastUpdates } from './ui/LastUpdates';
 import type { SyncStatus } from './SyncStatusIndicator';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, BLUR, Z_INDEX, WIDTHS } from '../styles/tokens';
+import { flexCenter, flexColumn } from '../styles/common';
 
 type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport' | 'updates';
 
@@ -185,15 +187,14 @@ const styles: Record<string, React.CSSProperties> = {
     flexDirection: 'row',
     height: '100vh',
     width: '100%',
-    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
-    color: '#f1f5f9',
+    background: `linear-gradient(135deg, ${COLORS.bgDarkAlt} 0%, ${COLORS.bgSurface} 50%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight,
     overflow: 'hidden',
     boxSizing: 'border-box'
   },
   rightColumn: {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
+    ...flexColumn,
     height: '100vh',
     overflow: 'hidden',
     boxSizing: 'border-box'
@@ -202,7 +203,7 @@ const styles: Record<string, React.CSSProperties> = {
     flex: 1,
     overflow: 'auto',
     position: 'relative',
-    background: '#0a0f1e'
+    background: COLORS.bgDarkSolid
   },
   modal: {
     position: 'fixed',
@@ -210,39 +211,36 @@ const styles: Record<string, React.CSSProperties> = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    backdropFilter: 'blur(8px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
+    backgroundColor: COLORS.bgOverlayDark,
+    backdropFilter: BLUR.md,
+    ...flexCenter,
+    zIndex: Z_INDEX.modal,
     animation: 'fadeIn 0.2s ease-out'
   },
   modalContent: {
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    borderRadius: '16px',
-    border: '1px solid rgba(45, 212, 191, 0.3)',
-    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(45, 212, 191, 0.1) inset',
-    width: '500px',
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    borderRadius: BORDER_RADIUS.xl,
+    border: `1px solid rgba(45, 212, 191, 0.3)`,
+    boxShadow: `${SHADOWS['2xl']}, 0 0 0 1px rgba(45, 212, 191, 0.1) inset`,
+    width: WIDTHS.modal,
     maxWidth: '90vw',
     maxHeight: '80vh',
     overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column'
+    ...flexColumn
   },
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '24px',
-    borderBottom: '1px solid rgba(45, 212, 191, 0.2)',
-    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%)'
+    padding: SPACING[6],
+    borderBottom: `1px solid rgba(45, 212, 191, 0.2)`,
+    background: `linear-gradient(135deg, rgba(15, 23, 42, 0.8) 0%, rgba(30, 41, 59, 0.8) 100%)`
   },
   modalTitle: {
     margin: 0,
-    fontSize: '24px',
-    fontWeight: '700',
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold,
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     backgroundClip: 'text'
@@ -250,89 +248,87 @@ const styles: Record<string, React.CSSProperties> = {
   closeButton: {
     width: '36px',
     height: '36px',
-    borderRadius: '50%',
+    borderRadius: BORDER_RADIUS.round,
     border: 'none',
-    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-    color: '#fff',
-    fontSize: '18px',
+    background: `linear-gradient(135deg, ${COLORS.danger} 0%, ${COLORS.dangerDark} 100%)`,
+    color: COLORS.white,
+    fontSize: FONT_SIZE.lg,
     cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    ...flexCenter,
     transition: 'all 0.2s',
-    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+    boxShadow: SHADOWS.glowRed
   },
   settingsContent: {
-    padding: '24px',
+    padding: SPACING[6],
     overflowY: 'auto',
     flex: 1
   },
   settingSection: {
     marginBottom: '28px',
-    paddingBottom: '24px',
+    paddingBottom: SPACING[6],
     borderBottom: '1px solid rgba(45, 212, 191, 0.1)'
   },
   settingLabel: {
     display: 'block',
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#2dd4bf',
-    marginBottom: '12px',
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.primary,
+    marginBottom: SPACING[3],
     letterSpacing: '0.3px'
   },
   settingValue: {
-    padding: '12px 16px',
-    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%)',
-    border: '1px solid rgba(45, 212, 191, 0.2)',
-    borderRadius: '8px',
-    color: '#94a3b8',
-    fontSize: '14px',
-    marginBottom: '8px',
+    padding: `${SPACING[3]} ${SPACING[4]}`,
+    background: `linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%)`,
+    border: `1px solid rgba(45, 212, 191, 0.2)`,
+    borderRadius: BORDER_RADIUS.md,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE.md,
+    marginBottom: SPACING[2],
     fontFamily: 'monospace'
   },
   settingInput: {
     width: '100%',
-    padding: '12px 16px',
-    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%)',
-    border: '1px solid rgba(45, 212, 191, 0.2)',
-    borderRadius: '8px',
-    color: '#f1f5f9',
-    fontSize: '14px',
-    marginBottom: '12px',
+    padding: `${SPACING[3]} ${SPACING[4]}`,
+    background: `linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%)`,
+    border: `1px solid rgba(45, 212, 191, 0.2)`,
+    borderRadius: BORDER_RADIUS.md,
+    color: COLORS.textLight,
+    fontSize: FONT_SIZE.md,
+    marginBottom: SPACING[3],
     boxSizing: 'border-box',
     transition: 'all 0.2s',
     outline: 'none'
   },
   settingHint: {
-    fontSize: '12px',
-    color: '#64748b',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textDarkGray,
     fontStyle: 'italic',
-    marginTop: '8px'
+    marginTop: SPACING[2]
   },
   settingButton: {
-    padding: '12px 24px',
-    fontSize: '14px',
-    fontWeight: '600',
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
-    color: '#0f172a',
+    padding: `${SPACING[3]} ${SPACING[6]}`,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
+    color: COLORS.bgDarkAlt,
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
     transition: 'all 0.2s',
-    boxShadow: '0 4px 12px rgba(45, 212, 191, 0.3)',
-    marginTop: '8px'
+    boxShadow: SHADOWS.glowTeal,
+    marginTop: SPACING[2]
   },
   logoutButton: {
     width: '100%',
-    padding: '14px',
-    fontSize: '16px',
-    fontWeight: '600',
-    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-    color: '#fff',
+    padding: SPACING.md,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    background: `linear-gradient(135deg, ${COLORS.danger} 0%, ${COLORS.dangerDark} 100%)`,
+    color: COLORS.white,
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
     transition: 'all 0.2s',
-    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)'
+    boxShadow: SHADOWS.glowRed
   }
 };

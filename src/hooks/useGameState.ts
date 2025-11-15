@@ -836,14 +836,15 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     addGold: async (amount: number) => {
       let newState: GameState | undefined;
       setState(prev => {
+        // Create a new inventory instance to avoid mutation
+        const newInventory = new Inventory(prev.inventory.maxSlots);
+        newInventory.gold = prev.inventory.gold + amount;
+        newInventory.items = [...prev.inventory.items];
+
         newState = {
           ...prev,
           gold: prev.gold + amount,
-          inventory: (() => {
-            const inv = prev.inventory;
-            inv.gold += amount;
-            return inv;
-          })()
+          inventory: newInventory
         };
         // CRITICAL: Update stateRef synchronously BEFORE scheduling save
         stateRef.current = newState;
@@ -855,14 +856,15 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     removeGold: async (amount: number) => {
       let newState: GameState | undefined;
       setState(prev => {
+        // Create a new inventory instance to avoid mutation
+        const newInventory = new Inventory(prev.inventory.maxSlots);
+        newInventory.gold = Math.max(0, prev.inventory.gold - amount);
+        newInventory.items = [...prev.inventory.items];
+
         newState = {
           ...prev,
           gold: Math.max(0, prev.gold - amount),
-          inventory: (() => {
-            const inv = prev.inventory;
-            inv.gold = Math.max(0, inv.gold - amount);
-            return inv;
-          })()
+          inventory: newInventory
         };
         // CRITICAL: Update stateRef synchronously BEFORE scheduling save
         stateRef.current = newState;
@@ -1067,15 +1069,21 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
 
     removeItem: async (itemId: string) => {
       setState(prev => {
-        const inv = prev.inventory;
-        inv.removeItem(itemId);
-        return { ...prev, inventory: inv };
+        // Create a new inventory instance to avoid mutation
+        const newInventory = new Inventory(prev.inventory.maxSlots);
+        newInventory.gold = prev.inventory.gold;
+        newInventory.items = prev.inventory.items.filter(item => item.id !== itemId);
+        return { ...prev, inventory: newInventory };
       });
       scheduleAutoSave();
     },
 
     updateInventory: async (inventory: Inventory) => {
-      setState(prev => ({ ...prev, inventory }));
+      setState(prev => ({
+        ...prev,
+        inventory,
+        gold: inventory.gold // Synchronize gold with inventory.gold
+      }));
       scheduleAutoSave();
     },
 

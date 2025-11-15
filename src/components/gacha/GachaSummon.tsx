@@ -3,12 +3,15 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
+ * @lastModified 2025-11-15
  */
 
 import React, { useState } from 'react';
 import type { GachaState, HeroTemplate } from '../../types/hero.types';
 import { GachaSystem } from '../../engine/gacha/GachaSystem';
 import { RARITY_COLORS } from '../../types/hero.types';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS, Z_INDEX } from '../../styles/tokens';
+import { flexBetween, flexColumn, flexCenter } from '../../styles/common';
 
 interface GachaSummonProps {
   gachaState: GachaState;
@@ -357,134 +360,132 @@ export function GachaSummon({
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
+    ...flexColumn,
     width: '100%',
     height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    color: '#f1f5f9',
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight,
     overflow: 'hidden',
     position: 'relative'
   },
   header: {
-    padding: '20px',
-    borderBottom: '2px solid #2dd4bf',
-    background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
+    padding: SPACING[5],
+    borderBottom: `2px solid ${COLORS.primary}`,
+    background: `linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)`
   },
   title: {
     margin: 0,
-    fontSize: '24px',
-    fontWeight: '700',
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold,
     textAlign: 'center'
   },
   resourcesBar: {
     display: 'flex',
     justifyContent: 'center',
-    gap: '40px',
-    padding: '15px 20px',
+    gap: SPACING[10],
+    padding: `${SPACING[4]} ${SPACING[5]}`,
     background: 'rgba(15, 23, 42, 0.5)',
-    borderBottom: '1px solid #334155'
+    borderBottom: `1px solid ${COLORS.bgSurfaceLight}`
   },
   resourceItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: SPACING[2]
   },
   resourceIcon: {
-    fontSize: '20px'
+    fontSize: FONT_SIZE.xl
   },
   resourceValue: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#fbbf24'
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.goldLight
   },
   ratesSection: {
-    padding: '20px',
+    padding: SPACING[5],
     background: 'rgba(15, 23, 42, 0.3)',
-    borderBottom: '1px solid #334155'
+    borderBottom: `1px solid ${COLORS.bgSurfaceLight}`
   },
   sectionTitle: {
-    margin: '0 0 15px 0',
-    fontSize: '18px',
-    fontWeight: '700',
+    margin: `0 0 ${SPACING[4]} 0`,
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
     textAlign: 'center',
-    color: '#f1f5f9'
+    color: COLORS.textLight
   },
   ratesGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-    gap: '10px',
+    gap: SPACING[3],
     maxWidth: '600px',
     margin: '0 auto'
   },
   rateItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    padding: '8px 12px',
+    gap: SPACING[2],
+    padding: `${SPACING[2]} ${SPACING[3]}`,
     background: 'rgba(51, 65, 85, 0.5)',
-    borderRadius: '6px'
+    borderRadius: BORDER_RADIUS.md
   },
   rarityDot: {
-    width: '12px',
-    height: '12px',
-    borderRadius: '50%',
+    width: SPACING[3],
+    height: SPACING[3],
+    borderRadius: BORDER_RADIUS.round,
     flexShrink: 0
   },
   rateName: {
     flex: 1,
-    fontSize: '14px',
-    fontWeight: '500'
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.medium
   },
   ratePercent: {
-    fontSize: '14px',
-    fontWeight: '700',
-    color: '#fbbf24'
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.goldLight
   },
   summonSection: {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '15px',
-    padding: '20px',
+    ...flexColumn,
+    gap: SPACING[4],
+    padding: SPACING[5],
     overflow: 'auto'
   },
   summonButton: {
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
-    padding: '20px',
+    gap: SPACING[4],
+    padding: SPACING[5],
     border: 'none',
-    borderRadius: '12px',
+    borderRadius: BORDER_RADIUS.lg,
     cursor: 'pointer',
-    transition: 'all 0.2s',
+    transition: TRANSITIONS.allBase,
     position: 'relative',
-    fontSize: '16px',
-    fontWeight: '700'
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold
   },
   freeSummonButton: {
-    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-    color: 'white',
-    boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)'
+    background: `linear-gradient(135deg, ${COLORS.success} 0%, ${COLORS.successDark} 100%)`,
+    color: COLORS.white,
+    boxShadow: SHADOWS.card
   },
   singleSummonButton: {
-    background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',
-    color: 'white',
-    boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+    background: `linear-gradient(135deg, ${COLORS.info} 0%, #2563eb 100%)`,
+    color: COLORS.white,
+    boxShadow: SHADOWS.card
   },
   tenSummonButton: {
     background: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)',
-    color: 'white',
-    boxShadow: '0 4px 12px rgba(168, 85, 247, 0.3)'
+    color: COLORS.white,
+    boxShadow: SHADOWS.card
   },
   debugSummonButton: {
-    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-    color: 'white',
-    boxShadow: '0 4px 12px rgba(239, 68, 68, 0.3)',
+    background: `linear-gradient(135deg, ${COLORS.danger} 0%, ${COLORS.dangerDark} 100%)`,
+    color: COLORS.white,
+    boxShadow: SHADOWS.card,
     border: '2px dashed #fca5a5'
   },
   buttonIcon: {
-    fontSize: '32px',
+    fontSize: FONT_SIZE['4xl'],
     flexShrink: 0
   },
   buttonContent: {
@@ -492,48 +493,48 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'left'
   },
   buttonTitle: {
-    fontSize: '18px',
-    fontWeight: '700',
-    marginBottom: '4px'
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
+    marginBottom: SPACING[1]
   },
   buttonSubtitle: {
-    fontSize: '14px',
+    fontSize: FONT_SIZE.md,
     opacity: 0.9
   },
   buttonDisabled: {
     opacity: 0.5,
     cursor: 'not-allowed',
-    boxShadow: 'none'
+    boxShadow: SHADOWS.none
   },
   guaranteeBadge: {
     position: 'absolute',
-    top: '8px',
-    right: '8px',
-    padding: '4px 10px',
-    fontSize: '11px',
-    fontWeight: '700',
+    top: SPACING[2],
+    right: SPACING[2],
+    padding: `${SPACING[1]} ${SPACING[3]}`,
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.bold,
     background: 'rgba(255, 255, 255, 0.2)',
-    borderRadius: '4px',
+    borderRadius: BORDER_RADIUS.sm,
     textTransform: 'uppercase',
     letterSpacing: '0.5px'
   },
   infoBox: {
-    margin: '0 20px 20px 20px',
-    padding: '15px 20px',
+    margin: `0 ${SPACING[5]} ${SPACING[5]} ${SPACING[5]}`,
+    padding: `${SPACING[4]} ${SPACING[5]}`,
     background: 'rgba(59, 130, 246, 0.1)',
-    border: '1px solid rgba(59, 130, 246, 0.3)',
-    borderRadius: '8px'
+    border: `1px solid rgba(59, 130, 246, 0.3)`,
+    borderRadius: BORDER_RADIUS.md
   },
   infoTitle: {
-    margin: '0 0 10px 0',
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#60a5fa'
+    margin: `0 0 ${SPACING[3]} 0`,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.infoLight
   },
   infoText: {
-    margin: '5px 0',
-    fontSize: '14px',
-    color: '#94a3b8',
+    margin: `${SPACING.xs} 0`,
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textGray,
     lineHeight: '1.6'
   },
   summoningOverlay: {
@@ -542,24 +543,22 @@ const styles: Record<string, React.CSSProperties> = {
     left: 0,
     right: 0,
     bottom: 0,
-    background: 'rgba(0, 0, 0, 0.8)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 100
+    background: COLORS.bgOverlayDark,
+    ...flexCenter,
+    zIndex: Z_INDEX.dropdown
   },
   summoningAnimation: {
     textAlign: 'center'
   },
   spinner: {
-    fontSize: '80px',
+    fontSize: FONT_SIZE['8xl'],
     animation: 'spin 1s linear infinite',
-    marginBottom: '20px'
+    marginBottom: SPACING[5]
   },
   summoningText: {
-    fontSize: '24px',
-    fontWeight: '700',
-    color: '#2dd4bf'
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.primary
   },
   resultsOverlay: {
     position: 'absolute',
@@ -568,130 +567,124 @@ const styles: Record<string, React.CSSProperties> = {
     right: 0,
     bottom: 0,
     background: 'rgba(0, 0, 0, 0.9)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 200,
-    padding: '20px'
+    ...flexCenter,
+    zIndex: Z_INDEX.modal,
+    padding: SPACING[5]
   },
   resultsModal: {
     width: '100%',
     maxWidth: '900px',
     maxHeight: '90vh',
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    borderRadius: '16px',
-    border: '2px solid #2dd4bf',
-    boxShadow: '0 8px 32px rgba(45, 212, 191, 0.3)',
-    display: 'flex',
-    flexDirection: 'column',
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    borderRadius: BORDER_RADIUS.xl,
+    border: `2px solid ${COLORS.primary}`,
+    boxShadow: SHADOWS.glowTeal,
+    ...flexColumn,
     overflow: 'hidden'
   },
   resultsHeader: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '20px',
-    borderBottom: '2px solid #2dd4bf',
+    ...flexBetween,
+    padding: SPACING[5],
+    borderBottom: `2px solid ${COLORS.primary}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
   },
   resultsTitle: {
     margin: 0,
-    fontSize: '24px',
-    fontWeight: '700',
-    color: '#2dd4bf'
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.primary
   },
   closeButton: {
-    background: 'transparent',
-    border: '2px solid #334155',
-    color: '#94a3b8',
-    fontSize: '20px',
+    background: COLORS.transparent,
+    border: `2px solid ${COLORS.bgSurfaceLight}`,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE.xl,
     cursor: 'pointer',
-    padding: '6px 12px',
-    borderRadius: '6px',
-    transition: 'all 0.2s'
+    padding: `${SPACING[2]} ${SPACING[3]}`,
+    borderRadius: BORDER_RADIUS.md,
+    transition: TRANSITIONS.allBase
   },
   resultsGrid: {
     flex: 1,
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-    gap: '15px',
-    padding: '20px',
+    gap: SPACING[4],
+    padding: SPACING[5],
     overflow: 'auto'
   },
   resultCard: {
-    display: 'flex',
-    flexDirection: 'column',
+    ...flexColumn,
     alignItems: 'center',
-    padding: '20px',
-    background: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
+    padding: SPACING[5],
+    background: `linear-gradient(135deg, ${COLORS.bgSurfaceLight} 0%, ${COLORS.bgSurface} 100%)`,
     border: '3px solid',
-    borderRadius: '12px',
+    borderRadius: BORDER_RADIUS.lg,
     position: 'relative'
   },
   rarityBadge: {
     position: 'absolute',
-    top: '10px',
-    right: '10px',
-    padding: '4px 10px',
-    fontSize: '11px',
-    fontWeight: '700',
-    color: 'white',
-    borderRadius: '4px',
+    top: SPACING[3],
+    right: SPACING[3],
+    padding: `${SPACING[1]} ${SPACING[3]}`,
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.white,
+    borderRadius: BORDER_RADIUS.sm,
     letterSpacing: '0.5px'
   },
   heroIconLarge: {
-    fontSize: '64px',
-    marginBottom: '12px'
+    fontSize: FONT_SIZE['7xl'],
+    marginBottom: SPACING[3]
   },
   heroNameLarge: {
-    fontSize: '18px',
-    fontWeight: '700',
-    color: '#f1f5f9',
-    marginBottom: '8px',
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight,
+    marginBottom: SPACING[2],
     textAlign: 'center'
   },
   heroDetails: {
     display: 'flex',
-    gap: '10px',
-    marginBottom: '10px'
+    gap: SPACING[3],
+    marginBottom: SPACING[3]
   },
   heroClass: {
-    fontSize: '13px',
-    color: '#94a3b8',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textGray,
     textTransform: 'capitalize',
-    padding: '4px 10px',
+    padding: `${SPACING[1]} ${SPACING[3]}`,
     background: 'rgba(148, 163, 184, 0.2)',
-    borderRadius: '4px'
+    borderRadius: BORDER_RADIUS.sm
   },
   heroRole: {
-    fontSize: '13px',
-    color: '#2dd4bf',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.primary,
     textTransform: 'capitalize',
-    padding: '4px 10px',
+    padding: `${SPACING[1]} ${SPACING[3]}`,
     background: 'rgba(45, 212, 191, 0.2)',
-    borderRadius: '4px'
+    borderRadius: BORDER_RADIUS.sm
   },
   specialAbility: {
-    fontSize: '12px',
-    color: '#fbbf24',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.goldLight,
     textAlign: 'center',
-    padding: '8px',
+    padding: SPACING[2],
     background: 'rgba(251, 191, 36, 0.1)',
-    borderRadius: '6px',
+    borderRadius: BORDER_RADIUS.md,
     lineHeight: '1.4',
-    marginTop: '8px'
+    marginTop: SPACING[2]
   },
   continueButton: {
-    margin: '20px',
-    padding: '14px 24px',
-    fontSize: '16px',
-    fontWeight: '700',
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
-    color: '#0f172a',
+    margin: SPACING[5],
+    padding: `${SPACING[4]} ${SPACING[6]}`,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold,
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
+    color: COLORS.bgDarkAlt,
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
-    transition: 'all 0.2s',
-    boxShadow: '0 4px 12px rgba(45, 212, 191, 0.3)'
+    transition: TRANSITIONS.allBase,
+    boxShadow: SHADOWS.card
   }
 };

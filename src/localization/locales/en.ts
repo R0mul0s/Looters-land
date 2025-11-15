@@ -1140,6 +1140,120 @@ export const en = {
   },
 
   // ============================================================================
+  // TOWN BUILDINGS
+  // ============================================================================
+  buildings: {
+    // Common elements
+    close: 'Close',
+    gold: 'Gold',
+
+    // Tavern
+    tavern: {
+      title: 'Tavern',
+      tabs: {
+        summon: 'Summon Heroes',
+        collection: 'Collection',
+        party: 'Party Manager',
+      },
+    },
+
+    // Smithy
+    smithy: {
+      title: 'Smithy',
+      selectItem: 'Select Item to Enchant',
+      enchantingDetails: 'Enchanting Details',
+      currentLevel: 'Current Level:',
+      nextLevel: 'Next Level:',
+      successRate: 'Success Rate:',
+      cost: 'Cost:',
+      enchantButton: 'Enchant Item',
+      maxEnchant: 'Max Enchant Level',
+      notEnoughGold: 'Not Enough Gold',
+      warning: {
+        title: 'Warning:',
+        message: 'Enchanting can fail! Gold is spent regardless of success.',
+      },
+      info: {
+        title: 'Enchanting System',
+        item1: 'Each enchant level adds bonus stats to your equipment',
+        item2: 'Success rate decreases as enchant level increases',
+        item3: 'Gold is spent even if enchanting fails',
+        item4: 'Maximum enchant level is +10',
+      },
+      empty: {
+        title: 'No Equipment',
+        message: "You don't have any equipment items to enchant. Try exploring dungeons to find gear!",
+      },
+    },
+
+    // Market
+    market: {
+      title: 'Market',
+      tabs: {
+        buy: 'Buy Items',
+        sell: 'Sell Items',
+      },
+      buttons: {
+        buy: 'Buy',
+        sell: 'Sell',
+        notEnoughGold: 'Not Enough Gold',
+      },
+      sellPrice: 'Sell:',
+      empty: {
+        message: 'No items to sell. Go explore dungeons to find loot!',
+      },
+    },
+
+    // Healer
+    healer: {
+      title: 'Healer',
+      healParty: 'Heal Entire Party',
+      individual: 'Individual Healing',
+      fullHP: 'Full HP',
+      heal: 'Heal',
+      allAtFullHP: 'All heroes at full HP',
+      pricing: {
+        title: 'Pricing',
+        individual: 'Individual healing:',
+        individualCost: '1g per HP',
+        party: 'Full party heal:',
+        partyCost: '50g flat rate',
+        partySaving: '(cheaper for multiple heroes)',
+      },
+    },
+
+    // Bank
+    bank: {
+      title: 'Bank',
+      comingSoon: {
+        title: 'Coming Soon!',
+        version: 'Bank system will be available in v0.9.0',
+        features: {
+          item1: 'Store gold securely',
+          item2: 'Earn daily interest',
+          item3: 'Deposit and withdraw services',
+          item4: 'Transaction history tracking',
+        },
+      },
+    },
+
+    // Guild Hall
+    guildHall: {
+      title: 'Guild Hall',
+      comingSoon: {
+        title: 'Coming Soon!',
+        version: 'Guild system will be available in v1.2.0',
+        features: {
+          item1: 'Create or join guilds',
+          item2: 'Guild chat and social features',
+          item3: 'Guild wars and territory control',
+          item4: 'Guild perks and bonuses',
+        },
+      },
+    },
+  },
+
+  // ============================================================================
   // AVATARS
   // ============================================================================
   avatars: {

@@ -3,6 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
+ * @lastModified 2025-11-15
  */
 
 import React, { useState } from 'react';
@@ -16,6 +17,8 @@ import { HealerBuilding } from './buildings/HealerBuilding';
 import { MarketBuilding } from './buildings/MarketBuilding';
 import { BankBuilding } from './buildings/BankBuilding';
 import { GuildHallBuilding } from './buildings/GuildHallBuilding';
+import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../styles/tokens';
+import { flexColumn } from '../styles/common';
 
 interface TownScreenProps {
   town: TownData;
@@ -248,118 +251,116 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    color: '#f1f5f9',
+    ...flexColumn,
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight,
     overflow: 'hidden'
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '20px',
-    borderBottom: '2px solid #2dd4bf',
+    padding: SPACING.lg,
+    borderBottom: `2px solid ${COLORS.primary}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
   },
   title: {
     margin: 0,
-    fontSize: '28px',
-    fontWeight: '700',
-    color: '#2dd4bf'
+    fontSize: FONT_SIZE['3xl'],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.primary
   },
   subtitle: {
-    margin: '5px 0 0 0',
-    fontSize: '14px',
-    color: '#94a3b8'
+    margin: `${SPACING[1]} 0 0 0`,
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textGray
   },
   closeButton: {
-    background: 'transparent',
-    border: '2px solid #334155',
-    color: '#94a3b8',
-    fontSize: '24px',
+    background: COLORS.transparent,
+    border: `2px solid ${COLORS.bgSurfaceLight}`,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE['2xl'],
     cursor: 'pointer',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    transition: 'all 0.2s',
-    fontWeight: '700'
+    padding: `${SPACING[2]} ${SPACING[4]}`,
+    borderRadius: BORDER_RADIUS.md,
+    transition: TRANSITIONS.fast,
+    fontWeight: FONT_WEIGHT.bold
   },
   resourcesBar: {
     display: 'flex',
-    gap: '20px',
-    padding: '15px 20px',
+    gap: SPACING.lg,
+    padding: `${SPACING.md} ${SPACING.lg}`,
     background: 'rgba(15, 23, 42, 0.5)',
-    borderBottom: '1px solid #334155'
+    borderBottom: `1px solid ${COLORS.bgSurfaceLight}`
   },
   resourceItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: SPACING[2]
   },
   resourceIcon: {
-    fontSize: '20px'
+    fontSize: FONT_SIZE.xl
   },
   resourceValue: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#fbbf24'
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.goldLight
   },
   buildingsGrid: {
     flex: 1,
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: '20px',
-    padding: '20px',
+    gap: SPACING.lg,
+    padding: SPACING.lg,
     overflow: 'auto'
   },
   buildingCard: {
-    display: 'flex',
-    flexDirection: 'column',
+    ...flexColumn,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '30px 20px',
-    background: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
-    border: '2px solid #475569',
-    borderRadius: '12px',
+    padding: `${SPACING[7]} ${SPACING.lg}`,
+    background: `linear-gradient(135deg, ${COLORS.bgSurfaceLight} 0%, ${COLORS.bgSurface} 100%)`,
+    border: `2px solid ${COLORS.bgSurfaceLighter}`,
+    borderRadius: BORDER_RADIUS.lg,
     cursor: 'pointer',
-    transition: 'all 0.3s',
+    transition: TRANSITIONS.base,
     position: 'relative',
     minHeight: '200px'
   },
   buildingCardUnlocked: {
-    borderColor: '#2dd4bf'
+    borderColor: COLORS.primary
   },
   buildingCardLocked: {
     opacity: 0.5,
     cursor: 'not-allowed'
   },
   buildingIcon: {
-    fontSize: '64px',
-    marginBottom: '15px'
+    fontSize: FONT_SIZE['7xl'],
+    marginBottom: SPACING.md
   },
   buildingName: {
-    margin: '0 0 10px 0',
-    fontSize: '20px',
-    fontWeight: '700',
-    color: '#f1f5f9'
+    margin: `0 0 ${SPACING[2.5]} 0`,
+    fontSize: FONT_SIZE.xl,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight
   },
   buildingDescription: {
     margin: 0,
-    fontSize: '14px',
-    color: '#94a3b8',
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textGray,
     textAlign: 'center',
     lineHeight: '1.5'
   },
   lockedBadge: {
     position: 'absolute',
-    top: '10px',
-    right: '10px',
-    padding: '4px 8px',
+    top: SPACING[2.5],
+    right: SPACING[2.5],
+    padding: `${SPACING[1]} ${SPACING[2]}`,
     background: 'rgba(239, 68, 68, 0.2)',
-    border: '1px solid #ef4444',
-    borderRadius: '4px',
-    fontSize: '12px',
-    fontWeight: '600',
-    color: '#ef4444'
+    border: `1px solid ${COLORS.danger}`,
+    borderRadius: BORDER_RADIUS.sm,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.danger
   }
 };

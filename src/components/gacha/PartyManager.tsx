@@ -3,11 +3,14 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
+ * @lastModified 2025-11-15
  */
 
 import React, { useState } from 'react';
 import type { Hero } from '../../engine/hero/Hero';
 import { RARITY_COLORS } from '../../types/hero.types';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../../styles/tokens';
+import { flexColumn, flexCenter, flexBetween } from '../../styles/common';
 
 interface PartyManagerProps {
   heroes: Hero[];
@@ -157,15 +160,15 @@ export function PartyManager({ heroes, activePartyIndices, onPartyChange }: Part
                       <div style={styles.heroNameMedium}>{hero.name}</div>
                       <div
                         style={{
-                          padding: '3px 8px',
-                          fontSize: '10px',
-                          fontWeight: '700',
-                          color: 'white',
-                          borderRadius: '4px',
+                          padding: `${SPACING[0.75]} ${SPACING[2]}`,
+                          fontSize: FONT_SIZE.xs,
+                          fontWeight: FONT_WEIGHT.bold,
+                          color: COLORS.white,
+                          borderRadius: BORDER_RADIUS.sm,
                           textTransform: 'capitalize',
                           background: RARITY_COLORS[hero.rarity],
-                          boxShadow: '0 1px 4px rgba(0, 0, 0, 0.3)',
-                          marginBottom: '4px'
+                          boxShadow: SHADOWS.sm,
+                          marginBottom: SPACING[1]
                         }}
                       >
                         {hero.rarity}
@@ -325,342 +328,334 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    color: '#f1f5f9',
+    ...flexColumn,
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight,
     overflow: 'hidden'
   },
   header: {
-    padding: '20px',
-    borderBottom: '2px solid #2dd4bf',
+    padding: SPACING.lg,
+    borderBottom: `2px solid ${COLORS.primary}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
   },
   title: {
     margin: 0,
-    fontSize: '24px',
-    fontWeight: '700',
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold,
     textAlign: 'center'
   },
   messageBanner: {
-    padding: '12px 20px',
+    padding: `${SPACING[3]} ${SPACING.lg}`,
     textAlign: 'center',
-    fontWeight: '600',
-    fontSize: '14px'
+    fontWeight: FONT_WEIGHT.semibold,
+    fontSize: FONT_SIZE.md
   },
   successBanner: {
     background: 'rgba(16, 185, 129, 0.2)',
-    color: '#10b981',
-    borderBottom: '2px solid #10b981'
+    color: COLORS.success,
+    borderBottom: `2px solid ${COLORS.success}`
   },
   errorBanner: {
     background: 'rgba(239, 68, 68, 0.2)',
-    color: '#ef4444',
-    borderBottom: '2px solid #ef4444'
+    color: COLORS.danger,
+    borderBottom: `2px solid ${COLORS.danger}`
   },
   content: {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px',
-    padding: '20px',
+    ...flexColumn,
+    gap: SPACING.lg,
+    padding: SPACING.lg,
     overflow: 'auto'
   },
   section: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '15px'
+    ...flexColumn,
+    gap: SPACING[3.75]
   },
   sectionTitle: {
     margin: 0,
-    fontSize: '18px',
-    fontWeight: '700',
-    color: '#f1f5f9'
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight
   },
   selectionHint: {
-    fontSize: '14px',
-    fontWeight: '600',
-    color: '#2dd4bf'
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.primary
   },
   partySlots: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-    gap: '15px'
+    gap: SPACING[3.75]
   },
   partySlot: {
     position: 'relative',
-    display: 'flex',
-    flexDirection: 'column',
+    ...flexColumn,
     alignItems: 'center',
-    padding: '15px',
-    background: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
-    border: '3px solid #475569',
-    borderRadius: '12px',
+    padding: SPACING[3.75],
+    background: `linear-gradient(135deg, ${COLORS.bgSurfaceLight} 0%, ${COLORS.bgSurface} 100%)`,
+    border: `3px solid ${COLORS.bgSurfaceLighter}`,
+    borderRadius: BORDER_RADIUS.lg,
     cursor: 'pointer',
-    transition: 'all 0.2s',
+    transition: TRANSITIONS.base,
     minHeight: '200px'
   },
   partySlotSelected: {
-    boxShadow: '0 0 20px rgba(45, 212, 191, 0.6)',
+    boxShadow: SHADOWS.glowTeal,
     transform: 'scale(1.03)',
-    borderColor: '#2dd4bf'
+    borderColor: COLORS.primary
   },
   selectedIndicator: {
     position: 'absolute',
     top: '-10px',
     left: '50%',
     transform: 'translateX(-50%)',
-    padding: '4px 12px',
-    fontSize: '11px',
-    fontWeight: '700',
-    background: '#2dd4bf',
-    color: '#0f172a',
-    borderRadius: '4px',
+    padding: `${SPACING[1]} ${SPACING[3]}`,
+    fontSize: FONT_SIZE[11],
+    fontWeight: FONT_WEIGHT.bold,
+    background: COLORS.primary,
+    color: COLORS.bgDarkAlt,
+    borderRadius: BORDER_RADIUS.sm,
     letterSpacing: '0.5px',
     zIndex: 2
   },
   slotNumber: {
     position: 'absolute',
-    top: '8px',
-    left: '8px',
-    fontSize: '11px',
-    fontWeight: '600',
-    color: '#94a3b8',
+    top: SPACING[2],
+    left: SPACING[2],
+    fontSize: FONT_SIZE[11],
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.textSecondary,
     textTransform: 'uppercase',
     letterSpacing: '0.5px'
   },
   slotNumberEmpty: {
-    fontSize: '11px',
-    fontWeight: '600',
-    color: '#64748b',
+    fontSize: FONT_SIZE[11],
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.textMuted,
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
-    marginTop: '8px'
+    marginTop: SPACING[2]
   },
   heroIconMedium: {
-    fontSize: '48px',
-    marginBottom: '8px',
-    marginTop: '20px'
+    fontSize: FONT_SIZE['6xl'],
+    marginBottom: SPACING[2],
+    marginTop: SPACING.lg
   },
   heroNameMedium: {
-    fontSize: '15px',
-    fontWeight: '700',
-    color: '#f1f5f9',
-    marginBottom: '4px',
+    fontSize: FONT_SIZE[15],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight,
+    marginBottom: SPACING[1],
     textAlign: 'center'
   },
   heroMetaSmall: {
-    fontSize: '12px',
-    color: '#94a3b8',
-    marginBottom: '4px',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textSecondary,
+    marginBottom: SPACING[1],
     display: 'flex',
-    gap: '6px',
+    gap: SPACING[1.5],
     textTransform: 'capitalize'
   },
   heroRoleSmall: {
-    fontSize: '12px',
-    color: '#2dd4bf',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.primary,
     textTransform: 'capitalize',
-    marginBottom: '10px'
+    marginBottom: SPACING[2.5]
   },
   heroDivider: {
     opacity: 0.5
   },
   removeButton: {
-    padding: '6px 16px',
-    fontSize: '12px',
-    fontWeight: '700',
+    padding: `${SPACING[1.5]} ${SPACING[4]}`,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.bold,
     background: 'rgba(239, 68, 68, 0.2)',
-    color: '#ef4444',
-    border: '1px solid rgba(239, 68, 68, 0.3)',
-    borderRadius: '6px',
+    color: COLORS.danger,
+    border: `1px solid rgba(239, 68, 68, 0.3)`,
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.base
   },
   emptySlot: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
+    ...flexColumn,
+    ...flexCenter,
     flex: 1,
     width: '100%'
   },
   emptySlotIcon: {
-    fontSize: '48px',
-    color: '#475569',
-    marginBottom: '8px'
+    fontSize: FONT_SIZE['6xl'],
+    color: COLORS.bgSurfaceLighter,
+    marginBottom: SPACING[2]
   },
   emptySlotText: {
-    fontSize: '14px',
-    color: '#64748b',
-    fontWeight: '600'
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textMuted,
+    fontWeight: FONT_WEIGHT.semibold
   },
   partyStats: {
-    padding: '15px',
+    padding: SPACING[3.75],
     background: 'rgba(45, 212, 191, 0.1)',
-    border: '1px solid rgba(45, 212, 191, 0.3)',
-    borderRadius: '8px'
+    border: `1px solid rgba(45, 212, 191, 0.3)`,
+    borderRadius: BORDER_RADIUS.md
   },
   statsTitle: {
-    margin: '0 0 12px 0',
-    fontSize: '16px',
-    fontWeight: '700',
-    color: '#2dd4bf'
+    margin: `0 0 ${SPACING[3]} 0`,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.primary
   },
   statsGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-    gap: '12px'
+    gap: SPACING[3]
   },
   statItem: {
-    padding: '10px',
+    padding: SPACING[2.5],
     background: 'rgba(15, 23, 42, 0.6)',
-    borderRadius: '6px',
+    borderRadius: BORDER_RADIUS.md,
     textAlign: 'center'
   },
   statLabel: {
-    fontSize: '12px',
-    color: '#94a3b8',
-    fontWeight: '600',
-    marginBottom: '4px'
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textSecondary,
+    fontWeight: FONT_WEIGHT.semibold,
+    marginBottom: SPACING[1]
   },
   statValue: {
-    fontSize: '18px',
-    color: '#f1f5f9',
-    fontWeight: '700'
+    fontSize: FONT_SIZE.lg,
+    color: COLORS.textLight,
+    fontWeight: FONT_WEIGHT.bold
   },
   heroesGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-    gap: '12px'
+    gap: SPACING[3]
   },
   heroCard: {
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '12px',
-    background: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
+    ...flexColumn,
+    padding: SPACING[3],
+    background: `linear-gradient(135deg, ${COLORS.bgSurfaceLight} 0%, ${COLORS.bgSurface} 100%)`,
     border: '2px solid',
-    borderRadius: '10px',
+    borderRadius: BORDER_RADIUS.lg,
     position: 'relative',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.base
   },
   heroCardSelectable: {
     cursor: 'pointer'
   },
   rarityBadge: {
     position: 'absolute',
-    top: '8px',
-    left: '8px',
-    padding: '3px 8px',
-    fontSize: '10px',
-    fontWeight: '700',
-    color: 'white',
-    borderRadius: '4px',
+    top: SPACING[2],
+    left: SPACING[2],
+    padding: `${SPACING[0.75]} ${SPACING[2]}`,
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.white,
+    borderRadius: BORDER_RADIUS.sm,
     textTransform: 'capitalize',
     zIndex: 1
   },
   talentBadge: {
     position: 'absolute',
-    top: '8px',
-    right: '8px',
-    padding: '3px 8px',
-    fontSize: '10px',
-    fontWeight: '700',
-    color: 'white',
-    borderRadius: '6px',
-    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+    top: SPACING[2],
+    right: SPACING[2],
+    padding: `${SPACING[0.75]} ${SPACING[2]}`,
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.white,
+    borderRadius: BORDER_RADIUS.md,
+    background: `linear-gradient(135deg, ${COLORS.goldLight} 0%, ${COLORS.goldDark} 100%)`,
     boxShadow: '0 2px 8px rgba(245, 158, 11, 0.6)',
     zIndex: 1
   },
   talentBadgeSlot: {
     position: 'absolute',
-    top: '8px',
-    right: '8px',
-    padding: '4px 8px',
-    fontSize: '10px',
-    fontWeight: '700',
-    color: 'white',
-    borderRadius: '6px',
-    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+    top: SPACING[2],
+    right: SPACING[2],
+    padding: `${SPACING[1]} ${SPACING[2]}`,
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.white,
+    borderRadius: BORDER_RADIUS.md,
+    background: `linear-gradient(135deg, ${COLORS.goldLight} 0%, ${COLORS.goldDark} 100%)`,
     boxShadow: '0 2px 8px rgba(245, 158, 11, 0.6)',
     zIndex: 1
   },
   heroIcon: {
-    fontSize: '40px',
+    fontSize: FONT_SIZE['5xl'],
     textAlign: 'center',
-    marginBottom: '8px',
-    marginTop: '15px'
+    marginBottom: SPACING[2],
+    marginTop: SPACING[3.75]
   },
   heroInfo: {
     textAlign: 'center'
   },
   heroName: {
-    fontSize: '14px',
-    fontWeight: '700',
-    color: '#f1f5f9',
-    marginBottom: '4px',
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight,
+    marginBottom: SPACING[1],
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap'
   },
   heroMeta: {
-    fontSize: '11px',
-    color: '#94a3b8',
-    marginBottom: '4px',
+    fontSize: FONT_SIZE[11],
+    color: COLORS.textSecondary,
+    marginBottom: SPACING[1],
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: '4px'
+    gap: SPACING[1]
   },
   heroRole: {
-    fontSize: '11px',
-    color: '#2dd4bf',
+    fontSize: FONT_SIZE[11],
+    color: COLORS.primary,
     textTransform: 'capitalize',
-    marginBottom: '8px'
+    marginBottom: SPACING[2]
   },
   miniStats: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '3px',
-    padding: '8px',
+    ...flexColumn,
+    gap: SPACING[0.75],
+    padding: SPACING[2],
     background: 'rgba(15, 23, 42, 0.6)',
-    borderRadius: '4px',
-    fontSize: '11px'
+    borderRadius: BORDER_RADIUS.sm,
+    fontSize: FONT_SIZE[11]
   },
   miniStat: {
     display: 'flex',
     justifyContent: 'space-between',
-    color: '#f1f5f9'
+    color: COLORS.textLight
   },
   emptyState: {
     textAlign: 'center',
-    padding: '30px'
+    padding: SPACING[7.5]
   },
   emptyIcon: {
-    fontSize: '60px',
-    marginBottom: '15px'
+    fontSize: FONT_SIZE['8xl'],
+    marginBottom: SPACING[3.75]
   },
   emptyText: {
-    fontSize: '14px',
-    color: '#94a3b8',
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textSecondary,
     margin: 0
   },
   infoBox: {
-    padding: '15px 20px',
+    padding: `${SPACING[3.75]} ${SPACING.lg}`,
     background: 'rgba(59, 130, 246, 0.1)',
-    border: '1px solid rgba(59, 130, 246, 0.3)',
-    borderRadius: '8px'
+    border: `1px solid rgba(59, 130, 246, 0.3)`,
+    borderRadius: BORDER_RADIUS.md
   },
   infoTitle: {
-    margin: '0 0 10px 0',
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#60a5fa'
+    margin: `0 0 ${SPACING[2.5]} 0`,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.info
   },
   infoText: {
-    margin: '5px 0',
-    fontSize: '14px',
-    color: '#94a3b8',
+    margin: `${SPACING[1.25]} 0`,
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textSecondary,
     lineHeight: '1.6'
   }
 };

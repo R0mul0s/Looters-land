@@ -3,11 +3,15 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
+ * @lastModified 2025-11-15
  */
 
 import React, { useState } from 'react';
 import type { Hero } from '../../engine/hero/Hero';
 import { TownService } from '../../services/TownService';
+import { t } from '../../localization/i18n';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
+import { flexBetween, flexColumn } from '../../styles/common';
 
 interface HealerBuildingProps {
   heroes: Hero[];
@@ -76,7 +80,7 @@ export function HealerBuilding({
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h2 style={styles.title}>⛑️ Healer</h2>
+        <h2 style={styles.title}>⛑️ {t('buildings.healer.title')}</h2>
         <button style={styles.closeButton} onClick={onClose}>✕</button>
       </div>
 
@@ -111,11 +115,11 @@ export function HealerBuilding({
           >
             <div style={styles.buttonIcon}>✨</div>
             <div style={styles.buttonContent}>
-              <div style={styles.buttonTitle}>Heal Entire Party</div>
+              <div style={styles.buttonTitle}>{t('buildings.healer.healParty')}</div>
               <div style={styles.buttonSubtitle}>
                 {partyHealCost === 0
-                  ? 'All heroes at full HP'
-                  : `Cost: ${partyHealCost}g`
+                  ? t('buildings.healer.allAtFullHP')
+                  : `${t('buildings.smithy.cost')} ${partyHealCost}g`
                 }
               </div>
             </div>
@@ -124,7 +128,7 @@ export function HealerBuilding({
 
         {/* Individual Heroes */}
         <div style={styles.section}>
-          <h3 style={styles.sectionTitle}>Individual Healing</h3>
+          <h3 style={styles.sectionTitle}>{t('buildings.healer.individual')}</h3>
           <div style={styles.heroesGrid}>
             {heroes.map((hero, index) => {
               const healCost = TownService.calculateHealCost(hero);
@@ -176,10 +180,10 @@ export function HealerBuilding({
                     disabled={!canAfford}
                   >
                     {healCost === 0 ? (
-                      <span>Full HP</span>
+                      <span>{t('buildings.healer.fullHP')}</span>
                     ) : (
                       <>
-                        <span>Heal</span>
+                        <span>{t('buildings.healer.heal')}</span>
                         <span style={styles.costText}>{healCost}g</span>
                       </>
                     )}
@@ -192,12 +196,12 @@ export function HealerBuilding({
 
         {/* Pricing Info */}
         <div style={styles.infoBox}>
-          <h4 style={styles.infoTitle}>Pricing</h4>
+          <h4 style={styles.infoTitle}>{t('buildings.healer.pricing.title')}</h4>
           <p style={styles.infoText}>
-            • Individual healing: <strong>1g per HP</strong>
+            • {t('buildings.healer.pricing.individual')} <strong>{t('buildings.healer.pricing.individualCost')}</strong>
           </p>
           <p style={styles.infoText}>
-            • Full party heal: <strong>50g flat rate</strong> (cheaper for multiple heroes)
+            • {t('buildings.healer.pricing.party')} <strong>{t('buildings.healer.pricing.partyCost')}</strong> {t('buildings.healer.pricing.partySaving')}
           </p>
         </div>
       </div>
@@ -209,117 +213,112 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     height: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    color: '#f1f5f9',
+    ...flexColumn,
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight,
     overflow: 'hidden'
   },
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: '20px',
-    borderBottom: '2px solid #2dd4bf',
+    ...flexBetween,
+    padding: SPACING.lg,
+    borderBottom: `2px solid ${COLORS.primary}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
   },
   title: {
     margin: 0,
-    fontSize: '24px',
-    fontWeight: '700'
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold
   },
   closeButton: {
-    background: 'transparent',
-    border: '2px solid #334155',
-    color: '#94a3b8',
-    fontSize: '24px',
+    background: COLORS.transparent,
+    border: `2px solid ${COLORS.bgSurfaceLight}`,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE['2xl'],
     cursor: 'pointer',
-    padding: '8px 16px',
-    borderRadius: '8px',
-    transition: 'all 0.2s'
+    padding: `${SPACING[2]} ${SPACING[4]}`,
+    borderRadius: BORDER_RADIUS.md,
+    transition: TRANSITIONS.allBase
   },
   messageBanner: {
-    padding: '12px 20px',
+    padding: `${SPACING[3]} ${SPACING.lg}`,
     textAlign: 'center',
-    fontWeight: '600',
-    fontSize: '14px'
+    fontWeight: FONT_WEIGHT.semibold,
+    fontSize: FONT_SIZE.md
   },
   successBanner: {
     background: 'rgba(16, 185, 129, 0.2)',
-    color: '#10b981',
-    borderBottom: '2px solid #10b981'
+    color: COLORS.success,
+    borderBottom: `2px solid ${COLORS.success}`
   },
   errorBanner: {
     background: 'rgba(239, 68, 68, 0.2)',
-    color: '#ef4444',
-    borderBottom: '2px solid #ef4444'
+    color: COLORS.danger,
+    borderBottom: `2px solid ${COLORS.danger}`
   },
   resourcesBar: {
     display: 'flex',
-    gap: '20px',
-    padding: '15px 20px',
+    gap: SPACING.lg,
+    padding: `${SPACING.md} ${SPACING.lg}`,
     background: 'rgba(15, 23, 42, 0.5)',
-    borderBottom: '1px solid #334155'
+    borderBottom: `1px solid ${COLORS.bgSurfaceLight}`
   },
   resourceItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: SPACING[2]
   },
   resourceIcon: {
-    fontSize: '20px'
+    fontSize: FONT_SIZE.xl
   },
   resourceValue: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#fbbf24'
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.goldLight
   },
   content: {
     flex: 1,
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '20px',
-    padding: '20px',
+    ...flexColumn,
+    gap: SPACING.lg,
+    padding: SPACING.lg,
     overflow: 'auto'
   },
   section: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '15px'
+    ...flexColumn,
+    gap: SPACING.md
   },
   sectionTitle: {
     margin: 0,
-    fontSize: '18px',
-    fontWeight: '700',
-    color: '#f1f5f9'
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight
   },
   healAllButton: {
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
-    padding: '20px',
-    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    gap: SPACING.md,
+    padding: SPACING.lg,
+    background: `linear-gradient(135deg, ${COLORS.success} 0%, ${COLORS.successDark} 100%)`,
     border: 'none',
-    borderRadius: '12px',
+    borderRadius: BORDER_RADIUS.lg,
     cursor: 'pointer',
-    transition: 'all 0.2s',
+    transition: TRANSITIONS.allBase,
     boxShadow: '0 4px 12px rgba(16, 185, 129, 0.3)',
-    color: 'white'
+    color: COLORS.white
   },
   buttonIcon: {
-    fontSize: '32px'
+    fontSize: FONT_SIZE['4xl']
   },
   buttonContent: {
     flex: 1,
     textAlign: 'left'
   },
   buttonTitle: {
-    fontSize: '18px',
-    fontWeight: '700',
-    marginBottom: '4px'
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.bold,
+    marginBottom: SPACING[1]
   },
   buttonSubtitle: {
-    fontSize: '14px',
+    fontSize: FONT_SIZE.md,
     opacity: 0.9
   },
   buttonDisabled: {
@@ -330,21 +329,21 @@ const styles: Record<string, React.CSSProperties> = {
   heroesGrid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
-    gap: '15px'
+    gap: SPACING.md
   },
   heroCard: {
     display: 'flex',
     alignItems: 'center',
-    gap: '15px',
-    padding: '15px',
-    background: 'linear-gradient(135deg, #334155 0%, #1e293b 100%)',
-    border: '2px solid #475569',
-    borderRadius: '8px',
+    gap: SPACING.md,
+    padding: SPACING.md,
+    background: `linear-gradient(135deg, ${COLORS.bgSurfaceLight} 0%, ${COLORS.bgSurface} 100%)`,
+    border: `2px solid ${COLORS.bgSurfaceLighter}`,
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.allBase
   },
   heroIcon: {
-    fontSize: '40px',
+    fontSize: SPACING.xxl,
     flexShrink: 0
   },
   heroInfo: {
@@ -352,28 +351,28 @@ const styles: Record<string, React.CSSProperties> = {
     minWidth: 0
   },
   heroName: {
-    fontSize: '16px',
-    fontWeight: '700',
-    color: '#f1f5f9',
-    marginBottom: '2px',
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.textLight,
+    marginBottom: SPACING.xxs,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap'
   },
   heroClass: {
-    fontSize: '12px',
-    color: '#94a3b8',
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textGray,
     textTransform: 'capitalize',
-    marginBottom: '8px'
+    marginBottom: SPACING[2]
   },
   hpBarContainer: {
     position: 'relative',
     width: '100%',
-    height: '24px',
+    height: SPACING[6],
     background: 'rgba(15, 23, 42, 0.8)',
-    borderRadius: '4px',
+    borderRadius: BORDER_RADIUS.sm,
     overflow: 'hidden',
-    border: '1px solid #334155'
+    border: `1px solid ${COLORS.bgSurfaceLight}`
   },
   hpBarFill: {
     position: 'absolute',
@@ -381,7 +380,7 @@ const styles: Record<string, React.CSSProperties> = {
     left: 0,
     height: '100%',
     transition: 'width 0.3s, background-color 0.3s',
-    borderRadius: '4px'
+    borderRadius: BORDER_RADIUS.sm
   },
   hpBarText: {
     position: 'absolute',
@@ -392,48 +391,47 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '11px',
-    fontWeight: '700',
-    color: 'white',
+    fontSize: FONT_SIZE['11'],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.white,
     textShadow: '0 1px 2px rgba(0,0,0,0.5)',
     zIndex: 1
   },
   healButton: {
-    display: 'flex',
-    flexDirection: 'column',
+    ...flexColumn,
     alignItems: 'center',
-    gap: '4px',
-    padding: '10px 16px',
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
+    gap: SPACING[1],
+    padding: `${SPACING.sm} ${SPACING[4]}`,
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: BORDER_RADIUS.sm,
     cursor: 'pointer',
-    transition: 'all 0.2s',
-    fontSize: '14px',
-    fontWeight: '700',
-    color: '#0f172a',
+    transition: TRANSITIONS.allBase,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.bgDarkAlt,
     whiteSpace: 'nowrap'
   },
   costText: {
-    fontSize: '12px',
+    fontSize: FONT_SIZE.sm,
     opacity: 0.9
   },
   infoBox: {
-    padding: '15px 20px',
+    padding: `${SPACING.md} ${SPACING.lg}`,
     background: 'rgba(59, 130, 246, 0.1)',
     border: '1px solid rgba(59, 130, 246, 0.3)',
-    borderRadius: '8px'
+    borderRadius: BORDER_RADIUS.md
   },
   infoTitle: {
-    margin: '0 0 10px 0',
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#60a5fa'
+    margin: `0 0 ${SPACING.sm} 0`,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.infoLight
   },
   infoText: {
-    margin: '5px 0',
-    fontSize: '14px',
-    color: '#94a3b8',
+    margin: `${SPACING.xs} 0`,
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textGray,
     lineHeight: '1.6'
   }
 };

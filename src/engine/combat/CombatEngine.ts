@@ -13,14 +13,15 @@
  * - Stun checking and turn skipping
  * - Combat log with detailed action reporting
  * - Victory/defeat condition checking
- * - XP reward system (baseXP * avgEnemyLevel * numEnemies)
+ * - XP reward system with shrine buff support (baseXP * avgEnemyLevel * numEnemies * xpMultiplier)
  * - Level up processing and stat growth
  * - Manual mode with player input waiting
  * - Auto-combat with AI for heroes and enemies
+ * - Shrine buff multipliers for XP and gold rewards
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-15
  */
 
 import type {
@@ -50,6 +51,10 @@ export class CombatEngine {
   currentCharacter: Combatant | null;
   turnOrder: Combatant[];
 
+  // Dungeon buffs
+  xpMultiplier: number; // Multiplier for XP rewards (default 1.0, +15% = 1.15)
+  goldMultiplier: number; // Multiplier for gold rewards (handled in App.tsx)
+
   // Callbacks for UI updates
   onTurnStart: ((character: Combatant) => void) | null;
   onAction: ((action: CombatActionResult) => void) | null;
@@ -74,6 +79,10 @@ export class CombatEngine {
     this.waitingForPlayerInput = false;
     this.currentCharacter = null;
     this.turnOrder = [];
+
+    // Buffs
+    this.xpMultiplier = 1.0;
+    this.goldMultiplier = 1.0;
 
     // Callbacks
     this.onTurnStart = null;
@@ -418,13 +427,14 @@ export class CombatEngine {
       this.log(`Items: No items dropped`, 'info');
     }
 
-    // Award XP to all alive heroes
+    // Award XP to all alive heroes (apply XP multiplier from shrine buff)
+    const finalXP = Math.floor(totalXP * this.xpMultiplier);
     const aliveHeroes = this.heroes.filter(h => h.isAlive);
 
     aliveHeroes.forEach(hero => {
       // Type guard: only Hero has gainXP method
       if ('gainXP' in hero && typeof hero.gainXP === 'function') {
-        const levelUpMessages = hero.gainXP(totalXP);
+        const levelUpMessages = hero.gainXP(finalXP);
 
         // Log level ups if any occurred
         if (levelUpMessages.length > 0) {

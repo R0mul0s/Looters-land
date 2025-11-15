@@ -3,7 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-15
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -13,6 +13,8 @@ import type { Hero } from '../engine/hero/Hero';
 import type { Item } from '../engine/item/Item';
 import { DungeonMinimap } from './DungeonMinimap';
 import { t } from '../localization/i18n';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../styles/tokens';
+import { flexBetween, flexColumn, flexCenter } from '../styles/common';
 
 interface DungeonExplorerProps {
   dungeon: Dungeon;
@@ -407,6 +409,43 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
         </div>
       </div>
 
+      {/* Active Buffs */}
+      {floor?.activeBuffs && floor.activeBuffs.length > 0 && (
+        <div style={{
+          padding: '10px 15px',
+          marginBottom: '15px',
+          backgroundColor: 'rgba(135, 206, 235, 0.1)',
+          borderRadius: '8px',
+          border: '2px solid #87ceeb'
+        }}>
+          <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '5px' }}>
+            ✨ Active Shrine Buffs:
+          </div>
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            {floor.activeBuffs.includes('damage') && (
+              <span style={{ padding: '4px 8px', backgroundColor: 'rgba(255, 77, 77, 0.2)', borderRadius: '4px', fontSize: '13px' }}>
+                ⚔️ +10% Damage
+              </span>
+            )}
+            {floor.activeBuffs.includes('xp') && (
+              <span style={{ padding: '4px 8px', backgroundColor: 'rgba(100, 149, 237, 0.2)', borderRadius: '4px', fontSize: '13px' }}>
+                📖 +15% XP
+              </span>
+            )}
+            {floor.activeBuffs.includes('gold') && (
+              <span style={{ padding: '4px 8px', backgroundColor: 'rgba(255, 215, 0, 0.2)', borderRadius: '4px', fontSize: '13px' }}>
+                💰 +20% Gold
+              </span>
+            )}
+            {floor.activeBuffs.includes('stats') && (
+              <span style={{ padding: '4px 8px', backgroundColor: 'rgba(138, 43, 226, 0.2)', borderRadius: '4px', fontSize: '13px' }}>
+                ✨ +10% All Stats
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Minimap */}
       {floor && (
         <DungeonMinimap
@@ -461,7 +500,7 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
                 {currentRoom.treasureItems && currentRoom.treasureItems.length > 0 && (
                   <div style={{ marginTop: '10px', fontSize: '14px' }}>
                     {currentRoom.treasureItems.map((item, idx) => (
-                      <div key={idx} style={{
+                      <div key={`dungeon-treasure-${item.id || `treasure-${idx}`}`} style={{
                         marginBottom: '5px',
                         padding: '5px',
                         backgroundColor: 'rgba(255, 215, 0, 0.1)',
@@ -543,7 +582,7 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
                     <div style={{ marginLeft: '10px', fontSize: '14px' }}>
                       <p style={{ color: '#ffd700' }}>{t('dungeon.gold')}: {currentRoom.eliteRewards.gold}</p>
                       {currentRoom.eliteRewards.items && currentRoom.eliteRewards.items.map((item, idx) => (
-                        <div key={idx} style={{
+                        <div key={`dungeon-elite-${item.id || `elite-${idx}`}`} style={{
                           marginBottom: '5px',
                           padding: '5px',
                           backgroundColor: 'rgba(255, 99, 71, 0.1)',
@@ -651,121 +690,117 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
  */
 const styles: { [key: string]: React.CSSProperties } = {
   container: {
-    padding: '20px',
+    padding: SPACING[5],
     maxWidth: '900px',
     margin: '0 auto',
-    color: '#fff'
+    color: COLORS.white
   },
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '20px',
+    ...flexBetween,
+    marginBottom: SPACING[5],
     position: 'sticky',
     top: 0,
-    backgroundColor: '#1a1a2e',
+    backgroundColor: COLORS.bgCardDark,
     zIndex: 1000,
-    padding: '10px 0',
-    borderBottom: '2px solid #667eea'
+    padding: `${SPACING[2]} 0`,
+    borderBottom: `2px solid ${COLORS.primary}`
   },
   title: {
-    fontSize: '24px',
+    fontSize: FONT_SIZE['2xl'],
     margin: 0
   },
   exitButton: {
-    padding: '10px 20px',
-    backgroundColor: '#ff4444',
-    color: '#fff',
+    padding: `${SPACING[2]} ${SPACING[5]}`,
+    backgroundColor: COLORS.danger,
+    color: COLORS.white,
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: 'bold'
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold
   },
   stats: {
     display: 'flex',
-    gap: '20px',
-    marginBottom: '20px',
-    padding: '15px',
-    backgroundColor: '#2a2a2a',
-    borderRadius: '8px',
+    gap: SPACING[5],
+    marginBottom: SPACING[5],
+    padding: SPACING[4],
+    backgroundColor: COLORS.bgCardDark,
+    borderRadius: BORDER_RADIUS.md,
     flexWrap: 'wrap' as const
   },
   statItem: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '5px'
+    ...flexColumn,
+    gap: SPACING[1]
   },
   roomDisplay: {
-    marginBottom: '20px'
+    marginBottom: SPACING[5]
   },
   roomCard: {
-    backgroundColor: '#2a2a2a',
-    padding: '20px',
-    borderRadius: '12px',
-    border: '3px solid',
-    marginBottom: '15px'
+    backgroundColor: COLORS.bgCardDark,
+    padding: SPACING[5],
+    borderRadius: BORDER_RADIUS.lg,
+    border: `3px solid`,
+    marginBottom: SPACING[4]
   },
   roomHeader: {
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
-    marginBottom: '15px'
+    gap: SPACING[2],
+    marginBottom: SPACING[4]
   },
   roomIcon: {
-    fontSize: '32px'
+    fontSize: FONT_SIZE['4xl']
   },
   roomTitle: {
     margin: 0,
-    fontSize: '20px'
+    fontSize: FONT_SIZE.xl
   },
   roomInfo: {
-    marginBottom: '15px',
+    marginBottom: SPACING[4],
     lineHeight: '1.6'
   },
   actionButton: {
     width: '100%',
-    padding: '12px',
-    color: '#fff',
+    padding: SPACING[3],
+    color: COLORS.white,
     border: 'none',
-    borderRadius: '8px',
-    fontSize: '16px',
-    fontWeight: 'bold'
+    borderRadius: BORDER_RADIUS.md,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.bold
   },
   message: {
-    padding: '15px',
-    backgroundColor: '#1a1a1a',
-    borderRadius: '8px',
-    borderLeft: '4px solid #4a9eff'
+    padding: SPACING[4],
+    backgroundColor: COLORS.bgCardDark,
+    borderRadius: BORDER_RADIUS.md,
+    borderLeft: `4px solid ${COLORS.borderPrimary}`
   },
   controls: {
-    backgroundColor: '#2a2a2a',
-    padding: '20px',
-    borderRadius: '12px'
+    backgroundColor: COLORS.bgCardDark,
+    padding: SPACING[5],
+    borderRadius: BORDER_RADIUS.lg
   },
   controlsTitle: {
-    margin: '0 0 15px 0',
+    margin: `0 0 ${SPACING[4]} 0`,
     textAlign: 'center' as const
   },
   movementGrid: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    gap: '10px'
+    ...flexColumn,
+    gap: SPACING[2]
   },
   movementRow: {
     display: 'flex',
     justifyContent: 'center',
-    gap: '10px'
+    gap: SPACING[2]
   },
   moveButton: {
-    padding: '15px 25px',
-    backgroundColor: '#4a9eff',
-    color: '#fff',
+    padding: `${SPACING[4]} ${SPACING[6]}`,
+    backgroundColor: COLORS.borderPrimary,
+    color: COLORS.white,
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
-    fontSize: '14px',
-    fontWeight: 'bold',
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold,
     width: '120px'
   },
   spacer: {
@@ -773,9 +808,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     height: '50px'
   },
   currentMarker: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '24px'
+    ...flexCenter,
+    fontSize: FONT_SIZE['2xl']
   }
 };

@@ -12,11 +12,13 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-09
+ * @lastModified 2025-11-15
  */
 
 import React, { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import { t } from '../localization/i18n';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../styles/tokens';
+import { flexColumn, flexCenter, flexBetween } from '../styles/common';
 
 interface ChatBoxProps {
   onSendMessage: (message: string) => void;
@@ -127,82 +129,79 @@ export function ChatBox({
 const styles: Record<string, React.CSSProperties> = {
   container: {
     position: 'fixed',
-    bottom: '20px',
-    right: '20px',
+    bottom: SPACING[5],
+    right: SPACING[5],
     zIndex: 900,
-    display: 'flex',
-    flexDirection: 'column',
+    ...flexColumn,
     alignItems: 'flex-end',
-    gap: '4px'
+    gap: SPACING[1]
   },
   chatBox: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    border: '2px solid #2dd4bf',
-    borderRadius: '12px',
-    padding: '10px 12px',
-    boxShadow: '0 4px 16px rgba(45, 212, 191, 0.3)',
+    gap: SPACING[2],
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    border: `2px solid ${COLORS.primary}`,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: `${SPACING.sm} ${SPACING[3]}`,
+    boxShadow: SHADOWS.glowTeal,
     minWidth: '300px'
   },
   icon: {
-    fontSize: '20px'
+    fontSize: FONT_SIZE.xl
   },
   input: {
     flex: 1,
-    background: 'rgba(51, 65, 85, 0.5)',
-    border: '1px solid #475569',
-    borderRadius: '6px',
-    padding: '8px 12px',
-    fontSize: '14px',
-    color: '#f1f5f9',
+    background: COLORS.bgSurfaceLight,
+    border: `1px solid ${COLORS.bgSurfaceLighter}`,
+    borderRadius: BORDER_RADIUS.sm,
+    padding: `${SPACING[2]} ${SPACING[3]}`,
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textLight,
     outline: 'none',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.allBase
   },
   sendButton: {
-    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    background: `linear-gradient(135deg, ${COLORS.success} 0%, ${COLORS.successDark} 100%)`,
     border: 'none',
-    borderRadius: '6px',
+    borderRadius: BORDER_RADIUS.sm,
     width: '36px',
     height: '36px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '18px',
-    color: 'white',
+    ...flexCenter,
+    fontSize: FONT_SIZE.lg,
+    color: COLORS.white,
     cursor: 'pointer',
-    transition: 'all 0.2s',
-    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.4)'
+    transition: TRANSITIONS.allBase,
+    boxShadow: SHADOWS.glowGreen
   },
   sendButtonDisabled: {
-    background: '#475569',
+    background: COLORS.bgSurfaceLighter,
     cursor: 'not-allowed',
-    boxShadow: 'none',
+    boxShadow: SHADOWS.none,
     opacity: 0.5
   },
   charCount: {
-    fontSize: '11px',
-    color: '#64748b',
-    fontWeight: '600',
-    paddingRight: '4px'
+    fontSize: FONT_SIZE[11],
+    color: COLORS.textDarkGray,
+    fontWeight: FONT_WEIGHT.semibold,
+    paddingRight: SPACING[1]
   },
   confirmation: {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px',
-    fontSize: '12px',
-    color: '#10b981',
-    fontWeight: '600',
-    paddingRight: '4px',
+    gap: SPACING.xs,
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.success,
+    fontWeight: FONT_WEIGHT.semibold,
+    paddingRight: SPACING[1],
     animation: 'fadeIn 0.2s ease-out'
   },
   confirmationIcon: {
-    fontSize: '14px',
-    color: '#10b981'
+    fontSize: FONT_SIZE.md,
+    color: COLORS.success
   },
   confirmationText: {
-    color: '#94a3b8',
+    color: COLORS.textGray,
     fontStyle: 'italic',
     maxWidth: '280px',
     overflow: 'hidden',

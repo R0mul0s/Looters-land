@@ -7,7 +7,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2025-11-15
  */
 
 import React, { useState, useEffect } from 'react';
@@ -18,6 +18,8 @@ import {
 } from '../services/LeaderboardService';
 import { DailyResetService } from '../services/DailyResetService';
 import { t } from '../localization/i18n';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../styles/tokens';
+import { flexColumn, flexCenter, flexBetween } from '../styles/common';
 
 /**
  * Props for LeaderboardScreen component
@@ -277,24 +279,22 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     width: '100%',
     height: '100%',
-    background: 'linear-gradient(135deg, #0a0f1e 0%, #1a1f2e 100%)',
+    background: `linear-gradient(135deg, ${COLORS.bgDarkSolid} 0%, #1a1f2e 100%)`,
     overflow: 'auto',
-    padding: '20px',
+    padding: SPACING.lg,
     boxSizing: 'border-box'
   },
   header: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: '24px',
+    ...flexBetween,
+    marginBottom: SPACING[6],
     flexWrap: 'wrap',
-    gap: '12px'
+    gap: SPACING[3]
   },
   title: {
     margin: 0,
-    fontSize: '32px',
-    fontWeight: '700',
-    background: 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)',
+    fontSize: FONT_SIZE['4xl'],
+    fontWeight: FONT_WEIGHT.bold,
+    background: `linear-gradient(135deg, ${COLORS.goldLight} 0%, #ffed4e 100%)`,
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     backgroundClip: 'text'
@@ -302,209 +302,207 @@ const styles: Record<string, React.CSSProperties> = {
   resetTimer: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    padding: '8px 16px',
+    gap: SPACING[2],
+    padding: `${SPACING[2]} ${SPACING[4]}`,
     background: 'rgba(45, 212, 191, 0.1)',
-    border: '1px solid rgba(45, 212, 191, 0.3)',
-    borderRadius: '8px'
+    border: `1px solid rgba(45, 212, 191, 0.3)`,
+    borderRadius: BORDER_RADIUS.md
   },
   resetIcon: {
-    fontSize: '18px'
+    fontSize: FONT_SIZE.lg
   },
   resetText: {
-    color: '#2dd4bf',
-    fontSize: '14px',
-    fontWeight: '600'
+    color: COLORS.primary,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold
   },
   categoryTabs: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-    gap: '12px',
-    marginBottom: '16px'
+    gap: SPACING[3],
+    marginBottom: SPACING[4]
   },
   categoryTab: {
-    display: 'flex',
-    flexDirection: 'column',
+    ...flexColumn,
     alignItems: 'center',
-    gap: '8px',
-    padding: '16px',
+    gap: SPACING[2],
+    padding: SPACING[4],
     background: 'rgba(30, 41, 59, 0.6)',
-    border: '1px solid rgba(45, 212, 191, 0.2)',
-    borderRadius: '12px',
+    border: `1px solid rgba(45, 212, 191, 0.2)`,
+    borderRadius: BORDER_RADIUS.lg,
     cursor: 'pointer',
-    transition: 'all 0.2s',
-    color: '#94a3b8'
+    transition: TRANSITIONS.base,
+    color: COLORS.textSecondary
   },
   categoryTabActive: {
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.2) 0%, rgba(20, 184, 166, 0.1) 100%)',
-    border: '2px solid #2dd4bf',
-    color: '#2dd4bf',
+    border: `2px solid ${COLORS.primary}`,
+    color: COLORS.primary,
     transform: 'translateY(-2px)',
     boxShadow: '0 8px 20px rgba(45, 212, 191, 0.3)'
   },
   categoryIcon: {
-    fontSize: '28px'
+    fontSize: FONT_SIZE['3xl']
   },
   categoryLabel: {
-    fontSize: '14px',
-    fontWeight: '600',
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold,
     textAlign: 'center'
   },
   categoryDescription: {
     textAlign: 'center',
-    color: '#64748b',
-    fontSize: '14px',
-    marginBottom: '20px',
-    padding: '12px',
+    color: COLORS.textMuted,
+    fontSize: FONT_SIZE.md,
+    marginBottom: SPACING.lg,
+    padding: SPACING[3],
     background: 'rgba(15, 23, 42, 0.4)',
-    borderRadius: '8px'
+    borderRadius: BORDER_RADIUS.md
   },
   playerRankCard: {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
-    padding: '20px',
+    gap: SPACING[4],
+    padding: SPACING.lg,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.15) 0%, rgba(20, 184, 166, 0.05) 100%)',
-    border: '2px solid #2dd4bf',
-    borderRadius: '12px',
-    marginBottom: '20px',
+    border: `2px solid ${COLORS.primary}`,
+    borderRadius: BORDER_RADIUS.lg,
+    marginBottom: SPACING.lg,
     boxShadow: '0 8px 24px rgba(45, 212, 191, 0.2)'
   },
   playerRankBadge: {
-    fontSize: '32px',
-    fontWeight: '700',
+    fontSize: FONT_SIZE['4xl'],
+    fontWeight: FONT_WEIGHT.bold,
     minWidth: '60px',
     textAlign: 'center',
-    color: '#ffd700'
+    color: COLORS.goldLight
   },
   playerRankInfo: {
     flex: 1
   },
   playerRankName: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#f1f5f9',
-    marginBottom: '4px'
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.textLight,
+    marginBottom: SPACING[1]
   },
   playerRankLevel: {
-    fontSize: '14px',
-    color: '#94a3b8'
+    fontSize: FONT_SIZE.md,
+    color: COLORS.textSecondary
   },
   playerRankScore: {
-    fontSize: '24px',
-    fontWeight: '700',
-    color: '#2dd4bf'
+    fontSize: FONT_SIZE['2xl'],
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.primary
   },
   noRankCard: {
     textAlign: 'center',
-    padding: '32px',
+    padding: SPACING[8],
     background: 'rgba(30, 41, 59, 0.4)',
-    border: '1px dashed rgba(100, 116, 139, 0.3)',
-    borderRadius: '12px',
-    marginBottom: '20px'
+    border: `1px dashed rgba(100, 116, 139, 0.3)`,
+    borderRadius: BORDER_RADIUS.lg,
+    marginBottom: SPACING.lg
   },
   noRankIcon: {
-    fontSize: '48px',
-    marginBottom: '12px'
+    fontSize: FONT_SIZE['6xl'],
+    marginBottom: SPACING[3]
   },
   noRankText: {
-    color: '#cbd5e1',
-    fontSize: '16px',
-    marginBottom: '8px'
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE.base,
+    marginBottom: SPACING[2]
   },
   noRankHint: {
-    color: '#64748b',
-    fontSize: '14px'
+    color: COLORS.textMuted,
+    fontSize: FONT_SIZE.md
   },
   leaderboardContainer: {
     background: 'rgba(15, 23, 42, 0.6)',
-    borderRadius: '12px',
-    border: '1px solid rgba(45, 212, 191, 0.2)',
+    borderRadius: BORDER_RADIUS.lg,
+    border: `1px solid rgba(45, 212, 191, 0.2)`,
     overflow: 'hidden'
   },
   loading: {
     textAlign: 'center',
-    padding: '48px',
-    color: '#64748b'
+    padding: SPACING[12],
+    color: COLORS.textMuted
   },
   loadingIcon: {
-    fontSize: '48px',
-    marginBottom: '12px',
+    fontSize: FONT_SIZE['6xl'],
+    marginBottom: SPACING[3],
     animation: 'spin 2s linear infinite'
   },
   loadingText: {
-    fontSize: '16px'
+    fontSize: FONT_SIZE.base
   },
   emptyState: {
     textAlign: 'center',
-    padding: '48px',
-    color: '#64748b'
+    padding: SPACING[12],
+    color: COLORS.textMuted
   },
   emptyIcon: {
-    fontSize: '64px',
-    marginBottom: '16px',
+    fontSize: FONT_SIZE['8xl'],
+    marginBottom: SPACING[4],
     opacity: 0.5
   },
   emptyText: {
-    fontSize: '18px',
-    color: '#cbd5e1',
-    marginBottom: '8px'
+    fontSize: FONT_SIZE.lg,
+    color: COLORS.textGray,
+    marginBottom: SPACING[2]
   },
   emptyHint: {
-    fontSize: '14px'
+    fontSize: FONT_SIZE.md
   },
   leaderboardList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '2px'
+    ...flexColumn,
+    gap: SPACING[0.5]
   },
   leaderboardEntry: {
     display: 'flex',
     alignItems: 'center',
-    gap: '16px',
-    padding: '16px 20px',
+    gap: SPACING[4],
+    padding: `${SPACING[4]} ${SPACING.lg}`,
     background: 'rgba(30, 41, 59, 0.4)',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.base
   },
   leaderboardEntryPlayer: {
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.2) 0%, rgba(20, 184, 166, 0.1) 100%)',
-    borderLeft: '4px solid #2dd4bf'
+    borderLeft: `4px solid ${COLORS.primary}`
   },
   entryRank: {
-    fontSize: '20px',
-    fontWeight: '700',
+    fontSize: FONT_SIZE.xl,
+    fontWeight: FONT_WEIGHT.bold,
     minWidth: '50px',
     textAlign: 'center',
-    color: '#ffd700'
+    color: COLORS.goldLight
   },
   entryInfo: {
     flex: 1
   },
   entryName: {
-    fontSize: '16px',
-    fontWeight: '600',
-    color: '#f1f5f9',
-    marginBottom: '4px',
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.textLight,
+    marginBottom: SPACING[1],
     display: 'flex',
     alignItems: 'center',
-    gap: '8px'
+    gap: SPACING[2]
   },
   youBadge: {
-    fontSize: '10px',
-    fontWeight: '700',
-    padding: '2px 6px',
-    background: '#2dd4bf',
-    color: '#0f172a',
-    borderRadius: '4px'
+    fontSize: FONT_SIZE.xs,
+    fontWeight: FONT_WEIGHT.bold,
+    padding: `${SPACING[0.5]} ${SPACING[1.5]}`,
+    background: COLORS.primary,
+    color: COLORS.bgDarkAlt,
+    borderRadius: BORDER_RADIUS.sm
   },
   entryLevel: {
-    fontSize: '12px',
-    color: '#94a3b8'
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textSecondary
   },
   entryScore: {
-    fontSize: '18px',
-    fontWeight: '600',
-    color: '#2dd4bf',
+    fontSize: FONT_SIZE.lg,
+    fontWeight: FONT_WEIGHT.semibold,
+    color: COLORS.primary,
     minWidth: '100px',
     textAlign: 'right'
   }

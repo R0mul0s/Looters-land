@@ -13,12 +13,13 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-13
+ * @lastModified 2025-11-15
  */
 
 import { useState, useEffect } from 'react';
 import * as AuthService from '../services/AuthService';
 import logo from '../assets/images/logo.png';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT } from '../styles/tokens';
 
 interface LoginScreenProps {
   onLoginSuccess: (userId: string) => void;
@@ -132,8 +133,8 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         backdropFilter: 'blur(10px)',
         border: '4px solid',
         borderImage: 'linear-gradient(145deg, #DAA520, #8B4513, #DAA520) 1',
-        borderRadius: '20px',
-        padding: '30px',
+        borderRadius: BORDER_RADIUS.xl,
+        padding: SPACING[7],
         width: '400px',
         maxWidth: '90%',
         boxShadow: '0 15px 50px rgba(218, 165, 32, 0.3), inset 0 2px 10px rgba(255, 215, 0, 0.2), 0 0 30px rgba(139, 69, 19, 0.4)',
@@ -184,7 +185,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         }}/>
 
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '25px' }}>
+        <div style={{ textAlign: 'center', marginBottom: SPACING[6] }}>
           <img
             className="login-logo"
             src={logo}
@@ -192,7 +193,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             style={{
               width: '240px',
               height: 'auto',
-              marginBottom: '15px',
+              marginBottom: SPACING[4],
               filter: 'drop-shadow(0 5px 25px rgba(218, 165, 32, 0.6))',
               animation: 'logoFloat 2s ease-in-out infinite'
             }}
@@ -200,8 +201,8 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           <h2 className="login-title" style={{
             margin: '0',
             color: '#FFD700',
-            fontSize: '20px',
-            fontWeight: 'bold',
+            fontSize: FONT_SIZE.xl,
+            fontWeight: FONT_WEIGHT.bold,
             textShadow: '3px 3px 6px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 215, 0, 0.4)',
             letterSpacing: '2px',
             fontFamily: '"Cinzel Decorative", "Playfair Display", "Georgia", serif'
@@ -335,13 +336,13 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
         {/* Form */}
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: SPACING[4] }}>
             <label className="login-label" style={{
               display: 'block',
-              marginBottom: '6px',
+              marginBottom: SPACING[1.5],
               color: '#FFD700',
-              fontSize: '14px',
-              fontWeight: 'bold',
+              fontSize: FONT_SIZE.md,
+              fontWeight: FONT_WEIGHT.bold,
               textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)',
               letterSpacing: '1px'
             }}>
@@ -356,12 +357,12 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               placeholder="your.treasure@map.com"
               style={{
                 width: '100%',
-                padding: '12px',
+                padding: SPACING[3],
                 border: '3px solid #8B4513',
-                borderRadius: '12px',
+                borderRadius: BORDER_RADIUS.lg,
                 background: 'rgba(255, 248, 220, 0.95)',
                 color: '#2c1810',
-                fontSize: '16px',
+                fontSize: FONT_SIZE.base,
                 outline: 'none',
                 transition: 'all 0.3s',
                 boxSizing: 'border-box',
@@ -380,13 +381,13 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             />
           </div>
 
-          <div style={{ marginBottom: '16px' }}>
+          <div style={{ marginBottom: SPACING[4] }}>
             <label className="login-label" style={{
               display: 'block',
-              marginBottom: '6px',
+              marginBottom: SPACING[1.5],
               color: '#FFD700',
-              fontSize: '14px',
-              fontWeight: 'bold',
+              fontSize: FONT_SIZE.md,
+              fontWeight: FONT_WEIGHT.bold,
               textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)',
               letterSpacing: '1px'
             }}>
@@ -401,12 +402,12 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
               placeholder="••••••••"
               style={{
                 width: '100%',
-                padding: '12px',
+                padding: SPACING[3],
                 border: '3px solid #8B4513',
-                borderRadius: '12px',
+                borderRadius: BORDER_RADIUS.lg,
                 background: 'rgba(255, 248, 220, 0.95)',
                 color: '#2c1810',
-                fontSize: '16px',
+                fontSize: FONT_SIZE.base,
                 outline: 'none',
                 transition: 'all 0.3s',
                 boxSizing: 'border-box',
@@ -426,13 +427,13 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           </div>
 
           {isRegistering && (
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: SPACING[4] }}>
               <label className="login-label" style={{
                 display: 'block',
-                marginBottom: '6px',
+                marginBottom: SPACING[1.5],
                 color: '#FFD700',
-                fontSize: '14px',
-                fontWeight: 'bold',
+                fontSize: FONT_SIZE.md,
+                fontWeight: FONT_WEIGHT.bold,
                 textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)',
                 letterSpacing: '1px'
               }}>
@@ -447,12 +448,12 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
                 placeholder="••••••••"
                 style={{
                   width: '100%',
-                  padding: '12px',
+                  padding: SPACING[3],
                   border: '3px solid #8B4513',
-                  borderRadius: '12px',
+                  borderRadius: BORDER_RADIUS.lg,
                   background: 'rgba(255, 248, 220, 0.95)',
                   color: '#2c1810',
-                  fontSize: '16px',
+                  fontSize: FONT_SIZE.base,
                   outline: 'none',
                   transition: 'all 0.3s',
                   boxSizing: 'border-box',
@@ -475,14 +476,14 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           {/* Error Message */}
           {error && (
             <div style={{
-              padding: '12px',
-              marginBottom: '16px',
+              padding: SPACING[3],
+              marginBottom: SPACING[4],
               background: 'linear-gradient(135deg, rgba(139, 0, 0, 0.8), rgba(178, 34, 34, 0.7))',
               border: '3px solid #8B0000',
-              borderRadius: '12px',
+              borderRadius: BORDER_RADIUS.lg,
               color: '#FFE4E1',
-              fontSize: '13px',
-              fontWeight: 'bold',
+              fontSize: FONT_SIZE.sm,
+              fontWeight: FONT_WEIGHT.bold,
               textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)',
               boxShadow: '0 4px 15px rgba(139, 0, 0, 0.4)'
             }}>
@@ -497,15 +498,15 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             disabled={loading}
             style={{
               width: '100%',
-              padding: '14px',
+              padding: SPACING[3.5],
               border: '4px solid #654321',
-              borderRadius: '15px',
+              borderRadius: BORDER_RADIUS.xl,
               background: loading
                 ? 'linear-gradient(135deg, #666 0%, #444 100%)'
                 : 'linear-gradient(135deg, #DAA520 0%, #B8860B 50%, #8B6914 100%)',
-              color: loading ? '#999' : '#FFFFFF',
+              color: loading ? '#999' : COLORS.white,
               fontSize: '17px',
-              fontWeight: 'bold',
+              fontWeight: FONT_WEIGHT.bold,
               cursor: loading ? 'not-allowed' : 'pointer',
               transition: 'all 0.3s',
               textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
@@ -535,11 +536,11 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
         {/* Toggle Mode */}
         <div className="toggle-text" style={{
-          marginTop: '18px',
+          marginTop: SPACING[4.5],
           textAlign: 'center',
           color: '#FFD700',
-          fontSize: '14px',
-          fontWeight: 'bold',
+          fontSize: FONT_SIZE.md,
+          fontWeight: FONT_WEIGHT.bold,
           textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)'
         }}>
           {isRegistering ? 'Already have an account?' : "Don't have an account?"}
@@ -551,16 +552,16 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
             style={{
               background: 'linear-gradient(135deg, #CD853F, #8B4513)',
               border: '2px solid #654321',
-              borderRadius: '8px',
-              padding: '7px 14px',
+              borderRadius: BORDER_RADIUS.md,
+              padding: `${SPACING[1.5]} ${SPACING[3.5]}`,
               color: '#FFD700',
               cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: '13px',
-              fontWeight: 'bold',
+              fontSize: FONT_SIZE.sm,
+              fontWeight: FONT_WEIGHT.bold,
               textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)',
               boxShadow: '0 4px 10px rgba(0, 0, 0, 0.4)',
               transition: 'all 0.3s',
-              marginLeft: '8px',
+              marginLeft: SPACING[2],
               letterSpacing: '0.5px'
             }}
             onMouseEnter={(e) => {

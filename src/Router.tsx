@@ -968,7 +968,7 @@ export function Router() {
                     }}>
                       {actualLoot.items.map((item: any, index: number) => (
                         <div
-                          key={index}
+                          key={`loot-${item.id || `loot-item-${index}`}`}
                           style={{
                             padding: '10px',
                             background: '#fff',

@@ -3,11 +3,13 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-15
  */
 
 import React from 'react';
 import type { Floor, Room } from '../types/dungeon.types';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, TRANSITIONS } from '../styles/tokens';
+import { flexCenter } from '../styles/common';
 
 interface DungeonMinimapProps {
   floor: Floor;
@@ -182,7 +184,7 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
             left: 0,
             right: 0,
             height: '3px',
-            backgroundColor: '#333'
+            backgroundColor: COLORS.bgDarkSolid
           }} />
         )}
 
@@ -194,7 +196,7 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
             right: 0,
             bottom: 0,
             width: '3px',
-            backgroundColor: '#333'
+            backgroundColor: COLORS.bgDarkSolid
           }} />
         )}
 
@@ -206,7 +208,7 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
             left: 0,
             right: 0,
             height: '3px',
-            backgroundColor: '#333'
+            backgroundColor: COLORS.bgDarkSolid
           }} />
         )}
 
@@ -218,7 +220,7 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
             left: 0,
             bottom: 0,
             width: '3px',
-            backgroundColor: '#333'
+            backgroundColor: COLORS.bgDarkSolid
           }} />
         )}
 
@@ -231,8 +233,8 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
             transform: 'translateX(-50%)',
             width: '12px',
             height: '4px',
-            backgroundColor: '#4a9eff',
-            borderRadius: '2px'
+            backgroundColor: COLORS.info,
+            borderRadius: BORDER_RADIUS.sm
           }} />
         )}
 
@@ -244,8 +246,8 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
             transform: 'translateY(-50%)',
             width: '4px',
             height: '12px',
-            backgroundColor: '#4a9eff',
-            borderRadius: '2px'
+            backgroundColor: COLORS.info,
+            borderRadius: BORDER_RADIUS.sm
           }} />
         )}
 
@@ -257,8 +259,8 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
             transform: 'translateX(-50%)',
             width: '12px',
             height: '4px',
-            backgroundColor: '#4a9eff',
-            borderRadius: '2px'
+            backgroundColor: COLORS.info,
+            borderRadius: BORDER_RADIUS.sm
           }} />
         )}
 
@@ -270,8 +272,8 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
             transform: 'translateY(-50%)',
             width: '4px',
             height: '12px',
-            backgroundColor: '#4a9eff',
-            borderRadius: '2px'
+            backgroundColor: COLORS.info,
+            borderRadius: BORDER_RADIUS.sm
           }} />
         )}
       </div>
@@ -288,11 +290,11 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
             display: 'grid',
             gridTemplateColumns: `repeat(${gridWidth}, 48px)`,
             gridTemplateRows: `repeat(${gridHeight}, 48px)`,
-            gap: '4px',
-            padding: '10px',
-            backgroundColor: '#1a1a1a',
-            borderRadius: '8px',
-            border: '2px solid #333'
+            gap: SPACING[1],
+            padding: SPACING[2.5],
+            backgroundColor: COLORS.bgDarkAlt,
+            borderRadius: BORDER_RADIUS.md,
+            border: `2px solid ${COLORS.bgDarkSolid}`
           }}
         >
           {grid.map((row, y) =>
@@ -306,15 +308,15 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
                     position: 'relative',
                     width: '48px',
                     height: '48px',
-                    backgroundColor: room ? getRoomColor(room) : '#0a0a0a',
-                    borderRadius: '4px',
+                    backgroundColor: room ? getRoomColor(room) : COLORS.bgDark,
+                    borderRadius: BORDER_RADIUS.sm,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '20px',
-                    border: room?.id === currentRoomId ? '3px solid #fff' : '1px solid #333',
+                    fontSize: FONT_SIZE.xl,
+                    border: room?.id === currentRoomId ? `3px solid ${COLORS.white}` : `1px solid ${COLORS.bgDarkSolid}`,
                     boxShadow: room?.id === currentRoomId ? '0 0 15px rgba(74, 158, 255, 0.8)' : 'none',
-                    transition: 'all 0.3s ease',
+                    transition: TRANSITIONS.base,
                     cursor: canClick ? 'pointer' : 'default',
                     opacity: canClick ? 1 : (room ? 0.7 : 0.3),
                     transform: canClick ? 'scale(1)' : 'scale(1)',
@@ -379,22 +381,21 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
  */
 const styles: { [key: string]: React.CSSProperties } = {
   container: {
-    marginBottom: '20px',
-    padding: '15px',
-    backgroundColor: '#2a2a2a',
-    borderRadius: '12px',
-    border: '2px solid #444'
+    marginBottom: SPACING.lg,
+    padding: SPACING[3.5],
+    backgroundColor: COLORS.bgSurface,
+    borderRadius: BORDER_RADIUS.lg,
+    border: `2px solid ${COLORS.bgSurfaceLighter}`
   },
   title: {
-    margin: '0 0 15px 0',
+    margin: `0 0 ${SPACING[3.5]} 0`,
     textAlign: 'center' as const,
-    color: '#fff',
-    fontSize: '16px'
+    color: COLORS.white,
+    fontSize: FONT_SIZE.base
   },
   mapContainer: {
-    display: 'flex',
-    justifyContent: 'center',
-    marginBottom: '15px',
+    ...flexCenter,
+    marginBottom: SPACING[3.5],
     overflowX: 'auto' as const,
     overflowY: 'auto' as const,
     maxHeight: '400px'
@@ -402,19 +403,19 @@ const styles: { [key: string]: React.CSSProperties } = {
   legend: {
     display: 'flex',
     justifyContent: 'center',
-    gap: '15px',
+    gap: SPACING[3.5],
     flexWrap: 'wrap' as const,
-    fontSize: '12px'
+    fontSize: FONT_SIZE.xs
   },
   legendItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '5px'
+    gap: SPACING[1.5]
   },
   legendBox: {
     width: '16px',
     height: '16px',
-    borderRadius: '3px',
-    border: '1px solid #333'
+    borderRadius: BORDER_RADIUS.sm,
+    border: `1px solid ${COLORS.bgDarkSolid}`
   }
 };

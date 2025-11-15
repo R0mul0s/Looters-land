@@ -1142,6 +1142,120 @@ export const cs: LocaleKeys = {
   },
 
   // ============================================================================
+  // TOWN BUILDINGS
+  // ============================================================================
+  buildings: {
+    // Common elements
+    close: 'Zavřít',
+    gold: 'Zlato',
+
+    // Tavern
+    tavern: {
+      title: 'Taverna',
+      tabs: {
+        summon: 'Povolat Hrdiny',
+        collection: 'Sbírka',
+        party: 'Správa Družiny',
+      },
+    },
+
+    // Smithy
+    smithy: {
+      title: 'Kovárna',
+      selectItem: 'Vyber předmět k vylepšení',
+      enchantingDetails: 'Detaily vylepšení',
+      currentLevel: 'Současná úroveň:',
+      nextLevel: 'Další úroveň:',
+      successRate: 'Šance na úspěch:',
+      cost: 'Cena:',
+      enchantButton: 'Vylepšit předmět',
+      maxEnchant: 'Maximální úroveň vylepšení',
+      notEnoughGold: 'Nedostatek zlata',
+      warning: {
+        title: 'Varování:',
+        message: 'Vylepšení může selhat! Zlato je utraceno i při neúspěchu.',
+      },
+      info: {
+        title: 'Systém vylepšení',
+        item1: 'Každá úroveň vylepšení přidává bonusové statistiky k vybavení',
+        item2: 'Šance na úspěch se snižuje s rostoucí úrovní vylepšení',
+        item3: 'Zlato je utraceno i když vylepšení selže',
+        item4: 'Maximální úroveň vylepšení je +10',
+      },
+      empty: {
+        title: 'Žádné vybavení',
+        message: 'Nemáš žádné předměty k vylepšení. Zkus prozkoumávat dungeony a najít výbavu!',
+      },
+    },
+
+    // Market
+    market: {
+      title: 'Trh',
+      tabs: {
+        buy: 'Koupit předměty',
+        sell: 'Prodat předměty',
+      },
+      buttons: {
+        buy: 'Koupit',
+        sell: 'Prodat',
+        notEnoughGold: 'Nedostatek zlata',
+      },
+      sellPrice: 'Prodej:',
+      empty: {
+        message: 'Žádné předměty k prodeji. Prozkoumej dungeony a najdi kořist!',
+      },
+    },
+
+    // Healer
+    healer: {
+      title: 'Léčitel',
+      healParty: 'Vyléčit celou družinu',
+      individual: 'Individuální léčení',
+      fullHP: 'Plné HP',
+      heal: 'Vyléčit',
+      allAtFullHP: 'Všichni hrdinové mají plné HP',
+      pricing: {
+        title: 'Ceník',
+        individual: 'Individuální léčení:',
+        individualCost: '1z za HP',
+        party: 'Léčení celé družiny:',
+        partyCost: '50z paušál',
+        partySaving: '(levnější pro více hrdinů)',
+      },
+    },
+
+    // Bank
+    bank: {
+      title: 'Banka',
+      comingSoon: {
+        title: 'Již brzy!',
+        version: 'Bankovní systém bude dostupný ve verzi v0.9.0',
+        features: {
+          item1: 'Bezpečně uložit zlato',
+          item2: 'Získávat denní úroky',
+          item3: 'Služby vkladu a výběru',
+          item4: 'Sledování historie transakcí',
+        },
+      },
+    },
+
+    // Guild Hall
+    guildHall: {
+      title: 'Guildovní síň',
+      comingSoon: {
+        title: 'Již brzy!',
+        version: 'Systém guildů bude dostupný ve verzi v1.2.0',
+        features: {
+          item1: 'Vytvořit nebo vstoupit do guildy',
+          item2: 'Guildovní chat a sociální funkce',
+          item3: 'Guildovní války a kontrola území',
+          item4: 'Guildovní výhody a bonusy',
+        },
+      },
+    },
+  },
+
+  // ============================================================================
   // AVATARS
   // ============================================================================
   avatars: {

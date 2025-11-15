@@ -16,10 +16,11 @@
  * - Stat modifiers from active effects
  * - Immunity and damage reduction mechanics
  * - Reset functionality for combat preparation
+ * - Combat power calculation based on actual stats
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-15
  */
 
 import type { HeroClass, HeroStats, BaseStats, HeroInfo, AttackResult, StatusEffect, HeroRarity } from '../../types/hero.types';
@@ -591,45 +592,50 @@ export class Hero {
   }
 
   /**
-   * Calculate hero score (power rating)
+   * Calculate hero score (combat power)
    *
-   * Formula: Base Score (rarity) × Level Multiplier × (1 + Equipment Score Bonus)
-   * - Base Score: 100 (Common) to 1000 (Legendary)
-   * - Level Multiplier: 1 + (level - 1) × 0.1
-   * - Equipment Bonus: +1% per 100 equipment score
+   * New formula based on actual combat stats:
+   * Base = (HP × 0.5) + (ATK × 5) + (DEF × 3) + (SPD × 2) + (CRIT × 10)
+   * Final = Base × Rarity Multiplier
    *
-   * @returns Hero score (power rating)
+   * Rarity Multipliers:
+   * - Common: 1.0×
+   * - Rare: 1.2×
+   * - Epic: 1.4×
+   * - Legendary: 1.6×
+   *
+   * This formula reflects actual combat effectiveness by weighing stats
+   * according to their impact on survivability and damage output.
+   *
+   * @returns Hero combat power
    *
    * @example
    * ```typescript
    * const score = hero.getScore();
-   * console.log(score); // 5850
+   * console.log(score); // 1370 (Common Warrior Lv30 with equipment)
    * ```
    */
   getScore(): number {
-    const baseScores: Record<HeroRarity, number> = {
-      common: 100,
-      rare: 250,
-      epic: 500,
-      legendary: 1000
+    // Calculate base score from stats (with equipment bonuses already included)
+    const baseScore =
+      (this.maxHP * 0.5) +       // Survivability base
+      (this.ATK * 5) +            // Primary damage
+      (this.DEF * 3) +            // Damage reduction value
+      (this.SPD * 2) +            // Turn advantage
+      (this.CRIT * 10);           // Crit multiplier value
+
+    // Apply rarity multiplier
+    const rarityMultipliers: Record<HeroRarity, number> = {
+      common: 1.0,
+      rare: 1.2,
+      epic: 1.4,
+      legendary: 1.6
     };
 
-    const baseScore = baseScores[this.rarity] || baseScores.common;
-    const levelMultiplier = 1 + (this.level - 1) * 0.1;
+    const rarityMultiplier = rarityMultipliers[this.rarity] || rarityMultipliers.common;
+    const finalScore = baseScore * rarityMultiplier;
 
-    // Calculate equipment score
-    let equipmentScore = 0;
-    if (this.equipment) {
-      const equippedItems = this.equipment.getAllEquipped();
-      for (const equipped of equippedItems) {
-        equipmentScore += equipped.item.getScore();
-      }
-    }
-
-    const equipmentBonus = 1 + equipmentScore / 10000;
-    const heroScore = baseScore * levelMultiplier * equipmentBonus;
-
-    return Math.floor(heroScore);
+    return Math.floor(finalScore);
   }
 
   /**

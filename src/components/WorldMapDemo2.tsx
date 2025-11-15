@@ -45,6 +45,8 @@ import { WeatherSystem } from '../engine/worldmap/WeatherSystem';
 import { TimeOfDaySystem } from '../engine/worldmap/TimeOfDaySystem';
 import { supabase } from '../lib/supabase';
 import { t } from '../localization/i18n';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS, BLUR } from '../styles/tokens';
+import { flexColumn, flexCenter } from '../styles/common';
 import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, DynamicObject, WanderingMonster, TravelingMerchant } from '../types/worldmap.types';
 import { DEBUG_CONFIG } from '../config/DEBUG_CONFIG';
 import logo from '../assets/images/logo.png';
@@ -295,20 +297,34 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
     // Only interact with objects if this is NOT an automatic path movement
     // (i.e., only on direct clicks, not when passing through during pathfinding)
     if (!isPathMovement) {
+      console.log(`🔍 DEBUG handleTileClick: Tile (${x}, ${y}) - isPathMovement: ${isPathMovement}`);
+
       // Check if clicking on a static object (town or dungeon)
       if (tile.staticObject) {
+        console.log('🔍 DEBUG: Found static object:', tile.staticObject.type);
         handleObjectClick(tile.staticObject, x, y);
         return;
       }
 
       // Check if clicking on a dynamic object (wandering monster, traveling merchant)
       if (gameState.worldMap) {
-        const dynamicObject = gameState.worldMap.dynamicObjects.find(
+        // Find ALL objects at this position (there might be multiple!)
+        const objectsAtPosition = gameState.worldMap.dynamicObjects.filter(
           obj => obj.position.x === x && obj.position.y === y && obj.isActive
         );
+
+        console.log('🔍 DEBUG: Looking for dynamic objects at', x, y);
+        console.log('🔍 DEBUG: Found', objectsAtPosition.length, 'objects at this position:', objectsAtPosition.map(o => o.type));
+
+        // Prioritize wandering monsters over other objects
+        const dynamicObject = objectsAtPosition.find(obj => obj.type === 'wanderingMonster') || objectsAtPosition[0];
+
         if (dynamicObject) {
+          console.log('🔍 DEBUG: Selected dynamic object:', dynamicObject.type);
           handleDynamicObjectClick(dynamicObject, x, y);
           return;
+        } else {
+          console.log('🔍 DEBUG: No dynamic object found at this position');
         }
       }
 
@@ -475,6 +491,12 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
     } else if (object.type === 'event') {
       // TODO: Implement random events
       setShowMessageModal(t('worldmap.randomEventComingSoon', { eventType: object.eventType }));
+    } else if (object.type === 'encounter') {
+      // TODO: Implement encounters
+      setShowMessageModal('Encounter system coming soon!');
+    } else if (object.type === 'resource') {
+      // TODO: Implement resource gathering
+      setShowMessageModal('Resource gathering coming soon!');
     }
   };
 
@@ -512,12 +534,9 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
     // Add gold
     await gameActions.addGold(loot.gold);
 
-    // Add items to inventory
-    for (const item of loot.items) {
-      const result = gameState.inventory.addItem(item);
-      if (!result.success) {
-        console.warn(`⚠️ Failed to add item ${item.name}: ${result.message}`);
-      }
+    // Add items to inventory using gameActions to avoid state mutation
+    if (loot.items.length > 0) {
+      await gameActions.addItems(loot.items);
     }
 
     console.log(`💰 Collected ${loot.gold} gold and ${loot.items.length} items`);
@@ -573,12 +592,9 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
     // Add gold
     await gameActions.addGold(loot.gold);
 
-    // Add items to inventory
-    for (const item of loot.items) {
-      const result = gameState.inventory.addItem(item);
-      if (!result.success) {
-        console.warn(`⚠️ Failed to add item ${item.name}: ${result.message}`);
-      }
+    // Add items to inventory using gameActions to avoid state mutation
+    if (loot.items.length > 0) {
+      await gameActions.addItems(loot.items);
     }
 
     console.log(`💰 Collected ${loot.gold} gold and ${loot.items.length} items`);
@@ -816,11 +832,8 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
     const playerLevel = gameState.activeParty?.[0]?.level || 1;
     const generatedItem = ItemGenerator.generate(playerLevel, item.rarity);
 
-    // Add to inventory
-    const result = gameState.inventory.addItem(generatedItem);
-    if (!result.success) {
-      console.warn(`⚠️ Failed to add item ${generatedItem.name}: ${result.message}`);
-    }
+    // Add to inventory using gameActions to avoid state mutation
+    await gameActions.addItem(generatedItem);
 
     // Save changes to database
     await gameActions.saveGame();
@@ -1038,13 +1051,13 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
       heroes={isInTown ? gameState.allHeroes : gameState.activeParty}
       inventory={gameState.inventory}
       isInTown={isInTown}
-      onEquipItem={(hero, item) => {
+      onEquipItem={async (hero, item) => {
         if (!hero.equipment) return;
         const result = hero.equipment.equip(item);
         if (result.success) {
-          gameState.inventory.removeItem(item.id);
+          await gameActions.removeItem(item.id);
           if (result.unequippedItem) {
-            gameState.inventory.addItem(result.unequippedItem);
+            await gameActions.addItem(result.unequippedItem);
           }
           gameActions.forceUpdate();
           gameActions.saveGame(); // Trigger save after equipment change
@@ -1053,11 +1066,11 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
           setEquipmentMessage(result.message);
         }
       }}
-      onUnequipItem={(hero, slotName) => {
+      onUnequipItem={async (hero, slotName) => {
         if (!hero.equipment) return;
         const result = hero.equipment.unequip(slotName as any);
         if (result.success && result.item) {
-          gameState.inventory.addItem(result.item);
+          await gameActions.addItem(result.item);
           gameActions.forceUpdate();
           gameActions.saveGame(); // Trigger save after unequip
         }
@@ -1300,7 +1313,7 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
             <ModalDivider />
             <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
               {showTreasureChestModal.loot.items.map((item: any, i: number) => (
-                <ItemDisplay key={i} item={item} compact />
+                <ItemDisplay key={`worldmap-treasure-${item.id || `item-${i}`}`} item={item} compact />
               ))}
             </div>
             <ModalButton onClick={handleCollectTreasureLoot} variant="primary" fullWidth>
@@ -1533,8 +1546,8 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
                     );
 
                     if (confirmSell) {
-                      // Remove item from inventory
-                      gameState.inventory.removeItem(enchantItem.id);
+                      // Remove item from inventory using gameActions to avoid state mutation
+                      await gameActions.removeItem(enchantItem.id);
                       // Add gold
                       await gameActions.addGold(sellPrice);
                       // Save game
@@ -1759,38 +1772,31 @@ const styles: Record<string, React.CSSProperties> = {
   container: {
     height: '100%',
     width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
-    backgroundColor: '#0a0a0a',
+    ...flexColumn,
+    backgroundColor: COLORS.bgDarkSolid,
     overflow: 'hidden',
     boxSizing: 'border-box'
   },
   mapWrapper: {
     flex: 1,
     width: '100%',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
+    ...flexCenter,
     minHeight: 0,
     overflow: 'hidden',
     position: 'relative'
   },
   loading: {
     flex: 1,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '18px',
-    color: '#888'
+    ...flexCenter,
+    fontSize: FONT_SIZE.lg,
+    color: COLORS.textMuted
   },
   loadingScreen: {
     width: '100vw',
     height: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
-    color: '#f1f5f9'
+    ...flexCenter,
+    background: `linear-gradient(135deg, ${COLORS.bgDarkAlt} 0%, ${COLORS.bgSurface} 50%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight
   },
   loadingContent: {
     textAlign: 'center'
@@ -1798,77 +1804,75 @@ const styles: Record<string, React.CSSProperties> = {
   loadingLogo: {
     width: '300px',
     height: 'auto',
-    marginBottom: '30px',
+    marginBottom: SPACING[6],
     filter: 'drop-shadow(0 0 20px rgba(45, 212, 191, 0.4))',
     animation: 'pulse 2s ease-in-out infinite'
   },
   loadingText: {
-    fontSize: '20px',
-    color: '#94a3b8',
-    marginTop: '20px'
+    fontSize: FONT_SIZE.xl,
+    color: COLORS.textGray,
+    marginTop: SPACING[5]
   },
   errorScreen: {
     width: '100vw',
     height: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)',
-    color: '#f1f5f9'
+    ...flexCenter,
+    background: `linear-gradient(135deg, ${COLORS.bgDarkAlt} 0%, ${COLORS.bgSurface} 50%, ${COLORS.bgDarkAlt} 100%)`,
+    color: COLORS.textLight
   },
   errorContent: {
     textAlign: 'center',
     maxWidth: '500px',
-    padding: '40px'
+    padding: SPACING[10]
   },
   errorIcon: {
-    fontSize: '64px',
-    marginBottom: '20px'
+    fontSize: FONT_SIZE['7xl'],
+    marginBottom: SPACING[5]
   },
   errorText: {
-    fontSize: '18px',
-    color: '#ef4444',
-    marginBottom: '30px'
+    fontSize: FONT_SIZE.lg,
+    color: COLORS.danger,
+    marginBottom: SPACING[6]
   },
   retryButton: {
-    padding: '12px 32px',
-    fontSize: '16px',
-    fontWeight: '600',
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
-    color: '#0f172a',
+    padding: `${SPACING[3]} ${SPACING[8]}`,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
+    color: COLORS.bgDarkAlt,
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
-    transition: 'all 0.2s',
-    boxShadow: '0 4px 12px rgba(45, 212, 191, 0.3)'
+    transition: TRANSITIONS.allBase,
+    boxShadow: SHADOWS.glowTeal
   },
   infoPanel: {
     position: 'absolute',
-    bottom: '10px',
-    left: '10px',
-    right: '10px',
+    bottom: SPACING[2],
+    left: SPACING[2],
+    right: SPACING[2],
     display: 'flex',
-    gap: '15px',
-    padding: '10px',
+    gap: SPACING.md,
+    padding: SPACING[2],
     backgroundColor: 'rgba(26, 26, 26, 0.95)',
-    borderRadius: '8px',
-    border: '1px solid #333',
+    borderRadius: BORDER_RADIUS.md,
+    border: `1px solid ${COLORS.borderDark}`,
     flexWrap: 'wrap',
-    backdropFilter: 'blur(10px)',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.5)',
-    zIndex: 200 // Above canvas (1), other players (100+), and chat bubbles (150)
+    backdropFilter: BLUR.md,
+    boxShadow: SHADOWS.card,
+    zIndex: 200
   },
   infoItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '6px'
+    gap: SPACING[1]
   },
   infoIcon: {
-    fontSize: '16px'
+    fontSize: FONT_SIZE.base
   },
   infoText: {
-    fontSize: '13px',
-    color: '#ccc'
+    fontSize: FONT_SIZE[13],
+    color: COLORS.textSlate
   },
   // Modal styles
   modal: {
@@ -1877,52 +1881,49 @@ const styles: Record<string, React.CSSProperties> = {
     left: 0,
     right: 0,
     bottom: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.85)',
-    backdropFilter: 'blur(8px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: COLORS.bgOverlayDark,
+    backdropFilter: BLUR.md,
+    ...flexCenter,
     zIndex: 1000,
-    padding: '20px'
+    padding: SPACING[5]
   },
   modalContent: {
-    background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-    borderRadius: '12px',
-    border: '2px solid #2dd4bf',
-    boxShadow: '0 8px 32px rgba(45, 212, 191, 0.3)',
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    borderRadius: BORDER_RADIUS.lg,
+    border: `2px solid ${COLORS.primary}`,
+    boxShadow: SHADOWS.glowTeal,
     maxWidth: '500px',
     width: '100%',
     maxHeight: '80vh',
     overflow: 'hidden',
-    display: 'flex',
-    flexDirection: 'column'
+    ...flexColumn
   },
   modalHeader: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '20px',
-    borderBottom: '1px solid #334155',
+    padding: SPACING[5],
+    borderBottom: `1px solid ${COLORS.bgSurfaceLight}`,
     background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
   },
   modalTitle: {
     margin: 0,
-    fontSize: '24px',
-    color: '#f1f5f9',
-    fontWeight: '700'
+    fontSize: FONT_SIZE['2xl'],
+    color: COLORS.textLight,
+    fontWeight: FONT_WEIGHT.bold
   },
   closeButton: {
     background: 'transparent',
     border: 'none',
-    color: '#94a3b8',
-    fontSize: '24px',
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE['2xl'],
     cursor: 'pointer',
-    padding: '4px 8px',
-    transition: 'all 0.2s',
-    borderRadius: '4px'
+    padding: `${SPACING[1]} ${SPACING[2]}`,
+    transition: TRANSITIONS.allBase,
+    borderRadius: BORDER_RADIUS.sm
   },
   modalBody: {
-    padding: '20px',
+    padding: SPACING[5],
     overflow: 'auto',
     flex: 1
   },
@@ -1930,115 +1931,118 @@ const styles: Record<string, React.CSSProperties> = {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '10px 0',
-    borderBottom: '1px solid #1e293b'
+    padding: `${SPACING[2]} 0`,
+    borderBottom: `1px solid ${COLORS.bgSurface}`
   },
   label: {
-    color: '#94a3b8',
-    fontSize: '14px',
-    fontWeight: '500'
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.medium
   },
   value: {
-    color: '#f1f5f9',
-    fontSize: '14px',
-    fontWeight: '600'
+    color: COLORS.textLight,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.semibold
   },
   energyCost: {
-    color: '#fbbf24',
-    fontSize: '14px',
-    fontWeight: '700'
+    color: COLORS.goldLight,
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold
   },
   divider: {
     height: '1px',
-    background: 'linear-gradient(90deg, transparent 0%, #334155 50%, transparent 100%)',
-    margin: '15px 0'
+    background: `linear-gradient(90deg, transparent 0%, ${COLORS.bgSurfaceLight} 50%, transparent 100%)`,
+    margin: `${SPACING.md} 0`
   },
   buildingsSection: {
-    marginTop: '15px'
+    marginTop: SPACING.md
   },
   sectionTitle: {
-    color: '#f1f5f9',
-    fontSize: '16px',
-    fontWeight: '600',
-    marginBottom: '10px'
+    color: COLORS.textLight,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    marginBottom: SPACING[2]
   },
   buildingsList: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '8px'
+    ...flexColumn,
+    gap: SPACING[2]
   },
   buildingItem: {
     display: 'flex',
     alignItems: 'center',
-    gap: '8px',
-    padding: '8px 12px',
+    gap: SPACING[2],
+    padding: `${SPACING[2]} ${SPACING[3]}`,
     background: 'rgba(45, 212, 191, 0.1)',
-    borderRadius: '6px',
+    borderRadius: BORDER_RADIUS.md,
     border: '1px solid rgba(45, 212, 191, 0.2)'
   },
   buildingIcon: {
-    fontSize: '16px'
+    fontSize: FONT_SIZE.base
   },
   buildingName: {
-    color: '#f1f5f9',
-    fontSize: '14px',
+    color: COLORS.textLight,
+    fontSize: FONT_SIZE.md,
     textTransform: 'capitalize'
   },
   infoBox: {
-    marginTop: '15px',
-    padding: '12px',
+    marginTop: SPACING.md,
+    padding: SPACING[3],
     background: 'rgba(59, 130, 246, 0.1)',
-    border: '1px solid rgba(59, 130, 246, 0.3)',
-    borderRadius: '6px'
+    border: `1px solid rgba(59, 130, 246, 0.3)`,
+    borderRadius: BORDER_RADIUS.md
   },
   warningText: {
-    color: '#fbbf24',
-    fontSize: '16px',
+    color: COLORS.goldLight,
+    fontSize: FONT_SIZE.base,
     lineHeight: '1.5',
-    margin: '0 0 15px 0'
+    margin: `0 0 ${SPACING.md} 0`
   },
   buttonGroup: {
     display: 'flex',
-    gap: '10px',
-    marginTop: '20px'
+    gap: SPACING[2],
+    marginTop: SPACING[5]
   },
   cancelButton: {
     flex: 1,
-    padding: '12px 24px',
-    fontSize: '16px',
-    fontWeight: '600',
+    padding: `${SPACING[3]} ${SPACING[6]}`,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
     background: 'transparent',
-    color: '#94a3b8',
-    border: '2px solid #334155',
-    borderRadius: '8px',
+    color: COLORS.textGray,
+    border: `2px solid ${COLORS.bgSurfaceLight}`,
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
-    transition: 'all 0.2s'
+    transition: TRANSITIONS.allBase
   },
   enterButton: {
     flex: 1,
-    padding: '12px 24px',
-    fontSize: '16px',
-    fontWeight: '600',
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
-    color: '#0f172a',
+    padding: `${SPACING[3]} ${SPACING[6]}`,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
+    color: COLORS.bgDarkAlt,
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
-    transition: 'all 0.2s',
-    boxShadow: '0 4px 12px rgba(45, 212, 191, 0.3)'
+    transition: TRANSITIONS.allBase,
+    boxShadow: SHADOWS.glowTeal
   },
   okButton: {
     width: '100%',
-    padding: '12px 24px',
-    fontSize: '16px',
-    fontWeight: '600',
-    background: 'linear-gradient(135deg, #2dd4bf 0%, #14b8a6 100%)',
-    color: '#0f172a',
+    padding: `${SPACING[3]} ${SPACING[6]}`,
+    fontSize: FONT_SIZE.base,
+    fontWeight: FONT_WEIGHT.semibold,
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
+    color: COLORS.bgDarkAlt,
     border: 'none',
-    borderRadius: '8px',
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
-    transition: 'all 0.2s',
-    boxShadow: '0 4px 12px rgba(45, 212, 191, 0.3)',
-    marginTop: '15px'
+    transition: TRANSITIONS.allBase,
+    boxShadow: SHADOWS.glowTeal,
+    marginTop: SPACING.md
+  },
+  modalFooter: {
+    padding: SPACING[5],
+    borderTop: `1px solid ${COLORS.bgSurfaceLight}`
   }
 };

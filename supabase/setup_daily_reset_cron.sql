@@ -28,6 +28,9 @@ EXCEPTION
     NULL;
 END $$;
 
+-- IMPORTANT: Before running this, store your API keys in PostgreSQL settings:
+-- Run setup-vault-secrets.sql FIRST to store the keys securely
+
 -- Schedule the daily reset Edge Function to run at 00:00 UTC every day
 SELECT cron.schedule(
   'daily-reset-trigger',
@@ -35,7 +38,9 @@ SELECT cron.schedule(
   $$
   SELECT net.http_post(
     url:='https://ykkjdsciiztoeqycxmtg.supabase.co/functions/v1/daily-reset',
-    headers:='{"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlra2pkc2NpaXp0b2VxeWN4bXRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0OTE1NTcsImV4cCI6MjA3ODA2NzU1N30.mCaZBekUEO_Irpucx5tOm2Mk_FM7KbiJo-BJB5wOBy0"}'::jsonb
+    headers:=jsonb_build_object(
+      'Authorization', 'Bearer ' || get_secret('publishable_key')
+    )
   )
   $$
 );
@@ -64,7 +69,9 @@ WHERE jobname = 'daily-reset-trigger';
 /*
 SELECT net.http_post(
   url:='https://ykkjdsciiztoeqycxmtg.supabase.co/functions/v1/daily-reset',
-  headers:='{"Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlra2pkc2NpaXp0b2VxeWN4bXRnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0OTE1NTcsImV4cCI6MjA3ODA2NzU1N30.mCaZBekUEO_Irpucx5tOm2Mk_FM7KbiJo-BJB5wOBy0"}'::jsonb
+  headers:=jsonb_build_object(
+    'Authorization', 'Bearer ' || get_secret('publishable_key')
+  )
 );
 */
 

@@ -21,7 +21,11 @@ CREATE EXTENSION IF NOT EXISTS pg_cron;
 -- Step 3: Enable pg_net extension (required for HTTP calls)
 CREATE EXTENSION IF NOT EXISTS pg_net;
 
--- Step 4: Create the cron job
+-- Step 4: Store Secret Key in PostgreSQL settings
+-- IMPORTANT: Run setup-vault-secrets.sql FIRST to store the API keys
+-- This ensures secure storage of your secret key
+
+-- Step 5: Create the cron job (uses PostgreSQL settings for security)
 -- This will run every 15 minutes and call your Edge Function
 SELECT cron.schedule(
   'update-global-world-state',           -- Job name
@@ -32,14 +36,14 @@ SELECT cron.schedule(
       url := 'https://ykkjdsciiztoeqycxmtg.supabase.co/functions/v1/update-global-world-state',
       headers := jsonb_build_object(
         'Content-Type', 'application/json',
-        'Authorization', 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlra2pkc2NpaXp0b2VxeWN4bXRnIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjQ5MTU1NywiZXhwIjoyMDc4MDY3NTU3fQ.gbJnnw3oKgLRS4uthChBtK_RsTWvWG-Qlidu66nyJn0'
+        'Authorization', 'Bearer ' || get_secret('secret_key')
       ),
       body := '{}'::jsonb
     ) AS request_id;
   $$
 );
 
--- Step 5: Verify the cron job was created
+-- Step 6: Verify the cron job was created
 SELECT
   jobid,
   jobname,
@@ -54,7 +58,7 @@ WHERE jobname = 'update-global-world-state';
 -- - schedule: */15 * * * *
 -- - active: true
 
--- Step 6: Check recent runs (after waiting 15 minutes)
+-- Step 7: Check recent runs (after waiting 15 minutes)
 SELECT
   jobid,
   runid,
@@ -67,8 +71,9 @@ WHERE jobid = (SELECT jobid FROM cron.job WHERE jobname = 'update-global-world-s
 ORDER BY start_time DESC
 LIMIT 5;
 
--- Step 7: Monitor Edge Function logs in database
--- (This will only work after running the migration: 20251113_add_edge_function_logs.sql)
+-- Step 8: Monitor Edge Function logs in database (OPTIONAL)
+-- Uncomment this if you have the edge_function_logs table set up:
+/*
 SELECT
   function_name,
   success,
@@ -79,6 +84,7 @@ FROM edge_function_logs
 WHERE function_name = 'update-global-world-state'
 ORDER BY invoked_at DESC
 LIMIT 10;
+*/
 
 -- NOTES:
 -- 1. The cron job runs every 15 minutes (at :00, :15, :30, :45)

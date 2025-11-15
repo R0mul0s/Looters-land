@@ -93,8 +93,6 @@ export function useOtherPlayers(currentUserId: string | undefined): OtherPlayer[
           filter: `is_online=eq.true`
         },
         (payload) => {
-          console.log('Player update:', payload);
-
           if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
             const updated = payload.new as any;
 

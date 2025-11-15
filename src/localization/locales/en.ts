@@ -1045,6 +1045,30 @@ export const en = {
       },
     },
 
+    // Version 2.3.5
+    v2_3_5: {
+      features: {
+        item1: 'Medieval fantasy login screen - Completely redesigned with golden decorations, animated elements, and Cinzel font',
+        item2: 'Enhanced authentication flow - Improved error handling and loading states',
+      },
+      fixes: {
+        item1: 'Fixed hero XP persistence bug - Heroes XP and levels now properly persist after dungeon combat',
+        item2: 'Fixed state management race condition - Single shared useGameState instance prevents stale data',
+        item3: 'Fixed combat end callback - Using closure pattern to prevent null metadata references',
+        item4: 'Fixed hero auto-save - Heroes saved before dungeon exit to persist all progress',
+      },
+      technical: {
+        item1: 'Implemented shared state pattern - Router passes gameState to WorldMapDemo2 via props',
+        item2: 'Added closure pattern for combat callbacks - Captures metadata to avoid React state issues',
+        item3: 'Updated Router with detailed JSDoc documentation for all combat handlers',
+        item4: 'Added 3 new documentation files (STATE_MANAGEMENT_FIX, REACT_STATE_CLOSURE_FIX, COMPLIANCE_REPORT)',
+        item5: 'Created new RLS migration for game_saves table (20251114_add_game_saves_rls.sql)',
+        item6: 'Refactored GameSaveService with improved error handling and type safety',
+        item7: 'Updated @lastModified dates to 2025-11-15 across multiple files',
+        item8: 'All changes verified against coding_rules.md standards',
+      },
+    },
+
     // Version 2.3.4
     v2_3_4: {
       features: {

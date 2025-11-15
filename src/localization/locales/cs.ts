@@ -1047,6 +1047,30 @@ export const cs: LocaleKeys = {
       },
     },
 
+    // Version 2.3.5
+    v2_3_5: {
+      features: {
+        item1: 'Středověký fantasy přihlašovací ekrán - Kompletně přepracovaný se zlatými dekoracemi, animovanými prvky a fontem Cinzel',
+        item2: 'Vylepšený autentifikační systém - Zlepšené zpracování chyb a stavy načítání',
+      },
+      fixes: {
+        item1: 'Opravena perzistence XP hrdinů - XP a úrovně hrdinů nyní správně přetrvávají po boji v dungeonu',
+        item2: 'Opravena race condition ve správě stavu - Jediná sdílená instance useGameState zabraňuje zastaralým datům',
+        item3: 'Opraven callback konce boje - Použití closure vzoru zabraňuje null odkazům na metadata',
+        item4: 'Opraveno automatické ukládání hrdinů - Hrdinové uloženi před opuštěním dungeonu pro zachování veškerého pokroku',
+      },
+      technical: {
+        item1: 'Implementován vzor sdíleného stavu - Router předává gameState do WorldMapDemo2 přes props',
+        item2: 'Přidán closure vzor pro combat callbacky - Zachycuje metadata pro zamezení React state problémů',
+        item3: 'Aktualizován Router s detailní JSDoc dokumentací pro všechny combat handlery',
+        item4: 'Přidány 3 nové dokumentační soubory (STATE_MANAGEMENT_FIX, REACT_STATE_CLOSURE_FIX, COMPLIANCE_REPORT)',
+        item5: 'Vytvořena nová RLS migrace pro tabulku game_saves (20251114_add_game_saves_rls.sql)',
+        item6: 'Refaktorován GameSaveService se zlepšeným zpracováním chyb a type safety',
+        item7: 'Aktualizována @lastModified data na 2025-11-15 v několika souborech',
+        item8: 'Všechny změny ověřeny podle coding_rules.md standardů',
+      },
+    },
+
     // Version 2.3.4
     v2_3_4: {
       features: {

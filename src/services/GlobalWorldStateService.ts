@@ -74,21 +74,6 @@ export class GlobalWorldStateService {
     // Calculate when weather changes (transition_start + duration)
     const transitionStart = new Date(state.weather_transition_start);
     const changesAt = new Date(transitionStart.getTime() + state.weather_duration * 60 * 1000);
-    const now = new Date();
-    const isExpired = changesAt.getTime() <= now.getTime();
-
-    console.log('🔍 Converting weather state:', {
-      current: state.weather_current,
-      next: state.weather_next,
-      transition_start: state.weather_transition_start,
-      duration: state.weather_duration,
-      transitionStart: transitionStart.toISOString(),
-      changesAt: changesAt.toISOString(),
-      now: now.toISOString(),
-      isExpired,
-      diffMs: changesAt.getTime() - now.getTime(),
-      diffMinutes: Math.floor((changesAt.getTime() - now.getTime()) / (1000 * 60))
-    });
 
     return {
       current: state.weather_current as WeatherState['current'],
@@ -105,21 +90,6 @@ export class GlobalWorldStateService {
     // Calculate when time changes (transition_start + duration)
     const transitionStart = new Date(state.time_transition_start);
     const changesAt = new Date(transitionStart.getTime() + state.time_duration * 60 * 1000);
-    const now = new Date();
-    const isExpired = changesAt.getTime() <= now.getTime();
-
-    console.log('🔍 Converting time state:', {
-      current: state.time_current,
-      next: state.time_next,
-      transition_start: state.time_transition_start,
-      duration: state.time_duration,
-      transitionStart: transitionStart.toISOString(),
-      changesAt: changesAt.toISOString(),
-      now: now.toISOString(),
-      isExpired,
-      diffMs: changesAt.getTime() - now.getTime(),
-      diffMinutes: Math.floor((changesAt.getTime() - now.getTime()) / (1000 * 60))
-    });
 
     return {
       current: state.time_current as TimeState['current'],

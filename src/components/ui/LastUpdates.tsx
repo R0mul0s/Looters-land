@@ -25,6 +25,20 @@ interface ChangelogEntry {
 
 const getChangelog = (): ChangelogEntry[] => [
   {
+    version: 'v2.3.6',
+    date: '2025-11-15',
+    technical: [
+      t('updates.v2_3_6.technical.item1'),
+      t('updates.v2_3_6.technical.item2'),
+      t('updates.v2_3_6.technical.item3'),
+      t('updates.v2_3_6.technical.item4'),
+      t('updates.v2_3_6.technical.item5'),
+      t('updates.v2_3_6.technical.item6'),
+      t('updates.v2_3_6.technical.item7'),
+      t('updates.v2_3_6.technical.item8')
+    ]
+  },
+  {
     version: 'v2.3.4',
     date: '2025-11-15',
     fixes: [

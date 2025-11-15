@@ -1071,6 +1071,20 @@ export const cs: LocaleKeys = {
       },
     },
 
+    // Version 2.3.6
+    v2_3_6: {
+      technical: {
+        item1: '🎨 Kompletní CSS refactoring - Všech 37 komponent refaktorováno s design tokeny (100% hotovo)',
+        item2: '📋 Design token systém - Vytvořeno 100+ tokenů (COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, atd.)',
+        item3: '🔧 Reusable style utilities - 50+ společných stylových objektů v common.ts',
+        item4: '🎯 695+ hardcoded barev nahrazeno COLORS tokeny',
+        item5: '📏 1,232+ hardcoded spacing hodnot nahrazeno SPACING tokeny',
+        item6: '✨ Vylepšená konzistence - Všechny design hodnoty z centralizovaného systému',
+        item7: '🔄 Theme-ready - Základ pro budoucí dark/light theme switching',
+        item8: '📚 Dokumentace - CSS_REFACTORING_PLAN.md s kompletním plánem a statistikami',
+      },
+    },
+
     // Version 2.3.4
     v2_3_4: {
       features: {
@@ -1090,22 +1104,6 @@ export const cs: LocaleKeys = {
     },
 
     // Version 2.3.3
-    v2_3_4: {
-      fixes: {
-        item1: 'Opravena synchronizace goldů - gameState.gold a inventory.gold se nyní vždy shodují',
-        item2: 'Vyřešena state mutace v inventory operacích - předchází desynchronizaci mezi UI a databází',
-      },
-      features: {
-        item1: 'Chat bubliny nyní kolapsují dlouhé zprávy (limit 50 znaků) s možností rozbalení kliknutím',
-        item2: 'Dynamické pozicování chat bublin - automaticky se přizpůsobují výšce textu a nikdy nepřekrývají avatara',
-        item3: 'Chat bubliny mají správný z-index a zobrazují se vždy nad tooltipem s jménem hráče',
-      },
-      technical: {
-        item1: 'useGameState.ts - Opraveny addGold/removeGold/removeItem pro vytváření nových Inventory instancí místo mutace',
-        item2: 'ChatBubble - Implementováno měření výšky pomocí useRef a dynamický výpočet offsetY',
-      },
-    },
-
     v2_3_3: {
       features: {
         item1: 'Globální systém počasí a času - Synchronizované počasí a denní doba napříč všemi hráči v reálném čase',

@@ -1069,6 +1069,20 @@ export const en = {
       },
     },
 
+    // Version 2.3.6
+    v2_3_6: {
+      technical: {
+        item1: '🎨 Complete CSS refactoring - All 37 components refactored with design tokens (100% complete)',
+        item2: '📋 Design token system - Created 100+ tokens (COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, etc.)',
+        item3: '🔧 Reusable style utilities - 50+ common style objects in common.ts',
+        item4: '🎯 695+ hardcoded colors replaced with COLORS tokens',
+        item5: '📏 1,232+ hardcoded spacing values replaced with SPACING tokens',
+        item6: '✨ Improved consistency - All design values from centralized system',
+        item7: '🔄 Theme-ready - Foundation for future dark/light theme switching',
+        item8: '📚 Documentation - CSS_REFACTORING_PLAN.md with complete plan and statistics',
+      },
+    },
+
     // Version 2.3.4
     v2_3_4: {
       features: {
@@ -1088,22 +1102,6 @@ export const en = {
     },
 
     // Version 2.3.3
-    v2_3_4: {
-      fixes: {
-        item1: 'Fixed gold synchronization - gameState.gold and inventory.gold now always match',
-        item2: 'Resolved state mutation in inventory operations - prevents desync between UI and database',
-      },
-      features: {
-        item1: 'Chat bubbles now collapse long messages (50 char limit) with click-to-expand functionality',
-        item2: 'Dynamic chat bubble positioning - automatically adjusts to text height and never overlaps avatar',
-        item3: 'Chat bubbles have correct z-index and always display above player name tooltip',
-      },
-      technical: {
-        item1: 'useGameState.ts - Fixed addGold/removeGold/removeItem to create new Inventory instances instead of mutation',
-        item2: 'ChatBubble - Implemented height measurement with useRef and dynamic offsetY calculation',
-      },
-    },
-
     v2_3_3: {
       features: {
         item1: 'Global Weather & Time System - Real-time synchronized weather and time across all players',

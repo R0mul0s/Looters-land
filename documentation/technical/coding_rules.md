@@ -1869,6 +1869,122 @@ const menuItems = [
 
 ---
 
+### 15.17 React State Closure Pattern for Async Callbacks
+
+**Rule:** When setting callbacks inside async operations that need current data, capture the data in a closure variable and pass it as a parameter instead of relying on React state.
+
+**Problem:** React state updates are asynchronous. When you set a callback inside an async operation (like `setTimeout`), the callback might capture stale or null state values.
+
+**Pattern:**
+
+```typescript
+// ✅ GOOD: Closure variable + parameter passing
+const handleAsyncAction = (data: any) => {
+  setState(data);  // Update state for UI
+
+  // IMPORTANT: Capture in closure to avoid null reference
+  const capturedData = data;  // Capture in closure variable
+
+  setTimeout(() => {
+    // Pass captured data directly to callback
+    asyncOperation.onComplete = () => handleCallback(capturedData);
+  }, 0);
+};
+
+const handleCallback = (data?: any) => {
+  // Use parameter if provided, fallback to state
+  const actualData = data || stateData;
+  // Use actualData...
+};
+
+// ❌ BAD: Relying on state in closure
+const handleAsyncAction = (data: any) => {
+  setState(data);
+
+  setTimeout(() => {
+    // State might be null or stale when callback executes!
+    asyncOperation.onComplete = () => handleCallback();
+  }, 0);
+};
+
+const handleCallback = () => {
+  const actualData = stateData;  // Might be null or stale!
+  // Use actualData...
+};
+```
+
+**When to use:**
+- ✅ Combat callbacks with rewards/metadata
+- ✅ Animation end callbacks
+- ✅ Timer/interval callbacks
+- ✅ Event handlers with async operations
+- ✅ Any callback set inside `setTimeout`, `setInterval`, promises
+
+**Real Example - Combat System:**
+
+```typescript
+// Router.tsx - Quick combat handler
+const handleQuickCombat = (enemies: Enemy[], combatType: string, metadata?: any) => {
+  setQuickCombatMetadata(metadata);  // Update state for UI
+
+  // IMPORTANT: Capture metadata in closure to avoid null reference later
+  const capturedMetadata = metadata;
+
+  setTimeout(() => {
+    combatEngine.initialize(activeHeroes, enemies);
+
+    // Pass captured metadata directly to callback
+    combatEngine.onCombatEnd = () => handleQuickCombatEnd(capturedMetadata);
+
+    combatEngine.runAutoCombat();
+  }, 0);
+};
+
+const handleQuickCombatEnd = async (metadata?: any) => {
+  // Use parameter if provided, otherwise fall back to state
+  const combatMetadata = metadata || quickCombatMetadata;
+
+  if (combatMetadata && gameState.worldMap) {
+    // Mark monster as defeated using reliable metadata
+    const updatedWorldMap = { ...gameState.worldMap };
+    const objectIndex = updatedWorldMap.dynamicObjects.findIndex(
+      obj => obj.position.x === combatMetadata.position.x &&
+             obj.position.y === combatMetadata.position.y
+    );
+
+    if (objectIndex !== -1) {
+      updatedWorldMap.dynamicObjects[objectIndex] = {
+        ...updatedWorldMap.dynamicObjects[objectIndex],
+        defeated: true
+      };
+    }
+
+    await gameActions.updateWorldMap(updatedWorldMap);
+  }
+};
+```
+
+**Key Points:**
+- ✅ Capture data in `const capturedData = data` before async operation
+- ✅ Pass captured data to callback as parameter
+- ✅ Accept parameter in callback with fallback: `data || stateData`
+- ✅ Document with comment: `// IMPORTANT: Capture in closure to avoid null reference`
+- ✅ Use this pattern for combat rewards, metadata, or any critical data
+- ❌ Never rely solely on React state in async callbacks
+- ❌ Never assume state updates complete before callback executes
+
+**Why this works:**
+1. Closure variables are **synchronous** - no async delay
+2. Function parameters are **reliable** - passed directly, not through state
+3. **Backward compatible** - fallback to state if parameter not provided
+4. **Testable** - easy to verify by checking parameter values
+
+**Related Documentation:**
+- See [REACT_STATE_CLOSURE_FIX.md](REACT_STATE_CLOSURE_FIX.md) for detailed fix explanation
+- See [STATE_MANAGEMENT_FIX.md](STATE_MANAGEMENT_FIX.md) for shared state pattern
+
+---
+
 ## Resources
 
 - [TypeScript Handbook](https://www.typescriptlang.org/docs/)
@@ -1880,4 +1996,4 @@ const menuItems = [
 
 **Remember**: These rules exist to maintain code quality and consistency. If you find a rule that doesn't work, propose a change to this document rather than ignoring the rule.
 
-**Last Updated:** 2025-11-09 (UI Interaction Patterns Added)
+**Last Updated:** 2025-11-15 (React State Closure Pattern Added)

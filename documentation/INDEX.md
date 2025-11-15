@@ -1,6 +1,6 @@
 # Looters Land - Documentation Index
 
-**Last Updated:** 2025-11-13
+**Last Updated:** 2025-11-15
 
 ---
 
@@ -34,6 +34,8 @@ Located in `technical/`:
 - **[LOCALIZATION.md](technical/LOCALIZATION.md)** - Internationalization (i18n) guide
 - **[SUPABASE_SETUP.md](technical/SUPABASE_SETUP.md)** - Database setup and configuration
 - **[DEPLOY_INSTRUCTIONS.md](technical/DEPLOY_INSTRUCTIONS.md)** - Deployment guide for production
+- **[STATE_MANAGEMENT_FIX.md](technical/STATE_MANAGEMENT_FIX.md)** - Hero XP persistence fix (shared state pattern)
+- **[REACT_STATE_CLOSURE_FIX.md](technical/REACT_STATE_CLOSURE_FIX.md)** - Combat metadata closure pattern fix
 
 ### Implementation Guides
 
@@ -70,6 +72,8 @@ Historical documentation kept for reference:
 2. **Adding features?** → Check [roadmap.md](roadmap.md)
 3. **Database changes?** → See [SUPABASE_SETUP.md](technical/SUPABASE_SETUP.md)
 4. **Deploying?** → Follow [DEPLOY_INSTRUCTIONS.md](technical/DEPLOY_INSTRUCTIONS.md)
+5. **React state issues?** → See [REACT_STATE_CLOSURE_FIX.md](technical/REACT_STATE_CLOSURE_FIX.md)
+6. **State management bugs?** → See [STATE_MANAGEMENT_FIX.md](technical/STATE_MANAGEMENT_FIX.md)
 
 ### For Project Management
 

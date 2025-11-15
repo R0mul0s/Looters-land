@@ -1,3 +1,20 @@
+/**
+ * Weather System - Dynamic weather state management
+ *
+ * Manages the global weather system including weather changes,
+ * spawn rate modifiers, and display information.
+ *
+ * Contains:
+ * - Weather state initialization and updates
+ * - Spawn rate modifiers for different weather types
+ * - Weighted random weather selection
+ * - Display information for UI with localization support
+ *
+ * @author Roman Hlaváček - rhsoft.cz
+ * @copyright 2025
+ * @lastModified 2025-11-15
+ */
+
 import type { WeatherState, WeatherType } from '../../types/worldmap.types';
 import { WORLDMAP_CONFIG } from '../../config/BALANCE_CONFIG';
 
@@ -104,14 +121,19 @@ export class WeatherSystem {
 
   /**
    * Get weather display info for UI
+   * @param weather - The weather type
+   * @param t - Translation function from useTranslation hook
    */
-  static getWeatherDisplay(weather: WeatherType): { icon: string; label: string; color: string } {
+  static getWeatherDisplay(
+    weather: WeatherType,
+    t?: (key: string) => string
+  ): { icon: string; label: string; color: string } {
     const displays: Record<WeatherType, { icon: string; label: string; color: string }> = {
-      clear: { icon: '☀️', label: 'Clear', color: '#FFD700' },
-      rain: { icon: '🌧️', label: 'Rain', color: '#4A90E2' },
-      storm: { icon: '⛈️', label: 'Storm', color: '#5C5C8A' },
-      fog: { icon: '🌫️', label: 'Fog', color: '#9E9E9E' },
-      snow: { icon: '❄️', label: 'Snow', color: '#E0F7FA' },
+      clear: { icon: '☀️', label: t ? t('weather.clear') : 'Clear', color: '#FFD700' },
+      rain: { icon: '🌧️', label: t ? t('weather.rain') : 'Rain', color: '#4A90E2' },
+      storm: { icon: '⛈️', label: t ? t('weather.storm') : 'Storm', color: '#5C5C8A' },
+      fog: { icon: '🌫️', label: t ? t('weather.fog') : 'Fog', color: '#9E9E9E' },
+      snow: { icon: '❄️', label: t ? t('weather.snow') : 'Snow', color: '#E0F7FA' },
     };
 
     return displays[weather];
@@ -119,14 +141,16 @@ export class WeatherSystem {
 
   /**
    * Get time remaining until next weather change
+   * @param state - The weather state
+   * @param t - Translation function from useTranslation hook
    */
-  static getTimeUntilChange(state: WeatherState): string {
+  static getTimeUntilChange(state: WeatherState, t?: (key: string) => string): string {
     const now = new Date();
     // Handle both Date objects and date strings (from database)
     const changesAt = typeof state.changesAt === 'string' ? new Date(state.changesAt) : state.changesAt;
     const diff = changesAt.getTime() - now.getTime();
 
-    if (diff <= 0) return 'Soon';
+    if (diff <= 0) return t ? t('weather.soon') : 'Soon';
 
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));

@@ -1,3 +1,21 @@
+/**
+ * Time of Day System - Dynamic day/night cycle management
+ *
+ * Manages the global time of day system including time changes,
+ * enemy spawn modifiers, lighting effects, and display information.
+ *
+ * Contains:
+ * - Time state initialization and updates
+ * - Day/night cycle progression (dawn → day → dusk → night)
+ * - Enemy spawn modifiers for different times
+ * - Lighting overlay colors for visual effects
+ * - Display information for UI with localization support
+ *
+ * @author Roman Hlaváček - rhsoft.cz
+ * @copyright 2025
+ * @lastModified 2025-11-15
+ */
+
 import type { TimeState, TimeOfDay } from '../../types/worldmap.types';
 import { WORLDMAP_CONFIG } from '../../config/BALANCE_CONFIG';
 
@@ -78,13 +96,18 @@ export class TimeOfDaySystem {
 
   /**
    * Get time of day display info for UI
+   * @param time - The time of day
+   * @param t - Translation function from useTranslation hook
    */
-  static getTimeDisplay(time: TimeOfDay): { icon: string; label: string; color: string } {
+  static getTimeDisplay(
+    time: TimeOfDay,
+    t?: (key: string) => string
+  ): { icon: string; label: string; color: string } {
     const displays: Record<TimeOfDay, { icon: string; label: string; color: string }> = {
-      dawn: { icon: '🌅', label: 'Dawn', color: '#FF9A56' },
-      day: { icon: '☀️', label: 'Day', color: '#FFE066' },
-      dusk: { icon: '🌇', label: 'Dusk', color: '#FF6B9D' },
-      night: { icon: '🌙', label: 'Night', color: '#4A5A8C' },
+      dawn: { icon: '🌅', label: t ? t('timeOfDay.dawn') : 'Dawn', color: '#FF9A56' },
+      day: { icon: '☀️', label: t ? t('timeOfDay.day') : 'Day', color: '#FFE066' },
+      dusk: { icon: '🌇', label: t ? t('timeOfDay.dusk') : 'Dusk', color: '#FF6B9D' },
+      night: { icon: '🌙', label: t ? t('timeOfDay.night') : 'Night', color: '#4A5A8C' },
     };
 
     return displays[time];
@@ -106,14 +129,16 @@ export class TimeOfDaySystem {
 
   /**
    * Get time remaining until next time change
+   * @param state - The time state
+   * @param t - Translation function from useTranslation hook
    */
-  static getTimeUntilChange(state: TimeState): string {
+  static getTimeUntilChange(state: TimeState, t?: (key: string) => string): string {
     const now = new Date();
     // Handle both Date objects and date strings (from database)
     const changesAt = typeof state.changesAt === 'string' ? new Date(state.changesAt) : state.changesAt;
     const diff = changesAt.getTime() - now.getTime();
 
-    if (diff <= 0) return 'Soon';
+    if (diff <= 0) return t ? t('weather.soon') : 'Soon';
 
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));

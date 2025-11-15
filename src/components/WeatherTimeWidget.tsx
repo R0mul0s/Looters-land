@@ -1,17 +1,20 @@
 /**
  * Weather & Time of Day Widget Component
  *
- * Displays current weather and time of day with icons and countdown timers
+ * Displays current weather and time of day with icons and countdown timers.
+ * Updates every second to show live countdown to next weather/time change.
+ * Supports localization for all text labels.
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-12
+ * @lastModified 2025-11-15
  */
 
 import React from 'react';
 import type { WeatherState, TimeState } from '../types/worldmap.types';
 import { WeatherSystem } from '../engine/worldmap/WeatherSystem';
 import { TimeOfDaySystem } from '../engine/worldmap/TimeOfDaySystem';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface WeatherTimeWidgetProps {
   weather: WeatherState;
@@ -26,6 +29,8 @@ interface WeatherTimeWidgetProps {
  * @returns React component
  */
 export function WeatherTimeWidget({ weather, timeOfDay }: WeatherTimeWidgetProps) {
+  const { t } = useTranslation();
+
   // Force re-render every second to update countdown
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
 
@@ -37,25 +42,10 @@ export function WeatherTimeWidget({ weather, timeOfDay }: WeatherTimeWidgetProps
     return () => clearInterval(interval);
   }, []);
 
-  const weatherDisplay = WeatherSystem.getWeatherDisplay(weather.current);
-  const timeDisplay = TimeOfDaySystem.getTimeDisplay(timeOfDay.current);
-  const weatherTimeRemaining = WeatherSystem.getTimeUntilChange(weather);
-  const timeTimeRemaining = TimeOfDaySystem.getTimeUntilChange(timeOfDay);
-
-  // Debug logging
-  if (weatherTimeRemaining === 'Soon' || timeTimeRemaining === 'Soon') {
-    console.log('⏰ Weather/Time Debug:', {
-      now: new Date().toISOString(),
-      weather: {
-        changesAt: weather.changesAt,
-        timeRemaining: weatherTimeRemaining
-      },
-      time: {
-        changesAt: timeOfDay.changesAt,
-        timeRemaining: timeTimeRemaining
-      }
-    });
-  }
+  const weatherDisplay = WeatherSystem.getWeatherDisplay(weather.current, t);
+  const timeDisplay = TimeOfDaySystem.getTimeDisplay(timeOfDay.current, t);
+  const weatherTimeRemaining = WeatherSystem.getTimeUntilChange(weather, t);
+  const timeTimeRemaining = TimeOfDaySystem.getTimeUntilChange(timeOfDay, t);
 
   return (
     <div style={styles.container}>
@@ -70,7 +60,7 @@ export function WeatherTimeWidget({ weather, timeOfDay }: WeatherTimeWidgetProps
         </div>
         {/* Next Weather Preview */}
         <div style={styles.nextPreview}>
-          <span style={styles.nextLabel}>Next: {WeatherSystem.getWeatherDisplay(weather.next).icon}</span>
+          <span style={styles.nextLabel}>{t('weather.next')} {WeatherSystem.getWeatherDisplay(weather.next, t).icon}</span>
         </div>
       </div>
 
@@ -88,7 +78,7 @@ export function WeatherTimeWidget({ weather, timeOfDay }: WeatherTimeWidgetProps
         </div>
         {/* Next Time Preview */}
         <div style={styles.nextPreview}>
-          <span style={styles.nextLabel}>Next: {TimeOfDaySystem.getTimeDisplay(timeOfDay.next).icon}</span>
+          <span style={styles.nextLabel}>{t('weather.next')} {TimeOfDaySystem.getTimeDisplay(timeOfDay.next, t).icon}</span>
         </div>
       </div>
     </div>

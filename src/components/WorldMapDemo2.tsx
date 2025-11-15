@@ -5,9 +5,19 @@
  * Shows header with resources, worldmap, and bottom navigation.
  * Now integrated with database via useGameState hook.
  *
+ * IMPORTANT: Uses shared gameState from Router when provided as props
+ * to ensure single source of truth for game state management.
+ *
+ * Contains:
+ * - World map rendering with player and other players
+ * - Weather and time of day system integration with localization
+ * - Interactive map objects (towns, dungeons, treasures, etc.)
+ * - Modal dialogs for confirmations and information
+ * - Real-time multiplayer with chat system
+ *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-13
+ * @lastModified 2025-11-15
  */
 
 import React, { useEffect, useState } from 'react';
@@ -26,10 +36,13 @@ import { ModalText, ModalDivider, ModalInfoBox, ModalInfoRow, ModalButton, Modal
 import { ItemDisplay } from './ui/ItemDisplay';
 import { InventoryHelper } from '../engine/item/InventoryHelper';
 import { LootGenerator } from '../engine/loot/LootGenerator';
-import { useGameState } from '../hooks/useGameState';
+import { useGameState, type GameState, type GameStateActions } from '../hooks/useGameState';
 import { useEnergyRegeneration } from '../hooks/useEnergyRegeneration';
 import { useOtherPlayers } from '../hooks/useOtherPlayers';
 import { useGlobalWorldState } from '../hooks/useGlobalWorldState';
+import { useTranslation } from '../hooks/useTranslation';
+import { WeatherSystem } from '../engine/worldmap/WeatherSystem';
+import { TimeOfDaySystem } from '../engine/worldmap/TimeOfDaySystem';
 import { supabase } from '../lib/supabase';
 import { t } from '../localization/i18n';
 import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, DynamicObject, WanderingMonster, TravelingMerchant } from '../types/worldmap.types';
@@ -40,6 +53,8 @@ interface WorldMapDemo2Props {
   onEnterDungeon?: (dungeon: DungeonEntrance) => void;
   onQuickCombat?: (enemies: any[], combatType: 'rare_spawn' | 'wandering_monster', metadata?: any) => void;
   userEmail?: string;
+  gameState?: GameState;
+  gameActions?: GameStateActions;
 }
 
 /**
@@ -62,19 +77,15 @@ interface WorldMapDemo2Props {
  * />
  * ```
  */
-export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEmailProp }: WorldMapDemo2Props) {
-  // Use centralized game state with database sync
-  const [gameState, gameActions] = useGameState(userEmailProp);
+export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEmailProp, gameState: gameStateProp, gameActions: gameActionsProp }: WorldMapDemo2Props) {
+  const { t: tLocal } = useTranslation();
 
-  // Debug: Log gameState when it changes
-  useEffect(() => {
-    console.log('🎮 WorldMapDemo2: gameState updated', {
-      loading: gameState.loading,
-      allHeroesCount: gameState.allHeroes.length,
-      activePartyCount: gameState.activeParty.length,
-      heroNames: gameState.allHeroes.map(h => h.name).join(', ')
-    });
-  }, [gameState.loading, gameState.allHeroes.length, gameState.activeParty.length, gameState.allHeroes, gameState.activeParty]);
+  // Use centralized game state with database sync
+  // If gameState/gameActions are provided as props, use them (single instance from Router)
+  // Otherwise, create a new instance (fallback for standalone usage)
+  const [localGameState, localGameActions] = useGameState(userEmailProp);
+  const gameState = gameStateProp || localGameState;
+  const gameActions = gameActionsProp || localGameActions;
 
   // Expose gameActions and gameState to window for debug commands
   useEffect(() => {
@@ -647,8 +658,16 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
    * Marks the rare spawn as defeated after combat completes.
    */
   const handleRareSpawnCombat = async (rareSpawn: RareSpawn) => {
+    // IMPORTANT: Always check defeated status from current worldMap state, not from the passed object
+    // The passed object might be stale if worldMap was updated after combat
+    const currentRareSpawn = gameState.worldMap?.staticObjects.find(
+      obj => obj.type === 'rareSpawn' &&
+             obj.position.x === rareSpawn.position.x &&
+             obj.position.y === rareSpawn.position.y
+    ) as RareSpawn | undefined;
+
     // Check if already defeated
-    if (rareSpawn.defeated) {
+    if (currentRareSpawn?.defeated) {
       setShowMessageModal(t('worldmap.rareSpawnDefeated'));
       return;
     }
@@ -701,12 +720,27 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
    * Monster respawns after a certain time period.
    */
   const handleWanderingMonsterCombat = async (monster: WanderingMonster) => {
+    console.log('🔍 DEBUG: handleWanderingMonsterCombat called for monster at:', monster.position);
+
+    // IMPORTANT: Always check defeated status from current worldMap state, not from the passed object
+    // The passed object might be stale if worldMap was updated after combat
+    const currentMonster = gameState.worldMap?.dynamicObjects.find(
+      obj => obj.type === 'wanderingMonster' &&
+             obj.position.x === monster.position.x &&
+             obj.position.y === monster.position.y
+    ) as WanderingMonster | undefined;
+
+    console.log('🔍 DEBUG: Found current monster in worldMap:', currentMonster);
+    console.log('🔍 DEBUG: Current monster defeated status:', currentMonster?.defeated);
+
     // Check if already defeated (and waiting to respawn)
-    if (monster.defeated) {
+    if (currentMonster?.defeated) {
+      console.log('❌ DEBUG: Monster is defeated, blocking combat');
       setShowMessageModal(t('worldmap.monsterDefeated'));
       return;
     }
 
+    console.log('✅ DEBUG: Monster is NOT defeated, starting combat');
     console.log('⚔️ Preparing wandering monster combat:', monster);
 
     // Check party health before combat
@@ -867,7 +901,6 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
 
   // Show loading screen while loading
   if (gameState.loading) {
-    console.log('🖼️ WorldMapDemo2: Showing loading screen because gameState.loading =', gameState.loading);
     return (
       <div style={styles.loadingScreen}>
         <div style={styles.loadingContent}>
@@ -877,8 +910,6 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
       </div>
     );
   }
-
-  console.log('✅ WorldMapDemo2: gameState.loading is false, rendering game');
 
   // Show error if any
   if (gameState.error) {
@@ -898,47 +929,21 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
     );
   }
 
-  // Helper functions for weather and time display
+  // Helper functions for weather and time display using systems
   const getWeatherIcon = (weather: string): string => {
-    const icons: Record<string, string> = {
-      'clear': '☀️',
-      'rain': '🌧️',
-      'storm': '⛈️',
-      'fog': '🌫️',
-      'snow': '❄️'
-    };
-    return icons[weather] || '🌤️';
+    return WeatherSystem.getWeatherDisplay(weather as any, tLocal).icon;
   };
 
   const getWeatherLabel = (weather: string): string => {
-    const labels: Record<string, string> = {
-      'clear': 'Clear',
-      'rain': 'Rainy',
-      'storm': 'Storm',
-      'fog': 'Foggy',
-      'snow': 'Snowy'
-    };
-    return labels[weather] || weather;
+    return WeatherSystem.getWeatherDisplay(weather as any, tLocal).label;
   };
 
   const getTimeIcon = (time: string): string => {
-    const icons: Record<string, string> = {
-      'day': '☀️',
-      'night': '🌙',
-      'dawn': '🌅',
-      'dusk': '🌆'
-    };
-    return icons[time] || '🌤️';
+    return TimeOfDaySystem.getTimeDisplay(time as any, tLocal).icon;
   };
 
   const getTimeLabel = (time: string): string => {
-    const labels: Record<string, string> = {
-      'day': 'Day',
-      'night': 'Night',
-      'dawn': 'Dawn',
-      'dusk': 'Dusk'
-    };
-    return labels[time] || time;
+    return TimeOfDaySystem.getTimeDisplay(time as any, tLocal).label;
   };
 
   const worldmapContent = (
@@ -1019,21 +1024,14 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
     </div>
   );
 
-  const heroesContent = (() => {
-    console.log('🎭 Rendering HeroesScreen with:', {
-      allHeroesCount: gameState.allHeroes.length,
-      activePartyCount: gameState.activeParty.length,
-      heroNames: gameState.allHeroes.map(h => h.name).join(', ')
-    });
-    return (
-      <HeroesScreen
-        heroes={gameState.allHeroes}
-        activeParty={gameState.activeParty}
-        onPartyChange={(heroes) => gameActions.updateActiveParty(heroes)}
-        isInTown={isInTown}
-      />
-    );
-  })();
+  const heroesContent = (
+    <HeroesScreen
+      heroes={gameState.allHeroes}
+      activeParty={gameState.activeParty}
+      onPartyChange={(heroes) => gameActions.updateActiveParty(heroes)}
+      isInTown={isInTown}
+    />
+  );
 
   const inventoryContent = (
     <InventoryScreen

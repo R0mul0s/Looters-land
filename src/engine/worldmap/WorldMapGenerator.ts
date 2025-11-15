@@ -404,6 +404,7 @@ export class WorldMapGenerator {
           enemyLevel: Math.floor(Math.random() * 10) + 1,
           enemyCount: Math.floor(Math.random() * 3) + 1,
           difficulty: Math.random() > 0.8 ? 'Elite' : 'Normal',
+          defeated: false,
           spawnTime: new Date(),
           despawnTime: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
           isActive: true

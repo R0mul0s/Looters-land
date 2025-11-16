@@ -632,7 +632,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
   };
 
   /**
-   * Initialize game state on mount - only load once per session
+   * Initialize game state on mount and when user changes
    */
   useEffect(() => {
     const initializeGameState = async () => {
@@ -641,9 +641,10 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       if (session?.user?.id) {
         const loadingFlagKey = `loading-${session.user.id}`;
 
-        // CRITICAL FIX: On component mount, clear any stale sessionStorage loading flags
+        // CRITICAL FIX: On component mount OR user change, clear any stale sessionStorage loading flags
         // This ensures fresh start on each page load/refresh
-        if (!hasLoadedRef.current) {
+        const isUserChange = userIdRef.current !== null && userIdRef.current !== session.user.id;
+        if (!hasLoadedRef.current || isUserChange) {
           const existingFlag = sessionStorage.getItem(loadingFlagKey);
           if (existingFlag) {
             sessionStorage.removeItem(loadingFlagKey);
@@ -686,6 +687,12 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
 
         if (!alreadyLoaded) {
           // Set the flag IMMEDIATELY to prevent race conditions
+          // IMPORTANT: If user changed, reset hasLoadedRef to allow fresh load
+          if (isUserChange) {
+            console.log('👤 User changed, resetting load state');
+            hasLoadedRef.current = false;
+          }
+
           hasLoadedRef.current = true;
           userIdRef.current = session.user.id;
           const loadingFlagKey = `loading-${session.user.id}`;
@@ -727,6 +734,47 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       }
     };
   }, []); // Empty deps - only run once on mount
+
+  /**
+   * Watch for authentication changes and reload game data when user logs in
+   */
+  useEffect(() => {
+    // Skip if no userEmail provided or if it's the same user
+    if (!userEmail) return;
+
+    const checkAndReload = async () => {
+      const session = await AuthService.getCurrentSession();
+
+      // If we have a session and the user ID changed, reload
+      if (session?.user?.id && userIdRef.current !== session.user.id) {
+        console.log('🔄 User logged in, loading game data...');
+        // Reset the loaded flag to allow fresh load
+        hasLoadedRef.current = false;
+
+        // Load data for new user
+        const loadingFlagKey = `loading-${session.user.id}`;
+
+        // Clear any stale flags
+        sessionStorage.removeItem(loadingFlagKey);
+        sessionStorage.removeItem(`${loadingFlagKey}-timestamp`);
+
+        // Set new loading flags
+        hasLoadedRef.current = true;
+        userIdRef.current = session.user.id;
+        sessionStorage.setItem(loadingFlagKey, 'true');
+        sessionStorage.setItem(`${loadingFlagKey}-timestamp`, Date.now().toString());
+
+        try {
+          await loadGameData(session.user.id);
+        } finally {
+          sessionStorage.removeItem(loadingFlagKey);
+          sessionStorage.removeItem(`${loadingFlagKey}-timestamp`);
+        }
+      }
+    };
+
+    checkAndReload();
+  }, [userEmail]); // Re-run when userEmail changes
 
   /**
    * Subscribe to real-time profile changes after userId is loaded

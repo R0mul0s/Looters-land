@@ -14,7 +14,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, Z_INDEX, TRANSITIONS } from '../styles/tokens';
 import { flexBetween, flexCenter } from '../styles/common';
-import type { WorldMap, Tile, DynamicObject, WeatherState, TimeState, Town, StaticObject } from '../types/worldmap.types';
+import type { WorldMap, Tile, DynamicObject, WeatherState, TimeState, Town, StaticObject, ObservationTower } from '../types/worldmap.types';
 import { TERRAIN_ICONS } from '../types/worldmap.types';
 import { OtherPlayerMarker } from './OtherPlayerMarker';
 import { ChatBubble } from './ChatBubble';
@@ -68,6 +68,9 @@ import travelingMerchant2Img from '../assets/images/object/traveling-merchant2.p
 import travelingMerchant3Img from '../assets/images/object/traveling-merchant3.png';
 import hiddenPath1Img from '../assets/images/object/hidden-path1.png';
 import hiddenPath2Img from '../assets/images/object/hidden-path2.png';
+import observationTower1Img from '../assets/images/building/observation-tower1.png';
+import observationTower2Img from '../assets/images/building/observation-tower2.png';
+import observationTower3Img from '../assets/images/building/observation-tower3.png';
 
 // Import monster images
 import ancientGolemImg from '../assets/images/monster/ancient-golem.png';
@@ -213,6 +216,17 @@ function WorldMapViewerComponent({
     merchant1: null,
     merchant2: null,
     merchant3: null
+  });
+
+  // Observation tower images
+  const [observationTowerImages, setObservationTowerImages] = useState<{
+    tower1: HTMLImageElement | null;
+    tower2: HTMLImageElement | null;
+    tower3: HTMLImageElement | null;
+  }>({
+    tower1: null,
+    tower2: null,
+    tower3: null
   });
 
   // Hidden path images
@@ -532,6 +546,42 @@ function WorldMapViewerComponent({
 
     images.path1.onerror = () => console.error('Failed to load hidden-path1.png');
     images.path2.onerror = () => console.error('Failed to load hidden-path2.png');
+  }, []);
+
+  // Load observation tower images
+  useEffect(() => {
+    const images = {
+      tower1: new Image(),
+      tower2: new Image(),
+      tower3: new Image()
+    };
+
+    images.tower1.src = observationTower1Img;
+    images.tower2.src = observationTower2Img;
+    images.tower3.src = observationTower3Img;
+
+    let loadedCount = 0;
+    const totalImages = 3;
+
+    const onLoad = () => {
+      loadedCount++;
+      if (loadedCount === totalImages) {
+        setObservationTowerImages({
+          tower1: images.tower1,
+          tower2: images.tower2,
+          tower3: images.tower3
+        });
+        console.log('✅ All observation tower images loaded successfully');
+      }
+    };
+
+    images.tower1.onload = onLoad;
+    images.tower2.onload = onLoad;
+    images.tower3.onload = onLoad;
+
+    images.tower1.onerror = () => console.error('Failed to load observation-tower1.png');
+    images.tower2.onerror = () => console.error('Failed to load observation-tower2.png');
+    images.tower3.onerror = () => console.error('Failed to load observation-tower3.png');
   }, []);
 
   // Load monster images
@@ -876,9 +926,12 @@ function WorldMapViewerComponent({
             case 'rareSpawn':
               icon = '👹';
               break;
+            case 'observationTower':
+              icon = '🗼';
+              break;
           }
           if (icon) {
-            // Check if object is defeated/opened/discovered for grayscale rendering
+            // Check if object is defeated/opened/discovered/used for grayscale rendering
             let isDefeatedOrOpened = false;
             if (tile.staticObject.type === 'treasureChest' && 'opened' in tile.staticObject) {
               isDefeatedOrOpened = tile.staticObject.opened === true;
@@ -886,6 +939,8 @@ function WorldMapViewerComponent({
               isDefeatedOrOpened = tile.staticObject.defeated === true;
             } else if (tile.staticObject.type === 'hiddenPath' && 'discovered' in tile.staticObject) {
               isDefeatedOrOpened = tile.staticObject.discovered === true;
+            } else if (tile.staticObject.type === 'observationTower' && 'used' in tile.staticObject) {
+              isDefeatedOrOpened = tile.staticObject.used === true;
             }
             staticObjectsToRender.push({ icon, screenX, screenY, objectType, objectId, objectName, isDefeatedOrOpened, staticObject: tile.staticObject });
           }
@@ -1218,6 +1273,48 @@ function WorldMapViewerComponent({
         } else {
           ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
         }
+      } else if (objectType === 'observationTower' && objectId) {
+        // Use observation tower images if available
+        const tower = staticObject as ObservationTower | undefined;
+        const assetName = tower?.asset;
+
+        let towerImg: HTMLImageElement | null = null;
+
+        // Use asset name if available
+        if (assetName) {
+          switch (assetName) {
+            case 'observation-tower1.png':
+              towerImg = observationTowerImages.tower1;
+              break;
+            case 'observation-tower2.png':
+              towerImg = observationTowerImages.tower2;
+              break;
+            case 'observation-tower3.png':
+              towerImg = observationTowerImages.tower3;
+              break;
+          }
+        }
+
+        // Draw tower image if loaded, otherwise fall back to emoji
+        if (towerImg) {
+          // Add blue glow effect for unused towers
+          if (!tower?.used) {
+            ctx.shadowColor = '#4a90e2';
+            ctx.shadowBlur = 15;
+          }
+
+          // Make tower larger (1.5x tile size) and center it
+          const towerSize = TILE_SIZE * 1.5;
+          const towerOffsetX = screenX - (towerSize - TILE_SIZE) / 2;
+          const towerOffsetY = screenY - (towerSize - TILE_SIZE) / 2;
+
+          ctx.drawImage(towerImg, towerOffsetX, towerOffsetY, towerSize, towerSize);
+
+          // Reset shadow
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+        }
       } else {
         // Draw emoji for other object types
         ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
@@ -1328,17 +1425,6 @@ function WorldMapViewerComponent({
             break;
           case 'encounter':
             icon = '⚔️';
-            break;
-          case 'resource':
-            icon = '🪵'; // Default resource icon
-            // You can customize based on resource type
-            if ('resourceType' in obj) {
-              if (obj.resourceType === 'gold') icon = '💰';
-              else if (obj.resourceType === 'wood') icon = '🪵';
-              else if (obj.resourceType === 'stone') icon = '🪨';
-              else if (obj.resourceType === 'ore') icon = '⛏️';
-              else if (obj.resourceType === 'gems') icon = '💎';
-            }
             break;
         }
 
@@ -1905,14 +1991,12 @@ function WorldMapViewerComponent({
                 {hoverInfo.dynamicObject.type === 'wanderingMonster' && '👾'}
                 {hoverInfo.dynamicObject.type === 'travelingMerchant' && '🧳'}
                 {hoverInfo.dynamicObject.type === 'encounter' && '⚔️'}
-                {hoverInfo.dynamicObject.type === 'resource' && '🪵'}
                 {hoverInfo.dynamicObject.type === 'event' && '❗'}
               </span>
               <span style={{ ...styles.tooltipValue, color: '#f59e0b', fontWeight: 'bold' }}>
                 {hoverInfo.dynamicObject.type === 'wanderingMonster' && 'Wandering Monster'}
                 {hoverInfo.dynamicObject.type === 'travelingMerchant' && 'Traveling Merchant'}
                 {hoverInfo.dynamicObject.type === 'encounter' && 'Encounter'}
-                {hoverInfo.dynamicObject.type === 'resource' && 'Resource'}
                 {hoverInfo.dynamicObject.type === 'event' && 'Event'}
               </span>
             </div>

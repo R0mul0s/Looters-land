@@ -25,8 +25,7 @@
    ↓
 4. Explore Worldmap
    │   ├─ Dungeons (10 energy/floor)
-   │   ├─ Encounters (5 energy/fight)
-   │   └─ Resources (1 energy/node)
+   │   └─ Encounters (5 energy/fight)
    ↓
 5. Town Activities (No Energy Cost)
    │   ├─ Gacha Summon (1x free daily)
@@ -122,7 +121,6 @@
 |----------|-------------|---------|
 | Dungeon Floor | 10 energy | XP, Gold, Items, Boss loot |
 | Worldmap Encounter | 5 energy | XP, Gold, Chance for items |
-| Resource Node | 1 energy | Gold, Wood, Stone, Ore, Gems |
 | Town Activities | 0 energy | Services, Gacha, Quests |
 
 **Energy Regeneration:**
@@ -151,7 +149,6 @@
 - **New seed** generates completely new 50×50 worldmap
 - **Towns** spawn at different locations (4 towns always present)
 - **Dungeons** appear in new positions (5 dungeons)
-- **Resources** scattered randomly (50 nodes)
 - **Encounters** spawn fresh (15 enemy groups)
 
 **What Persists:**
@@ -175,7 +172,6 @@
 1. **Deepest Dungeon Floor** - Who reached the farthest floor today
 2. **Most XP Earned** - Total XP gain across all heroes
 3. **Gold Collected** - Total gold earned
-4. **Resources Gathered** - Total resource nodes collected
 
 **Daily Rewards (Top 100):**
 - Rank 1: 1000 gems, 5x Legendary Summon Tickets, Exclusive Title
@@ -216,7 +212,6 @@ Each town (Capital, Stronghold, Oasis, Outpost) has 6 buildings:
 - **Daily Quests** (3 per day):
   - "Kill 10 Enemies" → 500 gold, 100 gems
   - "Clear 5 Dungeon Floors" → 1,000 gold, 1x Epic Summon Ticket
-  - "Collect 10 Resources" → 300 gold, 50 gems
 - **Story Quests**: Main campaign progression (see Story section)
 - **Weekly Quests**: Guild objectives, bigger rewards
 
@@ -251,7 +246,7 @@ Each town (Capital, Stronghold, Oasis, Outpost) has 6 buildings:
 - Epic+ items have 1-3 sockets
 - Insert gems (STR, DEX, INT, VIT) for +10-50 stats
 - Remove gem: 500 gold, gem is destroyed
-- Gems drop from resource nodes (rare) or dungeon bosses
+- Gems drop from dungeon bosses
 
 #### **3. Healer (Recovery & Resurrection)**
 
@@ -283,7 +278,6 @@ Each town (Capital, Stronghold, Oasis, Outpost) has 6 buildings:
 - Common = 50g, Rare = 200g, Epic = 1,000g, Legendary = 5,000g
 
 **Trade Materials:**
-- Exchange resources (10 wood = 5 stone, etc.)
 - Material bundles for premium currency
 
 **Black Market (Unlock at Town Level 3):**
@@ -460,7 +454,6 @@ The story unfolds **across multiple daily map resets** (persistent progress):
 **Daily Quests (Repeatable):**
 - Kill X enemies: 500g, 100 gems
 - Clear Y floors: 1,000g, Epic Summon Ticket
-- Collect Z resources: 300g, 50 gems
 - Reset daily at 00:00
 
 **Weekly Quests:**
@@ -470,7 +463,6 @@ The story unfolds **across multiple daily map resets** (persistent progress):
 
 **Dynamic Events (Random, 2x per week):**
 - "Bandit Raid!": Defend town, 10 waves, exclusive loot
-- "Resource Rush": 2x resource nodes for 3 hours
 - "Double XP Dungeon": Specific dungeon gives 2x XP for 24 hours
 
 ---
@@ -523,7 +515,6 @@ The story unfolds **across multiple daily map resets** (persistent progress):
 4. **Worldmap Exploration** (20 min):
    - Explore 30-40 tiles (reveal fog)
    - Fight 5 encounters (25 energy)
-   - Collect 10 resources (10 energy)
    - Mark dungeon locations
 5. **Dungeon Run** (30 min):
    - Enter Forest Ruins (Medium Dungeon)
@@ -554,23 +545,20 @@ The story unfolds **across multiple daily map resets** (persistent progress):
 3. **Guild Chat** → Coordinate World Boss spawn (16:00 today)
 4. **Efficient Route Planning**:
    - Identify optimal dungeon (closest to Capital)
-   - Mark resource node clusters
    - Plan encounter route
 5. **Speed Clear**:
    - Endless Abyss Floors 80-95 (150 energy, 15 floors)
    - Auto-combat enabled (optimized team)
    - Collect 30+ items (mostly vendor trash)
-6. **Resource Optimization**:
-   - 5 resource nodes (5 energy) for daily quest
    - Sell all non-Epic+ loot → 15,000g
-7. **Enhancement Session**:
+6. **Enhancement Session**:
    - Attempt +9 → +10 on Legendary weapon (40% chance)
    - Success! Now +10 (+50% stats)
-8. **World Boss Event** (16:00-16:30):
+7. **World Boss Event** (16:00-16:30):
    - 50 players attacking
    - Deal 2.5M damage (Rank 5 contribution)
    - Rewards: Legendary equipment, 500 gems
-9. **Leaderboard**:
+8. **Leaderboard**:
    - Deepest Floor: 95 (Rank 12 → Rewards: 500 gems, 3x Epic Tickets)
    - Daily complete
 
@@ -657,7 +645,6 @@ The story unfolds **across multiple daily map resets** (persistent progress):
 **Weekly Event (Saturday 20:00-21:00):**
 - Guilds compete for 10 worldmap territories
 - Each territory grants bonuses for 1 week:
-  - +10% resource gathering in region
   - +5% XP for guild members
   - Guild bank daily bonus
 
@@ -817,7 +804,7 @@ The story unfolds **across multiple daily map resets** (persistent progress):
 ├──────────────────────────────────────────────────────┤
 │  Resets in: 08:42:15                                │
 │                                                      │
-│  Category: [Deepest Floor] [Most XP] [Gold] [Resources]│
+│  Category: [Deepest Floor] [Most XP] [Gold]            │
 │                                                      │
 │  Deepest Dungeon Floor:                              │
 │  Rank  Player         Floor    Reward               │
@@ -972,7 +959,7 @@ The story unfolds **across multiple daily map resets** (persistent progress):
 
 **Tasks:**
 1. Daily leaderboard system
-   - Track: Deepest Floor, XP, Gold, Resources
+   - Track: Deepest Floor, XP, Gold
    - Reset at 00:00
    - Reward distribution
 2. World Boss events

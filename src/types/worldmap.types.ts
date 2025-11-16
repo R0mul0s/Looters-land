@@ -67,7 +67,7 @@ export interface Tile {
 // STATIC OBJECTS (Permanent)
 // ============================================================================
 
-export type StaticObjectType = 'town' | 'dungeon' | 'portal' | 'hiddenPath' | 'treasureChest' | 'rareSpawn';
+export type StaticObjectType = 'town' | 'dungeon' | 'portal' | 'hiddenPath' | 'treasureChest' | 'rareSpawn' | 'observationTower';
 
 export interface StaticObject {
   id: string;
@@ -127,11 +127,18 @@ export interface RareSpawn extends StaticObject {
   defeated: boolean;
 }
 
+export interface ObservationTower extends StaticObject {
+  type: 'observationTower';
+  used: boolean; // Whether player has already used this tower
+  revealRadius: number; // How far it reveals (default 2x normal vision)
+  asset?: string; // Asset filename (e.g., 'observation-tower1.png')
+}
+
 // ============================================================================
 // DYNAMIC OBJECTS (Spawn/Despawn)
 // ============================================================================
 
-export type DynamicObjectType = 'encounter' | 'resource' | 'event' | 'wanderingMonster' | 'travelingMerchant';
+export type DynamicObjectType = 'encounter' | 'event' | 'wanderingMonster' | 'travelingMerchant';
 
 export interface DynamicObject {
   id: string;
@@ -148,14 +155,6 @@ export interface MapEncounter extends DynamicObject {
   enemyCount: number;
   difficulty: 'Normal' | 'Elite' | 'Boss';
   defeated: boolean;
-}
-
-export interface ResourceNode extends DynamicObject {
-  type: 'resource';
-  resourceType: 'gold' | 'wood' | 'stone' | 'ore' | 'gems';
-  amount: number;
-  regenerates: boolean;
-  respawnTime?: Date;
 }
 
 export interface RandomEvent extends DynamicObject {
@@ -258,7 +257,6 @@ export interface WorldMapGenerationOptions {
   townCount?: number;
   dungeonCount?: number;
   encounterCount?: number;
-  resourceCount?: number;
 }
 
 // ============================================================================

@@ -40,8 +40,7 @@ export function WorldMapDemo() {
       seed,
       townCount: 4,
       dungeonCount: 5,
-      encounterCount: 15,
-      resourceCount: 50
+      encounterCount: 15
     });
 
     setWorldMap(newWorld);
@@ -60,7 +59,6 @@ export function WorldMapDemo() {
     addLog(`  🏰 Towns: ${newWorld.staticObjects.filter(o => o.type === 'town').length}`);
     addLog(`  🕳️ Dungeons: ${newWorld.staticObjects.filter(o => o.type === 'dungeon').length}`);
     addLog(`  ⚔️ Encounters: ${newWorld.dynamicObjects.filter(o => o.type === 'encounter').length}`);
-    addLog(`  💎 Resources: ${newWorld.dynamicObjects.filter(o => o.type === 'resource').length}`);
   };
 
   /**
@@ -147,7 +145,6 @@ export function WorldMapDemo() {
             <span>🏰 Towns: {worldMap.staticObjects.filter(o => o.type === 'town').length}</span>
             <span>🕳️ Dungeons: {worldMap.staticObjects.filter(o => o.type === 'dungeon').length}</span>
             <span>⚔️ Encounters: {worldMap.dynamicObjects.filter(o => o.type === 'encounter').length}</span>
-            <span>💎 Resources: {worldMap.dynamicObjects.filter(o => o.type === 'resource').length}</span>
           </div>
         )}
       </div>
@@ -213,7 +210,6 @@ export function WorldMapDemo() {
             <li>🕳️ Fixed dungeon entrances (5 dungeons)</li>
             <li>🛤️ Roads connecting towns</li>
             <li>⚔️ Dynamic enemy encounters</li>
-            <li>💎 Resource nodes (gold, wood, stone, ore, gems)</li>
             <li>🌫️ Fog of war (explore to reveal)</li>
             <li>🧙 Player movement (click tiles to move)</li>
           </ul>

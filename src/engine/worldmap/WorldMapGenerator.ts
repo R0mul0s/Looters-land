@@ -19,11 +19,11 @@ import type {
   DungeonEntrance,
   WorldMapGenerationOptions,
   MapEncounter,
-  ResourceNode,
   Portal,
   HiddenPath,
   TreasureChest,
   RareSpawn,
+  ObservationTower,
   WanderingMonster,
   TravelingMerchant,
   WeatherType,
@@ -104,8 +104,7 @@ export class WorldMapGenerator {
       seed = `world-${Date.now()}`,
       townCount = 4,
       dungeonCount = 5,
-      encounterCount = 15,
-      resourceCount = 50
+      encounterCount = 15
     } = options;
 
     console.log('🗺️ Generating worldmap...', { width, height, seed, playerCombatPower });
@@ -137,13 +136,13 @@ export class WorldMapGenerator {
     // 8. Place rare spawns
     const rareSpawns = this.placeRareSpawns(tiles, WORLDMAP_CONFIG.RARE_SPAWN_COUNT);
 
+    // 9. Place observation towers
+    const observationTowers = this.placeObservationTowers(tiles, 8); // ~8 towers on 50x50 map
+
     // 9. Spawn initial dynamic encounters
     const encounters = this.spawnInitialEncounters(tiles, encounterCount);
 
-    // 10. Spawn initial resource nodes
-    const resources = this.spawnInitialResources(tiles, resourceCount);
-
-    // 11. Spawn wandering monsters
+    // 10. Spawn wandering monsters
     const wanderingMonsters = this.spawnWanderingMonsters(tiles, WORLDMAP_CONFIG.WANDERING_MONSTER_COUNT);
 
     // 12. Spawn traveling merchants
@@ -162,7 +161,7 @@ export class WorldMapGenerator {
       seed,
       tiles,
       staticObjects: [...towns, ...dungeons, ...portals, ...hiddenPaths, ...treasureChests, ...rareSpawns],
-      dynamicObjects: [...encounters, ...resources, ...wanderingMonsters, ...travelingMerchants],
+      dynamicObjects: [...encounters, ...wanderingMonsters, ...travelingMerchants],
       players: [],
       weather,
       timeOfDay,
@@ -664,51 +663,6 @@ export class WorldMapGenerator {
     return encounters;
   }
 
-  /**
-   * Spawn initial resource nodes
-   *
-   * @param tiles - Map tiles
-   * @param count - Number of resources
-   * @returns Array of resources
-   */
-  private static spawnInitialResources(tiles: Tile[][], count: number): ResourceNode[] {
-    console.log('💎 Spawning initial resources...');
-    const resources: ResourceNode[] = [];
-    const width = tiles[0].length;
-    const height = tiles.length;
-
-    const resourceTypes: Array<'gold' | 'wood' | 'stone' | 'ore' | 'gems'> = [
-      'gold', 'wood', 'stone', 'ore', 'gems'
-    ];
-
-    for (let i = 0; i < count; i++) {
-      const x = Math.floor(Math.random() * width);
-      const y = Math.floor(Math.random() * height);
-      const tile = tiles[y][x];
-
-      // Only spawn on passable, empty terrain
-      if (!tile.staticObject && tile.terrain !== 'water' && tile.terrain !== 'road') {
-        const resourceType = resourceTypes[Math.floor(Math.random() * resourceTypes.length)];
-
-        const resource: ResourceNode = {
-          id: `resource-${Date.now()}-${i}`,
-          type: 'resource',
-          position: { x, y },
-          resourceType,
-          amount: Math.floor(Math.random() * 500) + 100,
-          regenerates: true,
-          respawnTime: new Date(Date.now() + 60 * 60 * 1000), // 1 hour
-          spawnTime: new Date(),
-          isActive: true
-        };
-
-        resources.push(resource);
-      }
-    }
-
-    console.log(`  💎 Spawned ${resources.length} resource nodes`);
-    return resources;
-  }
 
   /**
    * Place portals for fast travel
@@ -945,6 +899,57 @@ export class WorldMapGenerator {
     }
 
     return rareSpawns;
+  }
+
+  /**
+   * Place observation towers (reveal fog of war in large radius)
+   *
+   * @param tiles - Map tiles
+   * @param count - Number of observation towers
+   * @returns Array of observation towers
+   */
+  private static placeObservationTowers(tiles: Tile[][], count: number): ObservationTower[] {
+    console.log('🗼 Placing observation towers...');
+    const observationTowers: ObservationTower[] = [];
+    const width = tiles[0].length;
+    const height = tiles.length;
+
+    const towerAssets = ['observation-tower1.png', 'observation-tower2.png', 'observation-tower3.png'];
+
+    for (let i = 0; i < count; i++) {
+      let x: number, y: number, tile: Tile;
+      let attempts = 0;
+      do {
+        x = Math.floor(Math.random() * width);
+        y = Math.floor(Math.random() * height);
+        tile = tiles[y][x];
+        attempts++;
+      } while (
+        (tile.staticObject || tile.terrain === 'water' || tile.terrain === 'road') &&
+        attempts < 100
+      );
+
+      if (attempts >= 100) continue;
+
+      // Prefer placing towers on elevated terrain (mountains) for thematic reasons
+      const preferMountains = Math.random() > 0.5 && tile.terrain === 'mountains';
+
+      const observationTower: ObservationTower = {
+        id: `tower-${i}`,
+        type: 'observationTower',
+        name: 'Observation Tower',
+        position: { x, y },
+        used: false,
+        revealRadius: 10, // 2x normal vision (assuming normal is 5)
+        asset: towerAssets[Math.floor(Math.random() * towerAssets.length)]
+      };
+
+      tile.staticObject = observationTower;
+      observationTowers.push(observationTower);
+      console.log(`  🗼 Placed Observation Tower at (${x}, ${y}) - Asset: ${observationTower.asset}`);
+    }
+
+    return observationTowers;
   }
 
   /**

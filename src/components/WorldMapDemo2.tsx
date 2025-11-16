@@ -47,7 +47,7 @@ import { supabase } from '../lib/supabase';
 import { t } from '../localization/i18n';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS, BLUR } from '../styles/tokens';
 import { flexColumn, flexCenter } from '../styles/common';
-import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, DynamicObject, WanderingMonster, TravelingMerchant } from '../types/worldmap.types';
+import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, ObservationTower, DynamicObject, WanderingMonster, TravelingMerchant } from '../types/worldmap.types';
 import { DEBUG_CONFIG } from '../config/DEBUG_CONFIG';
 import { ENERGY_CONFIG } from '../config/BALANCE_CONFIG';
 import logo from '../assets/images/logo.png';
@@ -255,8 +255,7 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
         seed: `daily-${new Date().toISOString().split('T')[0]}`, // Daily seed - changes every day
         townCount: 4,
         dungeonCount: 5,
-        encounterCount: 15,
-        resourceCount: 50
+        encounterCount: 15
       }, gameState.combatPower);
 
       // Get all towns from the world
@@ -476,6 +475,8 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
     } else if (object.type === 'rareSpawn') {
       const rareSpawn = object as RareSpawn;
       handleRareSpawnCombat(rareSpawn);
+    } else if (object.type === 'observationTower') {
+      handleObservationTowerUse(object as ObservationTower);
     }
   };
 
@@ -503,9 +504,56 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
     } else if (object.type === 'encounter') {
       // TODO: Implement encounters
       setShowMessageModal('Encounter system coming soon!');
-    } else if (object.type === 'resource') {
-      // TODO: Implement resource gathering
-      setShowMessageModal('Resource gathering coming soon!');
+    }
+  };
+
+  /**
+   * Handle observation tower use - reveal large area of map
+   */
+  const handleObservationTowerUse = (tower: ObservationTower) => {
+    // Check if already used
+    if (tower.used) {
+      setShowMessageModal('You have already used this Observation Tower.');
+      return;
+    }
+
+    console.log('🗼 Using observation tower:', tower);
+
+    // Mark tower as used
+    tower.used = true;
+
+    // Reveal large area around tower (2x normal vision = radius 10)
+    if (gameState.worldMap) {
+      const radius = tower.revealRadius || 10;
+      let tilesRevealed = 0;
+
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          const newX = tower.position.x + dx;
+          const newY = tower.position.y + dy;
+          const nearbyTile = gameState.worldMap.tiles[newY]?.[newX];
+
+          if (nearbyTile && !nearbyTile.isExplored) {
+            nearbyTile.isExplored = true;
+            tilesRevealed++;
+
+            // Add discovered location if it has a static object
+            if (nearbyTile.staticObject) {
+              gameActions.addDiscoveredLocation({
+                name: nearbyTile.staticObject.name,
+                x: newX,
+                y: newY,
+                type: nearbyTile.staticObject.type
+              });
+            }
+          }
+        }
+      }
+
+      gameActions.updateWorldMap({ ...gameState.worldMap }); // Force re-render
+
+      console.log(`🗼 Revealed ${tilesRevealed} tiles from observation tower`);
+      setShowMessageModal(`The Observation Tower reveals a vast area! ${tilesRevealed} tiles discovered.`);
     }
   };
 

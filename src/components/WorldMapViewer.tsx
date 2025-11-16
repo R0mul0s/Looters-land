@@ -14,7 +14,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, Z_INDEX, TRANSITIONS } from '../styles/tokens';
 import { flexBetween, flexCenter } from '../styles/common';
-import type { WorldMap, Tile, DynamicObject, WeatherState, TimeState, Town, StaticObject, ObservationTower } from '../types/worldmap.types';
+import type { WorldMap, Tile, DynamicObject, WeatherState, TimeState, Town, StaticObject, ObservationTower, DungeonEntrance } from '../types/worldmap.types';
 import { TERRAIN_ICONS } from '../types/worldmap.types';
 import { OtherPlayerMarker } from './OtherPlayerMarker';
 import { ChatBubble } from './ChatBubble';
@@ -52,6 +52,7 @@ import hero5Img from '../assets/images/hero/hero5.png';
 import dungeon1Img from '../assets/images/building/dungeon1.png';
 import dungeon2Img from '../assets/images/building/dungeon2.png';
 import dungeon3Img from '../assets/images/building/dungeon3.png';
+import dungeon4Img from '../assets/images/building/dungeon4.png';
 import city1Img from '../assets/images/building/city1.png';
 import city2Img from '../assets/images/building/city2.png';
 import city3Img from '../assets/images/building/city3.png';
@@ -170,10 +171,12 @@ function WorldMapViewerComponent({
     dungeon1: HTMLImageElement | null;
     dungeon2: HTMLImageElement | null;
     dungeon3: HTMLImageElement | null;
+    dungeon4: HTMLImageElement | null;
   }>({
     dungeon1: null,
     dungeon2: null,
-    dungeon3: null
+    dungeon3: null,
+    dungeon4: null
   });
 
   // City building images
@@ -365,15 +368,17 @@ function WorldMapViewerComponent({
     const images = {
       dungeon1: new Image(),
       dungeon2: new Image(),
-      dungeon3: new Image()
+      dungeon3: new Image(),
+      dungeon4: new Image()
     };
 
     images.dungeon1.src = dungeon1Img;
     images.dungeon2.src = dungeon2Img;
     images.dungeon3.src = dungeon3Img;
+    images.dungeon4.src = dungeon4Img;
 
     let loadedCount = 0;
-    const totalImages = 3;
+    const totalImages = 4;
 
     const onLoad = () => {
       loadedCount++;
@@ -381,7 +386,8 @@ function WorldMapViewerComponent({
         setDungeonImages({
           dungeon1: images.dungeon1,
           dungeon2: images.dungeon2,
-          dungeon3: images.dungeon3
+          dungeon3: images.dungeon3,
+          dungeon4: images.dungeon4
         });
         console.log('✅ All dungeon images loaded successfully');
       }
@@ -390,10 +396,12 @@ function WorldMapViewerComponent({
     images.dungeon1.onload = onLoad;
     images.dungeon2.onload = onLoad;
     images.dungeon3.onload = onLoad;
+    images.dungeon4.onload = onLoad;
 
     images.dungeon1.onerror = () => console.error('Failed to load dungeon1.png');
     images.dungeon2.onerror = () => console.error('Failed to load dungeon2.png');
     images.dungeon3.onerror = () => console.error('Failed to load dungeon3.png');
+    images.dungeon4.onerror = () => console.error('Failed to load dungeon4.png');
   }, []);
 
   // Load city building images
@@ -1016,20 +1024,42 @@ function WorldMapViewerComponent({
       }
       // Use dungeon images for dungeons if available
       if (objectType === 'dungeon' && objectId) {
-        // Select dungeon image based on dungeon ID (0 = dungeon1, 1 = dungeon2, etc.)
-        const dungeonIndex = parseInt(objectId.split('-')[1] || '0');
+        // Get asset from dungeon object if available, otherwise fallback to ID-based selection
+        const dungeon = staticObject as DungeonEntrance | undefined;
+        const assetName = dungeon?.asset;
+
         let dungeonImg: HTMLImageElement | null = null;
 
-        switch (dungeonIndex % 3) {
-          case 0:
-            dungeonImg = dungeonImages.dungeon1;
-            break;
-          case 1:
-            dungeonImg = dungeonImages.dungeon2;
-            break;
-          case 2:
-            dungeonImg = dungeonImages.dungeon3;
-            break;
+        // Use asset name if available
+        if (assetName) {
+          switch (assetName) {
+            case 'dungeon1.png':
+              dungeonImg = dungeonImages.dungeon1;
+              break;
+            case 'dungeon2.png':
+              dungeonImg = dungeonImages.dungeon2;
+              break;
+            case 'dungeon3.png':
+              dungeonImg = dungeonImages.dungeon3;
+              break;
+            case 'dungeon4.png':
+              dungeonImg = dungeonImages.dungeon4;
+              break;
+          }
+        } else {
+          // Fallback: Select dungeon image based on dungeon ID (0 = dungeon1, 1 = dungeon2, etc.)
+          const dungeonIndex = parseInt(objectId.split('-')[1] || '0');
+          switch (dungeonIndex % 3) {
+            case 0:
+              dungeonImg = dungeonImages.dungeon1;
+              break;
+            case 1:
+              dungeonImg = dungeonImages.dungeon2;
+              break;
+            case 2:
+              dungeonImg = dungeonImages.dungeon3;
+              break;
+          }
         }
 
         // Draw dungeon image if loaded, otherwise fall back to emoji

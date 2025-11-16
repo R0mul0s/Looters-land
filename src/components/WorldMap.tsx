@@ -52,6 +52,7 @@ import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Po
 import { DEBUG_CONFIG } from '../config/DEBUG_CONFIG';
 import { ENERGY_CONFIG, WORLDMAP_CONFIG } from '../config/BALANCE_CONFIG';
 import { generateRandomEnemy } from '../engine/combat/Enemy';
+import { generateRareSpawnEncounter, generateWanderingMonsterEncounter } from '../engine/combat/NamedEnemies';
 import logo from '../assets/images/logo.png';
 
 interface WorldMapProps {
@@ -801,11 +802,9 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
   const handleRareSpawnCombat = async (rareSpawn: RareSpawn) => {
     // IMPORTANT: Always check defeated status from current worldMap state, not from the passed object
     // The passed object might be stale if worldMap was updated after combat
-    const currentRareSpawn = gameState.worldMap?.staticObjects.find(
-      obj => obj.type === 'rareSpawn' &&
-             obj.position.x === rareSpawn.position.x &&
-             obj.position.y === rareSpawn.position.y
-    ) as RareSpawn | undefined;
+    // Rare spawns are static objects, so we need to check the tile's staticObject
+    const tile = gameState.worldMap?.tiles[rareSpawn.position.y]?.[rareSpawn.position.x];
+    const currentRareSpawn = tile?.staticObject as RareSpawn | undefined;
 
     // Check if already defeated
     if (currentRareSpawn?.defeated) {
@@ -818,9 +817,8 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
     // Check party health before combat
     const averageHealth = getPartyAverageHealth(gameState.activeParty || []);
 
-    const startCombat = async () => {
+    const startCombat = () => {
       // Generate named boss enemy with elite minions
-      const { generateRareSpawnEncounter } = await import('../engine/combat/NamedEnemies');
       const enemies = generateRareSpawnEncounter(rareSpawn.enemyName, rareSpawn.enemyLevel);
 
       // Show pre-combat modal with enemy info and combat mode selection
@@ -887,9 +885,8 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
     // Check party health before combat
     const averageHealth = getPartyAverageHealth(gameState.activeParty || []);
 
-    const startCombat = async () => {
+    const startCombat = () => {
       // Generate named elite enemy with normal minions
-      const { generateWanderingMonsterEncounter } = await import('../engine/combat/NamedEnemies');
       const enemies = generateWanderingMonsterEncounter(monster.enemyName, monster.enemyLevel, monster.difficulty);
 
       // Show pre-combat modal with enemy info and combat mode selection

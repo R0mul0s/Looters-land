@@ -442,39 +442,58 @@ export function Router() {
 
       const updatedWorldMap = { ...gameState.worldMap };
 
-      // Find and mark the specific object as defeated in the worldMap's dynamicObjects
+      // Find and mark the specific object as defeated
       if (combatMetadata.position) {
         const pos = combatMetadata.position;
         console.log('🔍 DEBUG: Looking for object at position:', pos);
 
-        const objectIndex = updatedWorldMap.dynamicObjects.findIndex(
-          obj => obj.position.x === pos.x && obj.position.y === pos.y
-        );
-
-        console.log('🔍 DEBUG: Found object at index:', objectIndex);
-
-        if (objectIndex !== -1) {
-          const obj = updatedWorldMap.dynamicObjects[objectIndex];
-          const beforeDefeated = (obj.type === 'encounter' || obj.type === 'wanderingMonster') ? (obj as any).defeated : undefined;
-          console.log('🔍 DEBUG: Object defeated status BEFORE update:', beforeDefeated);
-
-          // Create new array with updated object
-          updatedWorldMap.dynamicObjects = [...updatedWorldMap.dynamicObjects];
-          updatedWorldMap.dynamicObjects[objectIndex] = {
-            ...updatedWorldMap.dynamicObjects[objectIndex],
-            defeated: true
-          } as any;
-
-          const updatedObj = updatedWorldMap.dynamicObjects[objectIndex];
-          console.log('🔍 DEBUG: Object defeated status AFTER update:', (updatedObj.type === 'encounter' || updatedObj.type === 'wanderingMonster') ? (updatedObj as any).defeated : undefined);
-
-          if (combatMetadata.rareSpawnObject) {
+        // Handle rare spawns (static objects)
+        if (combatMetadata.rareSpawnObject) {
+          console.log('🔍 DEBUG: Marking rare spawn as defeated (static object)');
+          const tile = updatedWorldMap.tiles[pos.y]?.[pos.x];
+          if (tile && tile.staticObject && tile.staticObject.type === 'rareSpawn') {
+            // Create new tiles array with updated static object
+            updatedWorldMap.tiles = updatedWorldMap.tiles.map((row, y) =>
+              y === pos.y ? row.map((cell, x) =>
+                x === pos.x && cell.staticObject?.type === 'rareSpawn'
+                  ? { ...cell, staticObject: { ...cell.staticObject, defeated: true } as any }
+                  : cell
+              ) : row
+            );
             console.log('🎯 Rare spawn marked as defeated at position', pos);
-          } else if (combatMetadata.monsterObject) {
-            console.log('🎯 Wandering monster marked as defeated at position', pos);
+          } else {
+            console.error('❌ DEBUG: Could not find rare spawn at position:', pos);
           }
-        } else {
-          console.error('❌ DEBUG: Could not find object at position:', pos);
+        }
+        // Handle wandering monsters and encounters (dynamic objects)
+        else {
+          const objectIndex = updatedWorldMap.dynamicObjects.findIndex(
+            obj => obj.position.x === pos.x && obj.position.y === pos.y
+          );
+
+          console.log('🔍 DEBUG: Found dynamic object at index:', objectIndex);
+
+          if (objectIndex !== -1) {
+            const obj = updatedWorldMap.dynamicObjects[objectIndex];
+            const beforeDefeated = (obj.type === 'encounter' || obj.type === 'wanderingMonster') ? (obj as any).defeated : undefined;
+            console.log('🔍 DEBUG: Object defeated status BEFORE update:', beforeDefeated);
+
+            // Create new array with updated object
+            updatedWorldMap.dynamicObjects = [...updatedWorldMap.dynamicObjects];
+            updatedWorldMap.dynamicObjects[objectIndex] = {
+              ...updatedWorldMap.dynamicObjects[objectIndex],
+              defeated: true
+            } as any;
+
+            const updatedObj = updatedWorldMap.dynamicObjects[objectIndex];
+            console.log('🔍 DEBUG: Object defeated status AFTER update:', (updatedObj.type === 'encounter' || updatedObj.type === 'wanderingMonster') ? (updatedObj as any).defeated : undefined);
+
+            if (combatMetadata.monsterObject) {
+              console.log('🎯 Wandering monster marked as defeated at position', pos);
+            }
+          } else {
+            console.error('❌ DEBUG: Could not find dynamic object at position:', pos);
+          }
         }
       }
 

@@ -97,6 +97,7 @@ export interface DungeonEntrance extends StaticObject {
   maxFloors: number;
   recommendedLevel: number;
   theme: string;
+  asset?: string; // Asset filename (e.g., 'dungeon1.png', 'dungeon4.png')
 }
 
 export interface Portal extends StaticObject {

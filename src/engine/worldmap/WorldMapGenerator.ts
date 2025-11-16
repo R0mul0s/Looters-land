@@ -554,7 +554,8 @@ export class WorldMapGenerator {
           difficulty: 'Nightmare',
           maxFloors: 999,
           recommendedLevel: 50,
-          theme: 'Endless Abyss'
+          theme: 'Endless Abyss',
+          asset: 'dungeon4.png'
         };
 
         tiles[y][x].staticObject = endlessDungeon;

@@ -19,7 +19,7 @@ import React, { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import { t } from '../localization/i18n';
 import { useIsMobile } from '../hooks/useIsMobile';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../styles/tokens';
-import { flexColumn, flexCenter, flexBetween } from '../styles/common';
+import { flexColumn, flexCenter } from '../styles/common';
 
 interface ChatBoxProps {
   onSendMessage: (message: string) => void;
@@ -185,7 +185,7 @@ const styles: Record<string, React.CSSProperties> = {
   mobileIconButton: {
     position: 'fixed',
     bottom: SPACING[2],
-    left: SPACING[2],
+    right: SPACING[2],
     width: '48px',
     height: '48px',
     borderRadius: BORDER_RADIUS.full,

@@ -13,6 +13,7 @@
 import React from 'react';
 import { SyncStatusIndicator, type SyncStatus } from '../SyncStatusIndicator';
 import { t } from '../../localization/i18n';
+import { useIsMobile } from '../../hooks/useIsMobile';
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
 import { flexBetween, flexColumn } from '../../styles/common';
 
@@ -57,6 +58,8 @@ export function GameHeader({
   lastSaveTime,
   onSettingsClick
 }: GameHeaderProps) {
+  const isMobile = useIsMobile();
+
   // Calculate energy percentage for progress bar
   const energyPercent = (energy / maxEnergy) * 100;
 
@@ -75,6 +78,48 @@ export function GameHeader({
     return num.toLocaleString('cs-CZ');
   };
 
+  if (isMobile) {
+    // Mobile layout - minimal, only essentials
+    return (
+      <div style={styles.containerMobile}>
+        {/* Single row: Player name + Sync Status */}
+        <div style={styles.topRowMobile}>
+          <div style={styles.playerNameMobile}>
+            🧙 {playerName}
+          </div>
+
+          {/* Sync Status - compact text only */}
+          {syncStatus && syncStatus === 'synced' && (
+            <div style={styles.syncStatusMobile}>
+              Uloženo
+            </div>
+          )}
+          {syncStatus && syncStatus === 'syncing' && (
+            <div style={styles.syncStatusMobileSyncing}>
+              Ukládám...
+            </div>
+          )}
+        </div>
+
+        {/* Energy Bar - compact */}
+        <div style={styles.energyContainerMobile}>
+          <div style={styles.energyLabelMobile}>
+            ⚡ {energy}/{maxEnergy}
+          </div>
+          <div style={styles.energyBarBackgroundMobile}>
+            <div
+              style={{
+                ...styles.energyBarFill,
+                width: `${energyPercent}%`
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop layout - original
   return (
     <div style={styles.container}>
       {/* Player Info & Resources */}
@@ -195,5 +240,54 @@ const styles: Record<string, React.CSSProperties> = {
     backgroundColor: COLORS.successLight,
     transition: TRANSITIONS.base,
     boxShadow: SHADOWS.glowGreen
+  },
+  // Mobile-specific styles
+  containerMobile: {
+    backgroundColor: COLORS.bgCardDark,
+    paddingTop: SPACING[2],
+    paddingRight: SPACING[2],
+    paddingBottom: SPACING[2],
+    paddingLeft: SPACING[2],
+    borderBottom: `2px solid ${COLORS.borderDark}`,
+    boxShadow: SHADOWS.md
+  },
+  topRowMobile: {
+    ...flexBetween,
+    marginBottom: SPACING[2],
+    alignItems: 'center'
+  },
+  playerNameMobile: {
+    fontSize: FONT_SIZE.md,
+    fontWeight: FONT_WEIGHT.bold,
+    color: COLORS.successLight
+  },
+  syncStatusMobile: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.success,
+    fontWeight: FONT_WEIGHT.semibold
+  },
+  syncStatusMobileSyncing: {
+    fontSize: FONT_SIZE.xs,
+    color: COLORS.textGray,
+    fontWeight: FONT_WEIGHT.semibold
+  },
+  energyContainerMobile: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: SPACING[2]
+  },
+  energyLabelMobile: {
+    fontSize: FONT_SIZE.sm,
+    color: COLORS.textSlate,
+    whiteSpace: 'nowrap',
+    minWidth: '70px'
+  },
+  energyBarBackgroundMobile: {
+    flex: 1,
+    height: '16px',
+    backgroundColor: COLORS.bgInput,
+    borderRadius: SPACING.sm,
+    overflow: 'hidden',
+    border: `1px solid ${COLORS.borderDarker}`
   }
 };

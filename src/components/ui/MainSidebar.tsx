@@ -265,10 +265,12 @@ const styles: Record<string, React.CSSProperties> = {
     background: 'linear-gradient(90deg, rgba(45, 212, 191, 0.2) 0%, rgba(45, 212, 191, 0.05) 100%)',
     color: COLORS.primary,
     borderLeft: `3px solid ${COLORS.primary}`,
+    paddingTop: SPACING[3],
+    paddingRight: '25px',
+    paddingBottom: SPACING[3],
     paddingLeft: SPACING[3],
     marginLeft: `-${SPACING.sm}`,
     marginRight: `-${SPACING.sm}`,
-    paddingRight: '25px',
     boxShadow: '0 4px 12px rgba(45, 212, 191, 0.15), inset 0 1px 0 rgba(45, 212, 191, 0.2)'
   },
   menuIcon: {
@@ -391,13 +393,19 @@ const styles: Record<string, React.CSSProperties> = {
   },
   menuItemCompact: {
     justifyContent: 'center',
-    padding: `${SPACING[3]} ${SPACING.xs}`,
+    paddingTop: SPACING[3],
+    paddingRight: SPACING.xs,
+    paddingBottom: SPACING[3],
+    paddingLeft: SPACING.xs,
     gap: '0'
   },
   menuItemActiveCompact: {
     background: 'linear-gradient(90deg, rgba(45, 212, 191, 0.2) 0%, rgba(45, 212, 191, 0.05) 100%)',
     color: COLORS.primary,
     borderLeft: `3px solid ${COLORS.primary}`,
+    paddingTop: SPACING[3],
+    paddingRight: SPACING.xs,
+    paddingBottom: SPACING[3],
     paddingLeft: SPACING.xxs,
     boxShadow: '0 4px 12px rgba(45, 212, 191, 0.15)'
   },

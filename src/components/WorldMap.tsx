@@ -287,6 +287,9 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
     }
   }, [gameState.loading, gameState.worldMap, gameState.combatPower]);
 
+  // Ref to cancel movement function from WorldMapViewer
+  const cancelMovementRef = React.useRef<(() => void) | null>(null);
+
   /**
    * Trigger random encounter - Classic RPG style
    * Returns true if encounter triggered, false otherwise
@@ -298,12 +301,9 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
       return false; // No encounter
     }
 
-    console.log('⚔️ Random encounter triggered!');
-
     // Get player level from active party
     const activeHero = gameState.activeParty?.[0];
     if (!activeHero) {
-      console.error('No active hero for encounter');
       return false;
     }
 
@@ -325,7 +325,10 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
       enemies.push(enemy);
     }
 
-    console.log(`⚔️ Random encounter: ${enemyCount}x Level ${enemyLevel} enemies`);
+    // Stop player movement if they're currently moving
+    if (cancelMovementRef.current) {
+      cancelMovementRef.current();
+    }
 
     // Show pre-combat modal with enemy info and combat mode selection
     setShowQuickCombatModal({
@@ -1099,6 +1102,9 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
             onCancelMovement={() => {
               console.log('Movement cancelled by user');
               // No additional action needed - WorldMapViewer handles the state cleanup
+            }}
+            onRegisterCancelMovement={(cancelFn) => {
+              cancelMovementRef.current = cancelFn;
             }}
           />
 
@@ -2038,7 +2044,6 @@ const styles: Record<string, React.CSSProperties> = {
     position: 'absolute',
     bottom: SPACING[2],
     left: SPACING[2],
-    right: SPACING[2],
     display: 'flex',
     gap: SPACING[2],
     padding: `${SPACING[1]} ${SPACING[2]}`,
@@ -2048,8 +2053,7 @@ const styles: Record<string, React.CSSProperties> = {
     flexWrap: 'nowrap',
     backdropFilter: BLUR.md,
     boxShadow: SHADOWS.card,
-    zIndex: 200,
-    justifyContent: 'center'
+    zIndex: 200
   },
   mobileToggleButton: {
     position: 'absolute',

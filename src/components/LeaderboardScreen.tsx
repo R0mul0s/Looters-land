@@ -18,8 +18,8 @@ import {
 } from '../services/LeaderboardService';
 import { DailyResetService } from '../services/DailyResetService';
 import { t } from '../localization/i18n';
-import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../styles/tokens';
-import { flexColumn, flexCenter, flexBetween } from '../styles/common';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../styles/tokens';
+import { flexColumn, flexBetween } from '../styles/common';
 
 /**
  * Props for LeaderboardScreen component
@@ -40,22 +40,22 @@ const CATEGORY_CONFIG: Record<
   deepest_floor: {
     icon: '🕳️',
     labelKey: 'leaderboard.categories.deepestFloor',
-    descriptionKey: 'leaderboard.descriptions.deepestFloor'
+    descriptionKey: 'leaderboard.categoryDescriptions.deepestFloor'
   },
   total_gold: {
     icon: '💰',
     labelKey: 'leaderboard.categories.totalGold',
-    descriptionKey: 'leaderboard.descriptions.totalGold'
+    descriptionKey: 'leaderboard.categoryDescriptions.totalGold'
   },
   heroes_collected: {
     icon: '👥',
     labelKey: 'leaderboard.categories.heroesCollected',
-    descriptionKey: 'leaderboard.descriptions.heroesCollected'
+    descriptionKey: 'leaderboard.categoryDescriptions.heroesCollected'
   },
   combat_power: {
     icon: '⚔️',
     labelKey: 'leaderboard.categories.combatPower',
-    descriptionKey: 'leaderboard.descriptions.combatPower'
+    descriptionKey: 'leaderboard.categoryDescriptions.combatPower'
   }
 };
 

@@ -100,6 +100,7 @@ interface WorldMapViewerProps {
   timeOfDay?: TimeState; // Current time of day state
   onTileClick?: (x: number, y: number, isPathMovement?: boolean) => void;
   onCancelMovement?: () => void; // Callback when player cancels movement
+  onRegisterCancelMovement?: (cancelFn: () => void) => void; // Callback to register cancel function
 }
 
 /**
@@ -130,7 +131,8 @@ function WorldMapViewerComponent({
   weather,
   timeOfDay,
   onTileClick,
-  onCancelMovement
+  onCancelMovement,
+  onRegisterCancelMovement
 }: WorldMapViewerProps) {
   const isMobile = useIsMobile();
   const [zoom, setZoom] = useState(1);
@@ -1819,10 +1821,8 @@ function WorldMapViewerComponent({
    *
    * @description Stops current movement and clears the path at current position.
    */
-  const handleCancelMovement = () => {
+  const handleCancelMovement = useCallback(() => {
     if (!isMoving || !currentPath) return;
-
-    console.log('⛔ Cancelling movement at current position');
 
     // Stop movement and clear path
     setIsMoving(false);
@@ -1833,7 +1833,18 @@ function WorldMapViewerComponent({
     if (onCancelMovement) {
       onCancelMovement();
     }
-  };
+  }, [isMoving, currentPath, onCancelMovement]);
+
+  /**
+   * Register cancel movement function with parent
+   *
+   * @description Allows parent component to cancel movement (e.g., for random encounters)
+   */
+  useEffect(() => {
+    if (onRegisterCancelMovement) {
+      onRegisterCancelMovement(handleCancelMovement);
+    }
+  }, [handleCancelMovement, onRegisterCancelMovement]);
 
   /**
    * Handle canvas click

@@ -126,8 +126,6 @@ export class BankService {
    */
   static async getBankInventory(userId: string): Promise<BankInventoryItem[]> {
     try {
-      console.log('🏦 Loading bank inventory for user:', userId);
-
       // Use the view that joins inventory_items with game_saves and player_profiles
       const { data: items, error: itemsError } = await supabase
         .from('bank_inventory_view')
@@ -138,11 +136,6 @@ export class BankService {
       if (itemsError) {
         console.error('❌ Error fetching bank items:', itemsError.message, itemsError);
         return [];
-      }
-
-      console.log('🏦 Bank items loaded:', items?.length ?? 0, 'items');
-      if (items && items.length > 0) {
-        console.log('🏦 First bank item:', items[0]);
       }
 
       return items ?? [];
@@ -180,8 +173,6 @@ export class BankService {
 
       // Get item from inventory directly (search by item_id, not by database id)
       // Note: There might be duplicates due to previous saves, so we use limit(1)
-      console.log('🔍 Searching for item_id:', itemId);
-
       const { data: items, error: itemError } = await supabase
         .from('inventory_items')
         .select('*')
@@ -207,8 +198,6 @@ export class BankService {
         };
       }
 
-      console.log('✅ Found item:', item.item_name, 'location:', item.location);
-
       // Calculate deposit fee
       const fee = calculateDepositFee(item.gold_value);
 
@@ -221,9 +210,7 @@ export class BankService {
       }
 
       // Update item location to bank (use database id, not item_id)
-      console.log('📝 Updating item location to bank, database id:', item.id);
-
-      const { data: updateData, error: updateError } = await supabase
+      const { error: updateError } = await supabase
         .from('inventory_items')
         .update({ location: 'bank' })
         .eq('id', item.id)
@@ -236,17 +223,6 @@ export class BankService {
           message: 'Failed to deposit item',
         };
       }
-
-      console.log('✅ Update result:', updateData);
-
-      // Verify the update by querying the item again
-      const { data: verifyData } = await supabase
-        .from('inventory_items')
-        .select('id, item_id, item_name, location')
-        .eq('id', item.id)
-        .maybeSingle();
-
-      console.log('🔍 Verification query result:', verifyData);
 
       // Deduct fee from player gold
       const newGold = playerGold - fee;

@@ -1310,9 +1310,6 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
     />
   );
 
-  // Debug: Log maxEnergy before rendering
-  console.log('🎯 WorldMap render - gameState.maxEnergy:', gameState.maxEnergy, 'bankVaultTier:', gameState.bankVaultTier);
-
   return (
     <>
       <GameLayout

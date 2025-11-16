@@ -562,7 +562,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         // Calculate max energy dynamically from all sources
         const bankEnergyBonus = getBankEnergyBonus(profile.bank_vault_tier || 0);
         const calculatedMaxEnergy = ENERGY_CONFIG.MAX_ENERGY + bankEnergyBonus;
-        console.log('🔄 loadGame - bank_vault_tier:', profile.bank_vault_tier, 'bonus:', bankEnergyBonus, 'calculatedMaxEnergy:', calculatedMaxEnergy);
 
         const newState = {
           ...prev,
@@ -832,7 +831,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
             // Calculate max energy dynamically from bank vault tier
             const bankEnergyBonus = getBankEnergyBonus(updatedProfile.bank_vault_tier || 0);
             const calculatedMaxEnergy = ENERGY_CONFIG.MAX_ENERGY + bankEnergyBonus;
-            console.log('🔄 Realtime update - bank_vault_tier:', updatedProfile.bank_vault_tier, 'bonus:', bankEnergyBonus, 'calculatedMaxEnergy:', calculatedMaxEnergy);
 
             return {
               ...prev,
@@ -996,7 +994,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       setState(prev => {
         const bankEnergyBonus = getBankEnergyBonus(prev.bankVaultTier);
         const calculatedMaxEnergy = ENERGY_CONFIG.MAX_ENERGY + bankEnergyBonus;
-        console.log('⚡ setMaxEnergy called - bankVaultTier:', prev.bankVaultTier, 'bonus:', bankEnergyBonus, 'total:', calculatedMaxEnergy);
         newState = { ...prev, maxEnergy: calculatedMaxEnergy };
         // CRITICAL: Update stateRef synchronously BEFORE scheduling save
         stateRef.current = newState;

@@ -1,7 +1,7 @@
 /**
  * Router Component - Main application router and combat controller
  *
- * Main game router for WorldMapDemo2 with combat system integration.
+ * Main game router with WorldMap integration and combat system.
  * Manages combat state for both dungeon and worldmap quick combat encounters.
  *
  * Contains:
@@ -10,7 +10,7 @@
  * - Combat UI rendering (heroes, enemies, manual controls)
  * - Victory/defeat modals with rewards display
  * - Authentication state management
- * - Single useGameState instance passed to WorldMapDemo2 (shared state pattern)
+ * - Single useGameState instance passed to WorldMap (shared state pattern)
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
@@ -18,7 +18,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { WorldMapDemo2 } from './components/WorldMapDemo2';
+import { WorldMap } from './components/WorldMap';
 import type { DungeonEntrance } from './types/worldmap.types';
 import { Dungeon } from './engine/dungeon/Dungeon';
 import { DungeonExplorer } from './components/DungeonExplorer';
@@ -748,7 +748,7 @@ export function Router() {
     <>
       {/* WorldMap - always mounted, just hidden when in dungeon */}
       <div style={{ display: inDungeon ? 'none' : 'block' }}>
-        <WorldMapDemo2
+        <WorldMap
           userEmail={userEmail}
           onEnterDungeon={handleEnterDungeon}
           onQuickCombat={handleQuickCombat}

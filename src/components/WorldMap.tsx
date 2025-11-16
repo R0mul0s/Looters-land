@@ -1,7 +1,7 @@
 /**
- * WorldMap Demo v2.0 Component
+ * WorldMap Component
  *
- * Demo implementation of new game loop with GameLayout.
+ * Main game interface of new game loop with GameLayout.
  * Shows header with resources, worldmap, and bottom navigation.
  * Now integrated with database via useGameState hook.
  *
@@ -17,7 +17,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-15
+ * @lastModified 2025-11-16
  */
 
 import React, { useEffect, useState } from 'react';
@@ -52,7 +52,7 @@ import { DEBUG_CONFIG } from '../config/DEBUG_CONFIG';
 import { ENERGY_CONFIG } from '../config/BALANCE_CONFIG';
 import logo from '../assets/images/logo.png';
 
-interface WorldMapDemo2Props {
+interface WorldMapProps {
   onEnterDungeon?: (dungeon: DungeonEntrance) => void;
   onQuickCombat?: (enemies: any[], combatType: 'rare_spawn' | 'wandering_monster', metadata?: any) => void;
   userEmail?: string;
@@ -80,7 +80,7 @@ interface WorldMapDemo2Props {
  * />
  * ```
  */
-export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEmailProp, gameState: gameStateProp, gameActions: gameActionsProp }: WorldMapDemo2Props) {
+export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailProp, gameState: gameStateProp, gameActions: gameActionsProp }: WorldMapProps) {
   const { t: tLocal } = useTranslation();
 
   // Use centralized game state with database sync

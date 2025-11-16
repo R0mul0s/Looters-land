@@ -37,6 +37,8 @@ import water1Img from '../assets/images/terrian/water1.png';
 import water2Img from '../assets/images/terrian/water2.png';
 import road1Img from '../assets/images/terrian/road1.png';
 import road2Img from '../assets/images/terrian/road2.png';
+import mountains1Img from '../assets/images/terrian/mountains1.png';
+import mountains2Img from '../assets/images/terrian/mountains2.png';
 
 // Import hero images for player avatar
 import hero1Img from '../assets/images/hero/hero1.png';
@@ -145,13 +147,15 @@ function WorldMapViewerComponent({
     swamp: { img1: HTMLImageElement | null; img2: HTMLImageElement | null };
     water: { img1: HTMLImageElement | null; img2: HTMLImageElement | null };
     road: { img1: HTMLImageElement | null; img2: HTMLImageElement | null };
+    mountains: { img1: HTMLImageElement | null; img2: HTMLImageElement | null };
   }>({
     forest: { img1: null, img2: null },
     desert: { img1: null, img2: null },
     plains: { img1: null, img2: null },
     swamp: { img1: null, img2: null },
     water: { img1: null, img2: null },
-    road: { img1: null, img2: null }
+    road: { img1: null, img2: null },
+    mountains: { img1: null, img2: null }
   });
 
   // Hero/player avatar image
@@ -673,7 +677,8 @@ function WorldMapViewerComponent({
       plains: { img1: new Image(), img2: new Image() },
       swamp: { img1: new Image(), img2: new Image() },
       water: { img1: new Image(), img2: new Image() },
-      road: { img1: new Image(), img2: new Image() }
+      road: { img1: new Image(), img2: new Image() },
+      mountains: { img1: new Image(), img2: new Image() }
     };
 
     // Set image sources
@@ -689,9 +694,11 @@ function WorldMapViewerComponent({
     images.water.img2.src = water2Img;
     images.road.img1.src = road1Img;
     images.road.img2.src = road2Img;
+    images.mountains.img1.src = mountains1Img;
+    images.mountains.img2.src = mountains2Img;
 
     let loadedCount = 0;
-    const totalImages = 12; // 6 terrains × 2 images each
+    const totalImages = 14; // 7 terrains × 2 images each
 
     const onLoad = () => {
       loadedCount++;
@@ -702,7 +709,8 @@ function WorldMapViewerComponent({
           plains: { img1: images.plains.img1, img2: images.plains.img2 },
           swamp: { img1: images.swamp.img1, img2: images.swamp.img2 },
           water: { img1: images.water.img1, img2: images.water.img2 },
-          road: { img1: images.road.img1, img2: images.road.img2 }
+          road: { img1: images.road.img1, img2: images.road.img2 },
+          mountains: { img1: images.mountains.img1, img2: images.mountains.img2 }
         });
         console.log('✅ All terrain images loaded successfully');
       }
@@ -727,6 +735,8 @@ function WorldMapViewerComponent({
     images.water.img2.onerror = () => console.error('Failed to load water2.png');
     images.road.img1.onerror = () => console.error('Failed to load road1.png');
     images.road.img2.onerror = () => console.error('Failed to load road2.png');
+    images.mountains.img1.onerror = () => console.error('Failed to load mountains1.png');
+    images.mountains.img2.onerror = () => console.error('Failed to load mountains2.png');
   }, []);
 
   // Update canvas dimensions based on container size
@@ -879,7 +889,11 @@ function WorldMapViewerComponent({
                 terrainImg = variant === 1 ? terrainImages.road.img1 : terrainImages.road.img2;
               }
               break;
-            // Mountains still use emoji (no images yet)
+            case 'mountains':
+              if (terrainImages.mountains.img1 && terrainImages.mountains.img2) {
+                terrainImg = variant === 1 ? terrainImages.mountains.img1 : terrainImages.mountains.img2;
+              }
+              break;
             default:
               break;
           }

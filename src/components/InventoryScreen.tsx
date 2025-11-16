@@ -18,6 +18,8 @@ import { CLASS_ICONS, RARITY_COLORS } from '../types/hero.types';
 import { t } from '../localization/i18n';
 import { COLORS, SPACING } from '../styles/tokens';
 import { flexCenter } from '../styles/common';
+import { GameModal } from './ui/GameModal';
+import { ModalButton, ModalButtonGroup, ModalDivider } from './ui/ModalContent';
 import '../App.css';
 
 /**
@@ -40,6 +42,8 @@ interface InventoryScreenProps {
   onAutoSellCommon: () => void;
   /** Optional callback when opening enchant panel */
   onOpenEnchantPanel?: (item: Item) => void;
+  /** Callback when discarding/destroying an item */
+  onDiscardItem: (itemId: string) => void;
   /** Whether player is in town (enables selling/expanding/enchanting) */
   isInTown?: boolean;
 }
@@ -59,10 +63,12 @@ export function InventoryScreen({
   onExpandInventory,
   onAutoSellCommon,
   onOpenEnchantPanel,
+  onDiscardItem,
   isInTown = true
 }: InventoryScreenProps) {
   const [selectedHeroIndex, setSelectedHeroIndex] = useState(0);
   const [tooltip, setTooltip] = useState<{ item: Item; equippedItem: Item | null; x: number; y: number } | null>(null);
+  const [itemDetailModal, setItemDetailModal] = useState<Item | null>(null);
 
   const selectedHero = heroes[selectedHeroIndex];
 
@@ -130,10 +136,12 @@ export function InventoryScreen({
    *
    * @param item - Item to show in tooltip
    * @param e - Mouse event with position
+   * @param isEquippedItem - Whether the item is currently equipped (don't show comparison)
    */
-  const showTooltip = (item: Item, e: React.MouseEvent): void => {
+  const showTooltip = (item: Item, e: React.MouseEvent, isEquippedItem: boolean = false): void => {
     // Get currently equipped item in the same slot for comparison
-    const equippedItem = selectedHero.equipment?.slots[item.slot] || null;
+    // Only show comparison if hovering over inventory item (not equipped item)
+    const equippedItem = isEquippedItem ? null : (selectedHero.equipment?.slots[item.slot] || null);
 
     // Calculate position with edge detection
     const { x, y } = calculateTooltipPosition(e.clientX, e.clientY, !!equippedItem);
@@ -171,6 +179,7 @@ export function InventoryScreen({
   const renderItemPanel = (item: Item, isEquipped: boolean = false): JSX.Element => {
     const stats = item.getEffectiveStats();
     const rarityColor = item.getRarityColor();
+    const canEquip = item.level <= selectedHero.level;
 
     // Convert hex color to rgba for background
     const hexToRgba = (hex: string, alpha: number): string => {
@@ -209,7 +218,7 @@ export function InventoryScreen({
             {item.icon} {item.getDisplayName()}
           </div>
           <div style={{ fontSize: '0.9em', color: '#666' }}>
-            {item.getRarityDisplayName()} {item.slot.charAt(0).toUpperCase() + item.slot.slice(1)} | Lv.{item.level}
+            {item.getRarityDisplayName()} {item.slot.charAt(0).toUpperCase() + item.slot.slice(1)} | <span style={{ color: canEquip ? '#666' : '#f44336', fontWeight: canEquip ? 'normal' : 'bold' }}>Lv.{item.level}</span>
           </div>
           {item.enchantLevel > 0 && (
             <div style={{ fontSize: '0.9em', color: '#9c27b0', fontWeight: 'bold' }}>
@@ -401,7 +410,13 @@ export function InventoryScreen({
               <div
                 key={`equipped-${slotName}-${item?.id || 'empty'}`}
                 className={`equipment-slot ${item ? 'has-item' : 'empty'}`}
-                onMouseEnter={(e) => item && showTooltip(item, e)}
+                onMouseEnter={(e) => {
+                  if (item) {
+                    // Force immediate hide then show
+                    setTooltip(null);
+                    setTimeout(() => showTooltip(item, e, true), 0);
+                  }
+                }}
                 onMouseMove={(e) => item && updateTooltipPosition(e)}
                 onMouseLeave={hideTooltip}
                 onContextMenu={(e) => {
@@ -491,28 +506,32 @@ export function InventoryScreen({
                 <p style={{ fontSize: '0.9em' }}>{t('inventoryScreen.inventoryPanel.emptyMessage')}</p>
               </div>
             ) : (
-              inventory.getFilteredItems().map((item) => (
-                <div
-                  key={`inventory-${item.id}`}
-                  className={`inventory-item rarity-${item.rarity}`}
-                  onClick={() => onEquipItem(selectedHero, item)}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    if (!isInTown) {
-                      alert(t('inventoryScreen.equipment.warnings.enchantingTownOnly'));
-                      return;
-                    }
-                    if (onOpenEnchantPanel) onOpenEnchantPanel(item);
-                  }}
-                  onMouseEnter={(e) => showTooltip(item, e)}
-                  onMouseMove={updateTooltipPosition}
-                  onMouseLeave={hideTooltip}
-                >
-                  <div className="item-icon">{item.icon}</div>
-                  <div className="item-name">{item.getDisplayName()}</div>
-                  <div className="item-level">Lv.{item.level}</div>
-                </div>
-              ))
+              inventory.getFilteredItems().map((item, index) => {
+                const canEquip = item.level <= selectedHero.level;
+                return (
+                  <div
+                    key={`inventory-${item.id}-${index}`}
+                    className={`inventory-item rarity-${item.rarity}`}
+                    onClick={() => setItemDetailModal(item)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      // Right-click does nothing in inventory
+                      // Enchant only available at smithy in town
+                    }}
+                    onMouseEnter={(e) => {
+                      // Force immediate hide then show
+                      setTooltip(null);
+                      setTimeout(() => showTooltip(item, e), 0);
+                    }}
+                    onMouseMove={updateTooltipPosition}
+                    onMouseLeave={hideTooltip}
+                  >
+                    <div className="item-icon">{item.icon}</div>
+                    <div className="item-name">{item.getDisplayName()}</div>
+                    <div className="item-level" style={{ color: canEquip ? undefined : '#f44336', fontWeight: canEquip ? undefined : 'bold' }}>Lv.{item.level}</div>
+                  </div>
+                );
+              })
             )}
           </div>
 
@@ -590,6 +609,96 @@ export function InventoryScreen({
             </>
           )}
         </div>
+      )}
+
+      {/* Item Detail Modal */}
+      {itemDetailModal && (
+        <GameModal
+          isOpen={true}
+          title={itemDetailModal.getDisplayName()}
+          icon={itemDetailModal.icon}
+          onClose={() => setItemDetailModal(null)}
+          maxWidth="500px"
+        >
+          <div style={{ padding: '10px' }}>
+            {/* Item Info */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{
+                fontSize: '0.9em',
+                color: itemDetailModal.getRarityColor(),
+                fontWeight: 'bold',
+                marginBottom: '5px'
+              }}>
+                {itemDetailModal.getRarityDisplayName()} {itemDetailModal.slot.charAt(0).toUpperCase() + itemDetailModal.slot.slice(1)} | Lv.{itemDetailModal.level}
+              </div>
+              {itemDetailModal.enchantLevel > 0 && (
+                <div style={{ fontSize: '0.9em', color: '#9c27b0', fontWeight: 'bold' }}>
+                  +{itemDetailModal.enchantLevel} Enchant
+                </div>
+              )}
+              {itemDetailModal.setName && (
+                <div style={{ fontSize: '0.9em', color: '#2196f3', fontWeight: 'bold' }}>
+                  {itemDetailModal.setName} Set
+                </div>
+              )}
+            </div>
+
+            <ModalDivider />
+
+            {/* Stats */}
+            <div style={{ marginBottom: '20px' }}>
+              <strong style={{ display: 'block', marginBottom: '10px' }}>Stats:</strong>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                {(() => {
+                  const stats = itemDetailModal.getEffectiveStats();
+                  return (
+                    <>
+                      {stats.HP > 0 && <div>❤️ HP: +{stats.HP}</div>}
+                      {stats.ATK > 0 && <div>⚔️ ATK: +{stats.ATK}</div>}
+                      {stats.DEF > 0 && <div>🛡️ DEF: +{stats.DEF}</div>}
+                      {stats.SPD > 0 && <div>⚡ SPD: +{stats.SPD}</div>}
+                      {stats.CRIT > 0 && <div>💥 CRIT: +{stats.CRIT}%</div>}
+                    </>
+                  );
+                })()}
+              </div>
+            </div>
+
+            <ModalDivider />
+
+            {/* Value */}
+            <div style={{ marginBottom: '20px', fontSize: '0.9em', color: '#ffd700' }}>
+              💰 Value: {itemDetailModal.goldValue} gold
+            </div>
+
+            <ModalDivider />
+
+            {/* Actions */}
+            <ModalButtonGroup>
+              <ModalButton
+                onClick={() => {
+                  onEquipItem(selectedHero, itemDetailModal);
+                  setItemDetailModal(null);
+                }}
+                variant="primary"
+                disabled={itemDetailModal.level > selectedHero.level}
+              >
+                Equip Item
+              </ModalButton>
+              <ModalButton
+                onClick={() => {
+                  if (window.confirm(`Are you sure you want to permanently destroy ${itemDetailModal.getDisplayName()}? This cannot be undone.`)) {
+                    onDiscardItem(itemDetailModal.id);
+                    setItemDetailModal(null);
+                  }
+                }}
+                variant="danger"
+              >
+                Destroy Item
+              </ModalButton>
+            </ModalButtonGroup>
+          </div>
+        </GameModal>
       )}
     </div>
   );

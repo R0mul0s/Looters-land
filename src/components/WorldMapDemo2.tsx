@@ -1135,7 +1135,7 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
       }}
       onAutoEquipBest={(hero) => {
         if (!hero.equipment) return;
-        const result = InventoryHelper.autoEquipBest(gameState.inventory, hero.equipment, hero.level);
+        const result = InventoryHelper.autoEquipBest(gameState.inventory, hero.equipment, hero.level, hero.role);
 
         // Build message based on results
         let message = result.message;
@@ -1177,6 +1177,11 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
       }}
       onOpenEnchantPanel={(item) => {
         setEnchantItem(item);
+      }}
+      onDiscardItem={async (itemId) => {
+        await gameActions.removeItem(itemId);
+        gameActions.forceUpdate();
+        gameActions.saveGame(); // Trigger save after discard
       }}
     />
   );
@@ -1375,7 +1380,7 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
             <ModalDivider />
             <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
               {showTreasureChestModal.loot.items.map((item: any, i: number) => (
-                <ItemDisplay key={`worldmap-treasure-${item.id || `item-${i}`}`} item={item} compact />
+                <ItemDisplay key={`worldmap-treasure-${item.id || `item-${i}`}`} item={item} compact heroLevel={gameState.allHeroes[0]?.level} />
               ))}
             </div>
             <ModalButton onClick={handleCollectTreasureLoot} variant="primary" fullWidth>
@@ -1401,7 +1406,7 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
             <ModalDivider />
             <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
               {showHiddenPathModal.loot.items.map((item: any, i: number) => (
-                <ItemDisplay key={i} item={item} compact />
+                <ItemDisplay key={i} item={item} compact heroLevel={gameState.allHeroes[0]?.level} />
               ))}
             </div>
             <ModalButton onClick={handleCollectHiddenPathLoot} variant="primary" fullWidth>

@@ -30,6 +30,16 @@ export const en = {
   },
 
   // ============================================================================
+  // RESOURCES
+  // ============================================================================
+  resources: {
+    gold: 'Gold',
+    gems: 'Gems',
+    dust: 'Dust',
+    crystals: 'Crystals',
+  },
+
+  // ============================================================================
   // HERO CLASSES
   // ============================================================================
   heroClasses: {
@@ -840,7 +850,7 @@ export const en = {
         spd: 'SPD:',
         crit: 'CRIT:',
         value: '💰 Value: {{value}} gold',
-        clickInstructions: 'Left-click to equip | Right-click to enchant',
+        clickInstructions: 'Left-click to view details',
       },
     },
     inventoryPanel: {
@@ -1336,6 +1346,25 @@ export const en = {
     hero3: 'Mage',
     hero4: 'Shieldbearer',
     hero5: 'Bard',
+  },
+
+  // ============================================================================
+  // HEROES SCREEN
+  // ============================================================================
+  heroesScreen: {
+    activePartyTitle: 'Active Party',
+    heroCollectionTitle: 'Hero Collection',
+    emptySlot: 'Empty Slot',
+    inParty: 'In Party',
+    addToParty: '+ Add to Party',
+    partyFull: 'Party is full! Maximum {max} heroes allowed.',
+    townOnly: 'You can only change your party in town (visit the Tavern)!',
+    all: 'All',
+    class: 'Class',
+    xp: 'XP',
+    talentPoints: 'Talent Points',
+    talentPointsAvailable: '{count} Points Available',
+    talentTree: 'Talent Tree (Coming Soon)',
   },
 
   // ============================================================================

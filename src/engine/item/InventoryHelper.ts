@@ -56,23 +56,73 @@ export class InventoryHelper {
   }
 
   /**
-   * Find best item for slot (by rarity first, then level, then power score)
-   * Only considers items from inventory (not currently equipped items)
+   * Calculate power score with role-based stat weights
+   * Different roles value different stats more highly
    */
-  static findBestForSlot(inventory: Inventory, slot: ItemSlot, heroLevel: number = 1, equipment?: Equipment, specificSlot?: EquipmentSlotName): Item | null {
-    // Only get items from inventory (not equipped items)
-    const items = inventory.getItemsBySlot(slot);
+  static calculatePowerScore(item: Item, heroRole?: 'tank' | 'dps' | 'healer' | 'support'): number {
+    const stats = item.getEffectiveStats();
+
+    // Default weights (balanced)
+    let weights = {
+      HP: 1,
+      ATK: 2,
+      DEF: 1.5,
+      SPD: 1,
+      CRIT: 10
+    };
+
+    // Role-based weights
+    if (heroRole === 'tank') {
+      weights = { HP: 2.5, ATK: 1, DEF: 3, SPD: 0.5, CRIT: 5 };
+    } else if (heroRole === 'dps') {
+      weights = { HP: 0.8, ATK: 3, DEF: 0.5, SPD: 1.5, CRIT: 15 };
+    } else if (heroRole === 'healer') {
+      weights = { HP: 1.5, ATK: 0.5, DEF: 1.5, SPD: 2, CRIT: 8 };
+    } else if (heroRole === 'support') {
+      weights = { HP: 1.2, ATK: 1, DEF: 1.2, SPD: 2.5, CRIT: 12 };
+    }
+
+    return (
+      stats.HP * weights.HP +
+      stats.ATK * weights.ATK +
+      stats.DEF * weights.DEF +
+      stats.SPD * weights.SPD +
+      stats.CRIT * weights.CRIT
+    );
+  }
+
+  /**
+   * Find best item for slot comparing both inventory AND currently equipped item
+   * Compares by: 1) Power score (with role weights), 2) Rarity, 3) Level
+   */
+  static findBestForSlot(inventory: Inventory, slot: ItemSlot, heroLevel: number = 1, equipment?: Equipment, specificSlot?: EquipmentSlotName, heroRole?: 'tank' | 'dps' | 'healer' | 'support'): Item | null {
+    // Get items from inventory
+    const inventoryItems = inventory.getItemsBySlot(slot);
+
+    // Get currently equipped item for this slot
+    let equippedItem: Item | null = null;
+    if (equipment && specificSlot) {
+      equippedItem = equipment.slots[specificSlot];
+    }
+
+    // Combine inventory items with equipped item
+    const allItems: Item[] = [...inventoryItems];
+    if (equippedItem && equippedItem.slot === slot) {
+      allItems.push(equippedItem);
+    }
 
     console.log(`🔍 findBestForSlot for ${slot}:`, {
-      itemsInInventory: items.length,
+      itemsInInventory: inventoryItems.length,
+      equippedItem: equippedItem ? `${equippedItem.name} (${equippedItem.rarity}, Lv.${equippedItem.level})` : 'None',
+      totalItems: allItems.length,
       heroLevel,
-      items: items.map(i => `${i.name} (${i.rarity}, Lv.${i.level})`)
+      heroRole: heroRole || 'balanced'
     });
 
-    if (items.length === 0) return null;
+    if (allItems.length === 0) return null;
 
     // Filter by level requirement
-    const usableItems = items.filter(item => item.level <= heroLevel);
+    const usableItems = allItems.filter(item => item.level <= heroLevel);
 
     console.log(`✅ Usable items (level <= ${heroLevel}):`, usableItems.length);
 
@@ -83,30 +133,34 @@ export class InventoryHelper {
 
     // Calculate power score for each item
     const scored = usableItems.map(item => {
-      const stats = item.getEffectiveStats();
-      const powerScore = stats.HP + (stats.ATK * 2) + (stats.DEF * 1.5) + stats.SPD + (stats.CRIT * 10);
+      const powerScore = this.calculatePowerScore(item, heroRole);
       const rarityIndex = rarityOrder.indexOf(item.rarity);
+      const isEquipped = equippedItem?.id === item.id;
 
-      return { item, powerScore, rarityIndex, level: item.level };
+      return { item, powerScore, rarityIndex, level: item.level, isEquipped };
     });
 
-    // Sort by: 1) rarity (higher first), 2) level (higher first), 3) power score (higher first)
+    // Sort by: 1) power score (higher first), 2) rarity (higher first), 3) level (higher first)
     scored.sort((a, b) => {
+      // Primary: Power score
+      if (Math.abs(a.powerScore - b.powerScore) > 0.01) {
+        return b.powerScore - a.powerScore;
+      }
+      // Secondary: Rarity
       if (a.rarityIndex !== b.rarityIndex) {
-        return b.rarityIndex - a.rarityIndex; // Higher rarity first
+        return b.rarityIndex - a.rarityIndex;
       }
-      if (a.level !== b.level) {
-        return b.level - a.level; // Higher level first
-      }
-      return b.powerScore - a.powerScore; // Higher power score first
+      // Tertiary: Level
+      return b.level - a.level;
     });
 
     console.log(`🏆 Best item selected:`, {
       name: scored[0].item.name,
       rarity: scored[0].item.rarity,
       level: scored[0].item.level,
-      powerScore: scored[0].powerScore,
-      allScored: scored.map(s => `${s.item.name} (${s.item.rarity}, Lv.${s.item.level}, PS:${s.powerScore.toFixed(0)})`)
+      powerScore: scored[0].powerScore.toFixed(1),
+      isEquipped: scored[0].isEquipped,
+      allScored: scored.map(s => `${s.item.name} (${s.item.rarity}, Lv.${s.item.level}, PS:${s.powerScore.toFixed(1)})${s.isEquipped ? ' [EQUIPPED]' : ''}`)
     });
 
     return scored[0].item;
@@ -115,9 +169,15 @@ export class InventoryHelper {
   /**
    * Auto-equip best items
    * Compares inventory items with currently equipped items and equips the best ones
+   * Now considers hero role for stat prioritization
    */
-  static autoEquipBest(inventory: Inventory, equipment: Equipment, heroLevel: number): AutoEquipResult {
-    console.log('🔧 Auto-equip starting...', { heroLevel, inventorySize: inventory.items.length });
+  static autoEquipBest(inventory: Inventory, equipment: Equipment, heroLevel: number, heroRole?: 'tank' | 'dps' | 'healer' | 'support'): AutoEquipResult {
+    console.log('🔧 Auto-equip starting...', {
+      heroLevel,
+      heroRole: heroRole || 'balanced',
+      inventorySize: inventory.items.length,
+      equippedItems: Object.values(equipment.slots).filter(i => i !== null).length
+    });
 
     const slotPairs: { slot: ItemSlot; equipSlot: EquipmentSlotName }[] = [
       { slot: 'helmet', equipSlot: 'helmet' },
@@ -135,16 +195,18 @@ export class InventoryHelper {
 
     slotPairs.forEach(({ slot, equipSlot }) => {
       // Find best item including currently equipped one
-      // IMPORTANT: Re-check inventory after each equip in case items were moved
       const allItemsInSlot = inventory.getItemsBySlot(slot);
-      const bestItem = this.findBestForSlot(inventory, slot, heroLevel, equipment, equipSlot);
       const currentItem = equipment.slots[equipSlot];
+
+      // Pass hero role to findBestForSlot for proper stat weighting
+      const bestItem = this.findBestForSlot(inventory, slot, heroLevel, equipment, equipSlot, heroRole);
 
       console.log(`📦 Checking ${equipSlot}:`, {
         slot,
         currentItem: currentItem ? `${currentItem.name} (${currentItem.rarity}, Lv.${currentItem.level})` : 'Empty',
         bestItem: bestItem ? `${bestItem.name} (${bestItem.rarity}, Lv.${bestItem.level})` : 'None found',
-        inInventory: bestItem ? inventory.items.find(i => i.id === bestItem.id) !== undefined : false
+        inInventory: bestItem ? inventory.items.find(i => i.id === bestItem.id) !== undefined : false,
+        isCurrentBest: currentItem && bestItem ? currentItem.id === bestItem.id : false
       });
 
       // Check if there are items that couldn't be equipped due to level requirement
@@ -152,13 +214,11 @@ export class InventoryHelper {
         // Find the best item regardless of level
         const itemsTooHigh = allItemsInSlot.filter(item => item.level > heroLevel);
         if (itemsTooHigh.length > 0) {
-          // Sort by rarity to find the best item that can't be equipped
-          const rarityOrder: ItemRarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+          // Sort by power score to find the best item that can't be equipped
           itemsTooHigh.sort((a, b) => {
-            const aIndex = rarityOrder.indexOf(a.rarity);
-            const bIndex = rarityOrder.indexOf(b.rarity);
-            if (aIndex !== bIndex) return bIndex - aIndex;
-            return b.level - a.level;
+            const scoreA = this.calculatePowerScore(a, heroRole);
+            const scoreB = this.calculatePowerScore(b, heroRole);
+            return scoreB - scoreA;
           });
           skippedItems.push({
             item: itemsTooHigh[0],
@@ -170,25 +230,23 @@ export class InventoryHelper {
 
       if (!bestItem) return;
 
-      // Only equip if:
-      // 1. Slot is empty, OR
-      // 2. Best item is different from currently equipped item
-      if (!currentItem || currentItem.id !== bestItem.id) {
-        // Best item is in inventory, need to equip it
-        if (inventory.items.find(i => i.id === bestItem.id)) {
-          const result = equipment.equip(bestItem);
-          if (result.success) {
-            console.log(`✅ Equipped ${bestItem.name} to ${equipSlot}`);
-            equipped.push(bestItem);
-            inventory.removeItem(bestItem.id);
+      // Only equip if best item is different from currently equipped item AND it's in inventory
+      // If bestItem is already equipped, it means it's the best option - do nothing
+      if (currentItem?.id !== bestItem.id && inventory.items.find(i => i.id === bestItem.id)) {
+        const result = equipment.equip(bestItem);
+        if (result.success) {
+          console.log(`✅ Equipped ${bestItem.name} to ${equipSlot}`);
+          equipped.push(bestItem);
+          inventory.removeItem(bestItem.id);
 
-            // If an item was unequipped, put it back in inventory
-            if (result.unequippedItem) {
-              inventory.addItem(result.unequippedItem);
-            }
+          // If an item was unequipped, put it back in inventory
+          if (result.unequippedItem) {
+            console.log(`📤 Unequipped ${result.unequippedItem.name} back to inventory`);
+            inventory.addItem(result.unequippedItem);
           }
         }
-        // Best item is already equipped, do nothing (it's already the best)
+      } else if (currentItem?.id === bestItem.id) {
+        console.log(`✓ ${currentItem.name} is already the best item for ${equipSlot}`);
       }
     });
 

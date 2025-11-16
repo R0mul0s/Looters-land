@@ -18,6 +18,7 @@ interface ItemDisplayProps {
   onClick?: () => void;
   showPrice?: number;
   compact?: boolean;
+  heroLevel?: number;
 }
 
 /**
@@ -27,10 +28,12 @@ interface ItemDisplayProps {
  * @param onClick - Optional click handler
  * @param showPrice - Optional price to display
  * @param compact - Use compact view (less padding/spacing)
+ * @param heroLevel - Optional hero level to check if item can be equipped
  */
-export function ItemDisplay({ item, onClick, showPrice, compact = false }: ItemDisplayProps) {
+export function ItemDisplay({ item, onClick, showPrice, compact = false, heroLevel }: ItemDisplayProps) {
   const stats = item.getEffectiveStats();
   const rarityColor = item.getRarityColor();
+  const canEquip = heroLevel !== undefined ? item.level <= heroLevel : true;
 
   return (
     <div
@@ -60,7 +63,7 @@ export function ItemDisplay({ item, onClick, showPrice, compact = false }: ItemD
             <strong style={{ color: rarityColor, fontSize: compact ? FONT_SIZE.sm : FONT_SIZE.md }}>
               {item.getDisplayName()}
             </strong>
-            <span style={{ color: COLORS.textDarkGray, fontSize: FONT_SIZE.xs }}>
+            <span style={{ color: canEquip ? COLORS.textDarkGray : '#f44336', fontSize: FONT_SIZE.xs, fontWeight: canEquip ? undefined : 'bold' }}>
               Lv{item.level}
             </span>
             <span style={{

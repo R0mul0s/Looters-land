@@ -32,6 +32,16 @@ export const cs: LocaleKeys = {
   },
 
   // ============================================================================
+  // RESOURCES
+  // ============================================================================
+  resources: {
+    gold: 'Zlato',
+    gems: 'Drahokamy',
+    dust: 'Prach',
+    crystals: 'Krystaly',
+  },
+
+  // ============================================================================
   // HERO CLASSES
   // ============================================================================
   heroClasses: {
@@ -51,7 +61,7 @@ export const cs: LocaleKeys = {
     atk: 'Útok',
     def: 'Obrana',
     spd: 'Rychlost',
-    crit: 'Kritický Zásah',
+    crit: 'Kritický zásah',
     level: 'Úroveň',
   },
 
@@ -60,7 +70,7 @@ export const cs: LocaleKeys = {
   // ============================================================================
   equipmentSlots: {
     helmet: 'Helma',
-    chest: 'Hrudní Zbroj',
+    chest: 'Hrudní zbroj',
     legs: 'Nohavice',
     boots: 'Boty',
     weapon: 'Zbraň',
@@ -83,8 +93,8 @@ export const cs: LocaleKeys = {
   // ============================================================================
   combat: {
     // Combat modes
-    modeAuto: 'Automatický Boj',
-    modeManual: 'Manuální Boj',
+    modeAuto: 'Automatický boj',
+    modeManual: 'Manuální boj',
 
     // Combat status
     victory: '🎉 VÍTĚZSTVÍ! Hrdinové zvítězili! 🎉',
@@ -111,10 +121,10 @@ export const cs: LocaleKeys = {
     healsFor: '{target} se uzdravil o {amount} životů',
 
     // Buttons
-    startCombat: 'Zahájit Boj',
-    nextTurn: 'Další Kolo',
+    startCombat: 'Zahájit boj',
+    nextTurn: 'Další kolo',
     attack: 'Útok',
-    useSkill: 'Použít Schopnost',
+    useSkill: 'Použít schopnost',
 
     // Status
     waitingForInput: 'Čekám na tvůj příkaz...',
@@ -277,10 +287,10 @@ export const cs: LocaleKeys = {
   dungeon: {
     // Room descriptions
     enemies: 'Nepřátelé',
-    eliteEnemies: 'Elitní Nepřátelé',
+    eliteEnemies: 'Elitní nepřátelé',
     gold: 'Zlato',
     items: 'Předměty',
-    guaranteedRewards: 'Zaručené Odměny',
+    guaranteedRewards: 'Zaručené odměny',
 
     // Room encounters
     bossEncounter: 'SOUBOJ S BOSSEM!',
@@ -303,27 +313,27 @@ export const cs: LocaleKeys = {
     exitRoomMessage: 'Stiskněte OK pro postup na další patro.\nStiskněte Zrušit pro opuštění podzemí (všechna kořist si necháte).',
 
     // Room action buttons
-    combatCompleted: 'Boj Dokončen',
-    fightBoss: 'Bojovat s Bossem',
-    bossDefeated: 'Boss Poražen',
-    lootTreasure: 'Vzít Poklad',
+    combatCompleted: 'Boj dokončen',
+    fightBoss: 'Bojovat s bossem',
+    bossDefeated: 'Boss poražen',
+    lootTreasure: 'Vzít poklad',
     treasureLooted: 'Sesbíráno',
-    disarmTrap: 'Zneškodnit Past',
-    trapDisarmed: 'Past Zneškodněna',
+    disarmTrap: 'Zneškodnit past',
+    trapDisarmed: 'Past zneškodněna',
     rest: 'Odpočinek',
-    alreadyRested: 'Již Odpočato',
-    useShrine: 'Použít Svatyni',
-    shrineUsed: 'Svatyně Použita',
+    alreadyRested: 'Již odpočato',
+    useShrine: 'Použít svatyni',
+    shrineUsed: 'Svatyně použita',
     investigate: 'Prozkoumat',
-    mysteryResolved: 'Záhada Vyřešena',
-    eliteDefeated: 'Elita Poražena',
-    fightMiniBoss: 'Bojovat s Mini-Bossem',
-    miniBossDefeated: 'Mini-Boss Poražen',
-    proceedNextFloor: 'Postoupit na Další Patro',
+    mysteryResolved: 'Záhada vyřešena',
+    eliteDefeated: 'Elita poražena',
+    fightMiniBoss: 'Bojovat s mini-bossem',
+    miniBossDefeated: 'Mini-boss poražen',
+    proceedNextFloor: 'Postoupit na další patro',
 
     // Buttons
-    exitDungeonKeepLoot: '✅ Opustit Podzemí (Ponechat Kořist)',
-    abandonDungeon: '❌ Opustit Podzemí',
+    exitDungeonKeepLoot: '✅ Opustit podzemí (Ponechat kořist)',
+    abandonDungeon: '❌ Opustit podzemí',
 
     // Messages
     loading: 'Načítání podzemí...',
@@ -332,9 +342,9 @@ export const cs: LocaleKeys = {
 
     // Statistics labels
     floor: 'Patro:',
-    enemiesDefeated: 'Poražení Nepřátelé:',
-    goldEarned: 'Získané Zlato:',
-    itemsFound: 'Nalezené Předměty:',
+    enemiesDefeated: 'Poražení nepřátelé:',
+    goldEarned: 'Získané zlato:',
+    itemsFound: 'Nalezené předměty:',
 
     // Shrine buffs
     activeShrineBufTitle: '✨ Aktivní Buff Svatyně:',
@@ -345,9 +355,9 @@ export const cs: LocaleKeys = {
 
     // Room descriptions
     difficulty: 'Obtížnost:',
-    healAmount: 'Množství Léčení:',
+    healAmount: 'Množství léčení:',
     shrineDescription: 'Mystická svatyně vyzařuje sílu...',
-    buffType: 'Typ Buffu:',
+    buffType: 'Typ buffu:',
 
     // Room types
     roomTypes: {
@@ -376,11 +386,11 @@ export const cs: LocaleKeys = {
     // Dungeon victory screen
     victory: {
       title: 'Vítězství!',
-      goldReward: 'Získané Zlato',
-      itemsReward: 'Nalezené Předměty',
+      goldReward: 'Získané zlato',
+      itemsReward: 'Nalezené předměty',
       instruction: 'Klikněte na předměty pro přidání do inventáře nebo prodej za zlato',
-      collectAll: 'Sebrat Vše',
-      sellAll: 'Prodat Vše',
+      collectAll: 'Sebrat vše',
+      sellAll: 'Prodat vše',
       allCollected: 'Veškerá kořist sebrána!',
       continueExploring: 'Pokračovat v Průzkumu',
       uncollectedWarning: 'Máte nesebrané předměty. Seberte nebo prodejte je před pokračováním.',
@@ -399,23 +409,23 @@ export const cs: LocaleKeys = {
     position: 'Pozice',
     energy: 'Energie',
     gold: 'Zlato',
-    dailyRank: 'Denní Pořadí',
+    dailyRank: 'Denní pořadí',
     inventory: 'Inventář',
-    storedGold: 'Uložené Zlato',
+    storedGold: 'Uložené zlato',
     energyRegen: 'Energie se regeneruje časem',
     todo: 'TODO',
 
     // Unexplored area warning
-    unexploredTitle: 'Neprozkoumaná Oblast',
+    unexploredTitle: 'Neprozkoumaná oblast',
     unexploredMessage: 'Tato oblast je zahalena temnotou. Nemůžete cestovat do neprozkoumaných území!',
     unexploredTip: 'Nejprve prozkoumejte okolní oblasti, abyste odhalili více mapy. Pohyb je omezen pouze na objevená políčka.',
 
     // Teleport system
     teleportTitle: 'Teleport',
-    teleportCost: 'Cena Teleportu',
+    teleportCost: 'Cena teleportu',
     teleportEnergy: 'Energie',
-    availableEnergy: 'Dostupná Energie',
-    discoveredLocations: 'Objevená Místa',
+    availableEnergy: 'Dostupná energie',
+    discoveredLocations: 'Objevená místa',
     allLocations: 'Vše',
     towns: 'Města',
     dungeons: 'Podzemí',
@@ -842,7 +852,7 @@ export const cs: LocaleKeys = {
         spd: 'Rychlost:',
         crit: 'Kritický Zásah:',
         value: '💰 Hodnota: {{value}} zlato',
-        clickInstructions: 'Levý klik pro nasazení | Pravý klik pro očarování',
+        clickInstructions: 'Levý klik pro zobrazení detailů',
       },
     },
     inventoryPanel: {
@@ -1338,6 +1348,25 @@ export const cs: LocaleKeys = {
     hero3: 'Kouzelník',
     hero4: 'Štítonoš',
     hero5: 'Bard',
+  },
+
+  // ============================================================================
+  // HEROES SCREEN
+  // ============================================================================
+  heroesScreen: {
+    activePartyTitle: 'Aktivní družina',
+    heroCollectionTitle: 'Sbírka hrdinů',
+    emptySlot: 'Prázdný slot',
+    inParty: 'V družině',
+    addToParty: '+ Přidat do družiny',
+    partyFull: 'Družina je plná! Maximálně {max} hrdinů povoleno.',
+    townOnly: 'Družinu můžete změnit pouze ve městě (navštivte Tavern)!',
+    all: 'Vše',
+    class: 'Třída',
+    xp: 'Zkušenosti',
+    talentPoints: 'Body talentu',
+    talentPointsAvailable: '{count} bodů k dispozici',
+    talentTree: 'Strom talentů (Připravujeme)',
   },
 
   // ============================================================================

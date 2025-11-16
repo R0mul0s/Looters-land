@@ -26,17 +26,21 @@ import './config/DEBUG_CONFIG' // Load debug commands
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS, Z_INDEX, BLUR } from './styles/tokens';
 import { flexColumn, flexCenter, flexBetween } from './styles/common';
 
-function App() {
-  // @lastModified: 2025-11-15
+interface AppProps {
+  userEmail?: string; // Optional: if provided, skip auth check (used when called from Router)
+}
+
+function App({ userEmail: userEmailProp }: AppProps = {}) {
+  // @lastModified: 2025-11-16
   // ============================================================================
   // ALL HOOKS - MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // ============================================================================
 
   // Authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(!!userEmailProp);
   const [userId, setUserId] = useState<string>('demo-user-id');
-  const [userEmail, setUserEmail] = useState<string>('');
-  const [authLoading, setAuthLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState<string>(userEmailProp || '');
+  const [authLoading, setAuthLoading] = useState(!userEmailProp); // Skip loading if userEmail prop provided
 
   // Main game UI - Initialize 5 heroes (one of each class) - with auto-restore from localStorage
   const [heroes] = useState<Hero[]>(() => {
@@ -101,7 +105,7 @@ function App() {
     }, 1000); // Save 1 second after last change
 
     return () => clearTimeout(timeoutId);
-  }, [heroes, inventory.items, inventory.gold, inventory.maxSlots, updateTrigger]);
+  }, [heroes, inventory.items, inventory.gold, inventory.maxSlots]); // REMOVED updateTrigger - it was causing infinite loops
 
   // Detect mobile on resize
   useEffect(() => {
@@ -256,7 +260,7 @@ function App() {
   const autoEquipBest = () => {
     if (!selectedHero.equipment) return;
 
-    const result = InventoryHelper.autoEquipBest(inventory, selectedHero.equipment, selectedHero.level);
+    const result = InventoryHelper.autoEquipBest(inventory, selectedHero.equipment, selectedHero.level, selectedHero.role);
     if (result.success) {
       console.log(result.message);
       forceUpdate();
@@ -405,6 +409,11 @@ function App() {
   // AUTH EFFECTS - Check authentication on mount
   // ============================================================================
   useEffect(() => {
+    // Skip auth check if userEmail was provided as prop (called from Router)
+    if (userEmailProp) {
+      return;
+    }
+
     const checkAuth = async () => {
       const session = await AuthService.getCurrentSession();
       if (session?.user) {
@@ -434,7 +443,7 @@ function App() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [userEmailProp]);
 
   // ============================================================================
   // EVENT HANDLERS

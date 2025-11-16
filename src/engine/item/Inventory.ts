@@ -128,35 +128,39 @@ export class Inventory {
     );
 
     // Apply sorting
+    // Always sort by: Level > Rarity > Type (slot)
     filtered.sort((a, b) => {
-      switch (this.sortBy) {
-        case 'rarity': {
-          const rarityOrder: Record<ItemRarity, number> = {
-            common: 0,
-            uncommon: 1,
-            rare: 2,
-            epic: 3,
-            legendary: 4,
-            mythic: 5
-          };
-          const rarityDiff = (rarityOrder[b.rarity] || 0) - (rarityOrder[a.rarity] || 0);
-          // If same rarity, sort by level (descending)
-          if (rarityDiff !== 0) return rarityDiff;
-          return b.level - a.level;
-        }
+      // Primary: Level (descending - highest first)
+      const levelDiff = b.level - a.level;
+      if (levelDiff !== 0) return levelDiff;
 
-        case 'level':
-          return b.level - a.level;
+      // Secondary: Rarity (descending - highest first)
+      const rarityOrder: Record<ItemRarity, number> = {
+        common: 0,
+        uncommon: 1,
+        rare: 2,
+        epic: 3,
+        legendary: 4,
+        mythic: 5
+      };
+      const rarityDiff = (rarityOrder[b.rarity] || 0) - (rarityOrder[a.rarity] || 0);
+      if (rarityDiff !== 0) return rarityDiff;
 
-        case 'name':
-          return a.name.localeCompare(b.name);
+      // Tertiary: Type/Slot (alphabetical)
+      const slotOrder: Record<ItemSlot, number> = {
+        weapon: 0,
+        helmet: 1,
+        chest: 2,
+        gloves: 3,
+        legs: 4,
+        boots: 5,
+        accessory: 6
+      };
+      const slotDiff = (slotOrder[a.slot] || 0) - (slotOrder[b.slot] || 0);
+      if (slotDiff !== 0) return slotDiff;
 
-        case 'value':
-          return b.goldValue - a.goldValue;
-
-        default:
-          return 0;
-      }
+      // Quaternary: Name (alphabetical)
+      return a.name.localeCompare(b.name);
     });
 
     return filtered;

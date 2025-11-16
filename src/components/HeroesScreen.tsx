@@ -4,9 +4,17 @@
  * Displays hero collection with party management.
  * Shows all heroes (owned and locked), allows party activation.
  *
+ * Contains:
+ * - Active Party panel with accordion (4 hero slots)
+ * - Hero Collection panel with accordion and class filters
+ * - Combat Power display for each hero
+ * - Health bars with color-coded HP status
+ * - Hero details panel (stats, talents, XP)
+ * - Party management (add/remove heroes)
+ *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-15
+ * @lastModified 2025-11-16
  */
 
 import React, { useState } from 'react';
@@ -15,6 +23,7 @@ import type { HeroClass } from '../types/hero.types';
 import { CLASS_ICONS, RARITY_COLORS } from '../types/hero.types';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS, BLUR, Z_INDEX } from '../styles/tokens';
 import { flexColumn, flexCenter, flexBetween } from '../styles/common';
+import { t } from '../localization/i18n';
 
 interface HeroesScreenProps {
   heroes: Hero[];
@@ -25,39 +34,53 @@ interface HeroesScreenProps {
 
 /**
  * Get health bar color based on HP percentage
+ *
+ * Returns appropriate gradient color for health bar visualization.
+ * Uses design tokens for consistent theming.
+ *
+ * @param hpPercent - Current HP as percentage (0-1)
+ * @returns CSS gradient string for health bar color
+ *
+ * @example
+ * ```typescript
+ * const color = getHealthBarColor(0.8); // Returns green gradient
+ * const color = getHealthBarColor(0.3); // Returns red gradient
+ * ```
  */
 function getHealthBarColor(hpPercent: number): string {
   if (hpPercent > 0.6) {
-    return 'linear-gradient(90deg, #10b981 0%, #059669 100%)'; // Green
+    return `linear-gradient(90deg, ${COLORS.success} 0%, ${COLORS.successDark} 100%)`; // Green
   } else if (hpPercent > 0.4) {
-    return 'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)'; // Orange
+    return `linear-gradient(90deg, ${COLORS.warning} 0%, ${COLORS.warningDark} 100%)`; // Orange
   } else if (hpPercent > 0.2) {
-    return 'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)'; // Red
+    return `linear-gradient(90deg, ${COLORS.danger} 0%, ${COLORS.dangerDark} 100%)`; // Red
   } else {
-    return 'linear-gradient(90deg, #991b1b 0%, #7f1d1d 100%)'; // Dark red
+    return 'linear-gradient(90deg, #991b1b 0%, #7f1d1d 100%)'; // Dark red (critical)
   }
-}
-
-/**
- * Calculate average health percentage of active party
- * @param activeParty - Array of heroes in active party
- * @returns Average health percentage (0-100)
- */
-export function getPartyAverageHealth(activeParty: Hero[]): number {
-  if (!activeParty || activeParty.length === 0) return 100;
-
-  const totalHealthPercent = activeParty.reduce((sum, hero) => {
-    return sum + (hero.currentHP / hero.maxHP) * 100;
-  }, 0);
-
-  return totalHealthPercent / activeParty.length;
 }
 
 /**
  * Heroes Screen Component
  *
+ * Main screen for managing hero party and viewing hero collection.
+ * Features accordion panels, class filtering, and detailed hero stats.
+ *
  * @param props - Component props
+ * @param props.heroes - All available heroes
+ * @param props.activeParty - Currently active party (max 4 heroes)
+ * @param props.onPartyChange - Callback when party composition changes
+ * @param props.isInTown - Whether player is in town (party changes only allowed in town)
  * @returns React component
+ *
+ * @example
+ * ```tsx
+ * <HeroesScreen
+ *   heroes={allHeroes}
+ *   activeParty={currentParty}
+ *   onPartyChange={handlePartyChange}
+ *   isInTown={true}
+ * />
+ * ```
  */
 export function HeroesScreen({
   heroes,
@@ -74,6 +97,8 @@ export function HeroesScreen({
 
   const [selectedHero, setSelectedHero] = useState<Hero | null>(null);
   const [filterClass, setFilterClass] = useState<HeroClass | 'all'>('all');
+  const [activePartyExpanded, setActivePartyExpanded] = useState(true);
+  const [collectionExpanded, setCollectionExpanded] = useState(false);
 
   const maxPartySize = 4;
 
@@ -86,7 +111,7 @@ export function HeroesScreen({
 
     // Can only change party in town (e.g., in Tavern)
     if (!isInTown) {
-      alert('⚠️ You can only change your party in town (visit the Tavern)!');
+      alert(`⚠️ ${t('heroesScreen.townOnly')}`);
       return;
     }
 
@@ -98,7 +123,7 @@ export function HeroesScreen({
       if (activeParty.length < maxPartySize) {
         onPartyChange([...activeParty, hero]);
       } else {
-        alert(`⚠️ Party is full! Maximum ${maxPartySize} heroes allowed.`);
+        alert(`⚠️ ${t('heroesScreen.partyFull').replace('{max}', maxPartySize.toString())}`);
       }
     }
   };
@@ -132,8 +157,19 @@ export function HeroesScreen({
     <div style={styles.container}>
       {/* Active Party Panel */}
       <div style={styles.partyPanel}>
-        <h2 style={styles.partyTitle}>⚔️ Active Party ({activeParty.length}/{maxPartySize})</h2>
-        <div style={styles.partySlots}>
+        <div
+          style={styles.accordionHeader}
+          onClick={() => setActivePartyExpanded(!activePartyExpanded)}
+        >
+          <h2 style={styles.partyTitle}>
+            <span style={styles.accordionIcon}>{activePartyExpanded ? '▼' : '▶'}</span>
+            ⚔️ {t('heroesScreen.activePartyTitle')} ({activeParty.length}/{maxPartySize})
+          </h2>
+        </div>
+
+        {activePartyExpanded && (
+          <div style={styles.accordionContent}>
+            <div style={styles.partySlots}>
           {[0, 1, 2, 3].map((index) => {
             const hero = activeParty[index];
 
@@ -150,6 +186,7 @@ export function HeroesScreen({
                   <>
                     <div style={styles.partyHeroIcon}>{CLASS_ICONS[hero.class]}</div>
                     <div style={styles.partyHeroName}>{hero.name}</div>
+                    <div style={styles.partyHeroCombatPower}>🏆 {hero.getScore()}</div>
                     <div style={styles.partyHeroClass}>{hero.class}</div>
                     <div style={styles.partyHeroLevel}>Level {hero.level}</div>
 
@@ -180,21 +217,33 @@ export function HeroesScreen({
                     </button>
                   </>
                 ) : (
-                  <div style={styles.partySlotPlaceholder}>Empty Slot</div>
+                  <div style={styles.partySlotPlaceholder}>{t('heroesScreen.emptySlot')}</div>
                 )}
               </div>
             );
           })}
-        </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Hero Collection */}
       <div style={styles.collectionPanel}>
-        <div style={styles.collectionHeader}>
-          <h2 style={styles.collectionTitle}>📖 Hero Collection ({heroes.length})</h2>
+        <div
+          style={styles.accordionHeader}
+          onClick={() => setCollectionExpanded(!collectionExpanded)}
+        >
+          <h2 style={styles.collectionTitle}>
+            <span style={styles.accordionIcon}>{collectionExpanded ? '▼' : '▶'}</span>
+            📖 {t('heroesScreen.heroCollectionTitle')} ({heroes.length})
+          </h2>
+        </div>
 
-          {/* Class Filter */}
-          <div style={styles.filterContainer}>
+        {collectionExpanded && (
+          <div style={styles.accordionContent}>
+            <div style={styles.collectionHeader}>
+              {/* Class Filter */}
+              <div style={styles.filterContainer}>
             {allClasses.map((cls) => (
               <button
                 key={cls}
@@ -204,14 +253,14 @@ export function HeroesScreen({
                   ...(filterClass === cls ? styles.filterButtonActive : {})
                 }}
               >
-                {cls === 'all' ? '🌟 All' : `${CLASS_ICONS[cls]} ${cls}`}
+                {cls === 'all' ? `🌟 ${t('heroesScreen.all')}` : `${CLASS_ICONS[cls]} ${cls}`}
               </button>
             ))}
-          </div>
-        </div>
+              </div>
+            </div>
 
-        {/* Hero Grid */}
-        <div style={styles.heroGrid}>
+            {/* Hero Grid */}
+            <div style={styles.heroGrid}>
           {filteredHeroes.map((hero) => {
             const inParty = isInParty(hero);
 
@@ -267,12 +316,14 @@ export function HeroesScreen({
                     ...(inParty ? styles.partyToggleButtonActive : {})
                   }}
                 >
-                  {inParty ? '✓ In Party' : '+ Add to Party'}
+                  {inParty ? `✓ ${t('heroesScreen.inParty')}` : t('heroesScreen.addToParty')}
                 </button>
               </div>
             );
           })}
-        </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Hero Details Panel (when selected) */}
@@ -292,26 +343,28 @@ export function HeroesScreen({
 
           <div style={styles.detailsContent}>
             <div style={styles.detailsRow}>
-              <span style={styles.detailsLabel}>Class:</span>
+              <span style={styles.detailsLabel}>{t('heroesScreen.class')}:</span>
               <span style={styles.detailsValue}>{selectedHero.class}</span>
             </div>
             <div style={styles.detailsRow}>
-              <span style={styles.detailsLabel}>Level:</span>
+              <span style={styles.detailsLabel}>{t('stats.level')}:</span>
               <span style={styles.detailsValue}>{selectedHero.level}</span>
             </div>
             <div style={styles.detailsRow}>
-              <span style={styles.detailsLabel}>XP:</span>
+              <span style={styles.detailsLabel}>{t('heroesScreen.xp')}:</span>
               <span style={styles.detailsValue}>{selectedHero.xp} / {selectedHero.xpToNextLevel}</span>
             </div>
 
             {/* Talent Section */}
             {selectedHero.talentPoints > 0 && (
               <div style={styles.talentSection}>
-                <h4 style={styles.statsTitle}>⭐ Talent Points</h4>
+                <h4 style={styles.statsTitle}>⭐ {t('heroesScreen.talentPoints')}</h4>
                 <div style={styles.talentInfo}>
-                  <span style={styles.talentCount}>{selectedHero.talentPoints} Points Available</span>
+                  <span style={styles.talentCount}>
+                    {t('heroesScreen.talentPointsAvailable').replace('{count}', selectedHero.talentPoints.toString())}
+                  </span>
                   <button style={styles.talentButton}>
-                    Talent Tree (Coming Soon)
+                    {t('heroesScreen.talentTree')}
                   </button>
                 </div>
               </div>
@@ -353,7 +406,7 @@ const styles: Record<string, React.CSSProperties> = {
     height: '100%',
     width: '100%',
     background: `linear-gradient(135deg, ${COLORS.bgDarkSolid} 0%, ${COLORS.bgDarkAlt} 100%)`,
-    overflow: 'hidden',
+    overflowY: 'auto',
     gap: SPACING[4],
     padding: SPACING.lg,
     boxSizing: 'border-box'
@@ -365,15 +418,33 @@ const styles: Record<string, React.CSSProperties> = {
     border: `1px solid rgba(45, 212, 191, 0.3)`,
     boxShadow: `${SHADOWS.lg}, inset 0 1px 0 rgba(45, 212, 191, 0.1)`
   },
+  accordionHeader: {
+    cursor: 'pointer',
+    userSelect: 'none' as const,
+    transition: TRANSITIONS.base
+  },
+  accordionIcon: {
+    display: 'inline-block',
+    marginRight: SPACING[2],
+    fontSize: FONT_SIZE.lg,
+    transition: TRANSITIONS.base,
+    color: COLORS.primary
+  },
+  accordionContent: {
+    marginTop: SPACING[4],
+    animation: 'fadeIn 0.3s ease-in-out'
+  },
   partyTitle: {
-    margin: `0 0 ${SPACING[4]} 0`,
+    margin: 0,
     fontSize: FONT_SIZE['2xl'],
     fontWeight: FONT_WEIGHT.bold,
     background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     backgroundClip: 'text',
-    letterSpacing: '0.3px'
+    letterSpacing: '0.3px',
+    display: 'flex',
+    alignItems: 'center'
   },
   partySlots: {
     display: 'grid',
@@ -420,6 +491,14 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: SPACING[0.75],
     textShadow: '0 0 8px rgba(251, 191, 36, 0.4)'
   },
+  partyHeroCombatPower: {
+    fontSize: FONT_SIZE[12],
+    color: COLORS.primary,
+    fontWeight: FONT_WEIGHT.bold,
+    marginBottom: SPACING[0.75],
+    textShadow: '0 0 8px rgba(45, 212, 191, 0.6)',
+    letterSpacing: '0.3px'
+  },
   partyHeroClass: {
     fontSize: FONT_SIZE[11],
     color: COLORS.textSecondary,
@@ -443,27 +522,26 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)'
   },
   collectionPanel: {
-    flex: 1,
     background: `linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%)`,
     borderRadius: BORDER_RADIUS.xl,
     padding: SPACING.lg,
     border: `1px solid rgba(45, 212, 191, 0.3)`,
-    boxShadow: `${SHADOWS.lg}, inset 0 1px 0 rgba(45, 212, 191, 0.1)`,
-    overflow: 'hidden',
-    ...flexColumn
+    boxShadow: `${SHADOWS.lg}, inset 0 1px 0 rgba(45, 212, 191, 0.1)`
   },
   collectionHeader: {
     marginBottom: SPACING[4]
   },
   collectionTitle: {
-    margin: `0 0 ${SPACING[4]} 0`,
+    margin: 0,
     fontSize: FONT_SIZE['2xl'],
     fontWeight: FONT_WEIGHT.bold,
     background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
     backgroundClip: 'text',
-    letterSpacing: '0.3px'
+    letterSpacing: '0.3px',
+    display: 'flex',
+    alignItems: 'center'
   },
   filterContainer: {
     display: 'flex',
@@ -491,11 +569,9 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: FONT_WEIGHT.semibold
   },
   heroGrid: {
-    flex: 1,
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))',
     gap: SPACING[3.5],
-    overflowY: 'auto',
     padding: SPACING[1.5]
   },
   heroCard: {

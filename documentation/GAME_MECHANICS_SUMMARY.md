@@ -193,6 +193,20 @@ if (Math.random() * 100 < attacker.CRIT) {
 - **10 Wandering Monsters** (30-min respawn):
   - Dire Wolf, Troll, Ogre, Harpy, Minotaur, Chimera, Demon, Lich
 
+### Random Encounters (✅ COMPLETE - v0.7.4)
+- **Classic RPG-style** random battles triggered during worldmap movement
+- **Trigger Chance:** 8% per tile moved (configurable in BALANCE_CONFIG)
+- **Enemy Scaling:** Player level ± 3 levels
+- **Enemy Count:** 1-3 enemies per encounter
+- **Combat Flow:**
+  1. Random roll during player movement (not on water/roads)
+  2. Movement immediately stops if encounter triggers
+  3. Pre-combat modal shows enemy details
+  4. Player chooses Auto or Manual combat
+  5. Standard 4v4 combat mechanics apply
+- **No visual markers** on map (encounters are invisible until triggered)
+- **Energy Cost:** 5 energy per encounter (standard worldmap combat)
+
 ### Global Systems
 - **Weather System:** Clear, Rain, Storm, Snow, Fog (15-min cycles)
 - **Time of Day:** Morning, Afternoon, Evening, Night (15-min cycles)

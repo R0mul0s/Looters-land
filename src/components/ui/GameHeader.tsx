@@ -89,12 +89,12 @@ export function GameHeader({
           </div>
 
           {/* Sync Status - compact text only */}
-          {syncStatus && syncStatus === 'synced' && (
+          {syncStatus && syncStatus === 'success' && (
             <div style={styles.syncStatusMobile}>
               Uloženo
             </div>
           )}
-          {syncStatus && syncStatus === 'syncing' && (
+          {syncStatus && syncStatus === 'saving' && (
             <div style={styles.syncStatusMobileSyncing}>
               Ukládám...
             </div>

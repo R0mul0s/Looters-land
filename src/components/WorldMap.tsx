@@ -2061,7 +2061,7 @@ const styles: Record<string, React.CSSProperties> = {
     right: SPACING[2],
     width: '40px',
     height: '40px',
-    borderRadius: BORDER_RADIUS.full,
+    borderRadius: BORDER_RADIUS.round,
     backgroundColor: 'rgba(26, 26, 26, 0.85)',
     border: `2px solid ${COLORS.primary}`,
     color: COLORS.textLight,

@@ -136,22 +136,24 @@ export function Router() {
   if (currentPath === '/test') {
     return (
       <div>
-        <div style={{
-          position: 'fixed',
-          top: 10,
-          right: 10,
-          zIndex: 10000,
-          background: '#4CAF50',
-          color: '#fff',
-          padding: '10px 20px',
-          borderRadius: '5px',
-          cursor: 'pointer',
-          fontWeight: 'bold',
-          border: '2px solid #2a5a2a'
-        }}
-        onClick={() => navigate('/')}>
+        <button
+          style={{
+            position: 'fixed',
+            top: 10,
+            right: 10,
+            zIndex: 10000,
+            background: '#4CAF50',
+            color: '#fff',
+            padding: '10px 20px',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            border: '2px solid #2a5a2a'
+          }}
+          onClick={() => navigate('/')}
+        >
           {t('router.backToMainGame')}
-        </div>
+        </button>
         <App />
       </div>
     );

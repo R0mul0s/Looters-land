@@ -131,7 +131,10 @@ CREATE OR REPLACE FUNCTION update_leaderboard_entry(
   p_player_name TEXT DEFAULT NULL,
   p_player_level INTEGER DEFAULT 1
 )
-RETURNS void AS $$
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
 DECLARE
   v_deepest_floor INTEGER := 0;
   v_total_gold BIGINT := 0;
@@ -181,11 +184,17 @@ BEGIN
     player_level = COALESCE(p_player_level, daily_leaderboards.player_level),
     updated_at = NOW();
 END;
-$$ LANGUAGE plpgsql;
+$$;
+
+-- Grant execute permission to authenticated users and service role
+GRANT EXECUTE ON FUNCTION update_leaderboard_entry TO authenticated, service_role, anon;
 
 -- Function to calculate rankings for a specific category
 CREATE OR REPLACE FUNCTION calculate_rankings(p_date DATE, p_category leaderboard_category)
-RETURNS void AS $$
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
 BEGIN
   WITH ranked_players AS (
     SELECT
@@ -199,11 +208,17 @@ BEGIN
   FROM ranked_players rp
   WHERE dl.id = rp.id;
 END;
-$$ LANGUAGE plpgsql;
+$$;
+
+-- Grant execute permission to authenticated users and service role
+GRANT EXECUTE ON FUNCTION calculate_rankings TO authenticated, service_role, anon;
 
 -- Function to archive leaderboards for a specific date
 CREATE OR REPLACE FUNCTION archive_leaderboards(p_date DATE)
-RETURNS void AS $$
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
 DECLARE
   v_category leaderboard_category;
 BEGIN
@@ -236,7 +251,10 @@ BEGIN
     ON CONFLICT (date, category) DO NOTHING;
   END LOOP;
 END;
-$$ LANGUAGE plpgsql;
+$$;
+
+-- Grant execute permission to authenticated users and service role
+GRANT EXECUTE ON FUNCTION archive_leaderboards TO authenticated, service_role, anon;
 
 -- ============================================================================
 -- TRIGGERS

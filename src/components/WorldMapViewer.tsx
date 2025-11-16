@@ -11,7 +11,7 @@
  * @lastModified 2025-11-15
  */
 
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, Z_INDEX, TRANSITIONS } from '../styles/tokens';
 import { flexBetween, flexCenter } from '../styles/common';
 import type { WorldMap, Tile, DynamicObject, WeatherState, TimeState } from '../types/worldmap.types';
@@ -1770,21 +1770,38 @@ function WorldMapViewerComponent({
   };
 
   /**
-   * Handle mouse wheel zoom
+   * Handle mouse wheel zoom with useCallback to prevent re-creating on every render
    *
    * @description Processes mouse wheel events to zoom in/out on the map
-   * @param e - React wheel event from canvas
+   * @param e - Native wheel event from canvas
    *
    * @example
-   * ```tsx
-   * <canvas onWheel={handleWheel} />
+   * ```typescript
+   * canvas.addEventListener('wheel', handleWheel, { passive: false });
    * ```
    */
-  const handleWheel = (e: React.WheelEvent<HTMLCanvasElement>): void => {
+  const handleWheel = useCallback((e: WheelEvent): void => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? -0.1 : 0.1;
     handleZoom(delta);
-  };
+  }, []);
+
+  /**
+   * Setup wheel event listener with passive: false
+   * This prevents the "Unable to preventDefault inside passive event listener" warning
+   */
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Add wheel event listener with { passive: false } to allow preventDefault
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+
+    // Cleanup
+    return () => {
+      canvas.removeEventListener('wheel', handleWheel);
+    };
+  }, [handleWheel]);
 
   /**
    * Calculate distance and cost for hovered tile (memoized)
@@ -1896,7 +1913,6 @@ function WorldMapViewerComponent({
         onClick={handleCanvasClick}
         onMouseMove={handleCanvasMouseMove}
         onMouseLeave={() => setHoveredTile(null)}
-        onWheel={handleWheel}
         style={styles.canvas}
       />
 

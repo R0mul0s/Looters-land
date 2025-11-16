@@ -73,9 +73,7 @@ END $$;
 -- PART 4: Schedule the daily reset cron job
 -- ============================================================================
 
--- IMPORTANT: Before running this, store your API keys in PostgreSQL settings:
--- Run setup-vault-secrets.sql FIRST to store the keys securely
-
+-- NOTE: No Authorization header needed - Edge Function uses SUPABASE_SERVICE_ROLE_KEY env variable
 SELECT cron.schedule(
   'daily-reset-trigger',
   '0 0 * * *', -- Every day at midnight UTC
@@ -83,8 +81,9 @@ SELECT cron.schedule(
   SELECT net.http_post(
     url:='https://ykkjdsciiztoeqycxmtg.supabase.co/functions/v1/daily-reset',
     headers:=jsonb_build_object(
-      'Authorization', 'Bearer ' || get_secret('publishable_key')
-    )
+      'Content-Type', 'application/json'
+    ),
+    body := '{}'::jsonb
   )
   $$
 );
@@ -121,8 +120,9 @@ WHERE jobname = 'daily-reset-trigger';
 SELECT net.http_post(
   url:='https://ykkjdsciiztoeqycxmtg.supabase.co/functions/v1/daily-reset',
   headers:=jsonb_build_object(
-    'Authorization', 'Bearer ' || get_secret('publishable_key')
-  )
+    'Content-Type', 'application/json'
+  ),
+  body := '{}'::jsonb
 );
 */
 

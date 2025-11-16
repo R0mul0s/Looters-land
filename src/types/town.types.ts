@@ -30,6 +30,7 @@ export interface TownData {
   name: string;
   faction: string;
   level: number;
+  asset?: string; // Asset filename for town exterior/interior (e.g., 'city2.png')
   buildings: Record<BuildingType, boolean>;
 }
 

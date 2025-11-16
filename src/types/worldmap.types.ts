@@ -78,8 +78,9 @@ export interface StaticObject {
 
 export interface Town extends StaticObject {
   type: 'town';
-  level: 1 | 2 | 3;
-  faction: 'Kingdom' | 'Mountain Dwarves' | 'Desert Nomads' | 'Forest Elves';
+  level: 1 | 2 | 3 | 4;
+  faction: 'Humans' | 'Elves' | 'Dwarves' | 'Mages' | 'Kingdom' | 'Mountain Dwarves' | 'Desert Nomads' | 'Forest Elves';
+  asset?: string; // Asset filename (e.g., 'city2.png', 'city3.png')
   buildings: {
     tavern: boolean;
     smithy: boolean;

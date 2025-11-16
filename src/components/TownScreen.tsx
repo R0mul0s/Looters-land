@@ -3,10 +3,10 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-15
+ * @lastModified 2025-11-16
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { TownData, BuildingType } from '../types/town.types';
 import type { Hero } from '../engine/hero/Hero';
 import type { Inventory } from '../engine/item/Inventory';
@@ -19,6 +19,12 @@ import { BankBuilding } from './buildings/BankBuilding';
 import { GuildHallBuilding } from './buildings/GuildHallBuilding';
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../styles/tokens';
 import { flexColumn } from '../styles/common';
+
+// Import city interior images (city1-inside doesn't exist, only city2-5)
+import city2InsideImg from '../assets/images/building/city2-inside.png';
+import city3InsideImg from '../assets/images/building/city3-inside.png';
+import city4InsideImg from '../assets/images/building/city4-inside.png';
+import city5InsideImg from '../assets/images/building/city5-inside.png';
 
 interface TownScreenProps {
   town: TownData;
@@ -65,6 +71,36 @@ export function TownScreen({
   onClose
 }: TownScreenProps) {
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingType | null>(null);
+  const [cityBackgroundImage, setCityBackgroundImage] = useState<string>('');
+
+  // Load appropriate city background based on town asset
+  useEffect(() => {
+    const assetName = town.asset || 'city2.png'; // Default to city2 if no asset specified
+
+    let insideImage = city2InsideImg; // Default fallback (city1-inside doesn't exist)
+
+    // Map city assets to their interior images
+    switch (assetName) {
+      case 'city1.png':
+        // city1-inside doesn't exist, use city2-inside as fallback
+        insideImage = city2InsideImg;
+        break;
+      case 'city2.png':
+        insideImage = city2InsideImg;
+        break;
+      case 'city3.png':
+        insideImage = city3InsideImg;
+        break;
+      case 'city4.png':
+        insideImage = city4InsideImg;
+        break;
+      case 'city5.png':
+        insideImage = city5InsideImg;
+        break;
+    }
+
+    setCityBackgroundImage(insideImage);
+  }, [town.asset]);
 
   // Building metadata
   const buildingInfo: Record<BuildingType, { name: string; icon: string; description: string }> = {
@@ -185,13 +221,21 @@ export function TownScreen({
     return renderBuildingInterior();
   }
 
-  // Otherwise, show town overview
+  // Otherwise, show town overview with city background
   return (
     <div style={styles.container}>
-      {/* Header */}
+      {/* City Background Image (like HOMAM) */}
+      <div
+        style={{
+          ...styles.cityBackground,
+          backgroundImage: cityBackgroundImage ? `url(${cityBackgroundImage})` : 'none'
+        }}
+      />
+
+      {/* Header - Positioned absolutely at top */}
       <div style={styles.header}>
         <div>
-          <h1 style={styles.title}>🏰 {town.name}</h1>
+          <h1 style={styles.title}>{town.name}</h1>
           <p style={styles.subtitle}>
             {town.faction} • Level {town.level}
           </p>
@@ -201,7 +245,7 @@ export function TownScreen({
         </button>
       </div>
 
-      {/* Resources Display */}
+      {/* Resources Display - Positioned absolutely at top */}
       <div style={styles.resourcesBar}>
         <div style={styles.resourceItem}>
           <span style={styles.resourceIcon}>💰</span>
@@ -217,7 +261,7 @@ export function TownScreen({
         </div>
       </div>
 
-      {/* Buildings Grid */}
+      {/* Buildings Grid - Positioned at bottom */}
       <div style={styles.buildingsGrid}>
         {(Object.keys(buildingInfo) as BuildingType[]).map(buildingType => {
           const building = buildingInfo[buildingType];
@@ -249,20 +293,37 @@ export function TownScreen({
 
 const styles: Record<string, React.CSSProperties> = {
   container: {
+    position: 'relative',
     width: '100%',
     height: '100%',
-    ...flexColumn,
-    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    display: 'flex',
+    flexDirection: 'column',
     color: COLORS.textLight,
     overflow: 'hidden'
   },
+  cityBackground: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    zIndex: 0
+  },
   header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: SPACING.lg,
-    borderBottom: `2px solid ${COLORS.primary}`,
-    background: 'linear-gradient(135deg, rgba(45, 212, 191, 0.1) 0%, transparent 100%)'
+    background: 'linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.6) 70%, transparent 100%)',
+    zIndex: 10,
+    backdropFilter: 'blur(4px)'
   },
   title: {
     margin: 0,
@@ -287,11 +348,16 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: FONT_WEIGHT.bold
   },
   resourcesBar: {
+    position: 'absolute',
+    top: '80px', // Below header
+    left: 0,
+    right: 0,
     display: 'flex',
     gap: SPACING.lg,
     padding: `${SPACING.md} ${SPACING.lg}`,
-    background: 'rgba(15, 23, 42, 0.5)',
-    borderBottom: `1px solid ${COLORS.bgSurfaceLight}`
+    background: 'rgba(0, 0, 0, 0.7)',
+    backdropFilter: 'blur(4px)',
+    zIndex: 10
   },
   resourceItem: {
     display: 'flex',
@@ -307,49 +373,62 @@ const styles: Record<string, React.CSSProperties> = {
     color: COLORS.goldLight
   },
   buildingsGrid: {
-    flex: 1,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-    gap: SPACING.lg,
+    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+    gap: SPACING.md,
     padding: SPACING.lg,
-    overflow: 'auto'
+    background: 'linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 80%, transparent 100%)',
+    backdropFilter: 'blur(6px)',
+    maxHeight: '35%',
+    overflow: 'auto',
+    zIndex: 10
   },
   buildingCard: {
     ...flexColumn,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: `${SPACING[7]} ${SPACING.lg}`,
-    background: `linear-gradient(135deg, ${COLORS.bgSurfaceLight} 0%, ${COLORS.bgSurface} 100%)`,
-    border: `2px solid ${COLORS.bgSurfaceLighter}`,
-    borderRadius: BORDER_RADIUS.lg,
+    padding: `${SPACING[3]} ${SPACING.md}`,
+    background: 'rgba(30, 41, 59, 0.85)',
+    border: `2px solid rgba(71, 85, 105, 0.6)`,
+    borderRadius: BORDER_RADIUS.md,
     cursor: 'pointer',
     transition: TRANSITIONS.base,
     position: 'relative',
-    minHeight: '200px'
+    minHeight: '140px',
+    backdropFilter: 'blur(8px)'
   },
   buildingCardUnlocked: {
-    borderColor: COLORS.primary
+    borderColor: COLORS.primary,
+    boxShadow: `0 0 15px ${COLORS.primary}40`
   },
   buildingCardLocked: {
-    opacity: 0.5,
+    opacity: 0.4,
     cursor: 'not-allowed'
   },
   buildingIcon: {
-    fontSize: FONT_SIZE['7xl'],
-    marginBottom: SPACING.md
+    fontSize: FONT_SIZE['5xl'],
+    marginBottom: SPACING[2]
   },
   buildingName: {
-    margin: `0 0 ${SPACING[2.5]} 0`,
-    fontSize: FONT_SIZE.xl,
+    margin: `0 0 ${SPACING[1]} 0`,
+    fontSize: FONT_SIZE.lg,
     fontWeight: FONT_WEIGHT.bold,
     color: COLORS.textLight
   },
   buildingDescription: {
     margin: 0,
-    fontSize: FONT_SIZE.md,
+    fontSize: FONT_SIZE.sm,
     color: COLORS.textGray,
     textAlign: 'center',
-    lineHeight: '1.5'
+    lineHeight: '1.3',
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden'
   },
   lockedBadge: {
     position: 'absolute',

@@ -14,7 +14,7 @@
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, Z_INDEX, TRANSITIONS } from '../styles/tokens';
 import { flexBetween, flexCenter } from '../styles/common';
-import type { WorldMap, Tile, DynamicObject, WeatherState, TimeState } from '../types/worldmap.types';
+import type { WorldMap, Tile, DynamicObject, WeatherState, TimeState, Town, StaticObject } from '../types/worldmap.types';
 import { TERRAIN_ICONS } from '../types/worldmap.types';
 import { OtherPlayerMarker } from './OtherPlayerMarker';
 import { ChatBubble } from './ChatBubble';
@@ -771,6 +771,7 @@ function WorldMapViewerComponent({
       objectId?: string;
       isDefeatedOrOpened?: boolean;
       objectName?: string;
+      staticObject?: StaticObject;
     }> = [];
 
     // Render tiles
@@ -886,7 +887,7 @@ function WorldMapViewerComponent({
             } else if (tile.staticObject.type === 'hiddenPath' && 'discovered' in tile.staticObject) {
               isDefeatedOrOpened = tile.staticObject.discovered === true;
             }
-            staticObjectsToRender.push({ icon, screenX, screenY, objectType, objectId, objectName, isDefeatedOrOpened });
+            staticObjectsToRender.push({ icon, screenX, screenY, objectType, objectId, objectName, isDefeatedOrOpened, staticObject: tile.staticObject });
           }
         }
 
@@ -904,7 +905,7 @@ function WorldMapViewerComponent({
     ctx.font = `${Math.floor(TILE_SIZE * 0.8)}px sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    staticObjectsToRender.forEach(({ icon, screenX, screenY, objectType, objectId, objectName, isDefeatedOrOpened }) => {
+    staticObjectsToRender.forEach(({ icon, screenX, screenY, objectType, objectId, objectName, isDefeatedOrOpened, staticObject }) => {
       // Apply grayscale filter for defeated/opened objects
       if (isDefeatedOrOpened) {
         ctx.filter = 'grayscale(100%) brightness(0.6)';
@@ -948,26 +949,51 @@ function WorldMapViewerComponent({
         }
       } else if (objectType === 'town' && objectId) {
         // Use city images for towns if available
-        // Select city image based on town ID (0 = city1, 1 = city2, etc.)
-        const townIndex = parseInt(objectId.split('-')[1] || '0');
+        // Get asset from town object if available, otherwise fallback to ID-based selection
+        const town = staticObject as Town | undefined;
+        const assetName = town?.asset;
+
         let cityImg: HTMLImageElement | null = null;
 
-        switch (townIndex % 5) {
-          case 0:
-            cityImg = cityImages.city1;
-            break;
-          case 1:
-            cityImg = cityImages.city2;
-            break;
-          case 2:
-            cityImg = cityImages.city3;
-            break;
-          case 3:
-            cityImg = cityImages.city4;
-            break;
-          case 4:
-            cityImg = cityImages.city5;
-            break;
+        // Use asset name if available
+        if (assetName) {
+          switch (assetName) {
+            case 'city1.png':
+              cityImg = cityImages.city1;
+              break;
+            case 'city2.png':
+              cityImg = cityImages.city2;
+              break;
+            case 'city3.png':
+              cityImg = cityImages.city3;
+              break;
+            case 'city4.png':
+              cityImg = cityImages.city4;
+              break;
+            case 'city5.png':
+              cityImg = cityImages.city5;
+              break;
+          }
+        } else {
+          // Fallback: Select city image based on town ID (0 = city1, 1 = city2, etc.)
+          const townIndex = parseInt(objectId.split('-')[1] || '0');
+          switch (townIndex % 5) {
+            case 0:
+              cityImg = cityImages.city1;
+              break;
+            case 1:
+              cityImg = cityImages.city2;
+              break;
+            case 2:
+              cityImg = cityImages.city3;
+              break;
+            case 3:
+              cityImg = cityImages.city4;
+              break;
+            case 4:
+              cityImg = cityImages.city5;
+              break;
+          }
         }
 
         // Draw city image if loaded, otherwise fall back to emoji

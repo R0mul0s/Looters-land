@@ -372,13 +372,14 @@ export class WorldMapGenerator {
         position: { x, y },
         level: config.level,
         faction: config.faction,
+        asset: config.asset, // Store asset filename for rendering
         buildings: {
-          tavern: true,
-          smithy: config.level >= 2,
-          healer: true,
-          market: config.level >= 2,
-          bank: config.level >= 3,
-          guild: config.level >= 4
+          tavern: true,   // Always available in all towns
+          smithy: true,   // Always available in all towns
+          healer: true,   // Always available in all towns
+          market: true,   // Always available in all towns
+          bank: false,    // Coming soon - not yet implemented
+          guild: false    // Coming soon - not yet implemented
         }
       };
 

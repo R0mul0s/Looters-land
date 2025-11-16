@@ -130,12 +130,35 @@ if (typeof window !== 'undefined') {
 
   /**
    * Reset worldmap - generates new map
+   * Clears worldmap from database so it regenerates with new town names
    */
-  (window as any).resetWorldMap = () => {
-    localStorage.removeItem('worldmap');
-    console.log('🗺️ World map reset! Reload page to generate new map.');
-    console.log('🔄 Reloading in 1 second...');
-    setTimeout(() => location.reload(), 1000);
+  (window as any).resetWorldMap = async () => {
+    try {
+      const { supabase } = await import('../lib/supabase');
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        console.error('❌ Not logged in');
+        return;
+      }
+
+      console.log('🗺️ Resetting world map in database...');
+
+      const { error } = await supabase
+        .from('player_profiles')
+        .update({ world_map_data: null })
+        .eq('user_id', session.user.id);
+
+      if (error) {
+        console.error('❌ Failed to reset world map:', error);
+      } else {
+        console.log('✅ World map reset in database!');
+        console.log('🔄 Reloading page to generate new map with updated town names...');
+        setTimeout(() => location.reload(), 1000);
+      }
+    } catch (error) {
+      console.error('❌ Error resetting world map:', error);
+    }
   };
 
   /**
@@ -167,6 +190,57 @@ if (typeof window !== 'undefined') {
     });
   };
 
+  /**
+   * Reveal entire world map (remove fog of war)
+   * Explores all tiles on the map
+   */
+  (window as any).revealMap = () => {
+    const gameActions = (window as any).__gameActions;
+    const gameState = (window as any).__gameState;
+
+    if (!gameState) {
+      console.error('❌ Game not loaded yet');
+      return;
+    }
+
+    if (!gameState.worldMap) {
+      console.error('❌ World map not generated yet');
+      return;
+    }
+
+    console.log('🗺️ Revealing entire world map...');
+
+    let exploredCount = 0;
+    const worldMap = gameState.worldMap;
+
+    // Explore all tiles
+    for (let y = 0; y < worldMap.tiles.length; y++) {
+      for (let x = 0; x < worldMap.tiles[y].length; x++) {
+        const tile = worldMap.tiles[y][x];
+        if (!tile.isExplored) {
+          tile.isExplored = true;
+          exploredCount++;
+
+          // Add discovered location if it has a static object
+          if (tile.staticObject) {
+            gameActions.addDiscoveredLocation({
+              name: tile.staticObject.name,
+              x,
+              y,
+              type: tile.staticObject.type
+            });
+          }
+        }
+      }
+    }
+
+    // Force re-render by updating the worldmap
+    gameActions.updateWorldMap({ ...worldMap });
+
+    console.log(`✅ Map revealed! Explored ${exploredCount} new tiles`);
+    console.log(`📍 Total tiles: ${worldMap.tiles.length * worldMap.tiles[0].length}`);
+  };
+
   console.log('🐛 Debug commands available:');
   console.log('  Energy:');
   console.log('    - window.enableUnlimitedEnergy()');
@@ -175,10 +249,12 @@ if (typeof window !== 'undefined') {
   console.log('    - window.enableFastRegen()');
   console.log('    - window.disableFastRegen()');
   console.log('  Gacha:');
-  console.log('    - window.showGachaState() - Show current gacha state');
-  console.log('    - window.resetDailyGacha() - Reset daily free summon');
+  console.log('    - await window.showGachaState() - Show current gacha state');
+  console.log('    - await window.resetDailyGacha() - Reset daily free summon');
   console.log('  Heroes:');
-  console.log('    - window.fixDuplicateHeroes() - Fix duplicate heroes (converts to talents)');
+  console.log('    - window.showAllHeroes() - Show all heroes in collection');
+  console.log('    - await window.fixDuplicateHeroes() - Fix duplicate heroes (converts to talents)');
   console.log('  World Map:');
-  console.log('    - window.resetWorldMap() - Generate new world map');
+  console.log('    - await window.resetWorldMap() - Generate new world map');
+  console.log('    - window.revealMap() - Reveal entire map (remove fog of war)');
 }

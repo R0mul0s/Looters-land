@@ -28,6 +28,7 @@ import city4InsideImg from '../assets/images/building/city4-inside.png';
 import city5InsideImg from '../assets/images/building/city5-inside.png';
 
 interface TownScreenProps {
+  userId: string;
   town: TownData;
   heroes: Hero[];
   activeParty: Hero[];
@@ -36,11 +37,19 @@ interface TownScreenProps {
   playerGold: number;
   playerGems: number;
   playerLevel: number;
-  storedGold: number;
+  energy: number;
+  maxEnergy: number;
+  storedGold: number; // Deprecated - kept for compatibility
+  bankVaultTier: number;
+  bankVaultMaxSlots: number;
+  bankTotalItems: number;
   gachaState: GachaState;
   onGoldChange: (newGold: number) => void;
   onGemsChange: (newGems: number) => void;
-  onStoredGoldChange: (newStoredGold: number) => void;
+  onEnergyChange: (newEnergy: number) => void;
+  onMaxEnergyChange: (newMaxEnergy: number) => void;
+  onStoredGoldChange: (newStoredGold: number) => void; // Deprecated
+  onBankVaultChange: (tier: number, maxSlots: number, totalItems: number) => void;
   onHeroesChange: (heroes: Hero[]) => void;
   onInventoryChange: (inventory: Inventory) => void;
   onGachaStateChange: (newState: GachaState) => void;
@@ -52,6 +61,7 @@ interface TownScreenProps {
  * Town Screen Component
  */
 export function TownScreen({
+  userId,
   town,
   heroes,
   activeParty,
@@ -60,11 +70,19 @@ export function TownScreen({
   playerGold,
   playerGems,
   playerLevel,
+  energy,
+  maxEnergy,
   storedGold,
+  bankVaultTier,
+  bankVaultMaxSlots,
+  bankTotalItems,
   gachaState,
   onGoldChange,
   onGemsChange,
+  onEnergyChange,
+  onMaxEnergyChange,
   onStoredGoldChange,
+  onBankVaultChange,
   onHeroesChange,
   onInventoryChange,
   onGachaStateChange,
@@ -197,11 +215,20 @@ export function TownScreen({
       case 'bank':
         return (
           <BankBuilding
+            userId={userId}
+            inventory={inventory}
             playerGold={playerGold}
-            storedGold={storedGold}
+            energy={energy}
+            maxEnergy={maxEnergy}
+            bankVaultTier={bankVaultTier}
+            bankVaultMaxSlots={bankVaultMaxSlots}
+            bankTotalItems={bankTotalItems}
             onClose={() => setSelectedBuilding(null)}
+            onInventoryChange={onInventoryChange}
             onGoldChange={onGoldChange}
-            onStoredGoldChange={onStoredGoldChange}
+            onEnergyChange={onEnergyChange}
+            onBankVaultChange={onBankVaultChange}
+            onMaxEnergyChange={onMaxEnergyChange}
           />
         );
 

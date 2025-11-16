@@ -7,10 +7,11 @@
  * - useGameState hook - Main state management hook with auto-save
  * - Auto-save with 2-second debouncing
  * - Database sync via GameSaveService
+ * - Dynamic max energy calculation from bank vault tier
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-14
+ * @lastModified 2025-11-16
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -27,7 +28,7 @@ import type { WorldMap, StaticObjectType } from '../types/worldmap.types';
 import type { GachaState } from '../types/hero.types';
 import { supabase } from '../lib/supabase';
 import type { SyncStatus } from '../components/SyncStatusIndicator';
-import { ENERGY_CONFIG } from '../config/BALANCE_CONFIG';
+import { ENERGY_CONFIG, getBankEnergyBonus } from '../config/BALANCE_CONFIG';
 
 export interface GameState {
   // Player profile
@@ -55,6 +56,11 @@ export interface GameState {
   // Gacha system
   gachaState: GachaState;
 
+  // Bank vault system
+  bankVaultTier: number;
+  bankVaultMaxSlots: number;
+  bankTotalItems: number;
+
   // Loading states
   loading: boolean;
   saving: boolean;
@@ -76,6 +82,7 @@ export interface GameStateActions {
   addGems: (amount: number) => Promise<void>;
   removeGems: (amount: number) => Promise<void>;
   setEnergy: (amount: number) => Promise<void>;
+  setMaxEnergy: (amount: number) => Promise<void>;
 
   // Hero actions
   addHero: (hero: Hero) => Promise<void>;
@@ -92,6 +99,9 @@ export interface GameStateActions {
 
   // Gacha actions
   updateGachaState: (gachaState: GachaState) => Promise<void>;
+
+  // Bank vault actions
+  updateBankVault: (tier: number, maxSlots: number, totalItems: number) => Promise<void>;
 
   // World map actions
   updatePlayerPos: (x: number, y: number) => Promise<void>;
@@ -151,6 +161,9 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       lastFreeSummonDate: '',
       pitySummons: 0
     },
+    bankVaultTier: 0,
+    bankVaultMaxSlots: 0,
+    bankTotalItems: 0,
     loading: true,
     saving: false,
     error: null,
@@ -418,7 +431,8 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
             goldValue: dbItem.gold_value,
             enchantLevel: dbItem.enchant_level,
             setId: dbItem.set_id || undefined,
-            setName: dbItem.set_name || undefined
+            setName: dbItem.set_name || undefined,
+            location: dbItem.location as any || 'inventory' // Preserve location from database
           });
 
           inventory.addItem(item);
@@ -476,13 +490,9 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         activePartyIndices = heroes.length >= 4 ? [0, 1, 2, 3] : Array.from({ length: heroes.length }, (_, i) => i);
       }
 
-      // Migrate max_energy if needed (for existing players)
-      if (profile.max_energy < ENERGY_CONFIG.MAX_ENERGY) {
-        console.log(`⚡ Migrating max_energy from ${profile.max_energy} to ${ENERGY_CONFIG.MAX_ENERGY}`);
-        await PlayerProfileService.updateProfile(userId, {
-          max_energy: ENERGY_CONFIG.MAX_ENERGY
-        });
-      }
+      // Note: max_energy is calculated dynamically from bank_vault_tier
+      // This allows flexible addition of other energy bonuses in the future
+      // The database max_energy field is only used as a cache
 
       // Log world map data for debugging
       // World map data loaded silently
@@ -549,6 +559,11 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           // Low overlap or different count - allow full reload
         }
 
+        // Calculate max energy dynamically from all sources
+        const bankEnergyBonus = getBankEnergyBonus(profile.bank_vault_tier || 0);
+        const calculatedMaxEnergy = ENERGY_CONFIG.MAX_ENERGY + bankEnergyBonus;
+        console.log('🔄 loadGame - bank_vault_tier:', profile.bank_vault_tier, 'bonus:', bankEnergyBonus, 'calculatedMaxEnergy:', calculatedMaxEnergy);
+
         const newState = {
           ...prev,
           profile,
@@ -557,8 +572,8 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           playerLevel: profile.player_level,
           gold: profile.gold,
           gems: profile.gems,
-          energy: Math.min(profile.energy, ENERGY_CONFIG.MAX_ENERGY),
-          maxEnergy: ENERGY_CONFIG.MAX_ENERGY,
+          energy: Math.min(profile.energy, calculatedMaxEnergy),
+          maxEnergy: calculatedMaxEnergy,
           allHeroes: heroes,
           activeParty,
           activePartyIndices,
@@ -577,6 +592,9 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
             lastFreeSummonDate: profile.gacha_last_free_summon || '',
             pitySummons: profile.gacha_pity_summons || 0
           },
+          bankVaultTier: profile.bank_vault_tier || 0,
+          bankVaultMaxSlots: profile.bank_vault_max_slots || 0,
+          bankTotalItems: profile.bank_total_items || 0,
           loading: false
         };
 
@@ -811,14 +829,22 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
             // CRITICAL: Always preserve allHeroes and activeParty from prev state!
             // Realtime updates should NEVER overwrite hero data
 
+            // Calculate max energy dynamically from bank vault tier
+            const bankEnergyBonus = getBankEnergyBonus(updatedProfile.bank_vault_tier || 0);
+            const calculatedMaxEnergy = ENERGY_CONFIG.MAX_ENERGY + bankEnergyBonus;
+            console.log('🔄 Realtime update - bank_vault_tier:', updatedProfile.bank_vault_tier, 'bonus:', bankEnergyBonus, 'calculatedMaxEnergy:', calculatedMaxEnergy);
+
             return {
               ...prev,
               profile: updatedProfile,
-              energy: Math.min(updatedProfile.energy, ENERGY_CONFIG.MAX_ENERGY),
-              maxEnergy: ENERGY_CONFIG.MAX_ENERGY,
+              energy: Math.min(updatedProfile.energy, calculatedMaxEnergy),
+              maxEnergy: calculatedMaxEnergy,
               gold: updatedProfile.gold,
               gems: updatedProfile.gems,
               playerLevel: updatedProfile.player_level,
+              bankVaultTier: updatedProfile.bank_vault_tier || 0,
+              bankVaultMaxSlots: updatedProfile.bank_vault_max_slots || 0,
+              bankTotalItems: updatedProfile.bank_total_items || 0,
               // KEEP current worldMap - do not overwrite from Realtime
               worldMap: prev.worldMap,
               // KEEP current heroes - do not overwrite from Realtime
@@ -955,6 +981,23 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       let newState: GameState | undefined;
       setState(prev => {
         newState = { ...prev, energy: Math.min(amount, prev.maxEnergy) };
+        // CRITICAL: Update stateRef synchronously BEFORE scheduling save
+        stateRef.current = newState;
+        return newState;
+      });
+      setTimeout(() => scheduleAutoSave(newState), 0);
+    },
+
+    setMaxEnergy: async (newMaxEnergy: number) => {
+      // Max energy is now calculated from bank vault tier
+      // This function updates state to trigger re-render after bank upgrade
+      // The actual maxEnergy is recalculated from bankVaultTier
+      let newState: GameState | undefined;
+      setState(prev => {
+        const bankEnergyBonus = getBankEnergyBonus(prev.bankVaultTier);
+        const calculatedMaxEnergy = ENERGY_CONFIG.MAX_ENERGY + bankEnergyBonus;
+        console.log('⚡ setMaxEnergy called - bankVaultTier:', prev.bankVaultTier, 'bonus:', bankEnergyBonus, 'total:', calculatedMaxEnergy);
+        newState = { ...prev, maxEnergy: calculatedMaxEnergy };
         // CRITICAL: Update stateRef synchronously BEFORE scheduling save
         stateRef.current = newState;
         return newState;
@@ -1145,6 +1188,16 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
 
     updateGachaState: async (gachaState: GachaState) => {
       setState(prev => ({ ...prev, gachaState }));
+      scheduleAutoSave();
+    },
+
+    updateBankVault: async (tier: number, maxSlots: number, totalItems: number) => {
+      setState(prev => ({
+        ...prev,
+        bankVaultTier: tier,
+        bankVaultMaxSlots: maxSlots,
+        bankTotalItems: totalItems
+      }));
       scheduleAutoSave();
     },
 

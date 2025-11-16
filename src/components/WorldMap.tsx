@@ -1310,6 +1310,9 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
     />
   );
 
+  // Debug: Log maxEnergy before rendering
+  console.log('🎯 WorldMap render - gameState.maxEnergy:', gameState.maxEnergy, 'bankVaultTier:', gameState.bankVaultTier);
+
   return (
     <>
       <GameLayout
@@ -1341,6 +1344,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
       {showTownModal && (
         <div style={styles.modal}>
           <TownScreen
+            userId={gameState.profile?.user_id || ''}
             town={showTownModal}
             heroes={gameState.allHeroes}
             activeParty={gameState.activeParty}
@@ -1349,7 +1353,12 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
             playerGold={gameState.gold}
             playerGems={gameState.gems}
             playerLevel={gameState.playerLevel}
-            storedGold={0} // TODO: Add storedGold to gameState
+            energy={gameState.energy}
+            maxEnergy={gameState.maxEnergy}
+            storedGold={0} // Deprecated
+            bankVaultTier={gameState.bankVaultTier}
+            bankVaultMaxSlots={gameState.bankVaultMaxSlots}
+            bankTotalItems={gameState.bankTotalItems}
             gachaState={gameState.gachaState}
             onGoldChange={(newGold) => {
               const diff = newGold - gameState.gold;
@@ -1367,7 +1376,16 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
                 gameActions.removeGems(Math.abs(diff));
               }
             }}
-            onStoredGoldChange={() => {}} // TODO: Implement storedGold management
+            onEnergyChange={async (newEnergy) => {
+              await gameActions.setEnergy(newEnergy);
+            }}
+            onMaxEnergyChange={async (newMaxEnergy) => {
+              await gameActions.setMaxEnergy(newMaxEnergy);
+            }}
+            onStoredGoldChange={() => {}} // Deprecated
+            onBankVaultChange={(tier, maxSlots, totalItems) => {
+              gameActions.updateBankVault(tier, maxSlots, totalItems);
+            }}
             onHeroesChange={async (updatedHeroes) => {
               // Find new heroes (that aren't in current allHeroes)
               const currentHeroIds = gameState.allHeroes.map(h => h.id);

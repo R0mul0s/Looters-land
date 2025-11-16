@@ -287,25 +287,25 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
 
     switch (currentRoom.type) {
       case 'combat':
-        return currentRoom.combatCompleted ? 'Combat Completed' : 'Start Combat';
+        return currentRoom.combatCompleted ? t('dungeon.combatCompleted') : t('combat.startCombat');
       case 'boss':
-        return currentRoom.bossDefeated ? 'Boss Defeated' : 'Fight Boss';
+        return currentRoom.bossDefeated ? t('dungeon.bossDefeated') : t('dungeon.fightBoss');
       case 'treasure':
-        return currentRoom.treasureLooted ? 'Looted' : 'Loot Treasure';
+        return currentRoom.treasureLooted ? t('dungeon.treasureLooted') : t('dungeon.lootTreasure');
       case 'trap':
-        return currentRoom.trapDisarmed ? 'Trap Disarmed' : 'Disarm Trap';
+        return currentRoom.trapDisarmed ? t('dungeon.trapDisarmed') : t('dungeon.disarmTrap');
       case 'rest':
-        return currentRoom.restUsed ? 'Already Rested' : 'Rest';
+        return currentRoom.restUsed ? t('dungeon.alreadyRested') : t('dungeon.rest');
       case 'exit':
-        return 'Proceed to Next Floor';
+        return t('dungeon.proceedNextFloor');
       case 'shrine':
-        return currentRoom.shrineUsed ? 'Shrine Used' : 'Use Shrine';
+        return currentRoom.shrineUsed ? t('dungeon.shrineUsed') : t('dungeon.useShrine');
       case 'mystery':
-        return currentRoom.mysteryResolved ? 'Mystery Resolved' : 'Investigate';
+        return currentRoom.mysteryResolved ? t('dungeon.mysteryResolved') : t('dungeon.investigate');
       case 'elite':
-        return currentRoom.combatCompleted ? 'Elite Defeated' : 'Fight Elite';
+        return currentRoom.combatCompleted ? t('dungeon.eliteDefeated') : t('combat.startCombat');
       case 'miniboss':
-        return currentRoom.miniBossDefeated ? 'Mini-Boss Defeated' : 'Fight Mini-Boss';
+        return currentRoom.miniBossDefeated ? t('dungeon.miniBossDefeated') : t('dungeon.fightMiniBoss');
       default:
         return '';
     }
@@ -344,7 +344,7 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
   };
 
   if (!currentRoom) {
-    return <div>Loading dungeon...</div>;
+    return <div>{t('dungeon.loading')}</div>;
   }
 
   const stats = dungeon.getStatistics();
@@ -365,7 +365,7 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
                 backgroundColor: '#4aff4a'
               }}
             >
-              ✅ Exit Dungeon (Keep Loot)
+              {t('dungeon.exitDungeonKeepLoot')}
             </button>
           )}
 
@@ -373,7 +373,7 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
           <button
             onClick={() => {
               const confirm = window.confirm(
-                '⚠️ Warning: Leaving the dungeon now will cause you to lose all collected loot and progress!\n\nAre you sure you want to abandon the dungeon?'
+                t('dungeon.abandonWarning')
               );
               if (confirm) {
                 onDungeonExit();
@@ -384,7 +384,7 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
               backgroundColor: '#ff4444'
             }}
           >
-            ❌ Abandon Dungeon
+            {t('dungeon.abandonDungeon')}
           </button>
         </div>
       </div>
@@ -392,19 +392,19 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
       {/* Statistics */}
       <div style={styles.stats}>
         <div style={styles.statItem}>
-          <span>Floor:</span>
+          <span>{t('dungeon.floor')}</span>
           <strong>{floor?.floorNumber || 0}</strong>
         </div>
         <div style={styles.statItem}>
-          <span>Enemies Defeated:</span>
+          <span>{t('dungeon.enemiesDefeated')}</span>
           <strong>{stats.enemiesDefeated}</strong>
         </div>
         <div style={styles.statItem}>
-          <span>Gold Earned:</span>
+          <span>{t('dungeon.goldEarned')}</span>
           <strong>{stats.goldEarned}</strong>
         </div>
         <div style={styles.statItem}>
-          <span>Items Found:</span>
+          <span>{t('dungeon.itemsFound')}</span>
           <strong>{stats.itemsFound}</strong>
         </div>
       </div>
@@ -419,27 +419,27 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
           border: '2px solid #87ceeb'
         }}>
           <div style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '5px' }}>
-            ✨ Active Shrine Buffs:
+            {t('dungeon.activeShrineBufTitle')}
           </div>
           <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
             {floor.activeBuffs.includes('damage') && (
               <span style={{ padding: '4px 8px', backgroundColor: 'rgba(255, 77, 77, 0.2)', borderRadius: '4px', fontSize: '13px' }}>
-                ⚔️ +10% Damage
+                ⚔️ {t('dungeon.damageBuff')}
               </span>
             )}
             {floor.activeBuffs.includes('xp') && (
               <span style={{ padding: '4px 8px', backgroundColor: 'rgba(100, 149, 237, 0.2)', borderRadius: '4px', fontSize: '13px' }}>
-                📖 +15% XP
+                📖 {t('dungeon.xpBuff')}
               </span>
             )}
             {floor.activeBuffs.includes('gold') && (
               <span style={{ padding: '4px 8px', backgroundColor: 'rgba(255, 215, 0, 0.2)', borderRadius: '4px', fontSize: '13px' }}>
-                💰 +20% Gold
+                💰 {t('dungeon.goldBuff')}
               </span>
             )}
             {floor.activeBuffs.includes('stats') && (
               <span style={{ padding: '4px 8px', backgroundColor: 'rgba(138, 43, 226, 0.2)', borderRadius: '4px', fontSize: '13px' }}>
-                ✨ +10% All Stats
+                ✨ {t('dungeon.allStatsBuff')}
               </span>
             )}
           </div>
@@ -471,12 +471,12 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
           <div style={styles.roomHeader}>
             <span style={styles.roomIcon}>{getRoomIcon(currentRoom)}</span>
             <h3 style={styles.roomTitle}>
-              {currentRoom.type.charAt(0).toUpperCase() + currentRoom.type.slice(1)} Room
+              {t(`dungeon.roomTypes.${currentRoom.type}`)} Room
             </h3>
           </div>
 
           <div style={styles.roomInfo}>
-            <p>Difficulty: <strong>{currentRoom.difficulty}</strong></p>
+            <p>{t('dungeon.difficulty')} <strong>{currentRoom.difficulty}</strong></p>
 
             {currentRoom.type === 'combat' && currentRoom.enemies && (
               <div>
@@ -530,7 +530,7 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
             )}
 
             {currentRoom.type === 'rest' && !currentRoom.restUsed && (
-              <p>Heal Amount: {currentRoom.healAmount} HP</p>
+              <p>{t('dungeon.healAmount')} {currentRoom.healAmount} HP</p>
             )}
 
             {currentRoom.type === 'boss' && (
@@ -552,8 +552,8 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
 
             {currentRoom.type === 'shrine' && !currentRoom.shrineUsed && (
               <div>
-                <p>A mystical shrine radiates power...</p>
-                <p>Buff Type: <strong>{currentRoom.shrineBuffType}</strong></p>
+                <p>{t('dungeon.shrineDescription')}</p>
+                <p>{t('dungeon.buffType')} <strong>{currentRoom.shrineBuffType}</strong></p>
               </div>
             )}
 
@@ -677,7 +677,7 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
       {((currentRoom.type === 'combat' || currentRoom.type === 'boss' || currentRoom.type === 'elite' || currentRoom.type === 'miniboss') && !currentRoom.combatCompleted) && (
         <div style={styles.controls}>
           <p style={{ textAlign: 'center', color: '#ff4444', fontSize: '16px', margin: 0 }}>
-            ⚠️ Defeat all enemies to proceed!
+            {t('dungeon.defeatAllEnemies')}
           </p>
         </div>
       )}

@@ -281,7 +281,8 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         'Auto Save',
         currentState.allHeroes,
         currentState.inventory,
-        currentState.activeParty
+        currentState.activeParty,
+        currentState.playerName
       );
 
       setState(prev => ({ ...prev, saving: false, syncStatus: 'success', lastSaveTime: new Date() }));

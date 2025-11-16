@@ -205,7 +205,14 @@ export function LeaderboardScreen({
           </div>
           <div style={styles.playerRankInfo}>
             <div style={styles.playerRankName}>{playerName}</div>
-            <div style={styles.playerRankLevel}>{t('leaderboard.levelLabel')} {playerLevel}</div>
+            <div style={styles.playerRankLevel}>
+              🏆 {playerEntry.combat_power.toLocaleString()}
+              {activeCategory === 'deepest_floor' && playerEntry.dungeon_name && (
+                <span style={{ marginLeft: '8px', color: 'rgba(255, 255, 255, 0.7)' }}>
+                  • {playerEntry.dungeon_name}
+                </span>
+              )}
+            </div>
           </div>
           <div style={styles.playerRankScore}>
             {formatScore(playerEntry.score, activeCategory)}
@@ -260,7 +267,14 @@ export function LeaderboardScreen({
                       {entry.player_name || t('leaderboard.anonymous')}
                       {isPlayer && <span style={styles.youBadge}>{t('leaderboard.youBadge')}</span>}
                     </div>
-                    <div style={styles.entryLevel}>{t('leaderboard.levelLabel')} {entry.player_level || 1}</div>
+                    <div style={styles.entryLevel}>
+                      🏆 {entry.combat_power.toLocaleString()}
+                      {activeCategory === 'deepest_floor' && entry.dungeon_name && (
+                        <span style={{ marginLeft: '8px', color: COLORS.textMuted }}>
+                          • {entry.dungeon_name}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div style={styles.entryScore}>
                     {formatScore(entry.score, activeCategory)}

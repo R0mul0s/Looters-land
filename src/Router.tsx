@@ -38,6 +38,8 @@ import { DUNGEON_CONFIG, COMBAT_CONFIG } from './config/BALANCE_CONFIG';
 import { LoginScreen } from './components/LoginScreen';
 import { GameModal } from './components/ui/GameModal';
 import { ModalText, ModalDivider, ModalInfoRow, ModalInfoBox, ModalButton } from './components/ui/ModalContent';
+import { LeaderboardService } from './services/LeaderboardService';
+import { calculatePlayerScore } from './utils/scoreCalculator';
 
 export function Router() {
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
@@ -264,6 +266,43 @@ export function Router() {
     // Set dungeon and switch to dungeon mode
     setCurrentDungeon(newDungeon);
     setInDungeon(true);
+  };
+
+  /**
+   * Update deepest floor reached in leaderboards
+   *
+   * Called when player reaches a new floor in dungeon.
+   * Updates the leaderboard with the deepest floor reached.
+   *
+   * @param floorNumber - The deepest floor number reached
+   * @param dungeonName - Name of the dungeon
+   */
+  const updateDeepestFloor = async (floorNumber: number, dungeonName: string) => {
+    try {
+      const user = await AuthService.getCurrentUser();
+      if (!user) {
+        console.warn('No user logged in, skipping leaderboard update');
+        return;
+      }
+
+      // Calculate combat power for leaderboard
+      const combatPower = calculatePlayerScore(gameState.activeParty || []);
+
+      // Update deepest_floor leaderboard (fire and forget)
+      LeaderboardService.updateLeaderboardEntry(
+        user.id,
+        'deepest_floor',
+        floorNumber,
+        gameState.playerName || 'Anonymous', // playerName
+        undefined, // playerLevel - will be filled from profile
+        dungeonName, // dungeon name
+        combatPower // combat power
+      ).catch(err => {
+        console.warn('Failed to update deepest_floor leaderboard:', err);
+      });
+    } catch (error) {
+      console.warn('Failed to update deepest floor:', error);
+    }
   };
 
   /**
@@ -799,6 +838,10 @@ export function Router() {
           onDungeonExit={handleDungeonExit}
           onFloorComplete={() => {
             console.log('🎉 Floor completed!');
+            // Update leaderboard with deepest floor reached
+            if (currentDungeon) {
+              updateDeepestFloor(currentDungeon.maxFloorReached, currentDungeon.name);
+            }
             forceUpdate({});
           }}
         />

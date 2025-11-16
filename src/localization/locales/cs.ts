@@ -302,6 +302,68 @@ export const cs: LocaleKeys = {
     exitRoomTitle: 'Dosáhli jste východu!',
     exitRoomMessage: 'Stiskněte OK pro postup na další patro.\nStiskněte Zrušit pro opuštění podzemí (všechna kořist si necháte).',
 
+    // Room action buttons
+    combatCompleted: 'Boj Dokončen',
+    fightBoss: 'Bojovat s Bossem',
+    bossDefeated: 'Boss Poražen',
+    lootTreasure: 'Vzít Poklad',
+    treasureLooted: 'Sesbíráno',
+    disarmTrap: 'Zneškodnit Past',
+    trapDisarmed: 'Past Zneškodněna',
+    rest: 'Odpočinek',
+    alreadyRested: 'Již Odpočato',
+    useShrine: 'Použít Svatyni',
+    shrineUsed: 'Svatyně Použita',
+    investigate: 'Prozkoumat',
+    mysteryResolved: 'Záhada Vyřešena',
+    eliteDefeated: 'Elita Poražena',
+    fightMiniBoss: 'Bojovat s Mini-Bossem',
+    miniBossDefeated: 'Mini-Boss Poražen',
+    proceedNextFloor: 'Postoupit na Další Patro',
+
+    // Buttons
+    exitDungeonKeepLoot: '✅ Opustit Podzemí (Ponechat Kořist)',
+    abandonDungeon: '❌ Opustit Podzemí',
+
+    // Messages
+    loading: 'Načítání podzemí...',
+    abandonWarning: '⚠️ Varování: Opuštění podzemí nyní způsobí ztrátu veškeré sebrané kořisti a pokroku!\n\nOpravdu chcete podzemí opustit?',
+    defeatAllEnemies: '⚠️ Poraž všechny nepřátele pro pokračování!',
+
+    // Statistics labels
+    floor: 'Patro:',
+    enemiesDefeated: 'Poražení Nepřátelé:',
+    goldEarned: 'Získané Zlato:',
+    itemsFound: 'Nalezené Předměty:',
+
+    // Shrine buffs
+    activeShrineBufTitle: '✨ Aktivní Buff Svatyně:',
+    damageBuff: '+10% Poškození',
+    xpBuff: '+15% Zkušenosti',
+    goldBuff: '+20% Zlato',
+    allStatsBuff: '+10% Všechny Statistiky',
+
+    // Room descriptions
+    difficulty: 'Obtížnost:',
+    healAmount: 'Množství Léčení:',
+    shrineDescription: 'Mystická svatyně vyzařuje sílu...',
+    buffType: 'Typ Buffu:',
+
+    // Room types
+    roomTypes: {
+      start: 'Start',
+      combat: 'Boj',
+      treasure: 'Poklad',
+      trap: 'Past',
+      rest: 'Odpočinek',
+      boss: 'Boss',
+      exit: 'Východ',
+      shrine: 'Svatyně',
+      mystery: 'Záhada',
+      elite: 'Elita',
+      miniboss: 'Mini-Boss',
+    },
+
     // Dungeon defeat screen
     defeat: {
       title: 'Porážka',

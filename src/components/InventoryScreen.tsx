@@ -62,7 +62,7 @@ export function InventoryScreen({
   isInTown = true
 }: InventoryScreenProps) {
   const [selectedHeroIndex, setSelectedHeroIndex] = useState(0);
-  const [tooltip, setTooltip] = useState<{ item: Item; x: number; y: number } | null>(null);
+  const [tooltip, setTooltip] = useState<{ item: Item; equippedItem: Item | null; x: number; y: number } | null>(null);
 
   const selectedHero = heroes[selectedHeroIndex];
 
@@ -81,13 +81,64 @@ export function InventoryScreen({
   }
 
   /**
+   * Calculate tooltip position with edge detection
+   *
+   * @param mouseX - Mouse X position
+   * @param mouseY - Mouse Y position
+   * @param hasComparison - Whether tooltip shows comparison (affects width)
+   * @returns Adjusted X and Y coordinates
+   */
+  const calculateTooltipPosition = (mouseX: number, mouseY: number, hasComparison: boolean): { x: number; y: number } => {
+    // Tooltip dimensions based on content
+    const tooltipWidth = hasComparison ? 650 : 320;
+    const tooltipHeight = 400; // Approximate height
+
+    // Get viewport dimensions
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    // Default position (offset from cursor)
+    let x = mouseX + 15;
+    let y = mouseY + 15;
+
+    // Check right edge - show on left side of cursor if tooltip would overflow
+    if (x + tooltipWidth > viewportWidth) {
+      x = mouseX - tooltipWidth - 15;
+    }
+
+    // Check bottom edge - move up if tooltip would overflow
+    if (y + tooltipHeight > viewportHeight) {
+      y = viewportHeight - tooltipHeight - 10;
+    }
+
+    // Ensure tooltip doesn't go off left edge
+    if (x < 10) {
+      x = 10;
+    }
+
+    // Ensure tooltip doesn't go off top edge
+    if (y < 10) {
+      y = 10;
+    }
+
+    return { x, y };
+  };
+
+  /**
    * Show item tooltip at mouse position
+   * Also shows equipped item in the same slot for comparison
    *
    * @param item - Item to show in tooltip
    * @param e - Mouse event with position
    */
   const showTooltip = (item: Item, e: React.MouseEvent): void => {
-    setTooltip({ item, x: e.clientX, y: e.clientY });
+    // Get currently equipped item in the same slot for comparison
+    const equippedItem = selectedHero.equipment?.slots[item.slot] || null;
+
+    // Calculate position with edge detection
+    const { x, y } = calculateTooltipPosition(e.clientX, e.clientY, !!equippedItem);
+
+    setTooltip({ item, equippedItem, x, y });
   };
 
   /**
@@ -97,7 +148,9 @@ export function InventoryScreen({
    */
   const updateTooltipPosition = (e: React.MouseEvent): void => {
     if (tooltip) {
-      setTooltip({ ...tooltip, x: e.clientX, y: e.clientY });
+      // Recalculate position with edge detection
+      const { x, y } = calculateTooltipPosition(e.clientX, e.clientY, !!tooltip.equippedItem);
+      setTooltip({ ...tooltip, x, y });
     }
   };
 
@@ -106,6 +159,108 @@ export function InventoryScreen({
    */
   const hideTooltip = (): void => {
     setTooltip(null);
+  };
+
+  /**
+   * Render item panel for tooltip (used for both inventory item and equipped item)
+   *
+   * @param item - Item to render
+   * @param isEquipped - Whether this is the currently equipped item
+   * @returns JSX element
+   */
+  const renderItemPanel = (item: Item, isEquipped: boolean = false): JSX.Element => {
+    const stats = item.getEffectiveStats();
+    const rarityColor = item.getRarityColor();
+
+    // Convert hex color to rgba for background
+    const hexToRgba = (hex: string, alpha: number): string => {
+      const r = parseInt(hex.slice(1, 3), 16);
+      const g = parseInt(hex.slice(3, 5), 16);
+      const b = parseInt(hex.slice(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    };
+
+    return (
+      <div style={{
+        flex: 1,
+        padding: '10px',
+        backgroundColor: hexToRgba(rarityColor, 0.1),
+        borderRadius: '8px',
+        border: `2px solid ${hexToRgba(rarityColor, 0.4)}`,
+        position: 'relative'
+      }}>
+        {isEquipped && (
+          <div style={{
+            position: 'absolute',
+            top: '5px',
+            right: '5px',
+            fontSize: '0.85em',
+            color: '#4caf50',
+            fontWeight: 'bold',
+            backgroundColor: 'rgba(76, 175, 80, 0.2)',
+            padding: '2px 6px',
+            borderRadius: '4px'
+          }}>
+            ✓ Equipped
+          </div>
+        )}
+        <div className="tooltip-header">
+          <div className="tooltip-name" style={{ color: rarityColor }}>
+            {item.icon} {item.getDisplayName()}
+          </div>
+          <div style={{ fontSize: '0.9em', color: '#666' }}>
+            {item.getRarityDisplayName()} {item.slot.charAt(0).toUpperCase() + item.slot.slice(1)} | Lv.{item.level}
+          </div>
+          {item.enchantLevel > 0 && (
+            <div style={{ fontSize: '0.9em', color: '#9c27b0', fontWeight: 'bold' }}>
+              +{item.enchantLevel} Enchant
+            </div>
+          )}
+          {item.setName && (
+            <div style={{ fontSize: '0.9em', color: '#2196f3', fontWeight: 'bold' }}>
+              {item.setName} Set
+            </div>
+          )}
+        </div>
+
+        <div className="tooltip-stats">
+          {stats.HP > 0 && (
+            <div className="tooltip-stat">
+              <span>{t('inventoryScreen.equipment.tooltip.hp')}</span>
+              <span className="stat-positive">+{stats.HP}</span>
+            </div>
+          )}
+          {stats.ATK > 0 && (
+            <div className="tooltip-stat">
+              <span>{t('inventoryScreen.equipment.tooltip.atk')}</span>
+              <span className="stat-positive">+{stats.ATK}</span>
+            </div>
+          )}
+          {stats.DEF > 0 && (
+            <div className="tooltip-stat">
+              <span>{t('inventoryScreen.equipment.tooltip.def')}</span>
+              <span className="stat-positive">+{stats.DEF}</span>
+            </div>
+          )}
+          {stats.SPD > 0 && (
+            <div className="tooltip-stat">
+              <span>{t('inventoryScreen.equipment.tooltip.spd')}</span>
+              <span className="stat-positive">+{stats.SPD}</span>
+            </div>
+          )}
+          {stats.CRIT > 0 && (
+            <div className="tooltip-stat">
+              <span>{t('inventoryScreen.equipment.tooltip.crit')}</span>
+              <span className="stat-positive">+{stats.CRIT}%</span>
+            </div>
+          )}
+        </div>
+
+        <div className="tooltip-actions">
+          <div>{t('inventoryScreen.equipment.tooltip.value', { value: item.goldValue.toString() })}</div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -375,77 +530,65 @@ export function InventoryScreen({
         </div>
       </div>
 
-      {/* Tooltip */}
+      {/* Comparison Tooltip */}
       {tooltip && (
         <div
           className="item-tooltip"
-          style={{ left: tooltip.x + 15, top: tooltip.y + 15 }}
+          style={{
+            left: tooltip.x + 15,
+            top: tooltip.y + 15,
+            minWidth: tooltip.equippedItem ? '600px' : '300px',
+            maxWidth: tooltip.equippedItem ? '800px' : '400px'
+          }}
         >
-          <div className="tooltip-header">
-            <div className="tooltip-name" style={{ color: tooltip.item.getRarityColor() }}>
-              {tooltip.item.icon} {tooltip.item.getDisplayName()}
-            </div>
-            <div style={{ fontSize: '0.9em', color: '#666' }}>
-              {tooltip.item.getRarityDisplayName()} {tooltip.item.slot.charAt(0).toUpperCase() + tooltip.item.slot.slice(1)} | Lv.{tooltip.item.level}
-            </div>
-            {tooltip.item.enchantLevel > 0 && (
-              <div style={{ fontSize: '0.9em', color: '#9c27b0', fontWeight: 'bold' }}>
-                +{tooltip.item.enchantLevel} Enchant
+          {tooltip.equippedItem ? (
+            /* Show comparison view when there's an equipped item */
+            <>
+              <div style={{
+                display: 'flex',
+                gap: '15px',
+                marginBottom: '10px'
+              }}>
+                {renderItemPanel(tooltip.equippedItem, true)}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontSize: '24px',
+                  color: '#666'
+                }}>
+                  ⇄
+                </div>
+                {renderItemPanel(tooltip.item, false)}
               </div>
-            )}
-            {tooltip.item.setName && (
-              <div style={{ fontSize: '0.9em', color: '#2196f3', fontWeight: 'bold' }}>
-                {tooltip.item.setName} Set
+              <div style={{
+                marginTop: '10px',
+                padding: '10px',
+                backgroundColor: 'rgba(255, 255, 255, 0.05)',
+                borderRadius: '4px',
+                fontSize: '0.85em',
+                fontStyle: 'italic',
+                textAlign: 'center',
+                color: '#aaa'
+              }}>
+                {t('inventoryScreen.equipment.tooltip.clickInstructions')}
               </div>
-            )}
-          </div>
-
-          <div className="tooltip-stats">
-            {(() => {
-              const stats = tooltip.item.getEffectiveStats();
-              return (
-                <>
-                  {stats.HP > 0 && (
-                    <div className="tooltip-stat">
-                      <span>{t('inventoryScreen.equipment.tooltip.hp')}</span>
-                      <span className="stat-positive">+{stats.HP}</span>
-                    </div>
-                  )}
-                  {stats.ATK > 0 && (
-                    <div className="tooltip-stat">
-                      <span>{t('inventoryScreen.equipment.tooltip.atk')}</span>
-                      <span className="stat-positive">+{stats.ATK}</span>
-                    </div>
-                  )}
-                  {stats.DEF > 0 && (
-                    <div className="tooltip-stat">
-                      <span>{t('inventoryScreen.equipment.tooltip.def')}</span>
-                      <span className="stat-positive">+{stats.DEF}</span>
-                    </div>
-                  )}
-                  {stats.SPD > 0 && (
-                    <div className="tooltip-stat">
-                      <span>{t('inventoryScreen.equipment.tooltip.spd')}</span>
-                      <span className="stat-positive">+{stats.SPD}</span>
-                    </div>
-                  )}
-                  {stats.CRIT > 0 && (
-                    <div className="tooltip-stat">
-                      <span>{t('inventoryScreen.equipment.tooltip.crit')}</span>
-                      <span className="stat-positive">+{stats.CRIT}%</span>
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-
-          <div className="tooltip-actions">
-            <div>{t('inventoryScreen.equipment.tooltip.value', { value: tooltip.item.goldValue.toString() })}</div>
-            <div style={{ marginTop: '5px', fontSize: '0.85em', fontStyle: 'italic' }}>
-              {t('inventoryScreen.equipment.tooltip.clickInstructions')}
-            </div>
-          </div>
+            </>
+          ) : (
+            /* Show single item view when no equipped item */
+            <>
+              {renderItemPanel(tooltip.item, false)}
+              <div style={{
+                marginTop: '10px',
+                padding: '5px',
+                fontSize: '0.85em',
+                fontStyle: 'italic',
+                textAlign: 'center',
+                color: '#aaa'
+              }}>
+                {t('inventoryScreen.equipment.tooltip.clickInstructions')}
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>

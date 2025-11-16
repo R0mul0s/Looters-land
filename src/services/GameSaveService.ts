@@ -22,6 +22,7 @@ import type { Hero } from '../engine/hero/Hero';
 import type { Inventory } from '../engine/item/Inventory';
 import type { GameSave, DBHero, DBInventoryItem, DBEquipmentSlot, GameSaveInsert, DBHeroInsert, DBInventoryItemInsert, DBEquipmentSlotInsert } from '../types/database.types';
 import { LeaderboardService } from './LeaderboardService';
+import { calculatePlayerScore } from '../utils/scoreCalculator';
 
 export class GameSaveService {
   /**
@@ -54,7 +55,8 @@ export class GameSaveService {
     saveName: string,
     heroes: Hero[],
     inventory: Inventory,
-    activeParty?: Hero[]
+    activeParty?: Hero[],
+    playerName?: string
   ): Promise<{ success: boolean; message: string; saveId?: string }> {
     if (!isSupabaseConfigured()) {
       return {
@@ -231,7 +233,13 @@ export class GameSaveService {
       }
 
       // 6. Update leaderboards (don't wait for it, fire and forget)
-      this.updateLeaderboards(userId, heroes, inventory.gold).catch(err =>
+      this.updateLeaderboards(
+        userId,
+        activeParty || heroes.slice(0, 4),
+        heroes.length, // Total heroes collected
+        inventory.gold,
+        playerName
+      ).catch(err =>
         console.warn('Leaderboard update failed (non-critical):', err)
       );
 
@@ -252,30 +260,33 @@ export class GameSaveService {
   /**
    * Update leaderboards with current game stats
    * @param userId - User ID
-   * @param heroes - Current heroes
+   * @param activeParty - Active party heroes (up to 4)
+   * @param totalHeroesCount - Total number of heroes collected
    * @param gold - Current gold
+   * @param playerName - Player's nickname
    */
   private static async updateLeaderboards(
     userId: string,
-    heroes: Hero[],
-    gold: number
+    activeParty: Hero[],
+    totalHeroesCount: number,
+    gold: number,
+    playerName?: string
   ): Promise<void> {
     try {
-      // Calculate combat power (sum of active party stats)
-      const combatPower = heroes
-        .slice(0, 4) // Active party (first 4 heroes)
-        .reduce((sum, hero) => sum + hero.maxHP + hero.ATK + hero.DEF, 0);
+      // Calculate combat power using proper scoring system
+      // This includes all stats (HP, ATK, DEF, SPD, CRIT) with rarity multipliers
+      const combatPower = calculatePlayerScore(activeParty);
 
       // Update all categories
       await LeaderboardService.updateAllCategories(
         userId,
         {
-          heroes_collected: heroes.length,
+          heroes_collected: totalHeroesCount, // Total unique heroes owned
           total_gold: gold,
           combat_power: combatPower
-          // Note: deepest_floor is updated separately in DungeonBuilding
+          // Note: deepest_floor is updated separately when completing dungeon floors
         },
-        undefined, // player_name will be filled from profile if available
+        playerName || 'Anonymous', // player_name
         1 // player_level (TODO: add player level system)
       );
     } catch (error) {

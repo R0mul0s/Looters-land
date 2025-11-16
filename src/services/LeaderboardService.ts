@@ -37,6 +37,7 @@ export interface LeaderboardEntry {
   total_gold: number;
   heroes_collected: number;
   combat_power: number;
+  dungeon_name: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -159,6 +160,8 @@ export async function getPlayerRank(
  * @param score - New score value
  * @param playerName - Player nickname
  * @param playerLevel - Player level
+ * @param dungeonName - Name of the dungeon (for deepest_floor category)
+ * @param combatPower - Player's combat power (stored in all categories)
  * @returns Service result
  */
 export async function updateLeaderboardEntry(
@@ -166,7 +169,9 @@ export async function updateLeaderboardEntry(
   category: LeaderboardCategory,
   score: number,
   playerName?: string,
-  playerLevel?: number
+  playerLevel?: number,
+  dungeonName?: string,
+  combatPower?: number
 ): Promise<ServiceResult<void>> {
   try {
     const { error } = await supabase.rpc('update_leaderboard_entry', {
@@ -174,7 +179,9 @@ export async function updateLeaderboardEntry(
       p_category: category,
       p_score: score,
       p_player_name: playerName || null,
-      p_player_level: playerLevel || 1
+      p_player_level: playerLevel || 1,
+      p_dungeon_name: dungeonName || null,
+      p_combat_power: combatPower || 0
     });
 
     if (error) throw error;

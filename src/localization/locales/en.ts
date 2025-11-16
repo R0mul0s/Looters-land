@@ -300,6 +300,68 @@ export const en = {
     exitRoomTitle: 'You have reached the exit!',
     exitRoomMessage: 'Click OK to proceed to the next floor.\nClick Cancel to leave the dungeon (you will keep all loot).',
 
+    // Room action buttons
+    combatCompleted: 'Combat Completed',
+    fightBoss: 'Fight Boss',
+    bossDefeated: 'Boss Defeated',
+    lootTreasure: 'Loot Treasure',
+    treasureLooted: 'Looted',
+    disarmTrap: 'Disarm Trap',
+    trapDisarmed: 'Trap Disarmed',
+    rest: 'Rest',
+    alreadyRested: 'Already Rested',
+    useShrine: 'Use Shrine',
+    shrineUsed: 'Shrine Used',
+    investigate: 'Investigate',
+    mysteryResolved: 'Mystery Resolved',
+    eliteDefeated: 'Elite Defeated',
+    fightMiniBoss: 'Fight Mini-Boss',
+    miniBossDefeated: 'Mini-Boss Defeated',
+    proceedNextFloor: 'Proceed to Next Floor',
+
+    // Buttons
+    exitDungeonKeepLoot: '✅ Exit Dungeon (Keep Loot)',
+    abandonDungeon: '❌ Abandon Dungeon',
+
+    // Messages
+    loading: 'Loading dungeon...',
+    abandonWarning: '⚠️ Warning: Leaving the dungeon now will cause you to lose all collected loot and progress!\n\nAre you sure you want to abandon the dungeon?',
+    defeatAllEnemies: '⚠️ Defeat all enemies to proceed!',
+
+    // Statistics labels
+    floor: 'Floor:',
+    enemiesDefeated: 'Enemies Defeated:',
+    goldEarned: 'Gold Earned:',
+    itemsFound: 'Items Found:',
+
+    // Shrine buffs
+    activeShrineBufTitle: '✨ Active Shrine Buffs:',
+    damageBuff: '+10% Damage',
+    xpBuff: '+15% XP',
+    goldBuff: '+20% Gold',
+    allStatsBuff: '+10% All Stats',
+
+    // Room descriptions
+    difficulty: 'Difficulty:',
+    healAmount: 'Heal Amount:',
+    shrineDescription: 'A mystical shrine radiates power...',
+    buffType: 'Buff Type:',
+
+    // Room types
+    roomTypes: {
+      start: 'Start',
+      combat: 'Combat',
+      treasure: 'Treasure',
+      trap: 'Trap',
+      rest: 'Rest',
+      boss: 'Boss',
+      exit: 'Exit',
+      shrine: 'Shrine',
+      mystery: 'Mystery',
+      elite: 'Elite',
+      miniboss: 'Mini-Boss',
+    },
+
     // Dungeon defeat screen
     defeat: {
       title: 'Defeat',

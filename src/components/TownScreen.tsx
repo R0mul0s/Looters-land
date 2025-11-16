@@ -105,34 +105,34 @@ export function TownScreen({
   // Building metadata
   const buildingInfo: Record<BuildingType, { name: string; icon: string; description: string }> = {
     tavern: {
-      name: 'Tavern',
+      name: t('town.tavern'),
       icon: '🍺',
-      description: 'Recruit heroes and summon new adventurers'
+      description: t('town.tavernDesc')
     },
     smithy: {
-      name: 'Smithy',
+      name: t('town.smithy'),
       icon: '⚒️',
-      description: 'Enchant equipment and repair items'
+      description: t('town.smithyDesc')
     },
     healer: {
-      name: 'Healer',
+      name: t('town.healer'),
       icon: '⛑️',
-      description: 'Restore HP for your heroes'
+      description: t('town.healerDesc')
     },
     market: {
-      name: 'Market',
+      name: t('town.market'),
       icon: '🏪',
-      description: 'Buy and sell items and resources'
+      description: t('town.marketDesc')
     },
     bank: {
-      name: 'Bank',
+      name: t('town.bank'),
       icon: '🏦',
-      description: 'Store gold and earn interest'
+      description: t('town.bankDesc')
     },
     guild: {
-      name: 'Guild Hall',
+      name: t('town.guild'),
       icon: '🏰',
-      description: 'Manage guild and social features'
+      description: t('town.guildDesc')
     }
   };
 
@@ -281,7 +281,7 @@ export function TownScreen({
               <h3 style={styles.buildingName}>{building.name}</h3>
               <p style={styles.buildingDescription}>{building.description}</p>
               {!isUnlocked && (
-                <div style={styles.lockedBadge}>🔒 Locked</div>
+                <div style={styles.lockedBadge}>🔒 {t('town.locked')}</div>
               )}
             </button>
           );

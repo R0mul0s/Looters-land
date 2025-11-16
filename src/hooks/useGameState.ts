@@ -348,12 +348,17 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         // Reconstruct heroes from database
         saveResult.data.heroes.forEach(dbHero => {
           const hero = new Hero(dbHero.hero_name, dbHero.hero_class as any, dbHero.level, dbHero.rarity as any || 'common');
+
           hero.id = dbHero.id;
           hero.experience = dbHero.experience;
           hero.requiredXP = dbHero.required_xp;
           hero.talentPoints = dbHero.talent_points || 0;
-          hero.currentHP = dbHero.current_hp;
-          hero.maxHP = dbHero.max_hp;
+
+          // IMPORTANT: Don't set currentHP yet - wait until after equipment is loaded
+          // because equip() calls recalculateStats() which can change HP
+          const savedCurrentHP = dbHero.current_hp; // Save it for later
+
+          // Set base stats (but not HP yet)
           hero.ATK = dbHero.atk;
           hero.DEF = dbHero.def;
           hero.SPD = dbHero.spd;
@@ -362,7 +367,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           // Initialize equipment
           hero.equipment = new Equipment(hero);
 
-          // Load equipped items
+          // Load equipped items FIRST
           const heroEquipment = saveResult.data!.equipmentSlots.filter(
             eq => eq.hero_id === dbHero.id
           );
@@ -388,6 +393,10 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
               hero.equipment?.equip(item);
             }
           });
+
+          // NOW set currentHP after all equipment is loaded and stats are recalculated
+          hero.currentHP = savedCurrentHP;
+          hero.isAlive = savedCurrentHP > 0;
 
           heroesWithPartyOrder.push({hero, partyOrder: dbHero.party_order});
         });

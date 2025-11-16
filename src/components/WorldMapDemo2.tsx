@@ -1220,7 +1220,9 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
                 await gameActions.addHero(hero);
               }
 
-              // Auto-save will trigger automatically via scheduleAutoSave in addHero
+              // IMPORTANT: Save game to persist HP changes (e.g., from healer)
+              // This ensures HP changes are saved even if no new heroes were added
+              gameActions.saveGame();
             }}
             onInventoryChange={(updatedInventory) => {
               gameActions.updateInventory(updatedInventory);

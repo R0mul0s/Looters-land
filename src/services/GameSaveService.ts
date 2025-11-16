@@ -133,7 +133,7 @@ export class GameSaveService {
         };
       }
 
-      // Verify XP integrity (only log errors if mismatch detected)
+      // Verify XP and HP integrity (only log errors if mismatch detected)
       heroUpserts.forEach((input, index) => {
         const returned = savedHeroes[index];
         if (input.experience !== returned.experience) {
@@ -141,6 +141,14 @@ export class GameSaveService {
             sent: input.experience,
             returned: returned.experience,
             difference: returned.experience - input.experience
+          });
+        }
+        if (input.current_hp !== returned.current_hp) {
+          console.error(`❌ HP MISMATCH for ${input.hero_name}:`, {
+            sentCurrentHP: input.current_hp,
+            returnedCurrentHP: returned.current_hp,
+            sentMaxHP: input.max_hp,
+            returnedMaxHP: returned.max_hp
           });
         }
       });

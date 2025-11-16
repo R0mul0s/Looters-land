@@ -19,6 +19,7 @@ import { BankBuilding } from './buildings/BankBuilding';
 import { GuildHallBuilding } from './buildings/GuildHallBuilding';
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../styles/tokens';
 import { flexColumn } from '../styles/common';
+import { t } from '../localization/i18n';
 
 // Import city interior images (city1-inside doesn't exist, only city2-5)
 import city2InsideImg from '../assets/images/building/city2-inside.png';

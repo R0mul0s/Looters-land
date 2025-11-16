@@ -985,6 +985,25 @@ function WorldMapViewerComponent({
 
           // Reset shadow
           ctx.shadowBlur = 0;
+
+          // Draw town name below the city icon
+          if (objectName) {
+            ctx.save();
+            ctx.font = `bold ${Math.floor(TILE_SIZE * 0.35)}px sans-serif`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+
+            // Draw text shadow for better readability
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+            ctx.shadowBlur = 4;
+            ctx.fillStyle = '#ffffff';
+
+            // Position text below the city (accounting for larger city size)
+            const textY = screenY + citySize + 2;
+            ctx.fillText(objectName, screenX + TILE_SIZE / 2, textY);
+
+            ctx.restore();
+          }
         } else {
           ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
         }

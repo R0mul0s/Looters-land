@@ -503,7 +503,7 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
       setShowMessageModal(t('worldmap.randomEventComingSoon', { eventType: object.eventType }));
     } else if (object.type === 'encounter') {
       // TODO: Implement encounters
-      setShowMessageModal('Encounter system coming soon!');
+      setShowMessageModal(t('worldmap.encounterComingSoon'));
     }
   };
 
@@ -513,7 +513,7 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
   const handleObservationTowerUse = (tower: ObservationTower) => {
     // Check if already used
     if (tower.used) {
-      setShowMessageModal('You have already used this Observation Tower.');
+      setShowMessageModal(t('worldmap.observationTowerAlreadyUsed'));
       return;
     }
 
@@ -553,7 +553,7 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
       gameActions.updateWorldMap({ ...gameState.worldMap }); // Force re-render
 
       console.log(`🗼 Revealed ${tilesRevealed} tiles from observation tower`);
-      setShowMessageModal(`The Observation Tower reveals a vast area! ${tilesRevealed} tiles discovered.`);
+      setShowMessageModal(t('worldmap.observationTowerRevealed', { tilesRevealed: tilesRevealed.toString() }));
     }
   };
 
@@ -1563,11 +1563,11 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
                     onClick={() => {
                       const result = enchantItem.enchant();
                       if (result.success) {
-                        setShowMessageModal(`✨ ${result.message}\nSuccess rate was ${result.chance}%`);
+                        setShowMessageModal(t('worldmap.enchantSuccess', { message: result.message, chance: result.chance.toString() }));
                         gameActions.saveGame();
                         setEnchantItem({ ...enchantItem }); // Force re-render
                       } else {
-                        setShowMessageModal(`❌ ${result.message}\nSuccess rate was ${result.chance}%`);
+                        setShowMessageModal(t('worldmap.enchantFailed', { message: result.message, chance: result.chance.toString() }));
                       }
                     }}
                   >

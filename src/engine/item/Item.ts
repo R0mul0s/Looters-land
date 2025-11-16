@@ -30,6 +30,7 @@ export class Item {
   setId: string | null;
   goldValue: number;
   icon: string;
+  location: 'inventory' | 'bank' | 'equipped'; // Item location for bank vault system
 
   constructor(config: ItemConfig) {
     // Generate UUID for database compatibility
@@ -57,6 +58,7 @@ export class Item {
     this.setId = config.setId || null;
     this.goldValue = config.goldValue || this.calculateValue();
     this.icon = config.icon || this.getDefaultIcon();
+    this.location = config.location || 'inventory'; // Default to inventory
   }
 
   static getRarityMultiplier(rarity: ItemRarity): number {

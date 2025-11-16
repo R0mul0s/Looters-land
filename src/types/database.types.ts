@@ -50,6 +50,7 @@ export interface DBInventoryItem {
   base_stats: ItemStats;
   set_id: string | null;
   set_name: string | null;
+  location: string; // Item location: 'inventory' | 'bank' | 'equipped'
   created_at: string;
   updated_at: string;
 }

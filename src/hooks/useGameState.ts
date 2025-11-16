@@ -351,7 +351,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       const saveResult = await GameSaveService.loadGame(userId, 'Auto Save');
 
       let heroes: Hero[] = [];
-      let inventory = new Inventory(50);
+      const inventory = new Inventory(50);
       inventory.gold = profile.gold;
 
       if (saveResult.success && saveResult.data && saveResult.data.heroes.length > 0) {

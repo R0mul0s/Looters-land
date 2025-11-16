@@ -201,30 +201,36 @@ export class GameSaveService {
       // 5. Save inventory items
       // For inventory, we keep DELETE + INSERT because items can be added/removed frequently
       // and we don't have a stable composite key (items can be duplicates with same item_id)
+      // IMPORTANT: Only delete items in 'inventory' location, NOT items in 'bank' or 'equipped'
       const { error: deleteItemsError } = await supabase
         .from('inventory_items')
         .delete()
-        .eq('game_save_id', gameSaveId);
+        .eq('game_save_id', gameSaveId)
+        .eq('location', 'inventory');
 
       if (deleteItemsError) {
         console.error('❌ Delete inventory error:', deleteItemsError);
       }
 
-      const itemInserts: DBInventoryItemInsert[] = inventory.items.map(item => ({
-        game_save_id: gameSaveId,
-        item_id: item.id,
-        item_name: item.name,
-        item_type: item.type,
-        slot: item.slot,
-        icon: item.icon,
-        level: item.level,
-        rarity: item.rarity,
-        gold_value: item.goldValue,
-        enchant_level: item.enchantLevel,
-        base_stats: item.stats,
-        set_id: item.setId || null,
-        set_name: item.setName || null
-      }));
+      // CRITICAL: Only save items with location='inventory' to avoid duplicating bank/equipped items
+      const itemInserts: DBInventoryItemInsert[] = inventory.items
+        .filter(item => (item.location || 'inventory') === 'inventory')
+        .map(item => ({
+          game_save_id: gameSaveId,
+          item_id: item.id,
+          item_name: item.name,
+          item_type: item.type,
+          slot: item.slot,
+          icon: item.icon,
+          level: item.level,
+          rarity: item.rarity,
+          gold_value: item.goldValue,
+          enchant_level: item.enchantLevel,
+          base_stats: item.stats,
+          set_id: item.setId || null,
+          set_name: item.setName || null,
+          location: 'inventory' // Always inventory since we filtered for it
+        }));
 
       if (itemInserts.length > 0) {
         const { error: itemError } = await supabase
@@ -388,10 +394,12 @@ export class GameSaveService {
       }
 
       // 4. Load inventory items
+      // CRITICAL: Only load items with location='inventory', NOT bank/equipped items
       const { data: inventoryItems, error: itemError } = await supabase
         .from('inventory_items')
         .select('*')
-        .eq('game_save_id', gameSaveId);
+        .eq('game_save_id', gameSaveId)
+        .eq('location', 'inventory');
 
       if (itemError) {
         return {

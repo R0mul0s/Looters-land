@@ -28,6 +28,7 @@ export interface ItemConfig {
   setId?: string | null;
   goldValue?: number;
   icon?: string;
+  location?: 'inventory' | 'bank' | 'equipped'; // Item location for bank vault system
 }
 
 export interface ItemInfo {

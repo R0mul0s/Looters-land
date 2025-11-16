@@ -28,6 +28,9 @@ export interface PlayerProfile {
   gacha_summon_count: number;
   gacha_last_free_summon: string | null;
   gacha_pity_summons: number;
+  bank_vault_tier: number;
+  bank_vault_max_slots: number;
+  bank_total_items: number;
   created_at: string;
   updated_at: string;
   last_login: string;
@@ -50,6 +53,9 @@ export interface PlayerProfileUpdate {
   gacha_summon_count?: number;
   gacha_last_free_summon?: string | null;
   gacha_pity_summons?: number;
+  bank_vault_tier?: number;
+  bank_vault_max_slots?: number;
+  bank_total_items?: number;
 }
 
 export class PlayerProfileService {

@@ -374,7 +374,7 @@ export class WorldMapGenerator {
           smithy: true,   // Always available in all towns
           healer: true,   // Always available in all towns
           market: true,   // Always available in all towns
-          bank: false,    // Coming soon - not yet implemented
+          bank: true,     // Bank Vault System (v0.9.0)
           guild: false    // Coming soon - not yet implemented
         }
       };

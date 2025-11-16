@@ -178,7 +178,7 @@ export function BankBuilding({
   };
 
   // Filter inventory items (only equipment, not in bank)
-  let inventoryItems = inventory.items.filter(
+  const inventoryItems = inventory.items.filter(
     item => ['helmet', 'chest', 'legs', 'boots', 'weapon', 'shield', 'accessory'].includes(item.slot)
   );
 

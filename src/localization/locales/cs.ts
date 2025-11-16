@@ -1310,17 +1310,7 @@ export const cs: LocaleKeys = {
 
     // Bank
     bank: {
-      title: 'Banka',
-      comingSoon: {
-        title: 'Již brzy!',
-        version: 'Bankovní systém bude dostupný ve verzi v0.9.0',
-        features: {
-          item1: 'Bezpečně uložit zlato',
-          item2: 'Získávat denní úroky',
-          item3: 'Služby vkladu a výběru',
-          item4: 'Sledování historie transakcí',
-        },
-      },
+      title: 'Bankovní trezor',
     },
 
     // Guild Hall

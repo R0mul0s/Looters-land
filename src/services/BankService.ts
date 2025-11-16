@@ -240,7 +240,7 @@ export class BankService {
       console.log('✅ Update result:', updateData);
 
       // Verify the update by querying the item again
-      const { data: verifyData, error: verifyError } = await supabase
+      const { data: verifyData } = await supabase
         .from('inventory_items')
         .select('id, item_id, item_name, location')
         .eq('id', item.id)

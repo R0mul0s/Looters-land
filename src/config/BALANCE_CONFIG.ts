@@ -401,6 +401,35 @@ export const TALENT_CONFIG = {
 } as const;
 
 // ============================================================================
+// BANK VAULT SYSTEM
+// ============================================================================
+
+export const BANK_CONFIG = {
+  /** Bank vault tier definitions */
+  TIERS: [
+    { tier: 0, slots: 0, cost: 0, energyBonus: 0 },
+    { tier: 1, slots: 50, cost: 25000, energyBonus: 25 },
+    { tier: 2, slots: 100, cost: 50000, energyBonus: 50 },
+    { tier: 3, slots: 150, cost: 100000, energyBonus: 75 },
+    { tier: 4, slots: 200, cost: 200000, energyBonus: 100 },
+    { tier: 5, slots: 250, cost: 400000, energyBonus: 125 },
+  ] as const,
+
+  /** Transaction fees */
+  DEPOSIT_FEE_PERCENTAGE: 0.01, // 1% of item value
+  WITHDRAW_FEE_PERCENTAGE: 0, // Free withdrawals
+
+  /** Maximum tier */
+  MAX_TIER: 5,
+
+  /** Default tier for new players */
+  DEFAULT_TIER: 0,
+
+  /** Total gold sink for max tier */
+  TOTAL_MAX_COST: 775000,
+} as const;
+
+// ============================================================================
 // MARKET SYSTEM (IMPLEMENTED)
 // ============================================================================
 
@@ -492,4 +521,36 @@ export function getEnchantCost(currentLevel: number): number {
 export function getEnchantSuccessRate(currentLevel: number): number {
   const rate = EQUIPMENT_CONFIG.ENCHANT_SUCCESS_RATES[currentLevel as keyof typeof EQUIPMENT_CONFIG.ENCHANT_SUCCESS_RATES];
   return rate ?? 0;
+}
+
+/**
+ * Get bank vault slot capacity for given tier
+ */
+export function getBankVaultSlots(tier: number): number {
+  const tierConfig = BANK_CONFIG.TIERS.find(t => t.tier === tier);
+  return tierConfig?.slots ?? 0;
+}
+
+/**
+ * Get bank vault upgrade cost from current tier to next tier
+ */
+export function getBankUpgradeCost(currentTier: number): number {
+  if (currentTier >= BANK_CONFIG.MAX_TIER) return 0;
+  const nextTier = BANK_CONFIG.TIERS.find(t => t.tier === currentTier + 1);
+  return nextTier?.cost ?? 0;
+}
+
+/**
+ * Get bank vault energy bonus for given tier
+ */
+export function getBankEnergyBonus(tier: number): number {
+  const tierConfig = BANK_CONFIG.TIERS.find(t => t.tier === tier);
+  return tierConfig?.energyBonus ?? 0;
+}
+
+/**
+ * Calculate deposit fee for item
+ */
+export function calculateDepositFee(itemValue: number): number {
+  return Math.floor(itemValue * BANK_CONFIG.DEPOSIT_FEE_PERCENTAGE);
 }

@@ -1308,17 +1308,7 @@ export const en = {
 
     // Bank
     bank: {
-      title: 'Bank',
-      comingSoon: {
-        title: 'Coming Soon!',
-        version: 'Bank system will be available in v0.9.0',
-        features: {
-          item1: 'Store gold securely',
-          item2: 'Earn daily interest',
-          item3: 'Deposit and withdraw services',
-          item4: 'Transaction history tracking',
-        },
-      },
+      title: 'Bank Vault',
     },
 
     // Guild Hall

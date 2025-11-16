@@ -244,34 +244,39 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
   // Generate initial worldmap if not exists
   useEffect(() => {
     if (!gameState.worldMap && !gameState.loading) {
+      // Generate world with player's combat power for CP-based starting position
       const newWorld = WorldMapGenerator.generate({
         width: 50,
         height: 50,
-        seed: `daily-${new Date().toISOString().split('T')[0]}`, // Daily seed
+        seed: `daily-${new Date().toISOString().split('T')[0]}`, // Daily seed - changes every day
         townCount: 4,
         dungeonCount: 5,
         encounterCount: 15,
         resourceCount: 50
-      });
+      }, gameState.combatPower);
 
-      // Reveal area around capital
-      const capital = newWorld.staticObjects.find(
-        obj => obj.type === 'town' && obj.name === 'Capital'
-      );
-      if (capital) {
-        for (let y = capital.position.y - 5; y <= capital.position.y + 5; y++) {
-          for (let x = capital.position.x - 5; x <= capital.position.x + 5; x++) {
-            if (newWorld.tiles[y]?.[x]) {
-              newWorld.tiles[y][x].isExplored = true;
-            }
+      // Get all towns from the world
+      const towns = newWorld.staticObjects.filter(obj => obj.type === 'town') as Town[];
+
+      // Find starting town based on player's combat power
+      const startingTown = WorldMapGenerator.getStartingTownByCP(towns, gameState.combatPower);
+
+      // Reveal area around starting town (11x11 grid)
+      for (let y = startingTown.position.y - 5; y <= startingTown.position.y + 5; y++) {
+        for (let x = startingTown.position.x - 5; x <= startingTown.position.x + 5; x++) {
+          if (newWorld.tiles[y]?.[x]) {
+            newWorld.tiles[y][x].isExplored = true;
           }
         }
-        gameActions.updatePlayerPos(capital.position.x, capital.position.y);
       }
 
+      // Set player position to starting town
+      gameActions.updatePlayerPos(startingTown.position.x, startingTown.position.y);
+
+      // Save the world
       gameActions.updateWorldMap(newWorld);
     }
-  }, [gameState.loading, gameState.worldMap]);
+  }, [gameState.loading, gameState.worldMap, gameState.combatPower]);
 
   /**
    * Handle tile click for hero movement

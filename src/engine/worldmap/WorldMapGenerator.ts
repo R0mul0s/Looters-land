@@ -35,13 +35,57 @@ import { TERRAIN_MOVEMENT_COST as MOVEMENT_COSTS } from '../../types/worldmap.ty
 import { WORLDMAP_CONFIG } from '../../config/BALANCE_CONFIG';
 
 /**
+ * Seeded Random Number Generator
+ * Uses seed string to generate deterministic random numbers
+ */
+class SeededRandom {
+  private seed: number;
+
+  constructor(seedString: string) {
+    // Convert string to number seed
+    let hash = 0;
+    for (let i = 0; i < seedString.length; i++) {
+      const char = seedString.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32-bit integer
+    }
+    this.seed = Math.abs(hash);
+  }
+
+  /**
+   * Generate next random number between 0 and 1
+   */
+  next(): number {
+    // Linear congruential generator
+    this.seed = (this.seed * 9301 + 49297) % 233280;
+    return this.seed / 233280;
+  }
+
+  /**
+   * Generate random integer between min and max (inclusive)
+   */
+  nextInt(min: number, max: number): number {
+    return Math.floor(this.next() * (max - min + 1)) + min;
+  }
+
+  /**
+   * Generate random float between min and max
+   */
+  nextFloat(min: number, max: number): number {
+    return this.next() * (max - min) + min;
+  }
+}
+
+/**
  * WorldMap Generator class
  */
 export class WorldMapGenerator {
+  private static rng: SeededRandom;
   /**
    * Generate complete worldmap
    *
    * @param options - Generation options
+   * @param playerCombatPower - Player's current combat power (for starting position)
    * @returns Generated worldmap
    *
    * @example
@@ -50,10 +94,10 @@ export class WorldMapGenerator {
    *   width: 50,
    *   height: 50,
    *   seed: 'my-world-123'
-   * });
+   * }, 5000);
    * ```
    */
-  static generate(options: WorldMapGenerationOptions): WorldMap {
+  static generate(options: WorldMapGenerationOptions, playerCombatPower: number = 0): WorldMap {
     const {
       width = 50,
       height = 50,
@@ -64,18 +108,21 @@ export class WorldMapGenerator {
       resourceCount = 50
     } = options;
 
-    console.log('🗺️ Generating worldmap...', { width, height, seed });
+    console.log('🗺️ Generating worldmap...', { width, height, seed, playerCombatPower });
+
+    // Initialize seeded RNG for deterministic generation
+    this.rng = new SeededRandom(seed);
 
     // 1. Generate base terrain with Perlin noise
     const tiles = this.generateTerrain(width, height, seed);
 
-    // 2. Place fixed towns
+    // 2. Place progressive towns with seeded positions
     const towns = this.placeTowns(tiles, townCount);
 
-    // 3. Place fixed dungeons
-    const dungeons = this.placeDungeons(tiles, dungeonCount);
+    // 3. Place dungeons near towns
+    const dungeons = this.placeDungeons(tiles, dungeonCount, towns);
 
-    // 4. Generate roads between towns
+    // 4. Generate roads connecting all towns
     this.generateRoads(tiles, towns);
 
     // 5. Place portals (for fast travel)
@@ -223,104 +270,299 @@ export class WorldMapGenerator {
   }
 
   /**
-   * Place fixed towns on map
+   * Place progressive towns on map with seeded random positions
+   *
+   * Towns are placed in order of difficulty and must be at least 15 tiles apart
    *
    * @param tiles - Map tiles
    * @param count - Number of towns
    * @returns Array of towns
    */
   private static placeTowns(tiles: Tile[][], count: number): Town[] {
-    console.log('🏰 Placing towns...');
+    console.log('🏰 Placing progressive towns with seeded positions...');
     const towns: Town[] = [];
     const width = tiles[0].length;
     const height = tiles.length;
 
-    // Fixed town positions (strategic locations)
-    const townPositions = [
-      { name: 'Capital', x: Math.floor(width / 2), y: Math.floor(height / 2), level: 3 as const, faction: 'Kingdom' as const },
-      { name: 'Mountain Stronghold', x: Math.floor(width * 0.2), y: Math.floor(height * 0.2), level: 2 as const, faction: 'Mountain Dwarves' as const },
-      { name: 'Desert Oasis', x: Math.floor(width * 0.5), y: Math.floor(height * 0.9), level: 2 as const, faction: 'Desert Nomads' as const },
-      { name: 'Forest Outpost', x: Math.floor(width * 0.1), y: Math.floor(height * 0.5), level: 1 as const, faction: 'Forest Elves' as const }
+    // Progressive town configs (ordered by difficulty)
+    const townConfigs = [
+      {
+        name: 'Goldhaven',
+        faction: 'Humans' as const,
+        level: 1 as const,
+        cpRange: [0, 12000],
+        asset: 'city2.png'
+      },
+      {
+        name: 'Ariandel',
+        faction: 'Elves' as const,
+        level: 2 as const,
+        cpRange: [12000, 22000],
+        asset: 'city3.png'
+      },
+      {
+        name: 'Gorundrim',
+        faction: 'Dwarves' as const,
+        level: 3 as const,
+        cpRange: [22000, 32000],
+        asset: 'city4.png'
+      },
+      {
+        name: 'Astralheim',
+        faction: 'Mages' as const,
+        level: 4 as const,
+        cpRange: [32001, 999999],
+        asset: 'city5.png'
+      }
     ];
 
-    for (let i = 0; i < Math.min(count, townPositions.length); i++) {
-      const pos = townPositions[i];
+    const placedPositions: Array<{ x: number; y: number }> = [];
+    const MIN_DISTANCE = 15;
 
-      // Ensure town is on passable terrain
-      if (tiles[pos.y] && tiles[pos.y][pos.x]) {
-        const tile = tiles[pos.y][pos.x];
-        if (tile.terrain !== 'water' && tile.terrain !== 'mountains') {
-          tile.terrain = 'plains'; // Towns always on plains
+    for (let i = 0; i < Math.min(count, townConfigs.length); i++) {
+      const config = townConfigs[i];
+      let x: number, y: number;
+      let attempts = 0;
+      let validPosition = false;
 
-          const town: Town = {
-            id: `town-${i}`,
-            type: 'town',
-            name: pos.name,
-            position: { x: pos.x, y: pos.y },
-            level: pos.level,
-            faction: pos.faction,
-            buildings: {
-              tavern: true,
-              smithy: pos.level >= 2,
-              healer: true,
-              market: pos.level >= 2,
-              bank: pos.level >= 3,
-              guild: pos.level >= 3
-            }
-          };
+      // Try to find a valid position (passable terrain, not too close to other towns)
+      while (!validPosition && attempts < 200) {
+        // Generate seeded random position
+        x = this.rng.nextInt(5, width - 6);
+        y = this.rng.nextInt(5, height - 6);
 
-          tile.staticObject = town;
-          towns.push(town);
-          console.log(`  🏰 Placed ${town.name} at (${pos.x}, ${pos.y})`);
+        const tile = tiles[y]?.[x];
+        if (!tile) {
+          attempts++;
+          continue;
         }
+
+        // Check if terrain is passable
+        if (tile.terrain === 'water' || tile.terrain === 'mountains') {
+          attempts++;
+          continue;
+        }
+
+        // Check distance from other towns (must be at least 15 tiles apart)
+        const tooClose = placedPositions.some(pos => {
+          const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
+          return distance < MIN_DISTANCE;
+        });
+
+        if (tooClose) {
+          attempts++;
+          continue;
+        }
+
+        validPosition = true;
       }
+
+      if (!validPosition) {
+        console.warn(`⚠️ Could not find valid position for ${config.name} after ${attempts} attempts`);
+        continue;
+      }
+
+      // Place town on plains
+      tiles[y][x].terrain = 'plains';
+
+      const town: Town = {
+        id: `town-${i}`,
+        type: 'town',
+        name: config.name,
+        position: { x, y },
+        level: config.level,
+        faction: config.faction,
+        buildings: {
+          tavern: true,
+          smithy: config.level >= 2,
+          healer: true,
+          market: config.level >= 2,
+          bank: config.level >= 3,
+          guild: config.level >= 4
+        }
+      };
+
+      tiles[y][x].staticObject = town;
+      towns.push(town);
+      placedPositions.push({ x, y });
+
+      console.log(`  🏰 Placed ${town.name} (CP ${config.cpRange[0]}-${config.cpRange[1]}) at (${x}, ${y})`);
     }
 
     return towns;
   }
 
   /**
-   * Place fixed dungeon entrances on map
+   * Place dungeon entrances near corresponding towns
+   *
+   * Each town gets a dungeon within 11 tiles, matching difficulty progression
+   * Plus one bonus random nightmare dungeon (Endless Abyss)
    *
    * @param tiles - Map tiles
-   * @param count - Number of dungeons
+   * @param count - Number of dungeons (4 town dungeons + 1 bonus)
+   * @param towns - Array of towns to place dungeons near
    * @returns Array of dungeons
    */
-  private static placeDungeons(tiles: Tile[][], count: number): DungeonEntrance[] {
-    console.log('🕳️ Placing dungeons...');
+  private static placeDungeons(tiles: Tile[][], count: number, towns: Town[]): DungeonEntrance[] {
+    console.log('🕳️ Placing dungeons near towns...');
     const dungeons: DungeonEntrance[] = [];
     const width = tiles[0].length;
     const height = tiles.length;
 
-    // Fixed dungeon positions
+    // Dungeon configs matching town progression
     const dungeonConfigs = [
-      { name: 'Goblin Caves', x: Math.floor(width * 0.4), y: Math.floor(height * 0.4), difficulty: 'Easy' as const, maxFloors: 10, level: 1, theme: 'Goblin Caves' },
-      { name: 'Forest Ruins', x: Math.floor(width * 0.15), y: Math.floor(height * 0.55), difficulty: 'Medium' as const, maxFloors: 25, level: 10, theme: 'Ancient Ruins' },
-      { name: 'Mountain Depths', x: Math.floor(width * 0.25), y: Math.floor(height * 0.15), difficulty: 'Hard' as const, maxFloors: 50, level: 20, theme: 'Mountain Depths' },
-      { name: 'Ancient Temple', x: Math.floor(width * 0.55), y: Math.floor(height * 0.95), difficulty: 'Hard' as const, maxFloors: 50, level: 25, theme: 'Desert Temple' },
-      { name: 'Endless Abyss', x: Math.floor(width * 0.8), y: Math.floor(height * 0.5), difficulty: 'Nightmare' as const, maxFloors: 999, level: 30, theme: 'Endless Abyss' }
+      {
+        name: 'Forgotten Mines',
+        difficulty: 'Easy' as const,
+        maxFloors: 10,
+        level: 3,
+        theme: 'Goblin Caves',
+        townIndex: 0 // Goldhaven
+      },
+      {
+        name: 'Elven Catacombs',
+        difficulty: 'Medium' as const,
+        maxFloors: 25,
+        level: 15,
+        theme: 'Ancient Ruins',
+        townIndex: 1 // Ariandel
+      },
+      {
+        name: 'Dwarven Depths',
+        difficulty: 'Hard' as const,
+        maxFloors: 50,
+        level: 25,
+        theme: 'Mountain Depths',
+        townIndex: 2 // Gorundrim
+      },
+      {
+        name: 'Arcane Sanctum',
+        difficulty: 'Nightmare' as const,
+        maxFloors: 75,
+        level: 35,
+        theme: 'Arcane Tower',
+        townIndex: 3 // Astralheim
+      }
     ];
 
-    for (let i = 0; i < Math.min(count, dungeonConfigs.length); i++) {
+    // Place dungeons near their corresponding towns
+    for (let i = 0; i < Math.min(4, dungeonConfigs.length); i++) {
       const config = dungeonConfigs[i];
+      const town = towns[config.townIndex];
 
-      if (tiles[config.y] && tiles[config.y][config.x]) {
-        const tile = tiles[config.y][config.x];
+      if (!town) {
+        console.warn(`⚠️ Town not found for dungeon ${config.name}`);
+        continue;
+      }
 
-        const dungeon: DungeonEntrance = {
-          id: `dungeon-${i}`,
+      let x: number, y: number;
+      let attempts = 0;
+      let validPosition = false;
+      const MAX_DISTANCE = 11;
+
+      // Try to find a valid position near the town (within 11 tiles)
+      while (!validPosition && attempts < 100) {
+        // Generate position within MAX_DISTANCE of town
+        const angle = this.rng.nextFloat(0, Math.PI * 2);
+        const distance = this.rng.nextFloat(3, MAX_DISTANCE);
+
+        x = Math.round(town.position.x + Math.cos(angle) * distance);
+        y = Math.round(town.position.y + Math.sin(angle) * distance);
+
+        // Ensure within bounds
+        if (x < 0 || x >= width || y < 0 || y >= height) {
+          attempts++;
+          continue;
+        }
+
+        const tile = tiles[y]?.[x];
+        if (!tile) {
+          attempts++;
+          continue;
+        }
+
+        // Check if position is valid (not water, not occupied)
+        if (tile.terrain === 'water' || tile.staticObject) {
+          attempts++;
+          continue;
+        }
+
+        validPosition = true;
+      }
+
+      if (!validPosition) {
+        console.warn(`⚠️ Could not find valid position for ${config.name} after ${attempts} attempts`);
+        continue;
+      }
+
+      const dungeon: DungeonEntrance = {
+        id: `dungeon-${i}`,
+        type: 'dungeon',
+        name: config.name,
+        position: { x, y },
+        difficulty: config.difficulty,
+        maxFloors: config.maxFloors,
+        recommendedLevel: config.level,
+        theme: config.theme
+      };
+
+      tiles[y][x].staticObject = dungeon;
+      dungeons.push(dungeon);
+
+      const distanceFromTown = Math.sqrt(
+        Math.pow(x - town.position.x, 2) + Math.pow(y - town.position.y, 2)
+      );
+
+      console.log(`  🕳️ Placed ${dungeon.name} (${dungeon.difficulty}, Lv${dungeon.recommendedLevel}) near ${town.name} - ${distanceFromTown.toFixed(1)} tiles away at (${x}, ${y})`);
+    }
+
+    // Place bonus nightmare dungeon (Endless Abyss) - random position
+    if (count >= 5) {
+      let x: number, y: number;
+      let attempts = 0;
+      let validPosition = false;
+
+      while (!validPosition && attempts < 100) {
+        x = this.rng.nextInt(5, width - 6);
+        y = this.rng.nextInt(5, height - 6);
+
+        const tile = tiles[y]?.[x];
+        if (!tile || tile.terrain === 'water' || tile.staticObject) {
+          attempts++;
+          continue;
+        }
+
+        // Ensure far from all towns (at least 15 tiles)
+        const tooClose = towns.some(town => {
+          const distance = Math.sqrt(
+            Math.pow(x - town.position.x, 2) + Math.pow(y - town.position.y, 2)
+          );
+          return distance < 15;
+        });
+
+        if (tooClose) {
+          attempts++;
+          continue;
+        }
+
+        validPosition = true;
+      }
+
+      if (validPosition) {
+        const endlessDungeon: DungeonEntrance = {
+          id: 'dungeon-endless',
           type: 'dungeon',
-          name: config.name,
-          position: { x: config.x, y: config.y },
-          difficulty: config.difficulty,
-          maxFloors: config.maxFloors,
-          recommendedLevel: config.level,
-          theme: config.theme
+          name: 'Endless Abyss',
+          position: { x, y },
+          difficulty: 'Nightmare',
+          maxFloors: 999,
+          recommendedLevel: 50,
+          theme: 'Endless Abyss'
         };
 
-        tile.staticObject = dungeon;
-        dungeons.push(dungeon);
-        console.log(`  🕳️ Placed ${dungeon.name} (${dungeon.difficulty}) at (${config.x}, ${config.y})`);
+        tiles[y][x].staticObject = endlessDungeon;
+        dungeons.push(endlessDungeon);
+        console.log(`  🕳️ Placed ${endlessDungeon.name} (Bonus, Lv${endlessDungeon.recommendedLevel}) at random position (${x}, ${y})`);
       }
     }
 
@@ -328,23 +570,26 @@ export class WorldMapGenerator {
   }
 
   /**
-   * Generate roads between towns
+   * Generate roads connecting all towns
+   *
+   * Creates a network where each town is connected to every other town
    *
    * @param tiles - Map tiles
    * @param towns - Array of towns
    */
   private static generateRoads(tiles: Tile[][], towns: Town[]): void {
-    console.log('🛤️ Generating roads between towns...');
+    console.log('🛤️ Generating roads connecting all towns...');
 
-    // Connect each town to capital (center town)
-    const capital = towns.find(t => t.name === 'Capital');
-    if (!capital) return;
+    // Connect each town to every other town (full mesh network)
+    for (let i = 0; i < towns.length; i++) {
+      for (let j = i + 1; j < towns.length; j++) {
+        const from = towns[i];
+        const to = towns[j];
 
-    for (const town of towns) {
-      if (town.id === capital.id) continue;
-
-      // Simple straight line road (can be improved with A*)
-      this.createRoad(tiles, capital.position, town.position);
+        // Create road between towns
+        this.createRoad(tiles, from.position, to.position);
+        console.log(`  🛤️ Road created: ${from.name} ↔ ${to.name}`);
+      }
     }
   }
 
@@ -881,33 +1126,64 @@ export class WorldMapGenerator {
   }
 
   /**
-   * Get starting position for a new player
-   * Returns coordinates of a random town so the player starts in a safe location
+   * Get starting town based on player's combat power
+   *
+   * Players start in the town that matches their progression level:
+   * - 0-12000 CP: Goldhaven (starter town)
+   * - 12000-22000 CP: Ariandel (mid-game)
+   * - 22000-32000 CP: Gorundrim (advanced)
+   * - 32001+ CP: Astralheim (end-game)
+   *
+   * @param towns - Array of towns on the map
+   * @param combatPower - Player's current combat power
+   * @returns Starting town
+   *
+   * @example
+   * ```typescript
+   * const startTown = WorldMapGenerator.getStartingTownByCP(towns, 5000);
+   * console.log(`Starting in ${startTown.name}`); // "Goldhaven"
+   * ```
+   */
+  static getStartingTownByCP(towns: Town[], combatPower: number): Town {
+    // CP thresholds for each town (matching town configs)
+    const cpThresholds = [
+      { max: 12000, townName: 'Goldhaven' },
+      { max: 22000, townName: 'Ariandel' },
+      { max: 32000, townName: 'Gorundrim' },
+      { max: 999999, townName: 'Astralheim' }
+    ];
+
+    // Find appropriate town based on CP
+    let targetTownName = 'Goldhaven'; // Default to starter town
+    for (const threshold of cpThresholds) {
+      if (combatPower <= threshold.max) {
+        targetTownName = threshold.townName;
+        break;
+      }
+    }
+
+    // Find the town in the array
+    const startTown = towns.find(t => t.name === targetTownName);
+
+    if (startTown) {
+      console.log(`🎯 Player CP ${combatPower} → Starting in ${startTown.name} at (${startTown.position.x}, ${startTown.position.y})`);
+      return startTown;
+    }
+
+    // Fallback to first town if not found
+    console.warn(`⚠️ Town ${targetTownName} not found, using first town`);
+    return towns[0];
+  }
+
+  /**
+   * Get starting position for a new player (DEPRECATED - use getStartingTownByCP instead)
    *
    * @param width - Map width
    * @param height - Map height
    * @returns Starting coordinates { x, y }
-   *
-   * @example
-   * ```typescript
-   * const startPos = WorldMapGenerator.getStartingPosition(50, 50);
-   * console.log(`Player starts at (${startPos.x}, ${startPos.y})`);
-   * ```
    */
   static getStartingPosition(width: number = 50, height: number = 50): { x: number; y: number } {
-    // Define same town positions as in placeTowns() method
-    const townPositions = [
-      { x: Math.floor(width / 2), y: Math.floor(height / 2) }, // Capital (center)
-      { x: Math.floor(width * 0.2), y: Math.floor(height * 0.2) }, // Mountain Stronghold (northwest)
-      { x: Math.floor(width * 0.5), y: Math.floor(height * 0.9) }, // Desert Oasis (south)
-      { x: Math.floor(width * 0.1), y: Math.floor(height * 0.5) } // Forest Outpost (west)
-    ];
-
-    // Pick a random town
-    const randomTown = townPositions[Math.floor(Math.random() * townPositions.length)];
-
-    console.log(`🎯 Starting position selected: (${randomTown.x}, ${randomTown.y})`);
-
-    return randomTown;
+    console.warn('⚠️ getStartingPosition is deprecated, use getStartingTownByCP instead');
+    return { x: Math.floor(width / 2), y: Math.floor(height / 2) };
   }
 }

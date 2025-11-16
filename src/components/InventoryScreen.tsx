@@ -176,7 +176,7 @@ export function InventoryScreen({
    * @param isEquipped - Whether this is the currently equipped item
    * @returns JSX element
    */
-  const renderItemPanel = (item: Item, isEquipped: boolean = false): JSX.Element => {
+  const renderItemPanel = (item: Item, isEquipped: boolean = false): React.JSX.Element => {
     const stats = item.getEffectiveStats();
     const rarityColor = item.getRarityColor();
     const canEquip = item.level <= selectedHero.level;

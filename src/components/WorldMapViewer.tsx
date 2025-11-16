@@ -23,6 +23,7 @@ import { t } from '../localization/i18n';
 import { PerlinNoise } from '../engine/worldmap/PerlinNoise';
 import { TimeOfDaySystem } from '../engine/worldmap/TimeOfDaySystem';
 import { findPath } from '../utils/pathfinding';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 // Import terrain images
 import forest1Img from '../assets/images/terrian/forest1.png';
@@ -131,6 +132,7 @@ function WorldMapViewerComponent({
   onTileClick,
   onCancelMovement
 }: WorldMapViewerProps) {
+  const isMobile = useIsMobile();
   const [zoom, setZoom] = useState(1);
   const [viewport, setViewport] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -297,6 +299,36 @@ function WorldMapViewerComponent({
     // Use worldMap seed for consistent variant distribution
     variantNoise.current = new PerlinNoise(worldMap.seed + '-variants');
   }, [worldMap.seed]);
+
+  // Dynamically update dimensions based on container size (fixes mobile rendering)
+  useEffect(() => {
+    const updateDimensions = () => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setDimensions({
+          width: rect.width || 800,
+          height: rect.height || 600
+        });
+      }
+    };
+
+    // Initial update
+    updateDimensions();
+
+    // Create ResizeObserver to watch for container size changes
+    const resizeObserver = new ResizeObserver(updateDimensions);
+    if (containerRef.current) {
+      resizeObserver.observe(containerRef.current);
+    }
+
+    // Also listen to window resize for safety
+    window.addEventListener('resize', updateDimensions);
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', updateDimensions);
+    };
+  }, []);
 
   // Load hero avatar image (dynamically based on playerAvatar prop)
   useEffect(() => {
@@ -1437,9 +1469,6 @@ function WorldMapViewerComponent({
           case 'event':
             icon = '⭐';
             break;
-          case 'encounter':
-            icon = '⚔️';
-            break;
         }
 
         if (useImage && imgToUse) {
@@ -2004,13 +2033,11 @@ function WorldMapViewerComponent({
               <span>
                 {hoverInfo.dynamicObject.type === 'wanderingMonster' && '👾'}
                 {hoverInfo.dynamicObject.type === 'travelingMerchant' && '🧳'}
-                {hoverInfo.dynamicObject.type === 'encounter' && '⚔️'}
                 {hoverInfo.dynamicObject.type === 'event' && '❗'}
               </span>
               <span style={{ ...styles.tooltipValue, color: '#f59e0b', fontWeight: 'bold' }}>
                 {hoverInfo.dynamicObject.type === 'wanderingMonster' && 'Wandering Monster'}
                 {hoverInfo.dynamicObject.type === 'travelingMerchant' && 'Traveling Merchant'}
-                {hoverInfo.dynamicObject.type === 'encounter' && 'Encounter'}
                 {hoverInfo.dynamicObject.type === 'event' && 'Event'}
               </span>
             </div>

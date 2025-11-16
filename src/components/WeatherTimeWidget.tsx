@@ -15,12 +15,14 @@ import type { WeatherState, TimeState } from '../types/worldmap.types';
 import { WeatherSystem } from '../engine/worldmap/WeatherSystem';
 import { TimeOfDaySystem } from '../engine/worldmap/TimeOfDaySystem';
 import { useTranslation } from '../hooks/useTranslation';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, Z_INDEX, BLUR, HEIGHTS } from '../styles/tokens';
 import { flexColumn } from '../styles/common';
 
 interface WeatherTimeWidgetProps {
   weather: WeatherState;
   timeOfDay: TimeState;
+  isVisible?: boolean;
 }
 
 /**
@@ -30,8 +32,9 @@ interface WeatherTimeWidgetProps {
  * @param props - Component props
  * @returns React component
  */
-export function WeatherTimeWidget({ weather, timeOfDay }: WeatherTimeWidgetProps) {
+export function WeatherTimeWidget({ weather, timeOfDay, isVisible = true }: WeatherTimeWidgetProps) {
   const { t } = useTranslation();
+  const isMobile = useIsMobile();
 
   // Force re-render every second to update countdown
   const [, forceUpdate] = React.useReducer(x => x + 1, 0);
@@ -49,21 +52,28 @@ export function WeatherTimeWidget({ weather, timeOfDay }: WeatherTimeWidgetProps
   const weatherTimeRemaining = WeatherSystem.getTimeUntilChange(weather, t);
   const timeTimeRemaining = TimeOfDaySystem.getTimeUntilChange(timeOfDay, t);
 
+  // Don't render if not visible
+  if (!isVisible) return null;
+
   return (
-    <div style={styles.container}>
+    <div style={isMobile ? styles.containerMobile : styles.container}>
       {/* Weather Section */}
       <div style={styles.section}>
         <div style={styles.iconRow}>
-          <span style={{ fontSize: '24px' }}>{weatherDisplay.icon}</span>
-          <div style={styles.labelColumn}>
-            <span style={{ ...styles.label, color: weatherDisplay.color }}>{weatherDisplay.label}</span>
-            <span style={styles.countdown}>{weatherTimeRemaining}</span>
+          <span style={{ fontSize: isMobile ? '18px' : '24px' }}>{weatherDisplay.icon}</span>
+          {!isMobile && (
+            <div style={styles.labelColumn}>
+              <span style={{ ...styles.label, color: weatherDisplay.color }}>{weatherDisplay.label}</span>
+              <span style={styles.countdown}>{weatherTimeRemaining}</span>
+            </div>
+          )}
+        </div>
+        {/* Next Weather Preview - hide on mobile */}
+        {!isMobile && (
+          <div style={styles.nextPreview}>
+            <span style={styles.nextLabel}>{t('weather.next')} {WeatherSystem.getWeatherDisplay(weather.next, t).icon}</span>
           </div>
-        </div>
-        {/* Next Weather Preview */}
-        <div style={styles.nextPreview}>
-          <span style={styles.nextLabel}>{t('weather.next')} {WeatherSystem.getWeatherDisplay(weather.next, t).icon}</span>
-        </div>
+        )}
       </div>
 
       {/* Divider */}
@@ -72,16 +82,20 @@ export function WeatherTimeWidget({ weather, timeOfDay }: WeatherTimeWidgetProps
       {/* Time of Day Section */}
       <div style={styles.section}>
         <div style={styles.iconRow}>
-          <span style={{ fontSize: '24px' }}>{timeDisplay.icon}</span>
-          <div style={styles.labelColumn}>
-            <span style={{ ...styles.label, color: timeDisplay.color }}>{timeDisplay.label}</span>
-            <span style={styles.countdown}>{timeTimeRemaining}</span>
+          <span style={{ fontSize: isMobile ? '18px' : '24px' }}>{timeDisplay.icon}</span>
+          {!isMobile && (
+            <div style={styles.labelColumn}>
+              <span style={{ ...styles.label, color: timeDisplay.color }}>{timeDisplay.label}</span>
+              <span style={styles.countdown}>{timeTimeRemaining}</span>
+            </div>
+          )}
+        </div>
+        {/* Next Time Preview - hide on mobile */}
+        {!isMobile && (
+          <div style={styles.nextPreview}>
+            <span style={styles.nextLabel}>{t('weather.next')} {TimeOfDaySystem.getTimeDisplay(timeOfDay.next, t).icon}</span>
           </div>
-        </div>
-        {/* Next Time Preview */}
-        <div style={styles.nextPreview}>
-          <span style={styles.nextLabel}>{t('weather.next')} {TimeOfDaySystem.getTimeDisplay(timeOfDay.next, t).icon}</span>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -102,6 +116,21 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: SHADOWS.card,
     gap: SPACING[2],
     minWidth: '140px'
+  },
+  containerMobile: {
+    ...flexColumn,
+    position: 'absolute',
+    top: HEIGHTS.header,
+    left: SPACING[2],
+    backgroundColor: 'rgba(26, 26, 26, 0.75)',
+    padding: SPACING[2],
+    borderRadius: BORDER_RADIUS.sm,
+    border: `1px solid ${COLORS.borderDark}`,
+    zIndex: Z_INDEX.dropdown,
+    backdropFilter: BLUR.md,
+    boxShadow: SHADOWS.card,
+    gap: SPACING[1],
+    minWidth: 'auto'
   },
   section: {
     ...flexColumn,

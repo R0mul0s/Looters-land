@@ -187,6 +187,15 @@ export const WORLDMAP_CONFIG = {
   /** Fog of war reveal radius */
   FOG_REVEAL_RADIUS: 2,
 
+  /** Random encounter chance per tile moved (%) - Classic RPG style */
+  RANDOM_ENCOUNTER_CHANCE: 8,
+
+  /** Random encounter enemy level range (player level ± range) */
+  ENCOUNTER_LEVEL_RANGE: 3,
+
+  /** Random encounter enemy count (min-max) */
+  ENCOUNTER_ENEMY_COUNT: { min: 1, max: 3 },
+
   /** Daily map seed reset */
   DAILY_SEED_RESET: true,
 } as const;

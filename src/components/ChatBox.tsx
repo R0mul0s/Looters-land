@@ -17,6 +17,7 @@
 
 import React, { useState, useRef, useEffect, type KeyboardEvent } from 'react';
 import { t } from '../localization/i18n';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../styles/tokens';
 import { flexColumn, flexCenter, flexBetween } from '../styles/common';
 
@@ -25,6 +26,7 @@ interface ChatBoxProps {
   disabled?: boolean;
   lastMessage?: string;
   lastMessageTimestamp?: Date;
+  isVisible?: boolean;
 }
 
 const MAX_MESSAGE_LENGTH = 100;
@@ -44,21 +46,14 @@ export function ChatBox({
   onSendMessage,
   disabled = false,
   lastMessage,
-  lastMessageTimestamp
+  lastMessageTimestamp,
+  isVisible = true
 }: ChatBoxProps) {
+  const isMobile = useIsMobile();
   const [message, setMessage] = useState('');
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isMobileExpanded, setIsMobileExpanded] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const handleSend = () => {
-    const trimmed = message.trim();
-    if (trimmed && trimmed.length > 0) {
-      onSendMessage(trimmed);
-      setMessage('');
-      setShowConfirmation(true);
-      inputRef.current?.blur();
-    }
-  };
 
   // Show confirmation flash for 2 seconds when message is sent
   useEffect(() => {
@@ -71,6 +66,20 @@ export function ChatBox({
     }
   }, [lastMessageTimestamp]);
 
+  const handleSend = () => {
+    const trimmed = message.trim();
+    if (trimmed && trimmed.length > 0) {
+      onSendMessage(trimmed);
+      setMessage('');
+      setShowConfirmation(true);
+      inputRef.current?.blur();
+      // On mobile, collapse after sending
+      if (isMobile) {
+        setIsMobileExpanded(false);
+      }
+    }
+  };
+
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -81,9 +90,36 @@ export function ChatBox({
     }
   };
 
+  // Hide chat on mobile unless explicitly visible (controlled by parent)
+  // IMPORTANT: This must be after all hooks to avoid "Rendered fewer hooks" error
+  if (isMobile && !isVisible) return null;
+
+  // On mobile, show only icon when collapsed
+  if (isMobile && !isMobileExpanded) {
+    return (
+      <button
+        onClick={() => setIsMobileExpanded(true)}
+        style={styles.mobileIconButton}
+        title="Open chat"
+      >
+        💬
+      </button>
+    );
+  }
+
   return (
-    <div style={styles.container}>
-      <div style={styles.chatBox}>
+    <div style={isMobile ? styles.containerMobile : styles.container}>
+      {isMobile && (
+        <button
+          onClick={() => setIsMobileExpanded(false)}
+          style={styles.mobileCloseButton}
+          title="Close chat"
+        >
+          ✕
+        </button>
+      )}
+
+      <div style={isMobile ? styles.chatBoxMobile : styles.chatBox}>
         <span style={styles.icon}>💬</span>
         <input
           ref={inputRef}
@@ -95,6 +131,7 @@ export function ChatBox({
           onKeyDown={handleKeyDown}
           disabled={disabled}
           maxLength={MAX_MESSAGE_LENGTH}
+          autoFocus={isMobile}
         />
         <button
           style={{
@@ -136,6 +173,51 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'flex-end',
     gap: SPACING[1]
   },
+  containerMobile: {
+    position: 'fixed',
+    bottom: SPACING[2],
+    left: SPACING[2],
+    right: SPACING[2],
+    zIndex: 900,
+    ...flexColumn,
+    gap: SPACING[1]
+  },
+  mobileIconButton: {
+    position: 'fixed',
+    bottom: SPACING[2],
+    left: SPACING[2],
+    width: '48px',
+    height: '48px',
+    borderRadius: BORDER_RADIUS.full,
+    backgroundColor: 'rgba(26, 26, 26, 0.85)',
+    border: `2px solid ${COLORS.primary}`,
+    color: COLORS.textLight,
+    fontSize: FONT_SIZE['3xl'],
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: SHADOWS.glowTeal,
+    backdropFilter: 'blur(8px)',
+    zIndex: 900,
+    transition: TRANSITIONS.allBase
+  },
+  mobileCloseButton: {
+    alignSelf: 'flex-end',
+    width: '32px',
+    height: '32px',
+    borderRadius: BORDER_RADIUS.full,
+    backgroundColor: COLORS.bgSurface,
+    border: `1px solid ${COLORS.borderDark}`,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE.lg,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: TRANSITIONS.fast,
+    marginBottom: SPACING[1]
+  },
   chatBox: {
     display: 'flex',
     alignItems: 'center',
@@ -146,6 +228,17 @@ const styles: Record<string, React.CSSProperties> = {
     padding: `${SPACING.sm} ${SPACING[3]}`,
     boxShadow: SHADOWS.glowTeal,
     minWidth: '300px'
+  },
+  chatBoxMobile: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: SPACING[2],
+    background: `linear-gradient(135deg, ${COLORS.bgSurface} 0%, ${COLORS.bgDarkAlt} 100%)`,
+    border: `2px solid ${COLORS.primary}`,
+    borderRadius: BORDER_RADIUS.lg,
+    padding: `${SPACING[2]} ${SPACING[3]}`,
+    boxShadow: SHADOWS.glowTeal,
+    width: '100%'
   },
   icon: {
     fontSize: FONT_SIZE.xl

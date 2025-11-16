@@ -41,6 +41,7 @@ import { useEnergyRegeneration } from '../hooks/useEnergyRegeneration';
 import { useOtherPlayers } from '../hooks/useOtherPlayers';
 import { useGlobalWorldState } from '../hooks/useGlobalWorldState';
 import { useTranslation } from '../hooks/useTranslation';
+import { useIsMobile } from '../hooks/useIsMobile';
 import { WeatherSystem } from '../engine/worldmap/WeatherSystem';
 import { TimeOfDaySystem } from '../engine/worldmap/TimeOfDaySystem';
 import { supabase } from '../lib/supabase';
@@ -49,7 +50,8 @@ import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SH
 import { flexColumn, flexCenter } from '../styles/common';
 import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, ObservationTower, DynamicObject, WanderingMonster, TravelingMerchant } from '../types/worldmap.types';
 import { DEBUG_CONFIG } from '../config/DEBUG_CONFIG';
-import { ENERGY_CONFIG } from '../config/BALANCE_CONFIG';
+import { ENERGY_CONFIG, WORLDMAP_CONFIG } from '../config/BALANCE_CONFIG';
+import { generateRandomEnemy } from '../engine/combat/Enemy';
 import logo from '../assets/images/logo.png';
 
 interface WorldMapProps {
@@ -82,6 +84,10 @@ interface WorldMapProps {
  */
 export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailProp, gameState: gameStateProp, gameActions: gameActionsProp }: WorldMapProps) {
   const { t: tLocal } = useTranslation();
+  const isMobile = useIsMobile();
+
+  // Mobile UI state - toggle for showing/hiding widgets on mobile
+  const [showMobileWidgets, setShowMobileWidgets] = useState(true);
 
   // Use centralized game state with database sync
   // If gameState/gameActions are provided as props, use them (single instance from Router)
@@ -282,6 +288,62 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
   }, [gameState.loading, gameState.worldMap, gameState.combatPower]);
 
   /**
+   * Trigger random encounter - Classic RPG style
+   * Returns true if encounter triggered, false otherwise
+   */
+  const triggerRandomEncounter = (): boolean => {
+    // Roll for random encounter
+    const roll = Math.random() * 100;
+    if (roll >= WORLDMAP_CONFIG.RANDOM_ENCOUNTER_CHANCE) {
+      return false; // No encounter
+    }
+
+    console.log('⚔️ Random encounter triggered!');
+
+    // Get player level from active party
+    const activeHero = gameState.activeParty?.[0];
+    if (!activeHero) {
+      console.error('No active hero for encounter');
+      return false;
+    }
+
+    const playerLevel = activeHero.level;
+    const levelRange = WORLDMAP_CONFIG.ENCOUNTER_LEVEL_RANGE;
+
+    // Generate enemy level (player level ± range)
+    const enemyLevel = Math.max(1, playerLevel + Math.floor(Math.random() * (levelRange * 2 + 1)) - levelRange);
+
+    // Generate enemy count
+    const enemyCount = Math.floor(
+      Math.random() * (WORLDMAP_CONFIG.ENCOUNTER_ENEMY_COUNT.max - WORLDMAP_CONFIG.ENCOUNTER_ENEMY_COUNT.min + 1)
+    ) + WORLDMAP_CONFIG.ENCOUNTER_ENEMY_COUNT.min;
+
+    // Generate enemies
+    const enemies = [];
+    for (let i = 0; i < enemyCount; i++) {
+      const enemy = generateRandomEnemy(enemyLevel, 'normal');
+      enemies.push(enemy);
+    }
+
+    console.log(`⚔️ Random encounter: ${enemyCount}x Level ${enemyLevel} enemies`);
+
+    // Show pre-combat modal with enemy info and combat mode selection
+    setShowQuickCombatModal({
+      enemies,
+      enemyName: `Wild ${enemies[0]?.name || 'Enemy'}${enemyCount > 1 ? ' Group' : ''}`,
+      enemyLevel,
+      difficulty: 'Normal',
+      combatType: 'wandering_monster',
+      metadata: {
+        encounterType: 'random',
+        triggerLocation: gameState.playerPos ? { x: gameState.playerPos.x, y: gameState.playerPos.y } : undefined
+      }
+    });
+
+    return true;
+  };
+
+  /**
    * Handle tile click for hero movement
    *
    * Validates energy cost, updates hero position, reveals fog of war,
@@ -376,6 +438,12 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
       }
 
       gameActions.updateWorldMap({ ...gameState.worldMap }); // Force re-render
+
+      // Check for random encounter after successful movement
+      // Only trigger on passable terrain (not water, not roads)
+      if (tile.terrain !== 'water' && tile.terrain !== 'road') {
+        triggerRandomEncounter();
+      }
     } else {
       setShowEnergyModal({
         message: t('worldmap.notEnoughEnergy', { required: baseCostPerTile, current: gameState.energy }),
@@ -501,9 +569,6 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
     } else if (object.type === 'event') {
       // TODO: Implement random events
       setShowMessageModal(t('worldmap.randomEventComingSoon', { eventType: object.eventType }));
-    } else if (object.type === 'encounter') {
-      // TODO: Implement encounters
-      setShowMessageModal(t('worldmap.encounterComingSoon'));
     }
   };
 
@@ -1041,6 +1106,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
           <WeatherTimeWidget
             weather={globalWorldState.weather || gameState.worldMap.weather}
             timeOfDay={globalWorldState.timeOfDay || gameState.worldMap.timeOfDay}
+            isVisible={!isMobile || showMobileWidgets}
           />
 
           {/* Chat Box */}
@@ -1049,45 +1115,81 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
             disabled={!gameState.profile?.user_id}
             lastMessage={myChatMessage}
             lastMessageTimestamp={myChatTimestamp}
+            isVisible={!isMobile || showMobileWidgets}
           />
 
+          {/* Mobile Toggle Button */}
+          {isMobile && (
+            <button
+              onClick={() => setShowMobileWidgets(!showMobileWidgets)}
+              style={styles.mobileToggleButton}
+              title={showMobileWidgets ? 'Hide map info' : 'Show map info'}
+            >
+              {showMobileWidgets ? '👁️' : '🗺️'}
+            </button>
+          )}
+
           {/* Info Panel Overlay */}
-          <div style={styles.infoPanel}>
-            <div style={styles.infoItem}>
-              <span style={styles.infoIcon}>📍</span>
-              <span style={styles.infoText}>{t('worldmap.position')} ({gameState.playerPos.x}, {gameState.playerPos.y})</span>
+          {(!isMobile || showMobileWidgets) && (
+            <div style={isMobile ? styles.infoPanelMobile : styles.infoPanel}>
+              {/* On mobile, show only essential info */}
+              {isMobile ? (
+                <>
+                  <div style={styles.infoItem}>
+                    <span style={styles.infoIcon}>⚡</span>
+                    <span style={styles.infoText}>{gameState.energy}/{gameState.maxEnergy}</span>
+                  </div>
+                  <div style={styles.infoItem}>
+                    <span style={styles.infoIcon}>💰</span>
+                    <span style={styles.infoText}>{gameState.gold.toLocaleString()}</span>
+                  </div>
+                  {gameState.saving && (
+                    <div style={styles.infoItem}>
+                      <span style={styles.infoIcon}>💾</span>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* Desktop: show all info */}
+                  <div style={styles.infoItem}>
+                    <span style={styles.infoIcon}>📍</span>
+                    <span style={styles.infoText}>{t('worldmap.position')} ({gameState.playerPos.x}, {gameState.playerPos.y})</span>
+                  </div>
+                  <div style={styles.infoItem}>
+                    <span style={styles.infoIcon}>⚡</span>
+                    <span style={styles.infoText}>{t('worldmap.energy')} {gameState.energy}/{gameState.maxEnergy}</span>
+                  </div>
+                  <div style={styles.infoItem}>
+                    <span style={styles.infoIcon}>🏆</span>
+                    <span style={styles.infoText}>Combat Power: {gameState.combatPower.toLocaleString()}</span>
+                  </div>
+                  <div style={styles.infoItem}>
+                    <span style={styles.infoIcon}>💰</span>
+                    <span style={styles.infoText}>{gameState.gold.toLocaleString()} Gold</span>
+                  </div>
+                  {globalWorldState.weather && globalWorldState.timeOfDay && (
+                    <>
+                      <div style={styles.infoItem}>
+                        <span style={styles.infoIcon}>{getWeatherIcon(globalWorldState.weather.current)}</span>
+                        <span style={styles.infoText}>{getWeatherLabel(globalWorldState.weather.current)}</span>
+                      </div>
+                      <div style={styles.infoItem}>
+                        <span style={styles.infoIcon}>{getTimeIcon(globalWorldState.timeOfDay.current)}</span>
+                        <span style={styles.infoText}>{getTimeLabel(globalWorldState.timeOfDay.current)}</span>
+                      </div>
+                    </>
+                  )}
+                  {gameState.saving && (
+                    <div style={styles.infoItem}>
+                      <span style={styles.infoIcon}>💾</span>
+                      <span style={styles.infoText}>{t('auth.loading')}</span>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
-            <div style={styles.infoItem}>
-              <span style={styles.infoIcon}>⚡</span>
-              <span style={styles.infoText}>{t('worldmap.energy')} {gameState.energy}/{gameState.maxEnergy}</span>
-            </div>
-            <div style={styles.infoItem}>
-              <span style={styles.infoIcon}>🏆</span>
-              <span style={styles.infoText}>Combat Power: {gameState.combatPower.toLocaleString()}</span>
-            </div>
-            <div style={styles.infoItem}>
-              <span style={styles.infoIcon}>💰</span>
-              <span style={styles.infoText}>{gameState.gold.toLocaleString()} Gold</span>
-            </div>
-            {globalWorldState.weather && globalWorldState.timeOfDay && (
-              <>
-                <div style={styles.infoItem}>
-                  <span style={styles.infoIcon}>{getWeatherIcon(globalWorldState.weather.current)}</span>
-                  <span style={styles.infoText}>{getWeatherLabel(globalWorldState.weather.current)}</span>
-                </div>
-                <div style={styles.infoItem}>
-                  <span style={styles.infoIcon}>{getTimeIcon(globalWorldState.timeOfDay.current)}</span>
-                  <span style={styles.infoText}>{getTimeLabel(globalWorldState.timeOfDay.current)}</span>
-                </div>
-              </>
-            )}
-            {gameState.saving && (
-              <div style={styles.infoItem}>
-                <span style={styles.infoIcon}>💾</span>
-                <span style={styles.infoText}>{t('auth.loading')}</span>
-              </div>
-            )}
-          </div>
+          )}
         </div>
       ) : (
         <div style={styles.loading}>{t('worldmap.loading')}</div>
@@ -1657,7 +1759,10 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
         {showQuickCombatModal && (
           <>
             <ModalText>
-              You have encountered a powerful {showQuickCombatModal.difficulty.toLowerCase()} enemy on the world map!
+              {showQuickCombatModal.metadata?.encounterType === 'random'
+                ? `A group of wild enemies has appeared and blocks your path!`
+                : `You have encountered a powerful ${showQuickCombatModal.difficulty.toLowerCase()} enemy on the world map!`
+              }
             </ModalText>
             <ModalDivider />
             <ModalInfoRow label="Enemy:" value={showQuickCombatModal.enemyName} />
@@ -1928,6 +2033,43 @@ const styles: Record<string, React.CSSProperties> = {
     backdropFilter: BLUR.md,
     boxShadow: SHADOWS.card,
     zIndex: 200
+  },
+  infoPanelMobile: {
+    position: 'absolute',
+    bottom: SPACING[2],
+    left: SPACING[2],
+    right: SPACING[2],
+    display: 'flex',
+    gap: SPACING[2],
+    padding: `${SPACING[1]} ${SPACING[2]}`,
+    backgroundColor: 'rgba(26, 26, 26, 0.75)',
+    borderRadius: BORDER_RADIUS.sm,
+    border: `1px solid ${COLORS.borderDark}`,
+    flexWrap: 'nowrap',
+    backdropFilter: BLUR.md,
+    boxShadow: SHADOWS.card,
+    zIndex: 200,
+    justifyContent: 'center'
+  },
+  mobileToggleButton: {
+    position: 'absolute',
+    top: '70px',
+    right: SPACING[2],
+    width: '40px',
+    height: '40px',
+    borderRadius: BORDER_RADIUS.full,
+    backgroundColor: 'rgba(26, 26, 26, 0.85)',
+    border: `2px solid ${COLORS.primary}`,
+    color: COLORS.textLight,
+    fontSize: FONT_SIZE['2xl'],
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: SHADOWS.glowTeal,
+    backdropFilter: BLUR.md,
+    zIndex: 300,
+    transition: TRANSITIONS.allBase
   },
   infoItem: {
     display: 'flex',

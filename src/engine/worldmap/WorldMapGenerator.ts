@@ -139,9 +139,6 @@ export class WorldMapGenerator {
     // 9. Place observation towers
     const observationTowers = this.placeObservationTowers(tiles, 8); // ~8 towers on 50x50 map
 
-    // 9. Spawn initial dynamic encounters
-    const encounters = this.spawnInitialEncounters(tiles, encounterCount);
-
     // 10. Spawn wandering monsters
     const wanderingMonsters = this.spawnWanderingMonsters(tiles, WORLDMAP_CONFIG.WANDERING_MONSTER_COUNT);
 
@@ -161,7 +158,7 @@ export class WorldMapGenerator {
       seed,
       tiles,
       staticObjects: [...towns, ...dungeons, ...portals, ...hiddenPaths, ...treasureChests, ...rareSpawns],
-      dynamicObjects: [...encounters, ...wanderingMonsters, ...travelingMerchants],
+      dynamicObjects: [...wanderingMonsters, ...travelingMerchants],
       players: [],
       weather,
       timeOfDay,
@@ -194,7 +191,7 @@ export class WorldMapGenerator {
         else if (value < -0.2) terrain = 'swamp';
         else if (value < 0.0) terrain = 'plains';
         else if (value < 0.3) terrain = 'forest';
-        else if (value < 0.5) terrain = 'desert';
+        else if (value < 0.6) terrain = 'desert';
         else terrain = 'mountains';
 
         // Determine biome based on position and terrain
@@ -621,47 +618,6 @@ export class WorldMapGenerator {
     }
   }
 
-  /**
-   * Spawn initial enemy encounters
-   *
-   * @param tiles - Map tiles
-   * @param count - Number of encounters
-   * @returns Array of encounters
-   */
-  private static spawnInitialEncounters(tiles: Tile[][], count: number): MapEncounter[] {
-    console.log('⚔️ Spawning initial encounters...');
-    const encounters: MapEncounter[] = [];
-    const width = tiles[0].length;
-    const height = tiles.length;
-
-    for (let i = 0; i < count; i++) {
-      // Random position
-      const x = Math.floor(Math.random() * width);
-      const y = Math.floor(Math.random() * height);
-      const tile = tiles[y][x];
-
-      // Only spawn on passable, empty terrain
-      if (!tile.staticObject && tile.terrain !== 'water' && tile.terrain !== 'road') {
-        const encounter: MapEncounter = {
-          id: `encounter-${Date.now()}-${i}`,
-          type: 'encounter',
-          position: { x, y },
-          enemyLevel: Math.floor(Math.random() * 10) + 1,
-          enemyCount: Math.floor(Math.random() * 3) + 1,
-          difficulty: Math.random() > 0.8 ? 'Elite' : 'Normal',
-          defeated: false,
-          spawnTime: new Date(),
-          despawnTime: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
-          isActive: true
-        };
-
-        encounters.push(encounter);
-      }
-    }
-
-    console.log(`  ⚔️ Spawned ${encounters.length} encounters`);
-    return encounters;
-  }
 
 
   /**

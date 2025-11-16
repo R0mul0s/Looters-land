@@ -1,6 +1,6 @@
 # Looters Land - Documentation Index
 
-**Last Updated:** 2025-11-15
+**Last Updated:** 2025-11-16
 
 ---
 
@@ -12,9 +12,10 @@ This folder contains all documentation for the Looters Land project.
 
 ## 🎯 Getting Started
 
-1. **[Project README](../README.md)** - Main project overview, quick start guide
-2. **[Roadmap](roadmap.md)** - Development roadmap and feature planning
-3. **[Game Design](GAME-LOOP-DESIGN.md)** - Complete game loop design document
+1. **[Project README](../README.md)** - Main project overview, installation guide
+2. **[QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)** - **NEW!** Player guide (first 15 min, daily routine, tips)
+3. **[Roadmap](roadmap.md)** - Development roadmap and feature planning
+4. **[Game Design](GAME-LOOP-DESIGN.md)** - Complete game loop design document
 
 ---
 
@@ -22,7 +23,9 @@ This folder contains all documentation for the Looters Land project.
 
 ### Planning & Design
 
-- **[roadmap.md](roadmap.md)** - Development roadmap with version planning
+- **[QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)** - **NEW!** Player onboarding guide (15-min tutorial, daily routine, FAQs)
+- **[GAME_MECHANICS_SUMMARY.md](GAME_MECHANICS_SUMMARY.md)** - **NEW!** Complete game mechanics overview (all systems, current + planned)
+- **[roadmap.md](roadmap.md)** - Development roadmap with version planning and completion %
 - **[GAME-LOOP-DESIGN.md](GAME-LOOP-DESIGN.md)** - v2.0 game loop design (energy, daily reset, gacha)
 - **[project_status.md](project_status.md)** - Current development status and progress tracking
 
@@ -39,13 +42,13 @@ Located in `technical/`:
 
 ### Implementation Guides
 
-Located in `../docs/`:
+Located in `technical/`:
 
-- **[GLOBAL_WORLD_STATE_SETUP.md](../docs/GLOBAL_WORLD_STATE_SETUP.md)** - Global weather & time system setup
-- **[WORLDMAP_COMBAT_ARCHITECTURE.md](../docs/WORLDMAP_COMBAT_ARCHITECTURE.md)** - Quick combat system architecture
-- **[HOW_TO_VIEW_EDGE_FUNCTION_LOGS.md](../docs/HOW_TO_VIEW_EDGE_FUNCTION_LOGS.md)** - Supabase Edge Function debugging
-- **[GLOBAL_WEATHER_TIME_FIX.md](../docs/GLOBAL_WEATHER_TIME_FIX.md)** - Weather/time system troubleshooting
-- **[DEBUG_WEATHER_TIME_UPDATES.md](../docs/DEBUG_WEATHER_TIME_UPDATES.md)** - Debugging weather/time cron jobs
+- **[GLOBAL_WORLD_STATE_SETUP.md](technical/GLOBAL_WORLD_STATE_SETUP.md)** - Global weather & time system setup
+- **[WORLDMAP_COMBAT_ARCHITECTURE.md](technical/WORLDMAP_COMBAT_ARCHITECTURE.md)** - Quick combat system architecture
+- **[HOW_TO_VIEW_EDGE_FUNCTION_LOGS.md](technical/HOW_TO_VIEW_EDGE_FUNCTION_LOGS.md)** - Supabase Edge Function debugging
+- **[GLOBAL_WEATHER_TIME_FIX.md](technical/GLOBAL_WEATHER_TIME_FIX.md)** - Weather/time system troubleshooting
+- **[DEBUG_WEATHER_TIME_UPDATES.md](technical/DEBUG_WEATHER_TIME_UPDATES.md)** - Debugging weather/time cron jobs
 
 ---
 
@@ -68,18 +71,25 @@ Historical documentation kept for reference:
 
 ### For Developers
 
-1. **Starting development?** → Read [coding_rules.md](technical/coding_rules.md)
-2. **Adding features?** → Check [roadmap.md](roadmap.md)
-3. **Database changes?** → See [SUPABASE_SETUP.md](technical/SUPABASE_SETUP.md)
-4. **Deploying?** → Follow [DEPLOY_INSTRUCTIONS.md](technical/DEPLOY_INSTRUCTIONS.md)
-5. **React state issues?** → See [REACT_STATE_CLOSURE_FIX.md](technical/REACT_STATE_CLOSURE_FIX.md)
-6. **State management bugs?** → See [STATE_MANAGEMENT_FIX.md](technical/STATE_MANAGEMENT_FIX.md)
+1. **Understanding game mechanics?** → Read **[GAME_MECHANICS_SUMMARY.md](GAME_MECHANICS_SUMMARY.md)** (NEW!)
+2. **Starting development?** → Read [coding_rules.md](technical/coding_rules.md)
+3. **Adding features?** → Check [roadmap.md](roadmap.md)
+4. **Database changes?** → See [SUPABASE_SETUP.md](technical/SUPABASE_SETUP.md)
+5. **Deploying?** → Follow [DEPLOY_INSTRUCTIONS.md](technical/DEPLOY_INSTRUCTIONS.md)
+6. **React state issues?** → See [REACT_STATE_CLOSURE_FIX.md](technical/REACT_STATE_CLOSURE_FIX.md)
+7. **State management bugs?** → See [STATE_MANAGEMENT_FIX.md](technical/STATE_MANAGEMENT_FIX.md)
 
 ### For Project Management
 
-1. **Current status?** → See [project_status.md](project_status.md)
-2. **Feature planning?** → Check [roadmap.md](roadmap.md)
-3. **Game design?** → Read [GAME-LOOP-DESIGN.md](GAME-LOOP-DESIGN.md)
+1. **Game mechanics overview?** → See **[GAME_MECHANICS_SUMMARY.md](GAME_MECHANICS_SUMMARY.md)** (Complete system breakdown)
+2. **Current status?** → See [project_status.md](project_status.md)
+3. **Feature planning?** → Check [roadmap.md](roadmap.md)
+4. **Game design philosophy?** → Read [GAME-LOOP-DESIGN.md](GAME-LOOP-DESIGN.md)
+
+### For New Players
+
+1. **First time playing?** → Read **[QUICK_START_GUIDE.md](QUICK_START_GUIDE.md)** (Tutorial + Tips)
+2. **Understanding mechanics?** → See [GAME_MECHANICS_SUMMARY.md](GAME_MECHANICS_SUMMARY.md)
 
 ---
 

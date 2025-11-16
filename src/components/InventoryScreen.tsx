@@ -435,8 +435,8 @@ export function InventoryScreen({
                     <div className="item-name" style={{ color: item.getRarityColor() }}>
                       {item.getDisplayName()}
                     </div>
-                    <div className="item-stats-preview" style={{ fontSize: '0.75em' }}>
-                      {item.getRarityDisplayName()}
+                    <div className="item-stats-preview" style={{ fontSize: '0.75em', color: '#94a3b8' }}>
+                      Lv.{item.level} | {item.getRarityDisplayName()}
                     </div>
                     <button
                       className="unequip-btn"

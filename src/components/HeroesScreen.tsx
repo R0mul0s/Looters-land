@@ -60,6 +60,21 @@ function getHealthBarColor(hpPercent: number): string {
 }
 
 /**
+ * Calculate average health percentage of active party
+ * @param activeParty - Array of heroes in active party
+ * @returns Average health percentage (0-100)
+ */
+export function getPartyAverageHealth(activeParty: Hero[]): number {
+  if (!activeParty || activeParty.length === 0) return 100;
+
+  const totalHealthPercent = activeParty.reduce((sum, hero) => {
+    return sum + (hero.currentHP / hero.maxHP) * 100;
+  }, 0);
+
+  return totalHealthPercent / activeParty.length;
+}
+
+/**
  * Heroes Screen Component
  *
  * Main screen for managing hero party and viewing hero collection.

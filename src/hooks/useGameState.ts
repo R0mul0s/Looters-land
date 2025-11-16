@@ -611,11 +611,9 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           setState(prev => ({ ...prev, loading: false, profileLoading: false }));
           // Force re-render
           setUpdateTrigger(prev => prev + 1);
-        } else {
-          // Force re-render anyway to ensure component gets the updated state
-          // Create a new state object to force React to re-render
-          setState(prev => ({ ...prev }));
         }
+        // REMOVED: Force re-render that was causing infinite loop
+        // The state was already set on line 589, no need to force another update
       }, 100);
 
       // DISABLED: Auto-fix duplicates - caused issues with deleting all heroes

@@ -1,24 +1,20 @@
 /**
  * Router Component - Main application router and combat controller
  *
- * Routes between main game (WorldMapDemo2) and legacy test UI (App).
+ * Main game router for WorldMapDemo2 with combat system integration.
  * Manages combat state for both dungeon and worldmap quick combat encounters.
  *
  * Contains:
- * - Route handling (/ for main game, /test for legacy UI)
+ * - Route handling (single route for main game)
  * - Combat system integration (dungeon and quick combat)
  * - Combat UI rendering (heroes, enemies, manual controls)
  * - Victory/defeat modals with rewards display
  * - Authentication state management
  * - Single useGameState instance passed to WorldMapDemo2 (shared state pattern)
  *
- * Routes:
- * - / -> WorldMapDemo2 (main game)
- * - /test -> App (legacy test UI)
- *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-15
+ * @lastModified 2025-11-16
  */
 
 import { useState, useEffect } from 'react';
@@ -28,7 +24,6 @@ import { Dungeon } from './engine/dungeon/Dungeon';
 import { DungeonExplorer } from './components/DungeonExplorer';
 import { useGameState } from './hooks/useGameState';
 import { Hero } from './engine/hero/Hero';
-import App from './App';
 import * as AuthService from './services/AuthService';
 import { CombatEngine } from './engine/combat/CombatEngine';
 import type { Enemy } from './engine/combat/Enemy';
@@ -42,7 +37,6 @@ import { LeaderboardService } from './services/LeaderboardService';
 import { calculatePlayerScore } from './utils/scoreCalculator';
 
 export function Router() {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
   const [userEmail, setUserEmail] = useState<string>('');
   const [authLoading, setAuthLoading] = useState(true);
   const [currentDungeon, setCurrentDungeon] = useState<Dungeon | null>(null);
@@ -98,20 +92,6 @@ export function Router() {
     };
   }, []);
 
-  useEffect(() => {
-    const handlePopState = () => {
-      setCurrentPath(window.location.pathname);
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
-
-  const navigate = (path: string) => {
-    window.history.pushState({}, '', path);
-    setCurrentPath(path);
-  };
-
   // Show loading while checking auth
   if (authLoading) {
     return (
@@ -134,32 +114,6 @@ export function Router() {
     return <LoginScreen onLoginSuccess={() => {}} />;
   }
 
-  // Render based on path
-  if (currentPath === '/test') {
-    return (
-      <div>
-        <button
-          style={{
-            position: 'fixed',
-            top: 10,
-            right: 10,
-            zIndex: 10000,
-            background: '#4CAF50',
-            color: '#fff',
-            padding: '10px 20px',
-            borderRadius: '5px',
-            cursor: 'pointer',
-            fontWeight: 'bold',
-            border: '2px solid #2a5a2a'
-          }}
-          onClick={() => navigate('/')}
-        >
-          {t('router.backToMainGame')}
-        </button>
-        <App />
-      </div>
-    );
-  }
 
   /**
    * Handle dungeon entrance from worldmap
@@ -794,22 +748,6 @@ export function Router() {
     <>
       {/* WorldMap - always mounted, just hidden when in dungeon */}
       <div style={{ display: inDungeon ? 'none' : 'block' }}>
-        <div style={{
-          position: 'fixed',
-          bottom: 10,
-          right: 10,
-          zIndex: 10000,
-          background: '#666',
-          color: '#fff',
-          padding: '8px 16px',
-          borderRadius: '5px',
-          cursor: 'pointer',
-          fontSize: '12px',
-          border: '1px solid #444'
-        }}
-        onClick={() => navigate('/test')}>
-          {t('router.testUI')}
-        </div>
         <WorldMapDemo2
           userEmail={userEmail}
           onEnterDungeon={handleEnterDungeon}

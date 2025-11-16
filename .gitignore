@@ -24,6 +24,9 @@ supabase/.temp/
 # Supabase secrets (should use .example or template instead)
 supabase/setup-vault-secrets.sql
 
+# Husky generated files
+.husky/_
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

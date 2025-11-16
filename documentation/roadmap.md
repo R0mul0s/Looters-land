@@ -244,20 +244,21 @@
 - ✅ Fog of war system
 - ✅ Canvas-based viewer with zoom
 
-**v0.7.0 Goals - Hero Collection & Gacha (2 weeks) - ✅ 90% COMPLETE:**
+**v0.7.0 Goals - Hero Collection & Gacha (2 weeks) - ✅ 100% COMPLETE:**
 
-We are transitioning from **single hero** to **party-based gameplay** with **gacha collection mechanics**.
+Transition from **single hero** to **party-based gameplay** with **gacha collection mechanics** - **SUCCESSFULLY COMPLETED**.
 
 **Core Changes:**
-1. **Hero Collection System** ✅ COMPLETE
+1. **Hero Collection System** ✅ 100% COMPLETE
    - ✅ Party of 4 active heroes
    - ✅ Collection of 50+ unique heroes (60 heroes in pool)
    - ✅ Hero roles: Tank, DPS, Healer, Support
    - ✅ Individual hero leveling (each hero levels independently)
    - ✅ Hero pool with rarities (Common, Rare, Epic, Legendary)
    - ✅ Hero metadata (faction, special abilities, descriptions)
+   - ✅ Talent System Phase 1 (duplicate merging, +5% stats per point, max 6)
 
-2. **Gacha Summon System** ✅ COMPLETE
+2. **Gacha Summon System** ✅ 100% COMPLETE
    - ✅ Gold-based summons (1,000g = 1x, 9,000g = 10x)
    - ✅ Daily free summon (resets at midnight)
    - ✅ Rarity distribution: Common 60%, Rare 25%, Epic 12%, Legendary 3%
@@ -266,23 +267,26 @@ We are transitioning from **single hero** to **party-based gameplay** with **gac
    - ✅ Daily free summon tracking with proper date comparison
    - ✅ Summon animations with rarity reveal
 
-3. **Combat Integration** 🔄 IN PROGRESS
-   - 🔄 4v4 party battles (foundation ready)
-   - ⏳ XP distribution across party
-   - ⏳ Hero synergies and combo skills
+3. **Combat Integration** ✅ 100% COMPLETE
+   - ✅ 4v4 party battles (fully functional)
+   - ✅ XP distribution across party
+   - 📋 Hero synergies and combo skills (planned for v1.0.0)
 
-4. **UI Components** ✅ COMPLETE
-   - ✅ Hero collection screen (filter by rarity, role)
+4. **UI Components** ✅ 100% COMPLETE
+   - ✅ Hero collection screen (filter by rarity, role, class)
    - ✅ Party manager (swap active party of 4)
    - ✅ Gacha summon screen with animations
    - ✅ Hero details view with stats and equipment
    - ✅ Tavern building integration in Town system
+   - ✅ Combat Power display (MainSidebar badge)
+   - ✅ Hero/Item scoring tooltips
 
-5. **Database Integration** ✅ COMPLETE
+5. **Database Integration** ✅ 100% COMPLETE
    - ✅ Gacha state persistence (pity counter, daily summon)
    - ✅ Hero collection persistence to database
    - ✅ Party composition persistence
    - ✅ Daily free summon date tracking (fixes Ctrl+F5 reset issue)
+   - ✅ Talent points persistence
 
 **Implementation Complete:**
 - ✅ Created `hero.types.ts` with full hero definitions
@@ -342,7 +346,7 @@ Implemented comprehensive scoring system for power ratings and progression gates
 
 Improved mobile experience and added real-time sync status indicator.
 
-1. **Mobile Map Fixes** ✅ COMPLETE
+1. **Mobile Map Fixes** ✅ 100% COMPLETE
    - ✅ Fixed map rendering on mobile devices (stretched appearance)
    - ✅ Fixed tap position calculations (incorrect target tiles)
    - ✅ High-DPI canvas support using devicePixelRatio
@@ -350,12 +354,12 @@ Improved mobile experience and added real-time sync status indicator.
    - ✅ Fixed viewport calculations with decimal coordinates
    - ✅ Separated BASE_TILE_SIZE and TILE_SIZE for correct scaling
 
-2. **Player Marker Scaling** ✅ COMPLETE
+2. **Player Marker Scaling** ✅ 100% COMPLETE
    - ✅ Other player markers scale with zoom level
    - ✅ Dynamic sizing for icon, nickname, and level text
    - ✅ Fixed transform positioning (translate -50%, -50%)
 
-3. **Sync Status Indicator** ✅ COMPLETE
+3. **Sync Status Indicator** ✅ 100% COMPLETE
    - ✅ Created SyncStatusIndicator component
    - ✅ Real-time sync status in GameHeader (💾 Saving, ✓ Saved, ⚠ Error)
    - ✅ Last save timestamp with relative time display (před 2m)
@@ -369,6 +373,50 @@ Improved mobile experience and added real-time sync status indicator.
 - ✅ `src/hooks/useGameState.ts` - Sync status tracking
 - ✅ `src/components/ui/GameHeader.tsx` - Status display
 - ✅ `src/components/GameLayout.tsx` - Props passing
+
+---
+
+**v0.7.3 - Global Weather, Time & Named Enemies (✅ COMPLETE - Nov 13, 2025):**
+
+Real-time global world state and special enemy encounters.
+
+1. **Global Weather & Time System** ✅ 100% COMPLETE
+   - ✅ Global weather states (Clear, Rain, Storm, Snow, Fog)
+   - ✅ Time of day system (Morning, Afternoon, Evening, Night)
+   - ✅ Automatic updates every 15 minutes via Supabase cron job
+   - ✅ Real-time subscriptions using useGlobalWorldState hook
+   - ✅ Weather & Time Widget with countdown timers
+   - ✅ Database table: global_world_state with RLS policies
+
+2. **Named Enemy System** ✅ 100% COMPLETE
+   - ✅ 4 Rare Spawn Bosses (3x stats): Ancient Golem, Frost Giant, Shadow Dragon, Phoenix
+   - ✅ 8 Wandering Monsters (1.5x stats): Dire Wolf, Troll, Ogre, Harpy, Minotaur, Chimera, Demon, Lich
+   - ✅ Spawn in groups of 1-3 enemies with higher drop rates
+   - ✅ 24-hour respawn cooldown for rare bosses
+   - ✅ 30-minute respawn for wandering monsters
+   - ✅ Red glow effect for rare bosses, yellow for wandering monsters
+
+3. **Quick Combat System** ✅ 100% COMPLETE
+   - ✅ Fast worldmap encounters with auto/manual combat modes
+   - ✅ Victory/Defeat modals with loot display
+   - ✅ Enemy respawn tracking
+   - ✅ Proper hero HP saving after defeat (10% HP)
+   - ✅ Fixed hero XP/level synchronization after combat
+
+4. **Enhanced UI Components** ✅ 100% COMPLETE
+   - ✅ ModalText, ModalDivider, ModalInfoBox (4 variants)
+   - ✅ ModalInfoRow for structured data display
+   - ✅ ModalButton with 3 variants (primary, secondary, danger)
+   - ✅ Color-coded glow effects (red=bosses, blue=towns/portals, yellow=content)
+
+**Implementation Files:**
+- ✅ `src/hooks/useGlobalWorldState.ts` - Real-time weather/time subscription
+- ✅ `src/services/GlobalWorldStateService.ts` - Weather/time data management
+- ✅ `src/engine/combat/NamedEnemies.ts` - Special boss and elite enemies
+- ✅ `src/components/WeatherTimeWidget.tsx` - Live countdown widget
+- ✅ `src/components/ui/ModalContent.tsx` - Enhanced modal components
+- ✅ `supabase/migrations/20251113_add_global_world_state.sql` - Database migration
+- ✅ `supabase/functions/update-global-world-state/` - Edge function for cron
 
 See [GAME-LOOP-DESIGN.md](./GAME-LOOP-DESIGN.md) for complete v2.0 game design.
 
@@ -482,9 +530,10 @@ The dungeon system is now complete with all planned room types. The next major f
 
 ---
 
-**Last Updated:** 2025-11-09 (UI Enhancements - Zoom & Keyboard Shortcuts)
-**Current Version:** v0.6.1 (UI Polish Complete)
-**Next Version:** v0.7.0 (Hero Collection & Gacha System - 90% Complete)
+**Last Updated:** 2025-11-16 (Documentation Overhaul + v0.7.3 Complete)
+**Current Version:** v0.7.3 (Global Weather/Time + Named Enemies Complete)
+**Next Version:** v0.8.0 (Daily Reset & Quest System - 0% Started)
+**Overall Progress:** ~40% complete to v1.2.0 full release
 
 ### ✅ v0.6.1 UI Enhancements (2025-11-09)
 - ✅ **Mouse Wheel Zoom** - Zoom in/out on worldmap using mouse wheel

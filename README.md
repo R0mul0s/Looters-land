@@ -75,51 +75,127 @@ looters-land/
 
 ### ✅ Completed (v0.7.0 - Hero Collection & Gacha)
 
-- [x] Hero collection system (party of 4)
-- [x] Gacha summon system (gold-based, daily free summon)
-- [x] Hero collection screen UI
-- [x] Party manager UI
-- [x] Hero rarity system (Common, Rare, Epic, Legendary)
+- [x] Hero collection system (party of 4 active heroes, 60+ unique heroes)
+- [x] Gacha summon system (1x = 1000g, 10x = 9000g, daily free summon)
+- [x] Hero collection screen UI with filtering (rarity, role, class)
+- [x] Party manager UI (swap heroes in/out of active party)
+- [x] Hero rarity system (Common 60%, Rare 25%, Epic 12%, Legendary 3%)
+- [x] Pity system (guaranteed Epic after 100 summons without Epic+)
 - [x] **Talent System Phase 1** - Duplicate hero merging
   - Automatic duplicate detection and merging
-  - Talent points awarded for duplicates (+1 per dupe)
-  - Talent point UI indicators on hero cards
-  - "Coming Soon" placeholder for talent tree
+  - Talent points awarded for duplicates (+1 per dupe, max 6 per hero)
+  - +5% all stats per talent point
+  - Talent point UI indicators (⭐ badges on hero cards)
+  - Database persistence (talent_points column)
 
 ### ✅ Completed (v0.7.1 - Scoring & Mobile)
 
 - [x] **Hero & Item Scoring System**
-  - Hero score calculation (rarity, level, equipment)
-  - Item score calculation (rarity, level, enchant, slot)
-  - Combat Power display in UI (MainSidebar badge)
+  - Hero score: (rarity base) × (level multiplier) × (equipment bonus)
+  - Item score: (rarity base) × (level) × (enchant) × (slot multiplier)
+  - Combat Power: Sum of active party hero scores
   - Score display in Hero Collection and Item Tooltips
+  - Combat Power badge in MainSidebar (real-time updates)
 - [x] **Mobile Optimizations**
-  - Fixed map rendering issues on mobile devices
+  - Fixed map rendering on mobile (stretched appearance)
   - High-DPI canvas support (devicePixelRatio)
   - Proper zoom centering on player avatar
-  - Fixed click/tap position calculations
+  - Fixed tap position calculations
   - Other player markers scale with zoom level
 - [x] **Sync Status Indicator**
-  - Real-time database sync status display
-  - Saving/Success/Error states with icons
-  - Last save timestamp with relative time
-  - Integrated into GameHeader component
+  - Real-time database sync status (💾 Saving / ✓ Saved / ⚠ Error)
+  - Last save timestamp with relative time display
+  - Integrated into GameHeader
+
+### ✅ Completed (v0.7.2 - Multiplayer & Visual Enhancements)
+
+- [x] **Avatar System** - 5 hero avatars (Knight, Ranger, Mage, Shieldbearer, Bard)
+  - Avatar selection UI in ProfileScreen
+  - Real-time avatar display on worldmap (main player + other players)
+  - Database persistence with avatar column
+  - Avatar images scale with zoom level (1.2x tile size)
+- [x] **Terrain Randomization** - Perlin Noise-based terrain variants
+  - 2 variants per terrain type (forest, desert, plains, swamp, water, road)
+  - Perlin Noise distribution (scale 0.15) for organic patches
+  - Prevents checkerboard pattern, creates smooth grouped areas
+- [x] **Pulsating Glow Effect** - Player avatar has animated yellow glow
+  - 20-35 blur intensity with smooth sine wave pulsation
+  - 60fps animation using requestAnimationFrame
+  - Improved player visibility on map
+
+### ✅ Completed (v0.7.3 - Global Weather, Time & Named Enemies)
+
+- [x] **Global Weather & Time System**
+  - Global weather states (Clear, Rain, Storm, Snow, Fog)
+  - Time of day system (Morning, Afternoon, Evening, Night)
+  - Automatic updates every 15 minutes via Supabase cron job
+  - Real-time subscriptions using useGlobalWorldState hook
+  - Weather & Time Widget with countdown timers
+  - Database table: global_world_state with RLS policies
+- [x] **Named Enemy System**
+  - 4 Rare Spawn Bosses (3x stats): Ancient Golem, Frost Giant, Shadow Dragon, Phoenix
+  - 8 Wandering Monsters (1.5x stats): Dire Wolf, Troll, Ogre, Harpy, etc.
+  - Spawn in groups of 1-3 enemies with higher drop rates
+  - 24-hour respawn cooldown for rare bosses
+- [x] **Quick Combat System**
+  - Fast worldmap encounters with auto/manual combat modes
+  - Victory/Defeat modals with loot display
+  - Enemy respawn tracking
+  - Proper hero HP saving after defeat (10% HP)
+  - Fixed hero XP/level synchronization after combat
+- [x] **Enhanced UI Components**
+  - ModalText, ModalDivider, ModalInfoBox (4 variants)
+  - ModalInfoRow for structured data display
+  - ModalButton with 3 variants (primary, secondary, danger)
+  - Color-coded glow effects (red=bosses, blue=towns/portals, yellow=content)
 
 ### 🔄 In Progress (v0.8.0 - Next)
 
-- [ ] Party-based 4v4 combat
-- [ ] Talent Tree Phase 2 (unlock abilities with talent points)
+- [x] Party-based 4v4 combat (✅ COMPLETE - fully functional)
+- [x] XP distribution across party (✅ COMPLETE)
+- [ ] Talent Tree Phase 2 (unlock abilities with talent points) - UI placeholder ready
+- [ ] Daily worldmap reset logic (map regeneration at 00:00 UTC)
+- [ ] Daily quests system (3 random quests per day)
 
-### 📋 Planned
+### 📋 Planned (Prioritized Roadmap)
 
-- [ ] Energy system with daily reset
-- [ ] Daily worldmap reset with new seed
-- [ ] Town system with 6 buildings
-- [ ] Quest system with branching story
-- [ ] Leaderboards and endgame content
-- [ ] Multiplayer features (guilds, real-time positions)
-- [ ] Boss-specific unique item drops
-- [ ] Achievement system
+**v0.8.0 - Daily Reset & Quests (1-2 weeks):**
+- [ ] Daily worldmap reset logic (new seed at 00:00 UTC)
+- [ ] Daily quests system (3 random quests per day with gold/gem rewards)
+- [ ] Quest tracking UI with progress indicators
+- [ ] Daily reset notification and countdown timer
+
+**v0.9.0 - Town System (2 weeks):**
+- [ ] Interactive town buildings (6 buildings per town)
+  - Tavern: Quest board + Gacha UI
+  - Smithy: Forge, Enhance, Repair, Dismantle
+  - Healer: HP/MP restoration, Resurrection, Debuff removal
+  - Market: Buy/sell items, daily shop rotation
+  - Bank: Gold vault with 1% daily interest, item storage
+  - Guild Hall: Guild creation, perks, chat, guild wars
+- [ ] Building upgrade system (town level progression)
+- [ ] NPC interactions and dialogue system
+
+**v1.0.0 - Story Campaign (3 weeks):**
+- [ ] Main story campaign (5 chapters with branching choices)
+- [ ] Faction allegiance system (Kingdom, Dwarves, Nomads, Elves)
+- [ ] Hero-specific personal stories (Legendary heroes unlock at levels 20/30/40)
+- [ ] Story quest tracking and rewards
+- [ ] Lore fragments and collectibles
+
+**v1.1.0 - Endgame & Competition (2 weeks):**
+- [ ] Endless Abyss enhancements (infinite scaling, checkpoints every 10 floors)
+- [ ] World Boss events (2x per week, contribution-based rewards)
+- [ ] Prestige/Ascension system (+5% all stats per prestige, infinite progression)
+- [ ] Achievement system with gem rewards
+- [ ] Boss-specific unique legendary item drops
+
+**v1.2.0 - Advanced Social (3 weeks):**
+- [ ] Guild Wars (weekly territory control events, Saturday 20:00-21:00)
+- [ ] PvP Arena (Ranked/Casual modes, async battles)
+- [ ] Friend system (friend list, teleport to friend, gifting)
+- [ ] Cooperative dungeons (party up for harder content)
+- [ ] Enhanced guild features (guild bank, shared vault, research perks)
 
 ## Getting Started
 
@@ -152,30 +228,42 @@ npm run preview
 
 ## Current Features (v0.7.3)
 
-The game currently includes:
+The game is a **gacha-style idle RPG** with **party-based 4v4 combat**, **daily worldmap resets**, and **competitive leaderboards**. Currently implemented:
 
-1. **Hero System** - 5 classes (Warrior, Archer, Mage, Cleric, Paladin) with unique skills
-2. **Combat System** - Turn-based combat with initiative, manual/auto modes
-3. **Equipment System** - 7 equipment slots with set bonuses and stat modifiers
-4. **Inventory** - Filtering, sorting, item selling, enchanting, capacity expansion
-5. **Leveling** - XP gain, level ups, stat growth scaling
-6. **Loot System** - Item drops with rarity distribution, gold rewards
-7. **Enemy Types** - Normal/Elite/Boss enemies with different drop rates
-8. **Status Effects** - Buffs, debuffs, stun, immunity mechanics
-9. **Dungeon System** - Procedural dungeons with 10 room types, floor progression
-10. **Worldmap System** - 50x50 procedural map with biomes, towns, dungeons, fog of war
-11. **Database Integration** - Cloud saves with Supabase (player profiles, game saves, auto-sync)
-12. **Authentication** - User registration, login, logout with secure session management
-13. **Centralized State** - useGameState hook managing all game data with auto-save
-14. **UI Enhancements** - Mouse wheel zoom, keyboard shortcuts (W/H/I/T/L/Q/G)
-15. **Hero Collection & Gacha** - 60+ unique heroes, daily free summons, talent system
-16. **Scoring System** - Hero and item power ratings, combat power calculation
-17. **Multiplayer** - Real-time player positions, chat system, online/offline status
-18. **Mobile Optimized** - High-DPI canvas rendering, proper zoom centering, responsive design
-19. **Sync Status Indicator** - Real-time database sync status with timestamp display
-20. **Avatar System** - 5 hero avatars (Knight, Ranger, Mage, Shieldbearer, Bard), avatar selection in profile
-21. **Terrain Randomization** - Perlin Noise-based terrain variant system for organic map generation (2 variants per terrain type)
-22. **Visual Enhancements** - Pulsating glow effect on player avatar for improved visibility, color-coded glow effects (red for bosses, blue for safe zones, yellow for regular content)
+### Core Systems (100% Complete)
+1. **Hero Collection & Gacha** - 60+ unique heroes across 4 rarities, party of 4 system, gacha summons (1x/10x), daily free summon, pity system, talent merging
+2. **Combat System** - Turn-based 4v4 battles, 5 hero classes (Warrior, Archer, Mage, Cleric, Paladin), 15 unique skills, status effects (buffs/debuffs/stun/immunity)
+3. **Dungeon System** - Procedural generation with 10 room types (Combat, Boss, Treasure, Trap, Rest, Shrine, Mystery, Elite, Mini-Boss), floor progression, checkpoints
+4. **Worldmap System** - 50x50 procedural Perlin Noise generation, fog of war, 4 towns, 5 dungeons, 6 portals, rare bosses, wandering monsters
+5. **Equipment & Progression** - 6 equipment slots per hero, enchanting system (+0 to +10), inventory management, hero leveling (1-100), XP distribution
+6. **Loot System** - Rarity-based drops (Common to Legendary), drop rates (Normal 30%, Elite 50%, Boss 100%), gold rewards
+
+### Multiplayer & Social (90% Complete)
+7. **Real-Time Features** - Player positions on worldmap, global chat system, online/offline status, avatar system (5 hero avatars)
+8. **Leaderboards** - 4 daily categories (Deepest Floor, Total Gold, Heroes Collected, Combat Power), top 100 rankings, daily reset
+
+### Global Systems (100% Complete)
+9. **Weather & Time** - Global weather system (5 types, 15-min cycles), time of day (4 periods), real-time synchronization via Supabase Edge Functions
+10. **Named Enemies** - 4 rare spawn bosses (Ancient Golem, Frost Giant, Shadow Dragon, Phoenix), 8 elite wandering monsters
+
+### Technical Features (100% Complete)
+11. **Database Integration** - Supabase cloud saves, auto-save with 2-second debounce, Row-Level Security policies, game state persistence
+12. **Authentication** - User registration, login/logout, secure session management, profile system
+13. **Energy System** - Energy regeneration (+10/hour, max 240), energy costs (dungeons: 10, encounters: 5), energy bar UI
+14. **UI/UX** - Mouse wheel zoom, keyboard shortcuts (W/H/I/T/L/Q/G), mobile-optimized (High-DPI canvas), sync status indicator, responsive design
+15. **Visual Polish** - Pulsating glow on player avatar, color-coded glow effects (red=bosses, blue=towns/portals, yellow=content), terrain randomization (2 variants per type)
+
+### Combat & Quick Encounters (100% Complete)
+16. **Worldmap Combat** - Quick combat from worldmap encounters, auto/manual modes, victory/defeat modals, enemy respawn tracking (24h cooldown for rare bosses)
+17. **Combat Engine Enhancements** - Proper HP saving after defeat (10% HP), hero XP/level synchronization, combat metadata closure pattern
+
+### Planned Features (v0.8.0+)
+- [ ] Daily worldmap reset with new seed (roguelike element)
+- [ ] Daily quests system (3 per day)
+- [ ] Town building interactions (6 buildings: Tavern, Smithy, Healer, Market, Bank, Guild Hall)
+- [ ] Main story campaign (5 chapters with branching choices)
+- [ ] PvP Arena and Guild Wars
+- [ ] Prestige/Ascension system for endgame
 
 ## Migration Benefits
 
@@ -291,6 +379,9 @@ When adding new features:
 - **[Localization](documentation/technical/LOCALIZATION.md)** - i18n implementation guide
 - **[Supabase Setup](documentation/technical/SUPABASE_SETUP.md)** - Database configuration
 - **[Deployment](documentation/technical/DEPLOY_INSTRUCTIONS.md)** - Production deployment guide
+- **[Global Weather/Time Setup](documentation/technical/GLOBAL_WORLD_STATE_SETUP.md)** - Real-time global systems
+- **[Combat Architecture](documentation/technical/WORLDMAP_COMBAT_ARCHITECTURE.md)** - Quick combat system
+- **[Edge Function Debugging](documentation/technical/HOW_TO_VIEW_EDGE_FUNCTION_LOGS.md)** - Supabase troubleshooting
 
 ### External Resources
 
@@ -301,11 +392,27 @@ When adding new features:
 
 ---
 
-**Version**: 2.3.3
-**Last Updated**: 2025-11-13
-**Status**: Active development
+**Version**: 2.4.0 (v0.7.3 features complete)
+**Last Updated**: 2025-11-16
+**Status**: Active development - 40% complete to v1.2.0 full release
 
-## Last Updates (2025-11-13)
+## Last Updates (2025-11-16)
+
+### Documentation Complete Overhaul
+- ✅ **GAME_MECHANICS_SUMMARY.md** - NEW comprehensive game mechanics document
+  - Complete breakdown of all game systems (hero collection, combat, dungeons, worldmap, etc.)
+  - Implementation status for each system (100% complete, partial, planned)
+  - Detailed formulas and calculations (damage, XP, scoring, etc.)
+  - Energy system mechanics and costs
+  - Leaderboard categories and rewards
+  - Currency economy (gold, gems, energy)
+  - Town building details and services
+  - Roadmap priorities (v0.8.0 → v1.2.0)
+- ✅ **README.md Updated** - Current features reorganized into logical categories
+- ✅ **INDEX.md Updated** - Added GAME_MECHANICS_SUMMARY.md to documentation index
+- ✅ **Version Bump** - 2.3.3 → 2.4.0 (documentation milestone)
+
+## Previous Updates (2025-11-13)
 
 ### Global Weather & Time System
 - ✅ **Real-Time Weather & Time** - Synchronized across all players

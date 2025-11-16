@@ -3,8 +3,9 @@
 ## 📊 Development Progress Overview
 
 **Overall Completion**: ~40% of full game design (v0.7.3)
-**Current Phase**: Avatar System & Visual Enhancements Complete
-**Last Update**: 2025-11-12
+**Current Phase**: Global Weather/Time + Named Enemies Complete
+**Last Update**: 2025-11-16
+**Latest Milestone**: v0.7.3 - Real-time global systems + Special encounters
 
 ---
 
@@ -240,7 +241,68 @@
 
 ---
 
-#### 12. UI/UX Enhancements ✅ (100% - v0.7.3)
+#### 12. Global Weather & Time System ✅ (100% - v0.7.3)
+**Priority**: MEDIUM
+**Status**: Production-ready
+
+**COMPLETED:**
+- [x] Global weather system (Clear, Rain, Storm, Snow, Fog)
+- [x] Time of day system (Morning, Afternoon, Evening, Night)
+- [x] 15-minute automatic cycles via Supabase Edge Function cron job
+- [x] Real-time subscriptions using useGlobalWorldState hook
+- [x] Weather & Time Widget with live countdown timers
+- [x] Database table: global_world_state with RLS policies
+- [x] Database migration: 20251113_add_global_world_state.sql
+- [x] Edge Function deployment: update-global-world-state
+
+**Use Cases:**
+- Dynamic world state affects player experience
+- Visual atmosphere changes (weather effects)
+- Future game mechanics tied to weather/time (spawn rates, XP bonuses)
+- Real-time synchronization across all players
+
+**Files**:
+- `src/hooks/useGlobalWorldState.ts` - Real-time subscription hook
+- `src/services/GlobalWorldStateService.ts` - Data management
+- `src/components/WeatherTimeWidget.tsx` - Live countdown UI
+- `supabase/functions/update-global-world-state/` - Cron Edge Function
+- `supabase/migrations/20251113_add_global_world_state.sql` - DB schema
+
+---
+
+#### 13. Named Enemy System ✅ (100% - v0.7.3)
+**Priority**: HIGH
+**Status**: Production-ready
+
+**COMPLETED:**
+- [x] 4 Rare Spawn Bosses (3x stats):
+  - Ancient Golem (Desert) - Earth legendary drops
+  - Frost Giant (Snow) - Ice legendary drops
+  - Shadow Dragon (Mountains) - Shadow legendary drops
+  - Phoenix (Volcano) - Fire legendary drops
+- [x] 8 Wandering Monsters (1.5x stats):
+  - Dire Wolf, Troll, Ogre, Harpy, Minotaur, Chimera, Demon, Lich
+- [x] Enemy spawn system (groups of 1-3)
+- [x] 24-hour respawn cooldown for rare bosses
+- [x] 30-minute respawn for wandering monsters
+- [x] Higher drop rates (Elite 50%, Boss 100%)
+- [x] Visual distinction (red glow for bosses, yellow for wandering)
+- [x] Integration with worldmap combat system
+
+**Use Cases:**
+- Endgame challenge content
+- Legendary item farming
+- Daily boss hunting rotation
+- Player competition for rare spawns
+
+**Files**:
+- `src/engine/combat/NamedEnemies.ts` - Boss and elite definitions
+- `src/components/WorldMapViewer.tsx` - Spawn rendering with glow effects
+- `src/Router.tsx` - Combat integration
+
+---
+
+#### 14. UI/UX Enhancements ✅ (100% - v0.7.3)
 **Priority**: HIGH
 **Status**: Production-ready
 
@@ -571,7 +633,9 @@
 | Hero Collection & Gacha | ✅ Complete | v0.7.0 | 2025-11-09 |
 | Hero & Item Scoring | ✅ Complete | v0.7.1 | 2025-11-10 |
 | Mobile & Sync Status | ✅ Complete | v0.7.2 | 2025-11-10 |
-| **Avatar System & Visual Enhancements** | ✅ Complete | **v0.7.3** | **2025-11-12** |
+| Avatar System & Visual Enhancements | ✅ Complete | v0.7.2.5 | 2025-11-12 |
+| **Global Weather/Time + Named Enemies** | ✅ Complete | **v0.7.3** | **2025-11-13** |
+| **Documentation Overhaul** | ✅ Complete | **v2.4.0** | **2025-11-16** |
 | Energy System & Daily Reset | 📋 Planned | v0.8.0 | TBD |
 | Leaderboards System | 📋 Planned | v0.8.0 | TBD |
 | Town System | 📋 Planned | v0.9.0 | TBD |
@@ -624,10 +688,11 @@
 
 ---
 
-**Last Updated**: 2025-11-12 (Avatar System & Visual Enhancements Complete)
-**Next Review**: 2025-11-19
-**Current Version**: v0.7.3 (Avatar System, Terrain Randomization, Pulsating Glow)
-**Next Version**: v0.8.0 (Energy System & Daily Reset - Planned)
+**Last Updated**: 2025-11-16 (Documentation Overhaul Complete)
+**Next Review**: 2025-11-23
+**Current Version**: v0.7.3 (Global Weather/Time + Named Enemies)
+**Next Version**: v0.8.0 (Daily Reset & Quest System - Planned)
+**Overall Progress**: ~40% to v1.2.0 full release
 
 ---
 

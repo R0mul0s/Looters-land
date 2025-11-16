@@ -19,7 +19,7 @@ import type { SyncStatus } from './SyncStatusIndicator';
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, BLUR, Z_INDEX, WIDTHS } from '../styles/tokens';
 import { flexCenter, flexColumn } from '../styles/common';
 
-type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport' | 'updates';
+export type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport' | 'updates';
 
 interface GameLayoutProps {
   playerName: string;
@@ -37,6 +37,8 @@ interface GameLayoutProps {
   itemCount?: number; // For profile screen
   syncStatus?: SyncStatus; // Database sync status
   lastSaveTime?: Date | null; // Last successful save time
+  activeScreen?: GameScreen; // Controlled active screen (optional)
+  onScreenChange?: (screen: GameScreen) => void; // External screen change handler
   // Screen components
   worldmapScreen?: React.ReactNode;
   heroesScreen?: React.ReactNode;
@@ -82,6 +84,8 @@ export function GameLayout({
   itemCount = 0,
   syncStatus,
   lastSaveTime,
+  activeScreen: controlledActiveScreen,
+  onScreenChange: externalScreenChange,
   worldmapScreen,
   heroesScreen,
   inventoryScreen,
@@ -90,12 +94,24 @@ export function GameLayout({
   guildScreen,
   leaderboardsScreen
 }: GameLayoutProps) {
-  const [activeScreen, setActiveScreen] = useState<GameScreen>('worldmap');
+  const [internalActiveScreen, setInternalActiveScreen] = useState<GameScreen>('worldmap');
   const [showSettings, setShowSettings] = useState(false);
 
+  // Use controlled activeScreen if provided, otherwise use internal state
+  const activeScreen = controlledActiveScreen !== undefined ? controlledActiveScreen : internalActiveScreen;
+
   const handleScreenChange = (screen: GameScreen) => {
-    setActiveScreen(screen);
+    // Update internal state if not controlled
+    if (controlledActiveScreen === undefined) {
+      setInternalActiveScreen(screen);
+    }
+
     console.log('Switched to screen:', screen);
+
+    // Always call external handler if provided (for both controlled and uncontrolled)
+    if (externalScreenChange) {
+      externalScreenChange(screen);
+    }
   };
 
   const handleSettingsClick = () => {

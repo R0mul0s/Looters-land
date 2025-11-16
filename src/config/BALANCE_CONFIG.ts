@@ -123,6 +123,9 @@ export const ENERGY_CONFIG = {
   /** Energy cost for entering a dungeon */
   DUNGEON_ENTRY_COST: 10,
 
+  /** Energy cost for teleporting to discovered location */
+  TELEPORT_COST: 40,
+
   /** Energy cost multiplier for worldmap movement */
   MOVEMENT_COST_MULTIPLIER: 0.01,
 

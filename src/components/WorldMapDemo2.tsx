@@ -21,7 +21,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { GameLayout } from './GameLayout';
+import { GameLayout, type GameScreen } from './GameLayout';
 import { WorldMapGenerator } from '../engine/worldmap/WorldMapGenerator';
 import { WorldMapViewer } from './WorldMapViewer';
 import { HeroesScreen, getPartyAverageHealth } from './HeroesScreen';
@@ -49,6 +49,7 @@ import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SH
 import { flexColumn, flexCenter } from '../styles/common';
 import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, DynamicObject, WanderingMonster, TravelingMerchant } from '../types/worldmap.types';
 import { DEBUG_CONFIG } from '../config/DEBUG_CONFIG';
+import { ENERGY_CONFIG } from '../config/BALANCE_CONFIG';
 import logo from '../assets/images/logo.png';
 
 interface WorldMapDemo2Props {
@@ -104,6 +105,9 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
 
   // Use email from props or fallback to placeholder
   const playerEmail = userEmailProp || 'adventurer@lootersland.com';
+
+  // Screen state
+  const [activeScreen, setActiveScreen] = useState<GameScreen>('worldmap');
 
   // Modal states
   const [showTownModal, setShowTownModal] = useState<Town | null>(null);
@@ -858,10 +862,10 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
   /**
    * Handle teleport to a location
    *
-   * Deducts energy cost, moves player to location, and closes teleport menu.
+   * Deducts energy cost, moves player to location, closes teleport menu, and switches to worldmap.
    */
   const handleTeleport = (location: { name: string; x: number; y: number; type: 'town' | 'dungeon' }) => {
-    const TELEPORT_COST = 40;
+    const TELEPORT_COST = ENERGY_CONFIG.TELEPORT_COST;
 
     if (gameState.energy < TELEPORT_COST && !DEBUG_CONFIG.UNLIMITED_ENERGY) {
       setShowEnergyModal({
@@ -877,8 +881,9 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
     }
     gameActions.updatePlayerPos(location.x, location.y);
 
-    // Close teleport menu
+    // Close teleport menu and switch to worldmap
     setShowTeleportMenu(false);
+    setActiveScreen('worldmap');
 
     console.log(`Teleported to ${location.name} (${location.x}, ${location.y})`);
   };
@@ -1165,6 +1170,8 @@ export function WorldMapDemo2({ onEnterDungeon, onQuickCombat, userEmail: userEm
         itemCount={gameState.inventory.items.length}
         syncStatus={gameState.syncStatus}
         lastSaveTime={gameState.lastSaveTime}
+        activeScreen={activeScreen}
+        onScreenChange={setActiveScreen}
         worldmapScreen={worldmapContent}
         heroesScreen={heroesContent}
         inventoryScreen={inventoryContent}

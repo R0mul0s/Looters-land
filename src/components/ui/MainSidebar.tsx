@@ -15,6 +15,7 @@ import { t } from '../../localization/i18n';
 import logo from '../../assets/images/logo.png';
 import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, BLUR, Z_INDEX, TRANSITIONS } from '../../styles/tokens';
 import { flexCenter } from '../../styles/common';
+import { VERSION_DISPLAY, COPYRIGHT } from '../../config/gameConfig';
 
 type GameScreen = 'worldmap' | 'town' | 'dungeon' | 'inventory' | 'heroes' | 'quests' | 'guild' | 'leaderboards' | 'teleport' | 'updates';
 
@@ -174,8 +175,8 @@ export function MainSidebar({
       {/* Footer */}
       {!isCompact && (
         <div style={styles.footer}>
-          <div style={styles.version}>v2.0</div>
-          <div style={styles.copyright}>© 2025 rhsoft.cz</div>
+          <div style={styles.version}>{VERSION_DISPLAY}</div>
+          <div style={styles.copyright}>{COPYRIGHT}</div>
         </div>
       )}
     </div>

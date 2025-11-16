@@ -11,6 +11,7 @@ import { t } from '../localization/i18n';
 import type { StaticObjectType } from '../types/worldmap.types';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../styles/tokens';
 import { flexColumn, flexCenter, flexBetween } from '../styles/common';
+import { ENERGY_CONFIG } from '../config/BALANCE_CONFIG';
 
 interface TeleportLocation {
   name: string;
@@ -26,8 +27,28 @@ interface TeleportMenuProps {
   onClose: () => void;
 }
 
-const TELEPORT_COST = 40;
+const TELEPORT_COST = ENERGY_CONFIG.TELEPORT_COST;
 
+/**
+ * Teleport Menu Component
+ *
+ * Displays a list of discovered locations (towns and dungeons) that the player
+ * can teleport to for an energy cost. Includes filtering by location type and
+ * real-time energy validation.
+ *
+ * @param props - Component props
+ * @returns React component
+ *
+ * @example
+ * ```tsx
+ * <TeleportMenu
+ *   discoveredLocations={locations}
+ *   currentEnergy={75}
+ *   onTeleport={(loc) => console.log('Teleporting to', loc.name)}
+ *   onClose={() => setShowMenu(false)}
+ * />
+ * ```
+ */
 export function TeleportMenu({
   discoveredLocations,
   currentEnergy,
@@ -42,10 +63,23 @@ export function TeleportMenu({
     return loc.type === filter;
   });
 
+  /**
+   * Get icon emoji for location type
+   *
+   * @param type - Location type (town or dungeon)
+   * @returns Emoji icon string
+   */
   const getLocationIcon = (type: string) => {
     return type === 'town' ? '🏰' : '🕳️';
   };
 
+  /**
+   * Handle teleportation to selected location
+   *
+   * Validates energy cost before triggering teleport callback.
+   *
+   * @param location - Target location to teleport to
+   */
   const handleTeleport = (location: TeleportLocation) => {
     if (currentEnergy < TELEPORT_COST) {
       return; // Not enough energy
@@ -256,7 +290,9 @@ const styles: Record<string, React.CSSProperties> = {
     gap: SPACING[3.5],
     padding: SPACING[3.5],
     background: `linear-gradient(135deg, ${COLORS.bgSurfaceLight} 0%, ${COLORS.bgSurface} 100%)`,
-    border: `2px solid ${COLORS.bgSurfaceLighter}`,
+    borderWidth: '2px',
+    borderStyle: 'solid',
+    borderColor: COLORS.bgSurfaceLighter,
     borderRadius: BORDER_RADIUS.lg,
     cursor: 'pointer',
     transition: TRANSITIONS.fast,

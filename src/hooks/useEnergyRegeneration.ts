@@ -88,12 +88,11 @@ export function useEnergyRegeneration(config: EnergyRegenerationConfig) {
         // Only proceed if we have at least 1 full energy point to add
         if (energyToAddFloored >= 1) {
           console.log(`🔋 Energy regen: attempting to add ${energyToAddFloored} energy (from ${energyToAdd.toFixed(2)})`);
-          // Use callback form to avoid stale closure - add the delta, don't set absolute value!
-          onEnergyChangeRef.current((prevEnergy: number) => {
-            const newEnergy = Math.min(maxEnergyRef.current, prevEnergy + energyToAddFloored);
-            console.log(`🔋 Energy regen result: ${prevEnergy} + ${energyToAddFloored} = ${newEnergy} (max: ${maxEnergyRef.current})`);
-            return newEnergy;
-          });
+          // Calculate new energy value
+          const prevEnergy = currentEnergyRef.current;
+          const newEnergy = Math.min(maxEnergyRef.current, prevEnergy + energyToAddFloored);
+          console.log(`🔋 Energy regen result: ${prevEnergy} + ${energyToAddFloored} = ${newEnergy} (max: ${maxEnergyRef.current})`);
+          onEnergyChangeRef.current(newEnergy);
         }
       }
     }, TICK_INTERVAL);

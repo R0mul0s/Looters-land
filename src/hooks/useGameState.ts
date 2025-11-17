@@ -263,18 +263,22 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     });
     saveQueueRef.current = savePromise;
 
+    // Define these outside try block so they're available in catch block
+    let currentState: GameState;
+    let profileUpdate: any;
+
     try {
       isSavingRef.current = true;
       setState(prev => ({ ...prev, saving: true, syncStatus: 'saving' }));
 
       // Use provided state if available (to avoid stale stateRef), otherwise fall back to stateRef
       // CRITICAL: This fixes race condition where stateRef.current hasn't been updated by useEffect yet
-      const currentState = providedState || stateRef.current;
+      currentState = providedState || stateRef.current;
 
       // Save player profile (including gacha state, worldmap, and discovered locations)
       // IMPORTANT: Never save world_map_data as null - this would trigger map regeneration on Realtime update!
       // If worldMap is null during save (e.g., early combat power update), skip saving it.
-      const profileUpdate: any = {
+      profileUpdate = {
         nickname: currentState.playerName,
         player_level: currentState.playerLevel,
         gold: currentState.gold,

@@ -8,13 +8,13 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-15
+ * @lastModified 2025-11-17
  */
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS, Z_INDEX, TRANSITIONS } from '../styles/tokens';
 import { flexBetween, flexCenter } from '../styles/common';
-import type { WorldMap, Tile, DynamicObject, WeatherState, TimeState, Town, StaticObject, ObservationTower, DungeonEntrance } from '../types/worldmap.types';
+import type { WorldMap, Tile, DynamicObject, WeatherState, TimeState, Town, StaticObject, ObservationTower, DungeonEntrance, HealingWell } from '../types/worldmap.types';
 import { TERRAIN_ICONS } from '../types/worldmap.types';
 import { OtherPlayerMarker } from './OtherPlayerMarker';
 import { ChatBubble } from './ChatBubble';
@@ -75,6 +75,8 @@ import hiddenPath2Img from '../assets/images/object/hidden-path2.png';
 import observationTower1Img from '../assets/images/building/observation-tower1.png';
 import observationTower2Img from '../assets/images/building/observation-tower2.png';
 import observationTower3Img from '../assets/images/building/observation-tower3.png';
+import healingWell1Img from '../assets/images/object/healing-well1.png';
+import healingWell2Img from '../assets/images/object/healing-well2.png';
 
 // Import monster images
 import ancientGolemImg from '../assets/images/monster/ancient-golem.png';
@@ -143,6 +145,7 @@ function WorldMapViewerComponent({
   const [animationTrigger, setAnimationTrigger] = useState(0); // Dummy state to trigger re-renders for animation
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const onTileClickRef = useRef(onTileClick); // Ref to prevent effect re-runs when callback changes
 
   // Terrain images state
   const [terrainImages, setTerrainImages] = useState<{
@@ -247,6 +250,15 @@ function WorldMapViewerComponent({
   }>({
     path1: null,
     path2: null
+  });
+
+  // Healing well images
+  const [healingWellImages, setHealingWellImages] = useState<{
+    well1: HTMLImageElement | null;
+    well2: HTMLImageElement | null;
+  }>({
+    well1: null,
+    well2: null
   });
 
   // Monster images
@@ -630,6 +642,37 @@ function WorldMapViewerComponent({
     images.tower3.onerror = () => console.error('Failed to load observation-tower3.png');
   }, []);
 
+  // Load healing well images
+  useEffect(() => {
+    const images = {
+      well1: new Image(),
+      well2: new Image()
+    };
+
+    images.well1.src = healingWell1Img;
+    images.well2.src = healingWell2Img;
+
+    let loadedCount = 0;
+    const totalImages = 2;
+
+    const onLoad = () => {
+      loadedCount++;
+      if (loadedCount === totalImages) {
+        setHealingWellImages({
+          well1: images.well1,
+          well2: images.well2
+        });
+        console.log('✅ All healing well images loaded successfully');
+      }
+    };
+
+    images.well1.onload = onLoad;
+    images.well2.onload = onLoad;
+
+    images.well1.onerror = () => console.error('Failed to load healing-well1.png');
+    images.well2.onerror = () => console.error('Failed to load healing-well2.png');
+  }, []);
+
   // Load monster images
   useEffect(() => {
     const images = {
@@ -985,6 +1028,9 @@ function WorldMapViewerComponent({
             case 'observationTower':
               icon = '🗼';
               break;
+            case 'healingWell':
+              icon = '💧';
+              break;
           }
           if (icon) {
             // Check if object is defeated/opened/discovered/used for grayscale rendering
@@ -996,6 +1042,8 @@ function WorldMapViewerComponent({
             } else if (tile.staticObject.type === 'hiddenPath' && 'discovered' in tile.staticObject) {
               isDefeatedOrOpened = tile.staticObject.discovered === true;
             } else if (tile.staticObject.type === 'observationTower' && 'used' in tile.staticObject) {
+              isDefeatedOrOpened = tile.staticObject.used === true;
+            } else if (tile.staticObject.type === 'healingWell' && 'used' in tile.staticObject) {
               isDefeatedOrOpened = tile.staticObject.used === true;
             }
             staticObjectsToRender.push({ icon, screenX, screenY, objectType, objectId, objectName, isDefeatedOrOpened, staticObject: tile.staticObject });
@@ -1393,6 +1441,45 @@ function WorldMapViewerComponent({
         } else {
           ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
         }
+      } else if (objectType === 'healingWell' && objectId) {
+        // Use healing well images if available
+        const well = staticObject as HealingWell | undefined;
+        const assetName = well?.asset;
+
+        let wellImg: HTMLImageElement | null = null;
+
+        // Use asset name if available
+        if (assetName) {
+          switch (assetName) {
+            case 'healing-well1.png':
+              wellImg = healingWellImages.well1;
+              break;
+            case 'healing-well2.png':
+              wellImg = healingWellImages.well2;
+              break;
+          }
+        }
+
+        // Draw well image if loaded, otherwise fall back to emoji
+        if (wellImg) {
+          // Add cyan/blue glow effect for unused wells
+          if (!well?.used) {
+            ctx.shadowColor = '#00d9ff';
+            ctx.shadowBlur = 15;
+          }
+
+          // Make well larger (1.3x tile size) and center it
+          const wellSize = TILE_SIZE * 1.3;
+          const wellOffsetX = screenX - (wellSize - TILE_SIZE) / 2;
+          const wellOffsetY = screenY - (wellSize - TILE_SIZE) / 2;
+
+          ctx.drawImage(wellImg, wellOffsetX, wellOffsetY, wellSize, wellSize);
+
+          // Reset shadow
+          ctx.shadowBlur = 0;
+        } else {
+          ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
+        }
       } else {
         // Draw emoji for other object types
         ctx.fillText(icon, screenX + TILE_SIZE / 2, screenY + TILE_SIZE / 2);
@@ -1710,6 +1797,13 @@ function WorldMapViewerComponent({
   }, [worldMap, playerPosition, viewport, zoom, TILE_SIZE, terrainImages, heroImage, dungeonImages, treasureChestImages, portalImages, travelingMerchantImages, hiddenPathImages, monsterImages, cityImages, weather, timeOfDay, animationTrigger, currentPath, isMoving, facingLeft]);
 
   /**
+   * Update onTileClick ref whenever it changes
+   */
+  useEffect(() => {
+    onTileClickRef.current = onTileClick;
+  }, [onTileClick]);
+
+  /**
    * Animation loop for pulsating glow effect and weather particles
    * Uses requestAnimationFrame to continuously update the canvas
    */
@@ -1762,8 +1856,8 @@ function WorldMapViewerComponent({
 
         // Call the onTileClick callback to actually move the player
         // Pass true to indicate this is automatic path movement (don't trigger object interactions)
-        if (onTileClick) {
-          onTileClick(nextPosition.x, nextPosition.y, true);
+        if (onTileClickRef.current) {
+          onTileClickRef.current(nextPosition.x, nextPosition.y, true);
         }
 
         // Remove the first position from the path
@@ -1789,8 +1883,8 @@ function WorldMapViewerComponent({
 
             // If there's an object at destination, call onTileClick with isPathMovement = false
             // to trigger the object interaction (open chest, enter town, etc.)
-            if ((hasStaticObject || hasDynamicObject) && onTileClick) {
-              onTileClick(nextPosition.x, nextPosition.y, false);
+            if ((hasStaticObject || hasDynamicObject) && onTileClickRef.current) {
+              onTileClickRef.current(nextPosition.x, nextPosition.y, false);
             }
           }
         }
@@ -1800,7 +1894,7 @@ function WorldMapViewerComponent({
     const intervalId = setInterval(moveStep, 16); // ~60fps
 
     return () => clearInterval(intervalId);
-  }, [currentPath, isMoving, onTileClick, playerPosition]);
+  }, [currentPath, isMoving, playerPosition]);
 
   /**
    * Get terrain variant for a specific tile using Perlin noise
@@ -1910,7 +2004,7 @@ function WorldMapViewerComponent({
       const isCurrentPosition = tileX === playerPosition.x && tileY === playerPosition.y;
 
       // If clicking on current position with an object, interact with it directly (no movement needed)
-      if (isCurrentPosition && onTileClick) {
+      if (isCurrentPosition && onTileClickRef.current) {
         // Check for static or dynamic objects at current position
         const hasObject = tile.staticObject || worldMap.dynamicObjects.some(
           obj => obj.position.x === tileX && obj.position.y === tileY && obj.isActive
@@ -1918,7 +2012,7 @@ function WorldMapViewerComponent({
 
         if (hasObject) {
           // Call onTileClick with isPathMovement = false to trigger object interaction
-          onTileClick(tileX, tileY, false);
+          onTileClickRef.current(tileX, tileY, false);
           return;
         }
       }

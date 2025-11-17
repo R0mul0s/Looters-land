@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2025-11-17
  */
 
 // ============================================================================
@@ -67,7 +67,7 @@ export interface Tile {
 // STATIC OBJECTS (Permanent)
 // ============================================================================
 
-export type StaticObjectType = 'town' | 'dungeon' | 'portal' | 'hiddenPath' | 'treasureChest' | 'rareSpawn' | 'observationTower';
+export type StaticObjectType = 'town' | 'dungeon' | 'portal' | 'hiddenPath' | 'treasureChest' | 'rareSpawn' | 'observationTower' | 'healingWell';
 
 export interface StaticObject {
   id: string;
@@ -133,6 +133,13 @@ export interface ObservationTower extends StaticObject {
   used: boolean; // Whether player has already used this tower
   revealRadius: number; // How far it reveals (default 2x normal vision)
   asset?: string; // Asset filename (e.g., 'observation-tower1.png')
+}
+
+export interface HealingWell extends StaticObject {
+  type: 'healingWell';
+  healPercent: number; // Percentage of HP to restore (25, 50, 75, 100)
+  used: boolean; // Whether player has already used this well today
+  asset?: string; // Asset filename (e.g., 'healing-well1.png', 'healing-well2.png')
 }
 
 // ============================================================================

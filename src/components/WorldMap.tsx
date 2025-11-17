@@ -17,10 +17,10 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-16
+ * @lastModified 2025-11-17
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { GameLayout, type GameScreen } from './GameLayout';
 import { WorldMapGenerator } from '../engine/worldmap/WorldMapGenerator';
 import { WorldMapViewer } from './WorldMapViewer';
@@ -48,7 +48,7 @@ import { supabase } from '../lib/supabase';
 import { t } from '../localization/i18n';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS, BLUR } from '../styles/tokens';
 import { flexColumn, flexCenter } from '../styles/common';
-import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, ObservationTower, DynamicObject, WanderingMonster, TravelingMerchant } from '../types/worldmap.types';
+import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, ObservationTower, HealingWell, DynamicObject, WanderingMonster, TravelingMerchant } from '../types/worldmap.types';
 import { DEBUG_CONFIG } from '../config/DEBUG_CONFIG';
 import { ENERGY_CONFIG, WORLDMAP_CONFIG } from '../config/BALANCE_CONFIG';
 import { generateRandomEnemy } from '../engine/combat/Enemy';
@@ -127,6 +127,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
   const [showTreasureChestModal, setShowTreasureChestModal] = useState<{ chest: TreasureChest; loot: any } | null>(null);
   const [showHiddenPathModal, setShowHiddenPathModal] = useState<{ path: HiddenPath; loot: any } | null>(null);
   const [showMerchantModal, setShowMerchantModal] = useState<TravelingMerchant | null>(null);
+  const [showHealingWellModal, setShowHealingWellModal] = useState<HealingWell | null>(null);
   const [showMessageModal, setShowMessageModal] = useState<string | null>(null);
   const [showLowHealthWarning, setShowLowHealthWarning] = useState<{ type: 'dungeon' | 'combat'; action: () => void; averageHealth: number } | null>(null);
   const [showQuickCombatModal, setShowQuickCombatModal] = useState<{
@@ -226,7 +227,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
         .eq('user_id', gameState.profile!.user_id)
         .then(() => console.log('Marked as offline'));
     };
-  }, [gameState.profile?.user_id, gameState.playerPos.x, gameState.playerPos.y, gameState.loading]);
+  }, [gameState.profile?.user_id, gameState.loading]); // Removed playerPos from dependencies - updatePresence captures current values
 
   // Multiplayer: Handle chat message
   const handleSendChatMessage = async (message: string) => {
@@ -416,7 +417,8 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
     if (gameState.energy >= baseCostPerTile || DEBUG_CONFIG.UNLIMITED_ENERGY) {
       gameActions.updatePlayerPos(x, y);
       if (!DEBUG_CONFIG.UNLIMITED_ENERGY) {
-        gameActions.setEnergy(gameState.energy - baseCostPerTile);
+        // Use callback form to avoid stale closure issues
+        gameActions.setEnergy(prev => prev - baseCostPerTile);
       }
 
       // Reveal area around player
@@ -549,6 +551,8 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
       handleRareSpawnCombat(rareSpawn);
     } else if (object.type === 'observationTower') {
       handleObservationTowerUse(object as ObservationTower);
+    } else if (object.type === 'healingWell') {
+      handleHealingWellUse(object as HealingWell);
     }
   };
 
@@ -624,6 +628,55 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
       console.log(`🗼 Revealed ${tilesRevealed} tiles from observation tower`);
       setShowMessageModal(t('worldmap.observationTowerRevealed', { tilesRevealed: tilesRevealed.toString() }));
     }
+  };
+
+  /**
+   * Handle healing well use - heal active party
+   */
+  const handleHealingWellUse = (well: HealingWell) => {
+    // Check if already used today
+    if (well.used) {
+      setShowMessageModal(t('worldmap.healingWellAlreadyUsed'));
+      return;
+    }
+
+    console.log('💧 Using healing well:', well);
+
+    // Show healing well modal with party HP info
+    setShowHealingWellModal(well);
+  };
+
+  /**
+   * Handle healing well confirmation - heal party
+   */
+  const handleConfirmHealingWell = async () => {
+    if (!showHealingWellModal) return;
+
+    const well = showHealingWellModal;
+    const healPercent = well.healPercent;
+
+    // Heal all members of active party
+    if (gameState.activeParty && gameState.activeParty.length > 0) {
+      gameState.activeParty.forEach(hero => {
+        const healAmount = Math.floor(hero.maxHP * (healPercent / 100));
+        const newHP = Math.min(hero.maxHP, hero.currentHP + healAmount);
+        hero.currentHP = newHP;
+      });
+
+      console.log(`💚 Healed party by ${healPercent}%`);
+
+      // Mark well as used
+      well.used = true;
+      if (gameState.worldMap) {
+        gameActions.updateWorldMap({ ...gameState.worldMap });
+      }
+
+      // Save game state
+      await gameActions.saveGame();
+    }
+
+    // Close modal
+    setShowHealingWellModal(null);
   };
 
   /**
@@ -1356,6 +1409,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
             bankVaultTier={gameState.bankVaultTier}
             bankVaultMaxSlots={gameState.bankVaultMaxSlots}
             bankTotalItems={gameState.bankTotalItems}
+            healerCooldownUntil={gameState.healerCooldownUntil}
             gachaState={gameState.gachaState}
             onGoldChange={(newGold) => {
               const diff = newGold - gameState.gold;
@@ -1378,6 +1432,9 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
             }}
             onMaxEnergyChange={async (newMaxEnergy) => {
               await gameActions.setMaxEnergy(newMaxEnergy);
+            }}
+            onSetHealerCooldown={async (cooldownUntil) => {
+              await gameActions.setHealerCooldown(cooldownUntil);
             }}
             onStoredGoldChange={() => {}} // Deprecated
             onBankVaultChange={(tier, maxSlots, totalItems) => {
@@ -1603,6 +1660,63 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
             <ModalButton onClick={() => setShowMerchantModal(null)} variant="secondary" fullWidth>
               Leave Shop
             </ModalButton>
+          </>
+        )}
+      </GameModal>
+
+      {/* Healing Well Modal */}
+      <GameModal
+        isOpen={!!showHealingWellModal}
+        title={t('worldmap.healingWellTitle')}
+        icon="💧"
+        onClose={() => setShowHealingWellModal(null)}
+      >
+        {showHealingWellModal && (
+          <>
+            <ModalText>{t('worldmap.healingWellDiscovered')}</ModalText>
+            <ModalDivider />
+            <ModalInfoBox variant="info">
+              {t('worldmap.healingWellWillRestore', { percent: showHealingWellModal.healPercent })}
+            </ModalInfoBox>
+            <ModalDivider />
+            <div style={{
+              padding: '12px',
+              background: 'rgba(59, 130, 246, 0.1)',
+              border: '1px solid rgba(59, 130, 246, 0.3)',
+              borderRadius: '6px',
+              fontSize: '13px',
+              color: '#cbd5e1'
+            }}>
+              <div><strong>{t('worldmap.healingWellActivePartyStatus')}</strong></div>
+              {gameState.activeParty.map((hero) => {
+                const hpPercent = (hero.currentHP / hero.maxHP) * 100;
+                const healAmount = Math.floor(hero.maxHP * (showHealingWellModal.healPercent / 100));
+                const newHP = Math.min(hero.maxHP, hero.currentHP + healAmount);
+                return (
+                  <div key={hero.id} style={{ marginTop: '4px', fontSize: '12px' }}>
+                    {hero.name} (Lv {hero.level}) - ❤️{hero.currentHP}/{hero.maxHP} ({Math.round(hpPercent)}%)
+                    {hero.currentHP < hero.maxHP && (
+                      <span style={{ color: '#22c55e', marginLeft: '8px' }}>
+                        → {newHP} (+{healAmount})
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <ModalDivider />
+            <ModalInfoBox variant="warning">
+              {t('worldmap.healingWellDailyWarning')}
+            </ModalInfoBox>
+            <ModalDivider />
+            <ModalButtonGroup>
+              <ModalButton onClick={() => setShowHealingWellModal(null)} variant="secondary" fullWidth={false}>
+                {t('worldmap.healingWellButtonCancel')}
+              </ModalButton>
+              <ModalButton onClick={handleConfirmHealingWell} variant="primary" fullWidth={false}>
+                {t('worldmap.healingWellButtonHeal')}
+              </ModalButton>
+            </ModalButtonGroup>
           </>
         )}
       </GameModal>

@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2025-11-17
  */
 
 import { PerlinNoise } from './PerlinNoise';
@@ -24,6 +24,7 @@ import type {
   TreasureChest,
   RareSpawn,
   ObservationTower,
+  HealingWell,
   WanderingMonster,
   TravelingMerchant,
   WeatherType,
@@ -139,7 +140,10 @@ export class WorldMapGenerator {
     // 9. Place observation towers
     const observationTowers = this.placeObservationTowers(tiles, 8); // ~8 towers on 50x50 map
 
-    // 10. Spawn wandering monsters
+    // 10. Place healing wells near dungeons
+    const healingWells = this.placeHealingWells(tiles, dungeons);
+
+    // 11. Spawn wandering monsters
     const wanderingMonsters = this.spawnWanderingMonsters(tiles, WORLDMAP_CONFIG.WANDERING_MONSTER_COUNT);
 
     // 12. Spawn traveling merchants
@@ -157,7 +161,7 @@ export class WorldMapGenerator {
       height,
       seed,
       tiles,
-      staticObjects: [...towns, ...dungeons, ...portals, ...hiddenPaths, ...treasureChests, ...rareSpawns],
+      staticObjects: [...towns, ...dungeons, ...portals, ...hiddenPaths, ...treasureChests, ...rareSpawns, ...observationTowers, ...healingWells],
       dynamicObjects: [...wanderingMonsters, ...travelingMerchants],
       players: [],
       weather,
@@ -907,6 +911,105 @@ export class WorldMapGenerator {
     }
 
     return observationTowers;
+  }
+
+  /**
+   * Place healing wells near dungeons (4 wells with different heal %)
+   *
+   * Each dungeon gets one healing well nearby with varying heal percentages.
+   * Wells provide healing for the entire active party and reset daily.
+   *
+   * @param tiles - Map tiles
+   * @param dungeons - Array of dungeons to place wells near
+   * @returns Array of healing wells
+   *
+   * @example
+   * ```typescript
+   * const tiles = this.generateTiles(50, 50);
+   * const dungeons = this.placeDungeons(tiles, 10);
+   * const healingWells = this.placeHealingWells(tiles, dungeons);
+   * // Returns 4 healing wells: 25%, 50%, 75%, 100% heal rates
+   * // Each well placed 3-8 tiles from nearest dungeon
+   * ```
+   */
+  private static placeHealingWells(tiles: Tile[][], dungeons: DungeonEntrance[]): HealingWell[] {
+    console.log('💧 Placing healing wells near dungeons...');
+    const healingWells: HealingWell[] = [];
+    const width = tiles[0].length;
+    const height = tiles.length;
+
+    // Heal percentages for each well (25%, 50%, 75%, 100%)
+    const healPercentages = [25, 50, 75, 100];
+
+    // Alternating assets
+    const wellAssets = ['healing-well1.png', 'healing-well2.png'];
+
+    // Place one well near each of the first 4 dungeons
+    for (let i = 0; i < Math.min(4, dungeons.length); i++) {
+      const dungeon = dungeons[i];
+      const healPercent = healPercentages[i];
+
+      let x: number, y: number;
+      let attempts = 0;
+      let validPosition = false;
+      const MAX_DISTANCE = 8;
+
+      // Try to find a valid position near the dungeon (within 8 tiles)
+      while (!validPosition && attempts < 100) {
+        // Generate position within MAX_DISTANCE of dungeon
+        const angle = this.rng.nextFloat(0, Math.PI * 2);
+        const distance = this.rng.nextFloat(3, MAX_DISTANCE);
+
+        x = Math.round(dungeon.position.x + Math.cos(angle) * distance);
+        y = Math.round(dungeon.position.y + Math.sin(angle) * distance);
+
+        // Ensure within bounds
+        if (x < 0 || x >= width || y < 0 || y >= height) {
+          attempts++;
+          continue;
+        }
+
+        const tile = tiles[y]?.[x];
+        if (!tile) {
+          attempts++;
+          continue;
+        }
+
+        // Check if position is valid (not water, not occupied)
+        if (tile.terrain === 'water' || tile.staticObject) {
+          attempts++;
+          continue;
+        }
+
+        validPosition = true;
+      }
+
+      if (!validPosition) {
+        console.warn(`⚠️ Could not find valid position for healing well near ${dungeon.name} after ${attempts} attempts`);
+        continue;
+      }
+
+      const healingWell: HealingWell = {
+        id: `healing-well-${i}`,
+        type: 'healingWell',
+        name: 'Healing Well',
+        position: { x, y },
+        healPercent,
+        used: false,
+        asset: wellAssets[i % wellAssets.length]
+      };
+
+      tiles[y][x].staticObject = healingWell;
+      healingWells.push(healingWell);
+
+      const distanceFromDungeon = Math.sqrt(
+        Math.pow(x - dungeon.position.x, 2) + Math.pow(y - dungeon.position.y, 2)
+      );
+
+      console.log(`  💧 Placed Healing Well (${healPercent}% heal) near ${dungeon.name} - ${distanceFromDungeon.toFixed(1)} tiles away at (${x}, ${y})`);
+    }
+
+    return healingWells;
   }
 
   /**

@@ -1268,6 +1268,8 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
       inventory={gameState.inventory}
       isInTown={isInTown}
       onEquipItem={async (hero, item) => {
+        console.log('🔍 WorldMap.onEquipItem - Hero:', hero.name, 'Level:', hero.level, 'Hero ID:', hero.id);
+        console.log('🔍 WorldMap.onEquipItem - Equipment.hero:', hero.equipment?.hero.name, 'Level:', hero.equipment?.hero.level, 'ID:', hero.equipment?.hero.id);
         if (!hero.equipment) return;
         const result = hero.equipment.equip(item);
         if (result.success) {

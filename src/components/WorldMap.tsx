@@ -357,16 +357,16 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
    * @param x - Tile X coordinate
    * @param y - Tile Y coordinate
    */
-  const handleTileClick = (x: number, y: number, isPathMovement: boolean = false) => {
-    if (!gameState.worldMap) return;
+  const handleTileClick = (x: number, y: number, isPathMovement: boolean = false): boolean => {
+    if (!gameState.worldMap) return false;
 
     const tile = gameState.worldMap.tiles[y]?.[x];
-    if (!tile) return;
+    if (!tile) return false;
 
     // Prevent movement to unexplored tiles
     if (!tile.isExplored) {
       setShowUnexploredModal(true);
-      return;
+      return false;
     }
 
     // Only interact with objects if this is NOT an automatic path movement
@@ -378,7 +378,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
       if (tile.staticObject) {
         console.log('🔍 DEBUG: Found static object:', tile.staticObject.type);
         handleObjectClick(tile.staticObject, x, y);
-        return;
+        return true;
       }
 
       // Check if clicking on a dynamic object (wandering monster, traveling merchant)
@@ -397,7 +397,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
         if (dynamicObject) {
           console.log('🔍 DEBUG: Selected dynamic object:', dynamicObject.type);
           handleDynamicObjectClick(dynamicObject, x, y);
-          return;
+          return true;
         } else {
           console.log('🔍 DEBUG: No dynamic object found at this position');
         }
@@ -405,7 +405,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
 
       // If this is a direct click (not path movement) and there's no object, don't do anything
       // The pathfinding will be handled by WorldMapViewer
-      return;
+      return true;
     }
 
     // This is path movement - update player position
@@ -450,11 +450,13 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
       if (tile.terrain !== 'water' && tile.terrain !== 'road') {
         triggerRandomEncounter();
       }
+      return true; // Movement successful
     } else {
       setShowEnergyModal({
         message: t('worldmap.notEnoughEnergy', { required: baseCostPerTile, current: gameState.energy }),
         required: baseCostPerTile
       });
+      return false; // Movement failed - not enough energy
     }
   };
 

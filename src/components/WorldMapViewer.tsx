@@ -101,7 +101,7 @@ interface WorldMapViewerProps {
   playerChatTimestamp?: Date; // Timestamp of current player's chat message
   weather?: WeatherState; // Current weather state
   timeOfDay?: TimeState; // Current time of day state
-  onTileClick?: (x: number, y: number, isPathMovement?: boolean) => void;
+  onTileClick?: (x: number, y: number, isPathMovement?: boolean) => boolean;
   onCancelMovement?: () => void; // Callback when player cancels movement
   onRegisterCancelMovement?: (cancelFn: () => void) => void; // Callback to register cancel function
 }
@@ -1856,8 +1856,17 @@ function WorldMapViewerComponent({
 
         // Call the onTileClick callback to actually move the player
         // Pass true to indicate this is automatic path movement (don't trigger object interactions)
+        let moveSuccess = true;
         if (onTileClickRef.current) {
-          onTileClickRef.current(nextPosition.x, nextPosition.y, true);
+          moveSuccess = onTileClickRef.current(nextPosition.x, nextPosition.y, true) ?? true;
+        }
+
+        // If movement failed (e.g., not enough energy), stop pathfinding
+        if (!moveSuccess) {
+          setIsMoving(false);
+          setCurrentPath(null);
+          setMovementProgress(0);
+          return;
         }
 
         // Remove the first position from the path

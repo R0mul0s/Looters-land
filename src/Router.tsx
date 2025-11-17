@@ -482,7 +482,8 @@ export function Router() {
             updatedWorldMap.dynamicObjects = [...updatedWorldMap.dynamicObjects];
             updatedWorldMap.dynamicObjects[objectIndex] = {
               ...updatedWorldMap.dynamicObjects[objectIndex],
-              defeated: true
+              defeated: true,
+              isActive: false
             } as any;
 
             const updatedObj = updatedWorldMap.dynamicObjects[objectIndex];

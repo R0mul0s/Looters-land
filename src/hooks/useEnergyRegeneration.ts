@@ -3,7 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-08
+ * @lastModified 2025-11-17
  */
 
 import { useEffect, useRef } from 'react';
@@ -33,6 +33,18 @@ export function useEnergyRegeneration(config: EnergyRegenerationConfig) {
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const lastTickRef = useRef<number>(Date.now());
+
+  // Use refs to avoid stale closure - always get current values
+  const currentEnergyRef = useRef(currentEnergy);
+  const maxEnergyRef = useRef(maxEnergy);
+  const onEnergyChangeRef = useRef(onEnergyChange);
+
+  // Update refs whenever values change
+  useEffect(() => {
+    currentEnergyRef.current = currentEnergy;
+    maxEnergyRef.current = maxEnergy;
+    onEnergyChangeRef.current = onEnergyChange;
+  }, [currentEnergy, maxEnergy, onEnergyChange]);
 
   useEffect(() => {
     // Don't start if disabled
@@ -66,10 +78,23 @@ export function useEnergyRegeneration(config: EnergyRegenerationConfig) {
       // Calculate energy to add based on time passed
       const energyToAdd = timePassed / msPerEnergy;
 
+      // Use ref values to avoid stale closure
+      const current = currentEnergyRef.current;
+      const max = maxEnergyRef.current;
+
       // Only update if we're below max energy and would add at least 0.1 energy
-      if (currentEnergy < maxEnergy && energyToAdd >= 0.1) {
-        const newEnergy = Math.min(maxEnergy, currentEnergy + energyToAdd);
-        onEnergyChange(Math.floor(newEnergy)); // Floor to avoid decimals
+      if (current < max && energyToAdd >= 0.1) {
+        const energyToAddFloored = Math.floor(energyToAdd);
+        // Only proceed if we have at least 1 full energy point to add
+        if (energyToAddFloored >= 1) {
+          console.log(`🔋 Energy regen: attempting to add ${energyToAddFloored} energy (from ${energyToAdd.toFixed(2)})`);
+          // Use callback form to avoid stale closure - add the delta, don't set absolute value!
+          onEnergyChangeRef.current((prevEnergy: number) => {
+            const newEnergy = Math.min(maxEnergyRef.current, prevEnergy + energyToAddFloored);
+            console.log(`🔋 Energy regen result: ${prevEnergy} + ${energyToAddFloored} = ${newEnergy} (max: ${maxEnergyRef.current})`);
+            return newEnergy;
+          });
+        }
       }
     }, TICK_INTERVAL);
 
@@ -85,9 +110,9 @@ export function useEnergyRegeneration(config: EnergyRegenerationConfig) {
   // Return regeneration info for UI display
   return {
     regenRate,
-    isRegenerating: enabled && currentEnergy < maxEnergy,
-    timeToFull: currentEnergy < maxEnergy
-      ? Math.ceil(((maxEnergy - currentEnergy) / regenRate) * 60) // minutes
+    isRegenerating: enabled && currentEnergyRef.current < maxEnergyRef.current,
+    timeToFull: currentEnergyRef.current < maxEnergyRef.current
+      ? Math.ceil(((maxEnergyRef.current - currentEnergyRef.current) / regenRate) * 60) // minutes
       : 0
   };
 }

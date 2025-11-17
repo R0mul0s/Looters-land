@@ -8,10 +8,12 @@
  * - Auto-save with 2-second debouncing
  * - Database sync via GameSaveService
  * - Dynamic max energy calculation from bank vault tier
+ * - Energy regeneration with callback form to prevent stale closures
+ * - Realtime subscription for profile updates (ignores energy to preserve local state)
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-16
+ * @lastModified 2025-11-17
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
@@ -61,6 +63,9 @@ export interface GameState {
   bankVaultMaxSlots: number;
   bankTotalItems: number;
 
+  // Cooldowns
+  healerCooldownUntil: Date | null; // When party heal becomes available again (60 min cooldown)
+
   // Loading states
   loading: boolean;
   saving: boolean;
@@ -81,7 +86,7 @@ export interface GameStateActions {
   removeGold: (amount: number) => Promise<void>;
   addGems: (amount: number) => Promise<void>;
   removeGems: (amount: number) => Promise<void>;
-  setEnergy: (amount: number) => Promise<void>;
+  setEnergy: (amount: number | ((prev: number) => number)) => Promise<void>;
   setMaxEnergy: (amount: number) => Promise<void>;
 
   // Hero actions
@@ -102,6 +107,9 @@ export interface GameStateActions {
 
   // Bank vault actions
   updateBankVault: (tier: number, maxSlots: number, totalItems: number) => Promise<void>;
+
+  // Cooldown actions
+  setHealerCooldown: (cooldownUntil: Date | null) => Promise<void>;
 
   // World map actions
   updatePlayerPos: (x: number, y: number) => Promise<void>;
@@ -164,6 +172,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     bankVaultTier: 0,
     bankVaultMaxSlots: 0,
     bankTotalItems: 0,
+    healerCooldownUntil: null,
     loading: true,
     saving: false,
     error: null,
@@ -278,7 +287,8 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         discovered_locations: currentState.discoveredLocations.map(loc => JSON.stringify(loc)),
         gacha_summon_count: currentState.gachaState.summonCount,
         gacha_last_free_summon: currentState.gachaState.lastFreeSummonDate || null,
-        gacha_pity_summons: currentState.gachaState.pitySummons
+        gacha_pity_summons: currentState.gachaState.pitySummons,
+        healer_cooldown_until: currentState.healerCooldownUntil ? currentState.healerCooldownUntil.toISOString() : null
       };
 
       // Only include world_map_data if it exists (never overwrite with null)
@@ -301,6 +311,12 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       setState(prev => ({ ...prev, saving: false, syncStatus: 'success', lastSaveTime: new Date() }));
     } catch (error) {
       console.error('❌ Auto-save failed:', error);
+      console.error('❌ Error details:', JSON.stringify(error, null, 2));
+      console.error('❌ State being saved:', {
+        energy: currentState.energy,
+        maxEnergy: currentState.maxEnergy,
+        profileUpdate
+      });
       setState(prev => ({ ...prev, saving: false, syncStatus: 'error' }));
     } finally {
       // CRITICAL: Always release the save lock, even if save failed
@@ -328,6 +344,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
    * ```
    */
   const loadGameData = async (userId: string) => {
+    console.log('🔄 loadGameData called for user:', userId);
     // Prevent concurrent loads using ref (synchronous check)
     if (isLoadingRef.current) {
       console.log('⏭️ loadGameData already in progress, skipping');
@@ -391,7 +408,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
               const item = new Item({
                 id: eq.item_id,
                 name: eq.item_name!,
-                type: eq.item_type as any,
+                type: (eq.item_type as any) || 'equipment', // Default to 'equipment' if not set
                 slot: eq.slot as any,
                 icon: eq.icon!,
                 level: eq.level!,
@@ -422,7 +439,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           const item = new Item({
             id: dbItem.item_id,
             name: dbItem.item_name,
-            type: dbItem.item_type as any,
+            type: (dbItem.item_type as any) || 'equipment', // Default to 'equipment' if not set
             slot: dbItem.slot as any,
             icon: dbItem.icon,
             level: dbItem.level,
@@ -563,6 +580,8 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         const bankEnergyBonus = getBankEnergyBonus(profile.bank_vault_tier || 0);
         const calculatedMaxEnergy = ENERGY_CONFIG.MAX_ENERGY + bankEnergyBonus;
 
+        console.log(`📊 Loading profile data - energy from DB: ${profile.energy}, calculatedMaxEnergy: ${calculatedMaxEnergy}, prev.energy: ${prev.energy}`);
+
         const newState = {
           ...prev,
           profile,
@@ -594,6 +613,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           bankVaultTier: profile.bank_vault_tier || 0,
           bankVaultMaxSlots: profile.bank_vault_max_slots || 0,
           bankTotalItems: profile.bank_total_items || 0,
+          healerCooldownUntil: profile.healer_cooldown_until ? new Date(profile.healer_cooldown_until) : null,
           loading: false
         };
 
@@ -828,14 +848,21 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
             // CRITICAL: Always preserve allHeroes and activeParty from prev state!
             // Realtime updates should NEVER overwrite hero data
 
+            // CRITICAL: Also preserve energy from prev state!
+            // Energy changes locally (movement, regeneration) and should only save OUT to DB,
+            // never load back IN from Realtime updates (causes energy jumps due to autosave debounce)
+
             // Calculate max energy dynamically from bank vault tier
             const bankEnergyBonus = getBankEnergyBonus(updatedProfile.bank_vault_tier || 0);
             const calculatedMaxEnergy = ENERGY_CONFIG.MAX_ENERGY + bankEnergyBonus;
 
+            console.log(`🔄 Realtime profile update - IGNORING energy from DB (${updatedProfile.energy}), keeping local (${prev.energy})`);
+
             return {
               ...prev,
               profile: updatedProfile,
-              energy: Math.min(updatedProfile.energy, calculatedMaxEnergy),
+              // KEEP current energy - do not overwrite from Realtime!
+              energy: prev.energy,
               maxEnergy: calculatedMaxEnergy,
               gold: updatedProfile.gold,
               gems: updatedProfile.gems,
@@ -869,9 +896,12 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
   /**
    * Periodic update for dynamic objects (wandering monsters, traveling merchants)
    * Runs every 5 minutes to check for respawns and despawns
+   * Only starts once when worldMap is loaded, doesn't restart on worldMap changes
    */
   useEffect(() => {
     if (!state.worldMap || !userIdRef.current) return;
+
+    console.log('🎯 Starting dynamic object updater');
 
     // Update immediately on mount
     const updateDynamicObjects = () => {
@@ -897,7 +927,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       console.log('⏰ Cleaning up dynamic object updater');
       clearInterval(intervalId);
     };
-  }, [state.worldMap, scheduleAutoSave]);
+  }, [!!state.worldMap, scheduleAutoSave]); // Only restart when worldMap becomes available (true/false), not on every worldMap change
 
   /**
    * Actions
@@ -975,10 +1005,13 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       setTimeout(() => scheduleAutoSave(newState), 0);
     },
 
-    setEnergy: async (amount: number) => {
+    setEnergy: async (amount: number | ((prev: number) => number)) => {
       let newState: GameState | undefined;
       setState(prev => {
-        newState = { ...prev, energy: Math.min(amount, prev.maxEnergy) };
+        const newEnergy = typeof amount === 'function' ? amount(prev.energy) : amount;
+        const clampedEnergy = Math.min(newEnergy, prev.maxEnergy);
+        console.log(`⚡ setEnergy: ${prev.energy} → ${clampedEnergy} (max: ${prev.maxEnergy})`);
+        newState = { ...prev, energy: clampedEnergy };
         // CRITICAL: Update stateRef synchronously BEFORE scheduling save
         stateRef.current = newState;
         return newState;
@@ -1194,6 +1227,14 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         bankVaultTier: tier,
         bankVaultMaxSlots: maxSlots,
         bankTotalItems: totalItems
+      }));
+      scheduleAutoSave();
+    },
+
+    setHealerCooldown: async (cooldownUntil: Date | null) => {
+      setState(prev => ({
+        ...prev,
+        healerCooldownUntil: cooldownUntil
       }));
       scheduleAutoSave();
     },

@@ -92,7 +92,13 @@ export function useEnergyRegeneration(config: EnergyRegenerationConfig) {
           const prevEnergy = currentEnergyRef.current;
           const newEnergy = Math.min(maxEnergyRef.current, prevEnergy + energyToAddFloored);
           console.log(`🔋 Energy regen result: ${prevEnergy} + ${energyToAddFloored} = ${newEnergy} (max: ${maxEnergyRef.current})`);
+          console.log(`🔋 Energy regen: calling onEnergyChange callback...`);
+
+          // Update ref BEFORE calling callback to avoid double-regen on next tick
+          currentEnergyRef.current = newEnergy;
+
           onEnergyChangeRef.current(newEnergy);
+          console.log(`🔋 Energy regen: callback completed, ref updated to: ${currentEnergyRef.current}`);
         }
       }
     }, TICK_INTERVAL);

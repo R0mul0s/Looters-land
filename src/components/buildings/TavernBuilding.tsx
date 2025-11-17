@@ -8,6 +8,7 @@
 
 import React, { useState } from 'react';
 import { Hero } from '../../engine/hero/Hero';
+import { Equipment } from '../../engine/equipment/Equipment';
 import type { GachaState, HeroTemplate } from '../../types/hero.types';
 import { GachaSummon } from '../gacha/GachaSummon';
 import { HeroCollection } from '../gacha/HeroCollection';
@@ -71,6 +72,9 @@ export function TavernBuilding({
         hero.specialAbility = template.specialAbility;
         hero.faction = template.faction;
         hero.role = template.role;
+
+        // Initialize equipment for new hero
+        hero.equipment = new Equipment(hero);
 
         newUniqueHeroes.push(hero);
       }

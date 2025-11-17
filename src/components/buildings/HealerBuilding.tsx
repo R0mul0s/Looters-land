@@ -16,20 +16,53 @@ import { flexBetween, flexColumn } from '../../styles/common';
 interface HealerBuildingProps {
   heroes: Hero[];
   playerGold: number;
+  healerCooldownUntil: Date | null;
   onClose: () => void;
   onHeroesChange: (heroes: Hero[]) => void;
   onGoldChange: (newGold: number) => void;
+  onSetHealerCooldown: (cooldownUntil: Date | null) => void;
 }
 
 export function HealerBuilding({
   heroes,
   playerGold,
+  healerCooldownUntil,
   onClose,
   onHeroesChange,
-  onGoldChange
+  onGoldChange,
+  onSetHealerCooldown
 }: HealerBuildingProps) {
   const [selectedHeroIndex, setSelectedHeroIndex] = useState<number | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [cooldownRemaining, setCooldownRemaining] = useState<number>(0);
+
+  // Update cooldown countdown every second
+  React.useEffect(() => {
+    const updateCooldown = () => {
+      if (!healerCooldownUntil) {
+        setCooldownRemaining(0);
+        return;
+      }
+
+      const now = new Date().getTime();
+      const cooldownTime = new Date(healerCooldownUntil).getTime();
+      const remaining = Math.max(0, cooldownTime - now);
+      setCooldownRemaining(remaining);
+    };
+
+    updateCooldown();
+    const interval = setInterval(updateCooldown, 1000);
+
+    return () => clearInterval(interval);
+  }, [healerCooldownUntil]);
+
+  // Format cooldown remaining time
+  const formatCooldown = (ms: number): string => {
+    if (ms <= 0) return '';
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
 
   const handleHealHero = (heroIndex: number) => {
     const hero = heroes[heroIndex];
@@ -54,10 +87,18 @@ export function HealerBuilding({
   };
 
   const handleHealParty = () => {
+    // Check if on cooldown
+    if (cooldownRemaining > 0) {
+      setMessage({ text: `Party heal is on cooldown! Available in ${formatCooldown(cooldownRemaining)}`, type: 'error' });
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+
     const cost = TownService.calculatePartyHealCost(heroes);
 
     if (cost === 0) {
       setMessage({ text: 'All heroes are already at full HP!', type: 'error' });
+      setTimeout(() => setMessage(null), 3000);
       return;
     }
 
@@ -66,7 +107,12 @@ export function HealerBuilding({
     if (result.success) {
       onGoldChange(result.newGold);
       onHeroesChange([...heroes]); // Trigger re-render
-      setMessage({ text: result.message, type: 'success' });
+
+      // Set 60-minute cooldown
+      const cooldownUntil = new Date(Date.now() + 60 * 60 * 1000); // 60 minutes from now
+      onSetHealerCooldown(cooldownUntil);
+
+      setMessage({ text: result.message + ' (Cooldown: 60 min)', type: 'success' });
     } else {
       setMessage({ text: result.message, type: 'error' });
     }
@@ -75,7 +121,8 @@ export function HealerBuilding({
   };
 
   const partyHealCost = TownService.calculatePartyHealCost(heroes);
-  const canAffordPartyHeal = playerGold >= partyHealCost && partyHealCost > 0;
+  const isOnCooldown = cooldownRemaining > 0;
+  const canAffordPartyHeal = playerGold >= partyHealCost && partyHealCost > 0 && !isOnCooldown;
 
   return (
     <div style={styles.container}>
@@ -117,7 +164,9 @@ export function HealerBuilding({
             <div style={styles.buttonContent}>
               <div style={styles.buttonTitle}>{t('buildings.healer.healParty')}</div>
               <div style={styles.buttonSubtitle}>
-                {partyHealCost === 0
+                {isOnCooldown
+                  ? `Cooldown: ${formatCooldown(cooldownRemaining)}`
+                  : partyHealCost === 0
                   ? t('buildings.healer.allAtFullHP')
                   : `${t('buildings.smithy.cost')} ${partyHealCost}g`
                 }

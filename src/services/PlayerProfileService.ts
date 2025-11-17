@@ -31,6 +31,7 @@ export interface PlayerProfile {
   bank_vault_tier: number;
   bank_vault_max_slots: number;
   bank_total_items: number;
+  healer_cooldown_until: string | null; // ISO timestamp when healer party heal becomes available
   created_at: string;
   updated_at: string;
   last_login: string;
@@ -56,6 +57,7 @@ export interface PlayerProfileUpdate {
   bank_vault_tier?: number;
   bank_vault_max_slots?: number;
   bank_total_items?: number;
+  healer_cooldown_until?: string | null;
 }
 
 export class PlayerProfileService {
@@ -186,24 +188,40 @@ export class PlayerProfileService {
     }
 
     try {
-      const { data, error } = await supabase
+      // Update without .select() or .single() to avoid API issues
+      const { error } = await supabase
         .from('player_profiles')
         .update(updates)
-        .eq('user_id', userId)
-        .select()
-        .single();
+        .eq('user_id', userId);
 
       if (error) {
+        console.error('Update profile error:', error);
         return {
           success: false,
           message: `Failed to update profile: ${error.message}`
         };
       }
 
+      // Fetch the updated profile separately
+      const { data: profile, error: fetchError } = await supabase
+        .from('player_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (fetchError) {
+        console.error('Fetch profile error:', fetchError);
+        // Update succeeded but fetch failed - still return success
+        return {
+          success: true,
+          message: 'Profile updated (fetch failed)'
+        };
+      }
+
       return {
         success: true,
         message: 'Profile updated',
-        profile: data as PlayerProfile
+        profile: profile as PlayerProfile
       };
     } catch (error: any) {
       return {

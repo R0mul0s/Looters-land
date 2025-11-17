@@ -43,11 +43,13 @@ interface TownScreenProps {
   bankVaultTier: number;
   bankVaultMaxSlots: number;
   bankTotalItems: number;
+  healerCooldownUntil: Date | null;
   gachaState: GachaState;
   onGoldChange: (newGold: number) => void;
   onGemsChange: (newGems: number) => void;
   onEnergyChange: (newEnergy: number) => void;
   onMaxEnergyChange: (newMaxEnergy: number) => void;
+  onSetHealerCooldown: (cooldownUntil: Date | null) => void;
   onStoredGoldChange: (newStoredGold: number) => void; // Deprecated
   onBankVaultChange: (tier: number, maxSlots: number, totalItems: number) => void;
   onHeroesChange: (heroes: Hero[]) => void;
@@ -76,11 +78,13 @@ export function TownScreen({
   bankVaultTier,
   bankVaultMaxSlots,
   bankTotalItems,
+  healerCooldownUntil,
   gachaState,
   onGoldChange,
   onGemsChange,
   onEnergyChange,
   onMaxEnergyChange,
+  onSetHealerCooldown,
   onStoredGoldChange,
   onBankVaultChange,
   onHeroesChange,
@@ -193,9 +197,11 @@ export function TownScreen({
           <HealerBuilding
             heroes={activeParty}
             playerGold={playerGold}
+            healerCooldownUntil={healerCooldownUntil}
             onClose={() => setSelectedBuilding(null)}
             onHeroesChange={onHeroesChange}
             onGoldChange={onGoldChange}
+            onSetHealerCooldown={onSetHealerCooldown}
           />
         );
 

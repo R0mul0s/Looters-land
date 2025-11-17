@@ -36,10 +36,19 @@ export class Equipment {
   }
 
   equip(item: Item): EquipResult {
-    if (!item || item.type !== 'equipment') {
+    if (!item) {
       return {
         success: false,
-        message: 'Invalid item or not equipment type'
+        message: 'Invalid item'
+      };
+    }
+
+    // Allow items without type set (default to equipment) or explicit equipment type
+    // This handles legacy items that may not have type property
+    if (item.type && item.type !== 'equipment') {
+      return {
+        success: false,
+        message: 'Not an equipment item'
       };
     }
 

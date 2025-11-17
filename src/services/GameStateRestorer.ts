@@ -82,7 +82,7 @@ export function restoreItem(savedItem: any): Item {
   return new Item({
     id: savedItem.id,
     name: savedItem.name,
-    type: savedItem.type as ItemType,
+    type: (savedItem.type as ItemType) || 'equipment', // Default to 'equipment' if not set
     slot: savedItem.slot as ItemSlot,
     icon: savedItem.icon,
     level: savedItem.level,

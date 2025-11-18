@@ -19,7 +19,7 @@
 
 import { useState, useEffect } from 'react';
 import { WorldMap } from './components/WorldMap';
-import type { DungeonEntrance } from './types/worldmap.types';
+import type { DungeonEntrance, StaticObject, DynamicObject } from './types/worldmap.types';
 import { Dungeon } from './engine/dungeon/Dungeon';
 import { DungeonExplorer } from './components/DungeonExplorer';
 import { useGameState } from './hooks/useGameState';
@@ -36,6 +36,26 @@ import { GameModal } from './components/ui/GameModal';
 import { ModalText, ModalDivider, ModalInfoRow, ModalInfoBox, ModalButton } from './components/ui/ModalContent';
 import { LeaderboardService } from './services/LeaderboardService';
 import { calculatePlayerScore } from './utils/scoreCalculator';
+import type { Item } from './engine/item/Item';
+
+/**
+ * Combat metadata for quick combat encounters
+ */
+interface QuickCombatMetadata {
+  position?: { x: number; y: number };
+  type?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Quick combat victory rewards
+ */
+interface QuickCombatVictory {
+  gold: number;
+  xp: number;
+  levelUps: Array<{ heroName: string; newLevel: number }>;
+  items: Item[];
+}
 
 export function Router() {
   const [userEmail, setUserEmail] = useState<string>('');
@@ -59,13 +79,8 @@ export function Router() {
   const [showDungeonVictory, setShowDungeonVictory] = useState(false);
   const [dungeonUpdateKey, setDungeonUpdateKey] = useState(0);
   const [, forceUpdate] = useState({});
-  const [quickCombatMetadata, setQuickCombatMetadata] = useState<any>(null);
-  const [quickCombatVictory, setQuickCombatVictory] = useState<{
-    gold: number;
-    xp: number;
-    levelUps: Array<{ heroName: string; newLevel: number }>;
-    items: any[];
-  } | null>(null);
+  const [quickCombatMetadata, setQuickCombatMetadata] = useState<QuickCombatMetadata | null>(null);
+  const [quickCombatVictory, setQuickCombatVictory] = useState<QuickCombatVictory | null>(null);
   const [quickCombatDefeat, setQuickCombatDefeat] = useState(false);
 
   // Check authentication on mount
@@ -380,7 +395,7 @@ export function Router() {
    * );
    * ```
    */
-  const handleQuickCombat = (enemies: Enemy[], combatType: 'rare_spawn' | 'wandering_monster', metadata?: any) => {
+  const handleQuickCombat = (enemies: Enemy[], combatType: 'rare_spawn' | 'wandering_monster', metadata?: QuickCombatMetadata) => {
     console.log(`⚔️ Quick combat starting: ${combatType}`, enemies.length, 'enemies');
     console.log('📋 Combat metadata:', metadata);
 
@@ -442,7 +457,7 @@ export function Router() {
    * combatEngine.onCombatEnd = () => handleQuickCombatEnd(capturedMetadata);
    * ```
    */
-  const handleQuickCombatEnd = async (metadata?: any) => {
+  const handleQuickCombatEnd = async (metadata?: QuickCombatMetadata) => {
     console.log('✅ Quick combat completed');
     console.log('🔍 DEBUG: handleQuickCombatEnd called');
     console.log('🔍 DEBUG: metadata parameter:', metadata);
@@ -507,7 +522,7 @@ export function Router() {
             updatedWorldMap.tiles = updatedWorldMap.tiles.map((row, y) =>
               y === pos.y ? row.map((cell, x) =>
                 x === pos.x && cell.staticObject?.type === 'rareSpawn'
-                  ? { ...cell, staticObject: { ...cell.staticObject, defeated: true } as any }
+                  ? { ...cell, staticObject: { ...cell.staticObject, defeated: true } as StaticObject }
                   : cell
               ) : row
             );
@@ -526,7 +541,7 @@ export function Router() {
 
           if (objectIndex !== -1) {
             const obj = updatedWorldMap.dynamicObjects[objectIndex];
-            const beforeDefeated = (obj.type === 'encounter' || obj.type === 'wanderingMonster') ? (obj as any).defeated : undefined;
+            const beforeDefeated = (obj.type === 'encounter' || obj.type === 'wanderingMonster') ? (obj as DynamicObject & { defeated?: boolean }).defeated : undefined;
             console.log('🔍 DEBUG: Object defeated status BEFORE update:', beforeDefeated);
 
             // Create new array with updated object
@@ -535,10 +550,10 @@ export function Router() {
               ...updatedWorldMap.dynamicObjects[objectIndex],
               defeated: true,
               isActive: false
-            } as any;
+            } as DynamicObject;
 
             const updatedObj = updatedWorldMap.dynamicObjects[objectIndex];
-            console.log('🔍 DEBUG: Object defeated status AFTER update:', (updatedObj.type === 'encounter' || updatedObj.type === 'wanderingMonster') ? (updatedObj as any).defeated : undefined);
+            console.log('🔍 DEBUG: Object defeated status AFTER update:', (updatedObj.type === 'encounter' || updatedObj.type === 'wanderingMonster') ? (updatedObj as DynamicObject & { defeated?: boolean }).defeated : undefined);
 
             if (combatMetadata.monsterObject) {
               console.log('🎯 Wandering monster marked as defeated at position', pos);
@@ -551,7 +566,7 @@ export function Router() {
 
       // Update worldmap with defeated status
       console.log('🔍 DEBUG: Calling updateWorldMap with defeated monsters count:',
-        updatedWorldMap.dynamicObjects.filter(obj => (obj.type === 'encounter' || obj.type === 'wanderingMonster') && (obj as any).defeated).length);
+        updatedWorldMap.dynamicObjects.filter(obj => (obj.type === 'encounter' || obj.type === 'wanderingMonster') && (obj as DynamicObject & { defeated?: boolean }).defeated).length);
       await gameActions.updateWorldMap(updatedWorldMap);
       console.log('🔍 DEBUG: updateWorldMap completed');
     }
@@ -725,7 +740,7 @@ export function Router() {
       }
 
       // Save hero changes (XP, level ups, HP) after victory
-      console.log('🔍 Router: Combat engine heroes after battle:', combatEngine.heroes.map((h: any) => ({
+      console.log('🔍 Router: Combat engine heroes after battle:', combatEngine.heroes.map((h) => ({
         name: h.name,
         hp: h.currentHP,
         maxHP: h.maxHP,
@@ -1020,7 +1035,7 @@ export function Router() {
                       borderRadius: '8px',
                       marginBottom: '15px'
                     }}>
-                      {actualLoot.items.map((item: any, index: number) => (
+                      {actualLoot.items.map((item, index) => (
                         <div
                           key={`loot-${item.id || `loot-item-${index}`}`}
                           style={{
@@ -1082,7 +1097,7 @@ export function Router() {
                       <button
                         onClick={async () => {
                           // Sell all items
-                          const totalValue = actualLoot.items.reduce((sum: number, item: any) => sum + item.value, 0);
+                          const totalValue = actualLoot.items.reduce((sum, item) => sum + item.value, 0);
                           await gameActions.addGold(totalValue);
                           actualLoot.items = [];
                           actualLoot.gold = 0;
@@ -1517,7 +1532,7 @@ export function Router() {
                           gridTemplateColumns: activeCharacter.getSkills().length === 1 ? '1fr' : 'repeat(auto-fit, minmax(140px, 1fr))',
                           gap: '8px'
                         }}>
-                          {activeCharacter.getSkills().map((skill: any, index: number) => {
+                          {activeCharacter.getSkills().map((skill, index) => {
                             const isOnCooldown = skill.currentCooldown > 0;
                             const canUse = !isOnCooldown;
 

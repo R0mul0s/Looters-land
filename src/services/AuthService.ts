@@ -13,11 +13,12 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-18
  */
 
 import { supabase } from '../lib/supabase';
 import type { User, Session, AuthError } from '@supabase/supabase-js';
+import { sessionManager } from './SessionManager';
 
 /**
  * Authentication result with success/error handling
@@ -79,6 +80,9 @@ export async function register(email: string, password: string): Promise<AuthRes
 
     // If session exists, user can login immediately (email confirmation disabled)
     if (data.session) {
+      // Note: SessionManager will be initialized by Router with proper callback
+      // We don't initialize it here to avoid callback conflicts
+
       return {
         success: true,
         message: 'Registration successful! You are now logged in.',
@@ -145,6 +149,10 @@ export async function login(email: string, password: string): Promise<AuthResult
     }
 
     console.log('✅ User logged in successfully:', data.user.email);
+
+    // Note: SessionManager will be initialized by Router with proper callback
+    // We don't initialize it here to avoid callback conflicts
+
     return {
       success: true,
       message: 'Login successful!',
@@ -177,6 +185,9 @@ export async function login(email: string, password: string): Promise<AuthResult
  */
 export async function logout(): Promise<AuthResult> {
   try {
+    // Destroy session manager first
+    await sessionManager.destroy();
+
     const { error } = await supabase.auth.signOut();
 
     if (error) {

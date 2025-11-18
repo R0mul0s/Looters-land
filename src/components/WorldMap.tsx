@@ -192,20 +192,31 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
   // This prevents unnecessary map updates and player position resets.
 
   // Multiplayer: Heartbeat system - Update position and online status every 15 seconds
+  // Store position in ref to access latest value without recreating interval
+  const playerPosRef = React.useRef(gameState.playerPos);
+
+  // Update ref when position changes
+  useEffect(() => {
+    playerPosRef.current = gameState.playerPos;
+  }, [gameState.playerPos.x, gameState.playerPos.y]);
+
+  // Setup heartbeat interval (only recreate when user_id changes)
   useEffect(() => {
     if (!gameState.profile?.user_id || gameState.loading) return;
 
     const updatePresence = async () => {
       try {
+        const currentPos = playerPosRef.current; // Use ref to get latest position
         await supabase
           .from('player_profiles')
           .update({
             is_online: true,
             last_seen: new Date().toISOString(),
-            current_map_x: gameState.playerPos.x,
-            current_map_y: gameState.playerPos.y
+            current_world_x: currentPos.x,
+            current_world_y: currentPos.y
           })
           .eq('user_id', gameState.profile!.user_id);
+        console.log('💓 Position updated:', currentPos.x, currentPos.y);
       } catch (error) {
         console.error('Error updating presence:', error);
       }
@@ -214,8 +225,8 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
     // Update immediately
     updatePresence();
 
-    // Update every 15 seconds
-    const heartbeatInterval = setInterval(updatePresence, 15000);
+    // Update every 5 seconds (more frequent for smoother multiplayer)
+    const heartbeatInterval = setInterval(updatePresence, 5000);
 
     // Mark as offline on unmount
     return () => {
@@ -229,7 +240,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
         .eq('user_id', gameState.profile!.user_id)
         .then(() => console.log('Marked as offline'));
     };
-  }, [gameState.profile?.user_id, gameState.loading]); // Removed playerPos from dependencies - updatePresence captures current values
+  }, [gameState.profile?.user_id, gameState.loading]); // Only recreate when user_id or loading changes
 
   // Multiplayer: Handle chat message
   const handleSendChatMessage = async (message: string) => {

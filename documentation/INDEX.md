@@ -1,6 +1,6 @@
 # Looters Land - Documentation Index
 
-**Last Updated:** 2025-11-18
+**Last Updated:** 2025-11-18 (Added Session Management & Online Status System docs)
 
 ---
 
@@ -44,7 +44,10 @@ Located in `technical/`:
 
 Located in `technical/`:
 
-- **[ENERGY_REGENERATION_SYSTEM.md](technical/ENERGY_REGENERATION_SYSTEM.md)** - **NEW!** Energy system (cron job, setup, troubleshooting)
+- **[SESSION_MANAGEMENT.md](technical/SESSION_MANAGEMENT.md)** - **NEW!** Single-session authentication system (design, implementation, testing)
+- **[ONLINE_STATUS_SYSTEM.md](technical/ONLINE_STATUS_SYSTEM.md)** - **NEW!** Online/offline player status tracking (heartbeat, cron job, visual indicators)
+- **[ONLINE_STATUS_DEPLOYMENT.md](technical/ONLINE_STATUS_DEPLOYMENT.md)** - **NEW!** Quick deployment guide for online status system
+- **[ENERGY_REGENERATION_SYSTEM.md](technical/ENERGY_REGENERATION_SYSTEM.md)** - Energy system (cron job, setup, troubleshooting)
 - **[GLOBAL_WORLD_STATE_SETUP.md](technical/GLOBAL_WORLD_STATE_SETUP.md)** - Global weather & time system setup
 - **[WORLDMAP_COMBAT_ARCHITECTURE.md](technical/WORLDMAP_COMBAT_ARCHITECTURE.md)** - Quick combat system architecture
 - **[HOW_TO_VIEW_EDGE_FUNCTION_LOGS.md](technical/HOW_TO_VIEW_EDGE_FUNCTION_LOGS.md)** - Supabase Edge Function debugging
@@ -72,14 +75,16 @@ Historical documentation kept for reference:
 
 ### For Developers
 
-1. **Understanding game mechanics?** → Read **[GAME_MECHANICS_SUMMARY.md](GAME_MECHANICS_SUMMARY.md)** (NEW!)
+1. **Understanding game mechanics?** → Read **[GAME_MECHANICS_SUMMARY.md](GAME_MECHANICS_SUMMARY.md)**
 2. **Starting development?** → Read [coding_rules.md](technical/coding_rules.md)
 3. **Adding features?** → Check [roadmap.md](roadmap.md)
 4. **Database changes?** → See [SUPABASE_SETUP.md](technical/SUPABASE_SETUP.md)
-5. **Energy system issues?** → See **[ENERGY_REGENERATION_SYSTEM.md](technical/ENERGY_REGENERATION_SYSTEM.md)** (NEW!)
-6. **Deploying?** → Follow [DEPLOY_INSTRUCTIONS.md](technical/DEPLOY_INSTRUCTIONS.md)
-7. **React state issues?** → See [REACT_STATE_CLOSURE_FIX.md](technical/REACT_STATE_CLOSURE_FIX.md)
-8. **State management bugs?** → See [STATE_MANAGEMENT_FIX.md](technical/STATE_MANAGEMENT_FIX.md)
+5. **Session management?** → See **[SESSION_MANAGEMENT.md](technical/SESSION_MANAGEMENT.md)** (NEW!)
+6. **Online status system?** → See **[ONLINE_STATUS_SYSTEM.md](technical/ONLINE_STATUS_SYSTEM.md)** (NEW!)
+7. **Energy system issues?** → See [ENERGY_REGENERATION_SYSTEM.md](technical/ENERGY_REGENERATION_SYSTEM.md)
+8. **Deploying?** → Follow [DEPLOY_INSTRUCTIONS.md](technical/DEPLOY_INSTRUCTIONS.md)
+9. **React state issues?** → See [REACT_STATE_CLOSURE_FIX.md](technical/REACT_STATE_CLOSURE_FIX.md)
+10. **State management bugs?** → See [STATE_MANAGEMENT_FIX.md](technical/STATE_MANAGEMENT_FIX.md)
 
 ### For Project Management
 

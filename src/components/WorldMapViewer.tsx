@@ -8,7 +8,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-17
+ * @lastModified 2025-11-18
  */
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -2296,14 +2296,20 @@ function WorldMapViewerComponent({
 
       {/* Render Other Players */}
       {otherPlayers.map((player) => {
-        // Calculate screen position from map coordinates (center of tile)
-        const screenX = (player.x - viewport.x) * TILE_SIZE + TILE_SIZE / 2;
-        const screenY = (player.y - viewport.y) * TILE_SIZE + TILE_SIZE / 2;
+        // Calculate screen position from map coordinates
+        // Use tile's top-left corner as base position
+        const tileX = (player.x - viewport.x) * TILE_SIZE;
+        const tileY = ((player.y - 1) - viewport.y) * TILE_SIZE;
+
+        // Avatar is 1.2x larger than tile and centered using transform: translate(-50%, -50%)
+        // So we need to position at the CENTER of the tile
+        const screenX = tileX + TILE_SIZE / 2;
+        const screenY = tileY + TILE_SIZE / 2;
 
         // Only render if player is in viewport
         const isVisible =
-          screenX >= -TILE_SIZE && screenX <= VIEWPORT_WIDTH + TILE_SIZE &&
-          screenY >= -TILE_SIZE && screenY <= VIEWPORT_HEIGHT + TILE_SIZE;
+          tileX >= -TILE_SIZE && tileX <= VIEWPORT_WIDTH + TILE_SIZE &&
+          tileY >= -TILE_SIZE && tileY <= VIEWPORT_HEIGHT + TILE_SIZE;
 
         if (!isVisible) return null;
 
@@ -2333,6 +2339,7 @@ function WorldMapViewerComponent({
               avatar={player.avatar || 'hero1.png'}
               color="#3b82f6"
               scale={zoom}
+              isOnline={player.isOnline}
             />
           </div>
         );

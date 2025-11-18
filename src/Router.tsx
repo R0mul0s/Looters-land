@@ -25,6 +25,7 @@ import { DungeonExplorer } from './components/DungeonExplorer';
 import { useGameState } from './hooks/useGameState';
 import { Hero } from './engine/hero/Hero';
 import * as AuthService from './services/AuthService';
+import { sessionManager } from './services/SessionManager';
 import { CombatEngine } from './engine/combat/CombatEngine';
 import type { Enemy } from './engine/combat/Enemy';
 import type { Combatant, CombatLogEntry } from './types/combat.types';
@@ -41,6 +42,7 @@ export function Router() {
   const [authLoading, setAuthLoading] = useState(true);
   const [currentDungeon, setCurrentDungeon] = useState<Dungeon | null>(null);
   const [inDungeon, setInDungeon] = useState(false);
+  const [sessionInvalidatedMessage, setSessionInvalidatedMessage] = useState<string | null>(null);
 
   // Get game state for heroes
   const [gameState, gameActions] = useGameState(userEmail);
@@ -72,6 +74,27 @@ export function Router() {
       const session = await AuthService.getCurrentSession();
       if (session) {
         setUserEmail(session.user.email || '');
+
+        // Initialize session manager for existing session
+        // This handles the case where user refreshes the page
+        const userId = session.user.id;
+        const sessionInitialized = await sessionManager.initialize(userId, (reason) => {
+          console.warn('⚠️ Session invalidated:', reason);
+
+          // Show notification to user
+          setSessionInvalidatedMessage(reason);
+
+          // Auto-logout after showing message
+          setTimeout(async () => {
+            await AuthService.logout();
+            setUserEmail('');
+            setSessionInvalidatedMessage(null);
+          }, 100); // Small delay to show modal first
+        });
+
+        if (!sessionInitialized) {
+          console.warn('⚠️ Failed to initialize session manager for existing session');
+        }
       }
       setAuthLoading(false);
     };
@@ -79,11 +102,39 @@ export function Router() {
     checkAuth();
 
     // Listen for auth changes
-    const unsubscribe = AuthService.onAuthStateChange((_event, session) => {
+    const unsubscribe = AuthService.onAuthStateChange(async (event, session) => {
+      console.log('🔄 Auth state changed:', event, session?.user?.email);
+
       if (session) {
         setUserEmail(session.user.email || '');
+
+        // Only initialize session manager for SIGNED_IN events (not INITIAL_SESSION)
+        // INITIAL_SESSION is already handled by checkAuth() above
+        if (event === 'SIGNED_IN') {
+          console.log('🔐 New sign in detected, initializing session manager');
+          const userId = session.user.id;
+          const sessionInitialized = await sessionManager.initialize(userId, (reason) => {
+            console.warn('⚠️ Session invalidated:', reason);
+
+            // Show notification to user
+            setSessionInvalidatedMessage(reason);
+
+            // Auto-logout after showing message
+            setTimeout(async () => {
+              await AuthService.logout();
+              setUserEmail('');
+              setSessionInvalidatedMessage(null);
+            }, 100); // Small delay to show modal first
+          });
+
+          if (!sessionInitialized) {
+            console.warn('⚠️ Failed to initialize session manager');
+          }
+        }
       } else {
         setUserEmail('');
+        // Clean up session manager on logout
+        sessionManager.destroy();
       }
     });
 
@@ -1683,6 +1734,41 @@ export function Router() {
           fullWidth
         >
           Continue
+        </ModalButton>
+      </GameModal>
+
+      {/* Session Invalidated Modal */}
+      <GameModal
+        isOpen={!!sessionInvalidatedMessage}
+        title="Session Expired"
+        icon="🔐"
+        onClose={() => {
+          // Force logout and close modal
+          AuthService.logout().then(() => {
+            setUserEmail('');
+            setSessionInvalidatedMessage(null);
+          });
+        }}
+      >
+        <ModalText>
+          {sessionInvalidatedMessage || 'Your session has been invalidated.'}
+        </ModalText>
+        <ModalDivider />
+        <ModalInfoBox variant="warning">
+          You will be redirected to the login screen.
+        </ModalInfoBox>
+        <ModalDivider />
+        <ModalButton
+          onClick={() => {
+            AuthService.logout().then(() => {
+              setUserEmail('');
+              setSessionInvalidatedMessage(null);
+            });
+          }}
+          variant="primary"
+          fullWidth
+        >
+          OK
         </ModalButton>
       </GameModal>
     </>

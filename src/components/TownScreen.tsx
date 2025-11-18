@@ -47,10 +47,10 @@ interface TownScreenProps {
   gachaState: GachaState;
   onGoldChange: (newGold: number) => void;
   onGemsChange: (newGems: number) => void;
-  onEnergyChange: (newEnergy: number) => void;
+  // onEnergyChange: removed - energy updated via BankService and smart sync
   onMaxEnergyChange: (newMaxEnergy: number) => void;
   onSetHealerCooldown: (cooldownUntil: Date | null) => void;
-  onStoredGoldChange: (newStoredGold: number) => void; // Deprecated
+  // onStoredGoldChange: removed - deprecated
   onBankVaultChange: (tier: number, maxSlots: number, totalItems: number) => void;
   onHeroesChange: (heroes: Hero[]) => void;
   onInventoryChange: (inventory: Inventory) => void;
@@ -82,10 +82,8 @@ export function TownScreen({
   gachaState,
   onGoldChange,
   onGemsChange,
-  onEnergyChange,
   onMaxEnergyChange,
   onSetHealerCooldown,
-  onStoredGoldChange,
   onBankVaultChange,
   onHeroesChange,
   onInventoryChange,

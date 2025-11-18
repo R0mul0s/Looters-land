@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-15
+ * @lastModified 2025-11-18
  */
 
 import React, { useState, useEffect } from 'react';
@@ -27,6 +27,7 @@ interface OtherPlayerMarkerProps {
   avatar?: string; // Avatar filename (e.g., 'hero1.png')
   color?: string; // Optional color for fallback icon
   scale?: number; // Scale factor based on zoom level
+  isOnline?: boolean; // Whether the player is currently online
 }
 
 /**
@@ -43,10 +44,11 @@ interface OtherPlayerMarkerProps {
 export function OtherPlayerMarker({
   nickname,
   combatPower,
-  level,
+  level: _level, // eslint-disable-line @typescript-eslint/no-unused-vars
   avatar = 'hero1.png',
   color = '#3b82f6', // Blue by default
-  scale = 1 // Default scale
+  scale = 1, // Default scale
+  isOnline = true // Default to online
 }: OtherPlayerMarkerProps) {
   const [avatarSrc, setAvatarSrc] = useState<string>('');
 
@@ -83,34 +85,57 @@ export function OtherPlayerMarker({
   return (
     <div style={styles.container}>
       {/* Nickname and Combat Power/Level Label */}
-      <div style={{ ...styles.label, padding: labelPadding }}>
-        <span style={{ ...styles.nickname, fontSize: `${nicknameFontSize}px` }}>{nickname}</span>
+      <div style={{
+        ...styles.label,
+        padding: labelPadding,
+        ...(isOnline ? {} : styles.labelOffline)
+      }}>
+        <span style={{ ...styles.nickname, fontSize: `${nicknameFontSize}px` }}>
+          {nickname}
+          {!isOnline && <span style={styles.offlineText}> (Offline)</span>}
+        </span>
         <span style={{ ...styles.combatPower, fontSize: `${combatPowerFontSize}px` }}>{displayLabel}</span>
       </div>
 
       {/* Player Avatar Image */}
-      {avatarSrc ? (
-        <img
-          src={avatarSrc}
-          alt={nickname}
-          style={{
-            ...styles.playerAvatar,
+      <div style={styles.avatarWrapper}>
+        {avatarSrc ? (
+          <img
+            src={avatarSrc}
+            alt={nickname}
+            style={{
+              ...styles.playerAvatar,
+              width: `${iconSize}px`,
+              height: `${iconSize}px`,
+              ...(isOnline ? {} : styles.avatarOffline)
+            }}
+          />
+        ) : (
+          // Fallback to emoji if image not loaded
+          <div style={{
+            ...styles.playerIcon,
+            backgroundColor: color,
             width: `${iconSize}px`,
-            height: `${iconSize}px`
-          }}
-        />
-      ) : (
-        // Fallback to emoji if image not loaded
-        <div style={{
-          ...styles.playerIcon,
-          backgroundColor: color,
-          width: `${iconSize}px`,
-          height: `${iconSize}px`,
-          fontSize: `${Math.floor(18 * scale)}px`
-        }}>
-          👤
-        </div>
-      )}
+            height: `${iconSize}px`,
+            fontSize: `${Math.floor(18 * scale)}px`,
+            ...(isOnline ? {} : styles.avatarOffline)
+          }}>
+            👤
+          </div>
+        )}
+
+        {/* Offline badge */}
+        {!isOnline && (
+          <div style={{
+            ...styles.offlineBadge,
+            width: `${Math.floor(20 * scale)}px`,
+            height: `${Math.floor(20 * scale)}px`,
+            fontSize: `${Math.floor(10 * scale)}px`
+          }}>
+            ⏸
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -135,6 +160,10 @@ const styles: Record<string, React.CSSProperties> = {
     boxShadow: SHADOWS.md,
     minWidth: '60px'
   },
+  labelOffline: {
+    border: `1px solid ${COLORS.danger}60`,
+    background: `${COLORS.bgOverlayDark}cc`
+  },
   nickname: {
     fontSize: FONT_SIZE[11],
     fontWeight: FONT_WEIGHT.bold,
@@ -142,11 +171,20 @@ const styles: Record<string, React.CSSProperties> = {
     whiteSpace: 'nowrap',
     textShadow: SHADOWS.md
   },
+  offlineText: {
+    color: COLORS.danger,
+    fontSize: '0.85em',
+    fontStyle: 'italic'
+  },
   combatPower: {
     fontSize: FONT_SIZE.xs,
     fontWeight: FONT_WEIGHT.semibold,
     color: COLORS.danger,
     marginTop: '1px'
+  },
+  avatarWrapper: {
+    position: 'relative',
+    display: 'inline-block'
   },
   playerIcon: {
     borderRadius: BORDER_RADIUS.round,
@@ -157,5 +195,22 @@ const styles: Record<string, React.CSSProperties> = {
   },
   playerAvatar: {
     objectFit: 'contain'
+  },
+  avatarOffline: {
+    opacity: 0.5,
+    filter: 'grayscale(50%)'
+  },
+  offlineBadge: {
+    position: 'absolute',
+    top: '-5px',
+    right: '-5px',
+    background: 'rgba(239, 68, 68, 0.9)',
+    border: '2px solid #ef4444',
+    borderRadius: BORDER_RADIUS.round,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: SHADOWS.md,
+    animation: 'pulse-offline 2s ease-in-out infinite'
   }
 };

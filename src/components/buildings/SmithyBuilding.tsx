@@ -136,12 +136,7 @@ export function SmithyBuilding({
             <div style={styles.section}>
               <h3 style={styles.sectionTitle}>{t('buildings.smithy.selectItem')}</h3>
               <div style={styles.itemsGrid}>
-                {equipmentItems.map(item => {
-                  const enchantCost = TownService.calculateEnchantCost(item);
-                  const _successRate = TownService.calculateEnchantSuccessRate(item);
-                  const _canAfford = playerGold >= enchantCost && enchantCost > 0;
-
-                  return (
+                {equipmentItems.map(item => (
                     <div
                       key={`smithy-enchant-${item.id}`}
                       style={{
@@ -175,8 +170,7 @@ export function SmithyBuilding({
                         <div style={styles.selectedBadge}>✓</div>
                       )}
                     </div>
-                  );
-                })}
+                ))}
               </div>
             </div>
 

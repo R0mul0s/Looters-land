@@ -35,7 +35,6 @@ interface MainSidebarProps {
 export function MainSidebar({
   activeScreen,
   onScreenChange,
-  playerLevel: _playerLevel = 1,
   combatPower = 0
 }: MainSidebarProps) {
   const [isCompact, setIsCompact] = useState(false);

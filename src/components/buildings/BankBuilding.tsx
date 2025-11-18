@@ -327,23 +327,6 @@ export function BankBuilding({
     setTimeout(() => setMessage(null), 3000);
   };
 
-  const _getRarityColor = (rarity: string) => {
-    switch (rarity.toLowerCase()) {
-      case 'legendary': return '#ff8c00';
-      case 'epic': return '#a855f7';
-      case 'rare': return '#3b82f6';
-      case 'uncommon': return '#10b981';
-      default: return '#9ca3af';
-    }
-  };
-
-  const _getEnchantColor = (level: number) => {
-    if (level === 0) return '#9ca3af';
-    if (level <= 3) return '#10b981';
-    if (level <= 6) return '#3b82f6';
-    if (level <= 9) return '#a855f7';
-    return '#ff8c00';
-  };
 
   // Filter inventory items (only equipment, not in bank)
   const inventoryItems = inventory.items.filter(

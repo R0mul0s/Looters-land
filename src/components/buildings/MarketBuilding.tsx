@@ -41,7 +41,6 @@ export function MarketBuilding({
 }: MarketBuildingProps) {
   const [activeTab, setActiveTab] = useState<MarketTab>('buy');
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
-  const [_selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [tooltip, setTooltip] = useState<{ item: Item; x: number; y: number } | null>(null);
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
@@ -107,7 +106,6 @@ export function MarketBuilding({
     if (result.success) {
       onGoldChange(result.newGold);
       onInventoryChange(inventory);
-      setSelectedItem(null);
       showMessage(result.message, 'success');
     } else {
       showMessage(result.message, 'error');

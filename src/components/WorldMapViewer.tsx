@@ -23,7 +23,6 @@ import { t } from '../localization/i18n';
 import { PerlinNoise } from '../engine/worldmap/PerlinNoise';
 import { TimeOfDaySystem } from '../engine/worldmap/TimeOfDaySystem';
 import { findPath } from '../utils/pathfinding';
-import { useIsMobile } from '../hooks/useIsMobile';
 
 // Import terrain images
 import forest1Img from '../assets/images/terrian/forest1.png';
@@ -137,7 +136,6 @@ function WorldMapViewerComponent({
   onCancelMovement,
   onRegisterCancelMovement
 }: WorldMapViewerProps) {
-  const _isMobile = useIsMobile();
   const [zoom, setZoom] = useState(1);
   const [viewport, setViewport] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -293,7 +291,7 @@ function WorldMapViewerComponent({
   // Pathfinding and movement state
   const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[] | null>(null);
   const [isMoving, setIsMoving] = useState(false);
-  const [_movementProgress, setMovementProgress] = useState(0); // 0 to 1 for interpolation between tiles
+  const [, setMovementProgress] = useState(0); // 0 to 1 for interpolation between tiles
   const [facingLeft, setFacingLeft] = useState(false); // Track if player is facing left
 
   // Perlin noise for smooth variant distribution (prevents checkerboard pattern)
@@ -1699,7 +1697,7 @@ function WorldMapViewerComponent({
     if (heroImage) {
       // Make hero slightly larger (1.2x tile size) and center it on the tile
       const heroSize = TILE_SIZE * 1.2;
-      const _heroOffsetX = playerScreenX - (heroSize - TILE_SIZE) / 2;
+      const heroOffsetX = playerScreenX - (heroSize - TILE_SIZE) / 2;
       const heroOffsetY = playerScreenY - (heroSize - TILE_SIZE) / 2;
 
       // Add bouncing animation when moving (like riding a horse)

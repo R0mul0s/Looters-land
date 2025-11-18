@@ -35,15 +35,6 @@ export function PartyManager({ heroes, activePartyIndices, onPartyChange }: Part
     }
   };
 
-  const _getRoleIcon = (role: string) => {
-    switch (role) {
-      case 'tank': return '🛡️';
-      case 'dps': return '⚔️';
-      case 'healer': return '💚';
-      case 'support': return '✨';
-      default: return '❓';
-    }
-  };
 
   const handleSlotClick = (slotIndex: number) => {
     setSelectedSlot(slotIndex);

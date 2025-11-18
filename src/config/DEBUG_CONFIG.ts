@@ -9,6 +9,16 @@
  * @lastModified 2025-11-10
  */
 
+// Extend Window interface for debug commands
+declare global {
+  interface Window {
+    __DEBUG__?: typeof DEBUG_CONFIG;
+    enableUnlimitedEnergy?: () => void;
+    disableUnlimitedEnergy?: () => void;
+    toggleUnlimitedEnergy?: () => void;
+  }
+}
+
 /**
  * Debug state
  * Access via window.__DEBUG__ in browser console
@@ -36,19 +46,19 @@ export const DEBUG_CONFIG = {
  * window.toggleUnlimitedEnergy() - Toggle unlimited energy
  */
 if (typeof window !== 'undefined') {
-  (window as any).__DEBUG__ = DEBUG_CONFIG;
+  window.__DEBUG__ = DEBUG_CONFIG;
 
-  (window as any).enableUnlimitedEnergy = () => {
+  window.enableUnlimitedEnergy = () => {
     DEBUG_CONFIG.UNLIMITED_ENERGY = true;
     console.log('⚡ Unlimited energy ENABLED');
   };
 
-  (window as any).disableUnlimitedEnergy = () => {
+  window.disableUnlimitedEnergy = () => {
     DEBUG_CONFIG.UNLIMITED_ENERGY = false;
     console.log('⚡ Unlimited energy DISABLED');
   };
 
-  (window as any).toggleUnlimitedEnergy = () => {
+  window.toggleUnlimitedEnergy = () => {
     DEBUG_CONFIG.UNLIMITED_ENERGY = !DEBUG_CONFIG.UNLIMITED_ENERGY;
     console.log(`⚡ Unlimited energy ${DEBUG_CONFIG.UNLIMITED_ENERGY ? 'ENABLED' : 'DISABLED'}`);
   };

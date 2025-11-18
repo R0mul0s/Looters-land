@@ -123,18 +123,6 @@ export function OtherPlayerMarker({
             👤
           </div>
         )}
-
-        {/* Offline badge */}
-        {!isOnline && (
-          <div style={{
-            ...styles.offlineBadge,
-            width: `${Math.floor(20 * scale)}px`,
-            height: `${Math.floor(20 * scale)}px`,
-            fontSize: `${Math.floor(10 * scale)}px`
-          }}>
-            ⏸
-          </div>
-        )}
       </div>
     </div>
   );
@@ -161,8 +149,8 @@ const styles: Record<string, React.CSSProperties> = {
     minWidth: '60px'
   },
   labelOffline: {
-    border: `1px solid ${COLORS.danger}60`,
-    background: `${COLORS.bgOverlayDark}cc`
+    border: `1px solid ${COLORS.danger}`,
+    background: COLORS.bgOverlayDark
   },
   nickname: {
     fontSize: FONT_SIZE[11],
@@ -199,18 +187,5 @@ const styles: Record<string, React.CSSProperties> = {
   avatarOffline: {
     opacity: 0.5,
     filter: 'grayscale(50%)'
-  },
-  offlineBadge: {
-    position: 'absolute',
-    top: '-5px',
-    right: '-5px',
-    background: 'rgba(239, 68, 68, 0.9)',
-    border: '2px solid #ef4444',
-    borderRadius: BORDER_RADIUS.round,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: SHADOWS.md,
-    animation: 'pulse-offline 2s ease-in-out infinite'
   }
 };

@@ -403,6 +403,7 @@ export const cs: LocaleKeys = {
   worldmap: {
     notEnoughEnergy: 'Nedostatek energie',
     notEnoughEnergyDungeon: 'Nedostatek energie pro vstup do tohoto podzemí',
+    notEnoughEnergyPortal: 'Nedostatek energie pro použití portálu!',
     dungeonIntegration: 'Integrace podzemí dokončena',
     loading: 'Načítání...',
     error: 'Chyba při načítání světové mapy',
@@ -414,6 +415,30 @@ export const cs: LocaleKeys = {
     storedGold: 'Uložené zlato',
     energyRegen: 'Energie se regeneruje časem',
     todo: 'TODO',
+
+    // Energy modal
+    energyModal: {
+      title: 'Nedostatek energie',
+      required: 'Potřebujete:',
+      youHave: 'Máte:',
+      waitMessage: 'Počkejte na regeneraci energie nebo použijte energetický lektvar!',
+    },
+
+    // Combat encounter modal
+    combatEncounter: {
+      titleFallback: 'Setkání s nepřítelem',
+      randomMessage: 'Skupina divokých nepřátel se objevila a blokuje vám cestu!',
+      powerfulMessage: 'Narazili jste na mocného {{difficulty}} nepřítele na světové mapě!',
+      enemy: 'Nepřítel:',
+      level: 'Úroveň:',
+      difficulty: 'Obtížnost:',
+      enemyCount: 'Počet nepřátel:',
+      yourParty: 'Vaše skupina:',
+      chooseCombatMode: 'Vyberte si režim boje:',
+      autoCombat: 'Automatický boj',
+      manualCombat: 'Manuální boj',
+      cancel: 'Zrušit',
+    },
 
     // Unexplored area warning
     unexploredTitle: 'Neprozkoumaná oblast',
@@ -578,6 +603,8 @@ export const cs: LocaleKeys = {
     registerFailed: 'Registrace selhala',
     invalidCredentials: 'Neplatný email nebo heslo',
     emailAlreadyExists: 'Email již je registrován',
+    errorOccurred: 'Došlo k chybě',
+    checkEmailConfirmation: 'Zkontrolujte prosím svůj email a potvrďte účet, poté se přihlaste.',
   },
 
   // ============================================================================
@@ -872,6 +899,20 @@ export const cs: LocaleKeys = {
       buttons: {
         expand: 'Rozšířit (+10 slotů, 500z)',
         autoSellCommon: 'Auto-Prodat Běžné',
+        discardAllGrey: 'Zahodit Všechny Šedivé',
+      },
+      noGreyItems: 'Žádné šedivé předměty k zahození',
+      confirmDiscardGrey: 'Zahodit {{count}} šedivých předmětů? Toto nelze vrátit zpět!',
+      discardedGrey: '{{count}} šedivých předmětů zahozeno',
+      confirmDestroyItem: 'Opravdu chcete trvale zničit {itemName}? Toto nelze vrátit zpět.',
+      itemDetail: {
+        stats: 'Statistiky:',
+        enchant: 'Zesílení',
+        set: 'Set',
+        value: 'Hodnota:',
+        gold: 'zlata',
+        equipItem: 'Nasadit Předmět',
+        destroyItem: 'Zničit Předmět',
       },
     },
   },
@@ -1291,11 +1332,17 @@ export const cs: LocaleKeys = {
         buy: 'Koupit',
         sell: 'Prodat',
         notEnoughGold: 'Nedostatek zlata',
+        selectAllGrey: 'Vybrat Všechny Šedivé',
+        clearSelection: 'Zrušit Výběr',
+        sellSelected: 'Prodat Vybrané',
       },
       sellPrice: 'Prodej:',
       empty: {
         message: 'Žádné předměty k prodeji. Prozkoumej dungeony a najdi kořist!',
       },
+      noItemsSelected: 'Žádné předměty vybrány',
+      confirmSellMultiple: 'Prodat {{count}} předmětů za {{gold}} zlata?',
+      soldMultiple: 'Prodáno {{count}} předmětů za {{gold}} zlata!',
     },
 
     // Healer
@@ -1319,6 +1366,17 @@ export const cs: LocaleKeys = {
     // Bank
     bank: {
       title: 'Bankovní trezor',
+      buttons: {
+        selectAll: 'Vybrat Všechny',
+        clearSelection: 'Zrušit Výběr',
+        depositSelected: 'Vložit Vybrané',
+        withdrawSelected: 'Vybrat Vybrané',
+      },
+      noItemsSelected: 'Žádné předměty vybrány',
+      confirmDepositMultiple: 'Vložit {{count}} předmětů do banky? Celkový poplatek: {{fee}}z',
+      depositedMultiple: 'Vloženo {{count}} předmětů za {{fee}}z',
+      confirmWithdrawMultiple: 'Vybrat {{count}} předmětů z banky?',
+      withdrawnMultiple: 'Vybráno {{count}} předmětů z banky',
     },
 
     // Guild Hall

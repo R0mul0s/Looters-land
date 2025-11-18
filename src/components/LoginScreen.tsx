@@ -18,6 +18,7 @@
 
 import { useState, useEffect } from 'react';
 import * as AuthService from '../services/AuthService';
+import { t } from '../localization/i18n';
 import logo from '../assets/images/logo.png';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT } from '../styles/tokens';
 
@@ -47,17 +48,17 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
 
     // Validation
     if (!email || !password) {
-      setError('Please fill in all fields');
+      setError(t('auth.fillAllFields'));
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+      setError(t('auth.passwordTooShort'));
       return;
     }
 
     if (isRegistering && password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth.passwordsDoNotMatch'));
       return;
     }
 
@@ -76,7 +77,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           } else {
             // If email confirmation required, switch to login mode
             setIsRegistering(false);
-            setError('Please check your email and confirm your account, then login.');
+            setError(t('auth.checkEmailConfirmation'));
           }
         } else {
           setError(result.message);
@@ -92,7 +93,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
         }
       }
     } catch (err: any) {
-      setError(err.message || 'An error occurred');
+      setError(err.message || t('auth.errorOccurred'));
     } finally {
       setLoading(false);
     }
@@ -543,7 +544,7 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           fontWeight: FONT_WEIGHT.bold,
           textShadow: '1px 1px 2px rgba(0, 0, 0, 0.8)'
         }}>
-          {isRegistering ? 'Already have an account?' : "Don't have an account?"}
+          {isRegistering ? t('auth.alreadyHaveAccount') : t('auth.dontHaveAccount')}
           {' '}
           <button
             className="toggle-button"

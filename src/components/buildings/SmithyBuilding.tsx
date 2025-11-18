@@ -36,7 +36,7 @@ export function SmithyBuilding({
     const cost = TownService.calculateEnchantCost(item);
 
     if (cost === 0) {
-      setMessage({ text: 'Item is already at max enchant level (+10)!', type: 'error' });
+      setMessage({ text: t('townBuildings.maxEnchantLevel'), type: 'error' });
       return;
     }
 

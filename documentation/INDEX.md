@@ -1,6 +1,6 @@
 # Looters Land - Documentation Index
 
-**Last Updated:** 2025-11-16
+**Last Updated:** 2025-11-18
 
 ---
 
@@ -44,6 +44,7 @@ Located in `technical/`:
 
 Located in `technical/`:
 
+- **[ENERGY_REGENERATION_SYSTEM.md](technical/ENERGY_REGENERATION_SYSTEM.md)** - **NEW!** Energy system (cron job, setup, troubleshooting)
 - **[GLOBAL_WORLD_STATE_SETUP.md](technical/GLOBAL_WORLD_STATE_SETUP.md)** - Global weather & time system setup
 - **[WORLDMAP_COMBAT_ARCHITECTURE.md](technical/WORLDMAP_COMBAT_ARCHITECTURE.md)** - Quick combat system architecture
 - **[HOW_TO_VIEW_EDGE_FUNCTION_LOGS.md](technical/HOW_TO_VIEW_EDGE_FUNCTION_LOGS.md)** - Supabase Edge Function debugging
@@ -75,9 +76,10 @@ Historical documentation kept for reference:
 2. **Starting development?** → Read [coding_rules.md](technical/coding_rules.md)
 3. **Adding features?** → Check [roadmap.md](roadmap.md)
 4. **Database changes?** → See [SUPABASE_SETUP.md](technical/SUPABASE_SETUP.md)
-5. **Deploying?** → Follow [DEPLOY_INSTRUCTIONS.md](technical/DEPLOY_INSTRUCTIONS.md)
-6. **React state issues?** → See [REACT_STATE_CLOSURE_FIX.md](technical/REACT_STATE_CLOSURE_FIX.md)
-7. **State management bugs?** → See [STATE_MANAGEMENT_FIX.md](technical/STATE_MANAGEMENT_FIX.md)
+5. **Energy system issues?** → See **[ENERGY_REGENERATION_SYSTEM.md](technical/ENERGY_REGENERATION_SYSTEM.md)** (NEW!)
+6. **Deploying?** → Follow [DEPLOY_INSTRUCTIONS.md](technical/DEPLOY_INSTRUCTIONS.md)
+7. **React state issues?** → See [REACT_STATE_CLOSURE_FIX.md](technical/REACT_STATE_CLOSURE_FIX.md)
+8. **State management bugs?** → See [STATE_MANAGEMENT_FIX.md](technical/STATE_MANAGEMENT_FIX.md)
 
 ### For Project Management
 

@@ -3,7 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-15
+ * @lastModified 2025-11-18
  */
 
 import React, { useState, useEffect } from 'react';
@@ -12,6 +12,9 @@ import type { Item } from '../../engine/item/Item';
 import { MarketService, type ShopItem } from '../../services/MarketService';
 import { RARITY_COLORS } from '../../types/item.types';
 import { ItemTooltip } from '../ui/ItemTooltip';
+import { GameModal } from '../ui/GameModal';
+import { ModalText, ModalButton } from '../ui/ModalContent';
+import { ItemMultiSelect, type ItemMultiSelectAction } from '../ui/ItemMultiSelect';
 import { t } from '../../localization/i18n';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
 import { flexBetween, flexColumn } from '../../styles/common';
@@ -41,6 +44,9 @@ export function MarketBuilding({
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [tooltip, setTooltip] = useState<{ item: Item; x: number; y: number } | null>(null);
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmData, setConfirmData] = useState<{ count: number; gold: number } | null>(null);
 
   // Generate daily shop on mount
   useEffect(() => {
@@ -108,6 +114,68 @@ export function MarketBuilding({
     }
   };
 
+  const toggleItemSelection = (itemId: string) => {
+    setSelectedItemIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllGrey = () => {
+    const greyItemIds = inventory.items
+      .filter(item => item.rarity === 'common')
+      .map(item => item.id);
+    setSelectedItemIds(new Set(greyItemIds));
+  };
+
+  const clearSelection = () => {
+    setSelectedItemIds(new Set());
+  };
+
+  const handleSellSelected = () => {
+    if (selectedItemIds.size === 0) {
+      showMessage(t('buildings.market.noItemsSelected'), 'error');
+      return;
+    }
+
+    const itemsToSell = inventory.items.filter(item => selectedItemIds.has(item.id));
+    const totalGold = itemsToSell.reduce((sum, item) => sum + MarketService.calculateSellPrice(item), 0);
+
+    // Show confirmation modal
+    setConfirmData({ count: itemsToSell.length, gold: totalGold });
+    setShowConfirmModal(true);
+  };
+
+  const confirmSellSelected = () => {
+    if (!confirmData) return;
+
+    const itemsToSell = inventory.items.filter(item => selectedItemIds.has(item.id));
+    let soldCount = 0;
+    let earnedGold = 0;
+
+    for (const item of itemsToSell) {
+      const result = MarketService.sellItem(item, inventory, playerGold + earnedGold);
+      if (result.success) {
+        soldCount++;
+        earnedGold += MarketService.calculateSellPrice(item);
+      }
+    }
+
+    onGoldChange(playerGold + earnedGold);
+    onInventoryChange(inventory);
+    setSelectedItemIds(new Set());
+    setShowConfirmModal(false);
+    setConfirmData(null);
+
+    const message = t('buildings.market.soldMultiple', { count: soldCount, gold: earnedGold });
+    showMessage(message.replace('{{count}}', soldCount.toString()).replace('{{gold}}', earnedGold.toString()), 'success');
+  };
+
   return (
     <div style={styles.container}>
       {/* Header */}
@@ -167,6 +235,41 @@ export function MarketBuilding({
           customActions={activeTab === 'buy' ? 'Click to purchase' : 'Click to sell'}
         />
       )}
+
+      {/* Confirmation Modal */}
+      <GameModal
+        isOpen={showConfirmModal}
+        title={t('buildings.market.buttons.sellSelected')}
+        icon="💰"
+        onClose={() => {
+          setShowConfirmModal(false);
+          setConfirmData(null);
+        }}
+        maxWidth="400px"
+      >
+        <ModalText>
+          {confirmData && t('buildings.market.confirmSellMultiple', { count: confirmData.count, gold: confirmData.gold })
+            .replace('{{count}}', confirmData.count.toString())
+            .replace('{{gold}}', confirmData.gold.toString())}
+        </ModalText>
+        <div style={{ display: 'flex', gap: SPACING[3], marginTop: SPACING[4] }}>
+          <ModalButton
+            onClick={() => {
+              setShowConfirmModal(false);
+              setConfirmData(null);
+            }}
+            variant="secondary"
+          >
+            {t('buildings.close')}
+          </ModalButton>
+          <ModalButton
+            onClick={confirmSellSelected}
+            variant="primary"
+          >
+            {t('buildings.market.buttons.sell')}
+          </ModalButton>
+        </div>
+      </GameModal>
     </div>
   );
 
@@ -241,61 +344,45 @@ export function MarketBuilding({
       return b.level - a.level;
     });
 
+    const selectedItems = inventory.items.filter(item => selectedItemIds.has(item.id));
+    const totalSelectedGold = selectedItems.reduce((sum, item) => sum + MarketService.calculateSellPrice(item), 0);
+
+    // Define actions for multi-select
+    const actions: ItemMultiSelectAction[] = [
+      {
+        label: t('buildings.market.buttons.selectAllGrey'),
+        icon: '✅',
+        onClick: selectAllGrey
+      },
+      {
+        label: t('buildings.market.buttons.clearSelection'),
+        icon: '❌',
+        onClick: clearSelection,
+        disabled: selectedItemIds.size === 0
+      },
+      {
+        label: `${t('buildings.market.buttons.sellSelected')} (${selectedItemIds.size}) - ${totalSelectedGold}g`,
+        icon: '💰',
+        onClick: handleSellSelected,
+        disabled: selectedItemIds.size === 0,
+        variant: 'primary'
+      }
+    ];
+
     return (
-      <div style={styles.inventoryGrid}>
-        {sortedItems.length === 0 ? (
-          <div style={styles.emptyMessage}>
-            {t('buildings.market.empty.message')}
-          </div>
-        ) : (
-          sortedItems.map((item) => {
-            const sellPrice = MarketService.calculateSellPrice(item);
-            return (
-              <div
-                key={`market-sell-${item.id}`}
-                style={{
-                  ...styles.inventoryItemCard,
-                  ...(selectedItem?.id === item.id ? styles.inventoryItemSelected : {})
-                }}
-                onClick={() => setSelectedItem(item)}
-                onMouseEnter={(e) => setTooltip({ item, x: e.clientX, y: e.clientY })}
-                onMouseMove={(e) => setTooltip(prev => prev ? { ...prev, x: e.clientX, y: e.clientY } : null)}
-                onMouseLeave={() => setTooltip(null)}
-              >
-                {/* Rarity badge */}
-                <div
-                  style={{
-                    ...styles.rarityBadge,
-                    background: RARITY_COLORS[item.rarity]
-                  }}
-                >
-                  {item.rarity}
-                </div>
-
-                <div style={styles.itemIcon}>{item.icon}</div>
-                <div style={styles.itemName}>{item.name}</div>
-                <div style={styles.itemType}>{item.type}</div>
-
-                {item.enchantLevel > 0 && (
-                  <div style={styles.enchantBadge}>+{item.enchantLevel}</div>
-                )}
-
-                <div style={styles.sellPrice}>{t('buildings.market.sellPrice')} {sellPrice}g</div>
-
-                <button
-                  style={styles.sellButton}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSellItem(item);
-                  }}
-                >
-                  {t('buildings.market.buttons.sell')}
-                </button>
-              </div>
-            );
-          })
-        )}
-      </div>
+      <ItemMultiSelect
+        items={sortedItems}
+        selectedItemIds={selectedItemIds}
+        onToggleSelection={toggleItemSelection}
+        actions={actions}
+        getItemInfo={(item) => `${t('buildings.market.sellPrice')} ${MarketService.calculateSellPrice(item)}g`}
+        itemActionLabel={t('buildings.market.buttons.sell')}
+        onItemAction={handleSellItem}
+        emptyMessage={t('buildings.market.empty.message')}
+        onMouseEnter={(item, x, y) => setTooltip({ item, x, y })}
+        onMouseMove={(item, x, y) => setTooltip(prev => prev ? { ...prev, x, y } : null)}
+        onMouseLeave={() => setTooltip(null)}
+      />
     );
   }
 }

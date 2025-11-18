@@ -3,7 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-16
+ * @lastModified 2025-11-18
  */
 
 import React, { useState, useEffect } from 'react';
@@ -11,6 +11,9 @@ import type { Inventory } from '../../engine/item/Inventory';
 import type { Item } from '../../engine/item/Item';
 import { BankService, type BankInventoryItem } from '../../services/BankService';
 import { getBankVaultSlots, getBankUpgradeCost, getBankEnergyBonus, calculateDepositFee } from '../../config/BALANCE_CONFIG';
+import { ItemMultiSelect, type ItemMultiSelectAction } from '../ui/ItemMultiSelect';
+import { GameModal } from '../ui/GameModal';
+import { ModalText, ModalButton } from '../ui/ModalContent';
 import { t } from '../../localization/i18n';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
 import { flexBetween, flexColumn } from '../../styles/common';
@@ -52,6 +55,12 @@ export function BankBuilding({
   const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState<'inventory' | 'bank'>('inventory');
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
+  const [selectedBankItemIds, setSelectedBankItemIds] = useState<Set<string>>(new Set());
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [confirmData, setConfirmData] = useState<{ count: number; fee: number } | null>(null);
+  const [withdrawData, setWithdrawData] = useState<{ count: number } | null>(null);
 
   // Load bank inventory on mount
   useEffect(() => {
@@ -156,6 +165,163 @@ export function BankBuilding({
       setMessage({ text: result.message, type: 'error' });
     }
 
+    setTimeout(() => setMessage(null), 3000);
+  };
+
+  const toggleItemSelection = (itemId: string) => {
+    setSelectedItemIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllItems = () => {
+    const allItemIds = inventoryItems.map(item => item.id);
+    setSelectedItemIds(new Set(allItemIds));
+  };
+
+  const clearSelection = () => {
+    setSelectedItemIds(new Set());
+  };
+
+  const handleDepositSelected = () => {
+    if (selectedItemIds.size === 0) {
+      setMessage({ text: t('buildings.bank.noItemsSelected'), type: 'error' });
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+
+    const itemsToDeposit = inventoryItems.filter(item => selectedItemIds.has(item.id));
+    const totalFee = itemsToDeposit.reduce((sum, item) => sum + calculateDepositFee(item.goldValue), 0);
+
+    // Show confirmation modal
+    setConfirmData({ count: itemsToDeposit.length, fee: totalFee });
+    setShowConfirmModal(true);
+  };
+
+  const confirmDepositSelected = async () => {
+    if (!confirmData) return;
+
+    const itemsToDeposit = inventoryItems.filter(item => selectedItemIds.has(item.id));
+    let depositedCount = 0;
+    let totalFeePaid = 0;
+
+    for (const item of itemsToDeposit) {
+      const fee = calculateDepositFee(item.goldValue);
+
+      if (playerGold - totalFeePaid < fee) {
+        break; // Not enough gold for more deposits
+      }
+
+      if (bankTotalItems + depositedCount >= bankVaultMaxSlots) {
+        break; // Bank is full
+      }
+
+      const result = await BankService.depositItem(userId, item.id, playerGold - totalFeePaid);
+
+      if (result.success && result.newGold !== undefined && result.newBankCount !== undefined) {
+        inventory.removeItem(item.id);
+        depositedCount++;
+        totalFeePaid += fee;
+      }
+    }
+
+    if (depositedCount > 0) {
+      onInventoryChange(inventory);
+      onGoldChange(playerGold - totalFeePaid);
+      onBankVaultChange(bankVaultTier, bankVaultMaxSlots, bankTotalItems + depositedCount);
+      await loadBankInventory();
+
+      const message = t('buildings.bank.depositedMultiple', { count: depositedCount, fee: totalFeePaid });
+      setMessage({
+        text: message.replace('{{count}}', depositedCount.toString()).replace('{{fee}}', totalFeePaid.toString()),
+        type: 'success'
+      });
+    }
+
+    setSelectedItemIds(new Set());
+    setShowConfirmModal(false);
+    setConfirmData(null);
+    setTimeout(() => setMessage(null), 3000);
+  };
+
+  const toggleBankItemSelection = (itemId: string) => {
+    setSelectedBankItemIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const selectAllBankItems = () => {
+    const allBankItemIds = bankItems.map(item => item.item_id);
+    setSelectedBankItemIds(new Set(allBankItemIds));
+  };
+
+  const clearBankSelection = () => {
+    setSelectedBankItemIds(new Set());
+  };
+
+  const handleWithdrawSelected = () => {
+    if (selectedBankItemIds.size === 0) {
+      setMessage({ text: t('buildings.bank.noItemsSelected'), type: 'error' });
+      setTimeout(() => setMessage(null), 3000);
+      return;
+    }
+
+    // Show confirmation modal
+    setWithdrawData({ count: selectedBankItemIds.size });
+    setShowWithdrawModal(true);
+  };
+
+  const confirmWithdrawSelected = async () => {
+    if (!withdrawData) return;
+
+    const currentInventoryCount = inventory.items.length;
+    const maxInventorySlots = inventory.maxSlots;
+
+    const itemsToWithdraw = bankItems.filter(item => selectedBankItemIds.has(item.item_id));
+    let withdrawnCount = 0;
+
+    for (const bankItem of itemsToWithdraw) {
+      if (currentInventoryCount + withdrawnCount >= maxInventorySlots) {
+        break; // Inventory is full
+      }
+
+      const result = await BankService.withdrawItem(userId, bankItem.item_id, currentInventoryCount + withdrawnCount, maxInventorySlots);
+
+      if (result.success && result.newBankCount !== undefined) {
+        // Add item to local inventory
+        const item = BankService.convertBankItemToItem(bankItem);
+        inventory.addItem(item);
+        withdrawnCount++;
+      }
+    }
+
+    if (withdrawnCount > 0) {
+      onInventoryChange(inventory);
+      onBankVaultChange(bankVaultTier, bankVaultMaxSlots, bankTotalItems - withdrawnCount);
+      await loadBankInventory();
+
+      const message = t('buildings.bank.withdrawnMultiple', { count: withdrawnCount });
+      setMessage({
+        text: message.replace('{{count}}', withdrawnCount.toString()),
+        type: 'success'
+      });
+    }
+
+    setSelectedBankItemIds(new Set());
+    setShowWithdrawModal(false);
+    setWithdrawData(null);
     setTimeout(() => setMessage(null), 3000);
   };
 
@@ -307,96 +473,150 @@ export function BankBuilding({
         ) : (
           <>
             {/* Inventory Tab */}
-            {selectedTab === 'inventory' && (
-              <div style={styles.itemGrid}>
-                {inventoryItems.length === 0 ? (
-                  <div style={styles.emptyMessage}>No items in inventory</div>
-                ) : (
-                  inventoryItems.map(item => {
-                    const fee = calculateDepositFee(item.goldValue);
-                    return (
-                      <div key={item.id} style={styles.itemCard}>
-                        <div style={styles.itemHeader}>
-                          <span style={{
-                            ...styles.itemName,
-                            color: getRarityColor(item.rarity)
-                          }}>
-                            {item.icon} {item.name}
-                          </span>
-                          {item.enchantLevel > 0 && (
-                            <span style={{
-                              ...styles.enchantBadge,
-                              background: getEnchantColor(item.enchantLevel)
-                            }}>
-                              +{item.enchantLevel}
-                            </span>
-                          )}
-                        </div>
-                        <div style={styles.itemDetails}>
-                          <div>Level {item.level}</div>
-                          <div>Value: {item.goldValue.toLocaleString()}g</div>
-                        </div>
-                        <button
-                          style={{
-                            ...styles.actionButton,
-                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
-                          }}
-                          onClick={() => handleDeposit(item)}
-                        >
-                          Deposit (fee: {fee}g)
-                        </button>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            )}
+            {selectedTab === 'inventory' && (() => {
+              const selectedItems = inventoryItems.filter(item => selectedItemIds.has(item.id));
+              const totalFee = selectedItems.reduce((sum, item) => sum + calculateDepositFee(item.goldValue), 0);
+
+              const actions: ItemMultiSelectAction[] = [
+                {
+                  label: t('buildings.bank.buttons.selectAll'),
+                  icon: '✅',
+                  onClick: selectAllItems
+                },
+                {
+                  label: t('buildings.bank.buttons.clearSelection'),
+                  icon: '❌',
+                  onClick: clearSelection,
+                  disabled: selectedItemIds.size === 0
+                },
+                {
+                  label: `${t('buildings.bank.buttons.depositSelected')} (${selectedItemIds.size}) - ${totalFee}g`,
+                  icon: '🏦',
+                  onClick: handleDepositSelected,
+                  disabled: selectedItemIds.size === 0,
+                  variant: 'primary'
+                }
+              ];
+
+              return (
+                <ItemMultiSelect
+                  items={inventoryItems}
+                  selectedItemIds={selectedItemIds}
+                  onToggleSelection={toggleItemSelection}
+                  actions={actions}
+                  getItemInfo={(item) => `Deposit fee: ${calculateDepositFee(item.goldValue)}g`}
+                  itemActionLabel="Deposit"
+                  onItemAction={handleDeposit}
+                  emptyMessage="No items in inventory"
+                />
+              );
+            })()}
 
             {/* Bank Tab */}
-            {selectedTab === 'bank' && (
-              <div style={styles.itemGrid}>
-                {bankItems.length === 0 ? (
-                  <div style={styles.emptyMessage}>No items in bank vault</div>
-                ) : (
-                  bankItems.map(bankItem => (
-                    <div key={bankItem.id} style={styles.itemCard}>
-                      <div style={styles.itemHeader}>
-                        <span style={{
-                          ...styles.itemName,
-                          color: getRarityColor(bankItem.rarity)
-                        }}>
-                          {bankItem.icon} {bankItem.item_name}
-                        </span>
-                        {bankItem.enchant_level > 0 && (
-                          <span style={{
-                            ...styles.enchantBadge,
-                            background: getEnchantColor(bankItem.enchant_level)
-                          }}>
-                            +{bankItem.enchant_level}
-                          </span>
-                        )}
-                      </div>
-                      <div style={styles.itemDetails}>
-                        <div>Level {bankItem.level}</div>
-                        <div>Value: {bankItem.gold_value.toLocaleString()}g</div>
-                      </div>
-                      <button
-                        style={{
-                          ...styles.actionButton,
-                          background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
-                        }}
-                        onClick={() => handleWithdraw(bankItem)}
-                      >
-                        Withdraw (free)
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
+            {selectedTab === 'bank' && (() => {
+              // Convert BankInventoryItem to Item for ItemMultiSelect
+              const bankItemsAsItems = bankItems.map(bankItem => BankService.convertBankItemToItem(bankItem));
+
+              const actions: ItemMultiSelectAction[] = [
+                { label: t('buildings.bank.buttons.selectAll'), icon: '✅', onClick: selectAllBankItems },
+                { label: t('buildings.bank.buttons.clearSelection'), icon: '❌', onClick: clearBankSelection, disabled: selectedBankItemIds.size === 0 },
+                {
+                  label: `${t('buildings.bank.buttons.withdrawSelected')} (${selectedBankItemIds.size})`,
+                  icon: '📤',
+                  onClick: handleWithdrawSelected,
+                  disabled: selectedBankItemIds.size === 0,
+                  variant: 'primary'
+                }
+              ];
+
+              return (
+                <ItemMultiSelect
+                  items={bankItemsAsItems}
+                  selectedItemIds={selectedBankItemIds}
+                  onToggleSelection={toggleBankItemSelection}
+                  actions={actions}
+                  getItemInfo={() => 'Withdraw: Free'}
+                  itemActionLabel="Withdraw"
+                  onItemAction={(item) => {
+                    const bankItem = bankItems.find(bi => bi.item_id === item.id);
+                    if (bankItem) handleWithdraw(bankItem);
+                  }}
+                  emptyMessage="No items in bank vault"
+                />
+              );
+            })()}
           </>
         )}
       </div>
+
+      {/* Deposit Confirmation Modal */}
+      <GameModal
+        isOpen={showConfirmModal}
+        title={t('buildings.bank.buttons.depositSelected')}
+        icon="🏦"
+        onClose={() => {
+          setShowConfirmModal(false);
+          setConfirmData(null);
+        }}
+        maxWidth="400px"
+      >
+        <ModalText>
+          {confirmData && t('buildings.bank.confirmDepositMultiple', { count: confirmData.count, fee: confirmData.fee })
+            .replace('{{count}}', confirmData.count.toString())
+            .replace('{{fee}}', confirmData.fee.toString())}
+        </ModalText>
+        <div style={{ display: 'flex', gap: SPACING[3], marginTop: SPACING[4] }}>
+          <ModalButton
+            onClick={() => {
+              setShowConfirmModal(false);
+              setConfirmData(null);
+            }}
+            variant="secondary"
+          >
+            {t('buildings.close')}
+          </ModalButton>
+          <ModalButton
+            onClick={confirmDepositSelected}
+            variant="primary"
+          >
+            Deposit
+          </ModalButton>
+        </div>
+      </GameModal>
+
+      {/* Withdraw Confirmation Modal */}
+      <GameModal
+        isOpen={showWithdrawModal}
+        title={t('buildings.bank.buttons.withdrawSelected')}
+        icon="📤"
+        onClose={() => {
+          setShowWithdrawModal(false);
+          setWithdrawData(null);
+        }}
+        maxWidth="400px"
+      >
+        <ModalText>
+          {withdrawData && t('buildings.bank.confirmWithdrawMultiple', { count: withdrawData.count })
+            .replace('{{count}}', withdrawData.count.toString())}
+        </ModalText>
+        <div style={{ display: 'flex', gap: SPACING[3], marginTop: SPACING[4] }}>
+          <ModalButton
+            onClick={() => {
+              setShowWithdrawModal(false);
+              setWithdrawData(null);
+            }}
+            variant="secondary"
+          >
+            {t('buildings.close')}
+          </ModalButton>
+          <ModalButton
+            onClick={confirmWithdrawSelected}
+            variant="primary"
+          >
+            Withdraw
+          </ModalButton>
+        </div>
+      </GameModal>
     </div>
   );
 }

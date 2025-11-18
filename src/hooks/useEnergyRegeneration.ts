@@ -1,9 +1,28 @@
 /**
  * useEnergyRegeneration Hook - Automatic energy regeneration system
  *
+ * ⚠️ **DEPRECATED** - No longer used as of 2025-11-18
+ *
+ * Energy regeneration is now handled by hourly cron job in database:
+ * - Migration: supabase/migrations/20251118_add_hourly_energy_regen.sql
+ * - Function: regenerate_player_energy()
+ * - Schedule: Every hour at :00 minutes
+ *
+ * This hook was disabled because:
+ * 1. Caused duplicate regeneration when multiple tabs were open
+ * 2. Only worked when game was open (no offline regeneration)
+ * 3. Created race conditions with Realtime updates
+ *
+ * Server-side cron job provides:
+ * - Consistent regeneration for all players
+ * - Works even when game is closed (offline regeneration)
+ * - No duplicate regeneration issues
+ * - No race conditions
+ *
+ * @deprecated Use database cron job instead (see migration file)
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-17
+ * @lastModified 2025-11-18
  */
 
 import { useEffect, useRef } from 'react';
@@ -20,6 +39,8 @@ interface EnergyRegenerationConfig {
  * Hook for automatic energy regeneration
  * Regenerates energy over time at specified rate
  *
+ * @deprecated This hook is no longer used. Energy regeneration is now handled by database cron job.
+ * @see supabase/migrations/20251118_add_hourly_energy_regen.sql
  * @param config - Energy regeneration configuration
  */
 export function useEnergyRegeneration(config: EnergyRegenerationConfig) {

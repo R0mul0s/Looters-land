@@ -7,7 +7,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-15
+ * @lastModified 2025-11-18
  */
 
 import React, { useState } from 'react';
@@ -19,7 +19,7 @@ import { t } from '../localization/i18n';
 import { COLORS, SPACING } from '../styles/tokens';
 import { flexCenter } from '../styles/common';
 import { GameModal } from './ui/GameModal';
-import { ModalButton, ModalButtonGroup, ModalDivider } from './ui/ModalContent';
+import { ModalButton, ModalButtonGroup, ModalDivider, ModalText } from './ui/ModalContent';
 import '../App.css';
 
 /**
@@ -44,6 +44,8 @@ interface InventoryScreenProps {
   onOpenEnchantPanel?: (item: Item) => void;
   /** Callback when discarding/destroying an item */
   onDiscardItem: (itemId: string) => void;
+  /** Callback when discarding all grey/common items */
+  onDiscardAllGrey?: () => void;
   /** Whether player is in town (enables selling/expanding/enchanting) */
   isInTown?: boolean;
 }
@@ -64,11 +66,13 @@ export function InventoryScreen({
   onAutoSellCommon,
   onOpenEnchantPanel,
   onDiscardItem,
+  onDiscardAllGrey,
   isInTown = true
 }: InventoryScreenProps) {
   const [selectedHeroIndex, setSelectedHeroIndex] = useState(0);
   const [tooltip, setTooltip] = useState<{ item: Item; equippedItem: Item | null; x: number; y: number } | null>(null);
   const [itemDetailModal, setItemDetailModal] = useState<Item | null>(null);
+  const [showDestroyModal, setShowDestroyModal] = useState<{ item: Item; itemName: string } | null>(null);
 
   const selectedHero = heroes[selectedHeroIndex];
 
@@ -536,16 +540,23 @@ export function InventoryScreen({
           </div>
 
           {/* Inventory Actions */}
-          {isInTown && (
-            <div className="inventory-actions">
-              <button className="btn btn-primary" onClick={onExpandInventory}>
-                {t('inventoryScreen.inventoryPanel.buttons.expand')}
+          <div className="inventory-actions">
+            {isInTown && (
+              <>
+                <button className="btn btn-primary" onClick={onExpandInventory}>
+                  {t('inventoryScreen.inventoryPanel.buttons.expand')}
+                </button>
+                <button className="btn btn-warning" onClick={onAutoSellCommon}>
+                  {t('inventoryScreen.inventoryPanel.buttons.autoSellCommon')}
+                </button>
+              </>
+            )}
+            {onDiscardAllGrey && (
+              <button className="btn btn-danger" onClick={onDiscardAllGrey}>
+                🗑️ {t('inventoryScreen.inventoryPanel.buttons.discardAllGrey')}
               </button>
-              <button className="btn btn-warning" onClick={onAutoSellCommon}>
-                {t('inventoryScreen.inventoryPanel.buttons.autoSellCommon')}
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -633,12 +644,12 @@ export function InventoryScreen({
               </div>
               {itemDetailModal.enchantLevel > 0 && (
                 <div style={{ fontSize: '0.9em', color: '#9c27b0', fontWeight: 'bold' }}>
-                  +{itemDetailModal.enchantLevel} Enchant
+                  +{itemDetailModal.enchantLevel} {t('inventoryScreen.inventoryPanel.itemDetail.enchant')}
                 </div>
               )}
               {itemDetailModal.setName && (
                 <div style={{ fontSize: '0.9em', color: '#2196f3', fontWeight: 'bold' }}>
-                  {itemDetailModal.setName} Set
+                  {itemDetailModal.setName} {t('inventoryScreen.inventoryPanel.itemDetail.set')}
                 </div>
               )}
             </div>
@@ -647,7 +658,7 @@ export function InventoryScreen({
 
             {/* Stats */}
             <div style={{ marginBottom: '20px' }}>
-              <strong style={{ display: 'block', marginBottom: '10px' }}>Stats:</strong>
+              <strong style={{ display: 'block', marginBottom: '10px' }}>{t('inventoryScreen.inventoryPanel.itemDetail.stats')}</strong>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                 {(() => {
                   const stats = itemDetailModal.getEffectiveStats();
@@ -668,7 +679,7 @@ export function InventoryScreen({
 
             {/* Value */}
             <div style={{ marginBottom: '20px', fontSize: '0.9em', color: '#ffd700' }}>
-              💰 Value: {itemDetailModal.goldValue} gold
+              💰 {t('inventoryScreen.inventoryPanel.itemDetail.value')} {itemDetailModal.goldValue} {t('inventoryScreen.inventoryPanel.itemDetail.gold')}
             </div>
 
             <ModalDivider />
@@ -683,18 +694,53 @@ export function InventoryScreen({
                 variant="primary"
                 disabled={itemDetailModal.level > selectedHero.level}
               >
-                Equip Item
+                {t('inventoryScreen.inventoryPanel.itemDetail.equipItem')}
               </ModalButton>
               <ModalButton
                 onClick={() => {
-                  if (window.confirm(`Are you sure you want to permanently destroy ${itemDetailModal.getDisplayName()}? This cannot be undone.`)) {
-                    onDiscardItem(itemDetailModal.id);
-                    setItemDetailModal(null);
-                  }
+                  setShowDestroyModal({
+                    item: itemDetailModal,
+                    itemName: itemDetailModal.getDisplayName()
+                  });
+                  setItemDetailModal(null);
                 }}
                 variant="danger"
               >
-                Destroy Item
+                {t('inventoryScreen.inventoryPanel.itemDetail.destroyItem')}
+              </ModalButton>
+            </ModalButtonGroup>
+          </div>
+        </GameModal>
+      )}
+
+      {/* Destroy Item Confirmation Modal */}
+      {showDestroyModal && (
+        <GameModal
+          isOpen={true}
+          title={t('inventoryScreen.inventoryPanel.itemDetail.destroyItem')}
+          icon="🗑️"
+          onClose={() => setShowDestroyModal(null)}
+          maxWidth="400px"
+        >
+          <ModalText>
+            {t('inventoryScreen.inventoryPanel.confirmDestroyItem', { itemName: showDestroyModal.itemName })}
+          </ModalText>
+          <div style={{ marginTop: SPACING[4] }}>
+            <ModalButtonGroup>
+              <ModalButton
+                onClick={() => setShowDestroyModal(null)}
+                variant="secondary"
+              >
+                {t('common.cancel')}
+              </ModalButton>
+              <ModalButton
+                onClick={() => {
+                  onDiscardItem(showDestroyModal.item.id);
+                  setShowDestroyModal(null);
+                }}
+                variant="danger"
+              >
+                {t('common.confirm')}
               </ModalButton>
             </ModalButtonGroup>
           </div>

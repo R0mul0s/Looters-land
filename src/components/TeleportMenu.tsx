@@ -58,7 +58,15 @@ export function TeleportMenu({
   const [selectedLocation, setSelectedLocation] = useState<TeleportLocation | null>(null);
   const [filter, setFilter] = useState<'all' | 'town' | 'dungeon'>('all');
 
-  const filteredLocations = discoveredLocations.filter(loc => {
+  // Deduplicate locations by position (x, y) to ensure uniqueness
+  // Filter only towns and dungeons (teleportable locations)
+  const uniqueLocations = discoveredLocations
+    .filter(loc => loc.type === 'town' || loc.type === 'dungeon')
+    .filter((loc, index, self) =>
+      index === self.findIndex(l => l.x === loc.x && l.y === loc.y)
+    );
+
+  const filteredLocations = uniqueLocations.filter(loc => {
     if (filter === 'all') return true;
     return loc.type === filter;
   });
@@ -111,7 +119,7 @@ export function TeleportMenu({
           </div>
           <div style={styles.infoRow}>
             <span style={styles.infoLabel}>{t('worldmap.discoveredLocations')}:</span>
-            <span style={styles.infoValue}>{discoveredLocations.length}</span>
+            <span style={styles.infoValue}>{uniqueLocations.length}</span>
           </div>
         </div>
 
@@ -124,7 +132,7 @@ export function TeleportMenu({
             }}
             onClick={() => setFilter('all')}
           >
-            {t('worldmap.allLocations')} ({discoveredLocations.length})
+            {t('worldmap.allLocations')} ({uniqueLocations.length})
           </button>
           <button
             style={{
@@ -133,7 +141,7 @@ export function TeleportMenu({
             }}
             onClick={() => setFilter('town')}
           >
-            🏰 {t('worldmap.towns')} ({discoveredLocations.filter(l => l.type === 'town').length})
+            🏰 {t('worldmap.towns')} ({uniqueLocations.filter(l => l.type === 'town').length})
           </button>
           <button
             style={{
@@ -142,7 +150,7 @@ export function TeleportMenu({
             }}
             onClick={() => setFilter('dungeon')}
           >
-            🕳️ {t('worldmap.dungeons')} ({discoveredLocations.filter(l => l.type === 'dungeon').length})
+            🕳️ {t('worldmap.dungeons')} ({uniqueLocations.filter(l => l.type === 'dungeon').length})
           </button>
         </div>
 

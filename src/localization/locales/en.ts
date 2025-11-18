@@ -401,6 +401,7 @@ export const en = {
   worldmap: {
     notEnoughEnergy: 'Not enough energy',
     notEnoughEnergyDungeon: 'Not enough energy to enter this dungeon',
+    notEnoughEnergyPortal: 'Not enough energy to use portal!',
     dungeonIntegration: 'Dungeon integration complete',
     loading: 'Loading...',
     error: 'Error loading worldmap',
@@ -412,6 +413,30 @@ export const en = {
     storedGold: 'Stored Gold',
     energyRegen: 'Energy regenerates over time',
     todo: 'TODO',
+
+    // Energy modal
+    energyModal: {
+      title: 'Not Enough Energy',
+      required: 'Required:',
+      youHave: 'You have:',
+      waitMessage: 'Wait for energy regeneration or use an energy potion!',
+    },
+
+    // Combat encounter modal
+    combatEncounter: {
+      titleFallback: 'Enemy Encounter',
+      randomMessage: 'A group of wild enemies has appeared and blocks your path!',
+      powerfulMessage: 'You have encountered a powerful {{difficulty}} enemy on the world map!',
+      enemy: 'Enemy:',
+      level: 'Level:',
+      difficulty: 'Difficulty:',
+      enemyCount: 'Enemy Count:',
+      yourParty: 'Your Party:',
+      chooseCombatMode: 'Choose your combat mode:',
+      autoCombat: 'Auto Combat',
+      manualCombat: 'Manual Combat',
+      cancel: 'Cancel',
+    },
 
     // Unexplored area warning
     unexploredTitle: 'Unexplored Territory',
@@ -576,6 +601,8 @@ export const en = {
     registerFailed: 'Registration failed',
     invalidCredentials: 'Invalid email or password',
     emailAlreadyExists: 'Email already registered',
+    errorOccurred: 'An error occurred',
+    checkEmailConfirmation: 'Please check your email and confirm your account, then login.',
   },
 
   // ============================================================================
@@ -870,6 +897,20 @@ export const en = {
       buttons: {
         expand: 'Expand (+10 slots, 500g)',
         autoSellCommon: 'Auto-Sell Common',
+        discardAllGrey: 'Discard All Grey',
+      },
+      noGreyItems: 'No grey items to discard',
+      confirmDiscardGrey: 'Discard {{count}} grey items? This cannot be undone!',
+      discardedGrey: '{{count}} grey items discarded',
+      confirmDestroyItem: 'Are you sure you want to permanently destroy {itemName}? This cannot be undone.',
+      itemDetail: {
+        stats: 'Stats:',
+        enchant: 'Enchant',
+        set: 'Set',
+        value: 'Value:',
+        gold: 'gold',
+        equipItem: 'Equip Item',
+        destroyItem: 'Destroy Item',
       },
     },
   },
@@ -1289,11 +1330,17 @@ export const en = {
         buy: 'Buy',
         sell: 'Sell',
         notEnoughGold: 'Not Enough Gold',
+        selectAllGrey: 'Select All Grey',
+        clearSelection: 'Clear Selection',
+        sellSelected: 'Sell Selected',
       },
       sellPrice: 'Sell:',
       empty: {
         message: 'No items to sell. Go explore dungeons to find loot!',
       },
+      noItemsSelected: 'No items selected',
+      confirmSellMultiple: 'Sell {{count}} items for {{gold}} gold?',
+      soldMultiple: 'Sold {{count}} items for {{gold}} gold!',
     },
 
     // Healer
@@ -1317,6 +1364,17 @@ export const en = {
     // Bank
     bank: {
       title: 'Bank Vault',
+      buttons: {
+        selectAll: 'Select All',
+        clearSelection: 'Clear Selection',
+        depositSelected: 'Deposit Selected',
+        withdrawSelected: 'Withdraw Selected',
+      },
+      noItemsSelected: 'No items selected',
+      confirmDepositMultiple: 'Deposit {{count}} items? Total fee: {{fee}}g',
+      depositedMultiple: 'Deposited {{count}} items for {{fee}}g',
+      confirmWithdrawMultiple: 'Withdraw {{count}} items?',
+      withdrawnMultiple: 'Withdrawn {{count}} items',
     },
 
     // Guild Hall

@@ -17,7 +17,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-17
+ * @lastModified 2025-11-18
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
@@ -37,7 +37,7 @@ import { ItemDisplay } from './ui/ItemDisplay';
 import { InventoryHelper } from '../engine/item/InventoryHelper';
 import { LootGenerator } from '../engine/loot/LootGenerator';
 import { useGameState, type GameState, type GameStateActions } from '../hooks/useGameState';
-import { useEnergyRegeneration } from '../hooks/useEnergyRegeneration';
+// import { useEnergyRegeneration } from '../hooks/useEnergyRegeneration'; // Disabled - now handled by cron
 import { useOtherPlayers } from '../hooks/useOtherPlayers';
 import { useGlobalWorldState } from '../hooks/useGlobalWorldState';
 import { useTranslation } from '../hooks/useTranslation';
@@ -130,6 +130,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
   const [showHealingWellModal, setShowHealingWellModal] = useState<HealingWell | null>(null);
   const [showMessageModal, setShowMessageModal] = useState<string | null>(null);
   const [showLowHealthWarning, setShowLowHealthWarning] = useState<{ type: 'dungeon' | 'combat'; action: () => void; averageHealth: number } | null>(null);
+  const [showDiscardGreyModal, setShowDiscardGreyModal] = useState<{ count: number; items: any[] } | null>(null);
   const [showQuickCombatModal, setShowQuickCombatModal] = useState<{
     enemies: any[];
     enemyName: string;
@@ -149,14 +150,15 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
   // Location tracking: Player is "in town" when town modal is open
   const isInTown = showTownModal !== null;
 
-  // Energy regeneration system (10 energy per hour)
-  const energyRegen = useEnergyRegeneration({
-    currentEnergy: gameState.energy,
-    maxEnergy: gameState.maxEnergy,
-    onEnergyChange: (newEnergy) => gameActions.setEnergy(newEnergy),
-    regenRate: 10, // 10 energy per hour
-    enabled: !gameState.loading && !gameState.profileLoading
-  });
+  // Energy regeneration is now handled by hourly cron job in database
+  // Frontend regeneration disabled to prevent duplicate regeneration in multiple tabs
+  // const energyRegen = useEnergyRegeneration({
+  //   currentEnergy: gameState.energy,
+  //   maxEnergy: gameState.maxEnergy,
+  //   onEnergyChange: (newEnergy) => gameActions.setEnergy(newEnergy),
+  //   regenRate: 10, // 10 energy per hour
+  //   enabled: !gameState.loading && !gameState.profileLoading
+  // });
 
   // Multiplayer: Subscribe to other online players
   const otherPlayers = useOtherPlayers(gameState.profile?.user_id);
@@ -253,14 +255,19 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
     }
   };
 
-  // Generate initial worldmap if not exists
+  // Generate initial worldmap if not exists or if seed doesn't match today's date
   useEffect(() => {
-    if (!gameState.worldMap && !gameState.loading) {
+    const todaySeed = `daily-${new Date().toISOString().split('T')[0]}`;
+    const needsNewMap = !gameState.worldMap || gameState.worldMap.seed !== todaySeed;
+
+    if (needsNewMap && !gameState.loading) {
+      console.log('🗺️ Generating new world map with seed:', todaySeed);
+
       // Generate world with player's combat power for CP-based starting position
       const newWorld = WorldMapGenerator.generate({
         width: 50,
         height: 50,
-        seed: `daily-${new Date().toISOString().split('T')[0]}`, // Daily seed - changes every day
+        seed: todaySeed, // Daily seed - changes every day
         townCount: 4,
         dungeonCount: 5,
         encounterCount: 15
@@ -283,6 +290,9 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
 
       // Set player position to starting town
       gameActions.updatePlayerPos(startingTown.position.x, startingTown.position.y);
+
+      // Clear discovered locations when generating new map
+      gameActions.clearDiscoveredLocations();
 
       // Save the world
       gameActions.updateWorldMap(newWorld);
@@ -816,7 +826,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
     const energyCost = portal.energyCost;
     if (gameState.energy < energyCost && !DEBUG_CONFIG.UNLIMITED_ENERGY) {
       setShowEnergyModal({
-        message: `Not enough energy to use portal!\nRequired: ${energyCost}\nCurrent: ${gameState.energy}`,
+        message: tLocal('worldmap.notEnoughEnergyPortal'),
         required: energyCost
       });
       return;
@@ -1345,6 +1355,18 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
         gameActions.forceUpdate();
         gameActions.saveGame(); // Trigger save after discard
       }}
+      onDiscardAllGrey={() => {
+        // Find all common (grey) items
+        const greyItems = gameState.inventory.items.filter(item => item.rarity === 'common');
+
+        if (greyItems.length === 0) {
+          setShowMessageModal(tLocal('inventoryScreen.inventoryPanel.noGreyItems'));
+          return;
+        }
+
+        // Show confirmation modal
+        setShowDiscardGreyModal({ count: greyItems.length, items: greyItems });
+      }}
     />
   );
 
@@ -1380,7 +1402,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
         gems={gameState.gems}
         energy={gameState.energy}
         maxEnergy={gameState.maxEnergy}
-        energyRegenRate={energyRegen.regenRate}
+        energyRegenRate={10}
         heroCount={gameState.allHeroes.length}
         itemCount={gameState.inventory.items.length}
         syncStatus={gameState.syncStatus}
@@ -1504,7 +1526,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
       {/* Energy Warning Modal */}
       <GameModal
         isOpen={!!showEnergyModal}
-        title="Not Enough Energy"
+        title={tLocal('worldmap.energyModal.title')}
         icon="⚡"
         onClose={() => setShowEnergyModal(null)}
       >
@@ -1514,12 +1536,12 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
             {showEnergyModal.required && (
               <>
                 <ModalDivider />
-                <ModalInfoRow label="Required:" value={`⚡ ${showEnergyModal.required}`} valueColor="energy" />
-                <ModalInfoRow label="You have:" value={`⚡ ${gameState.energy}`} />
+                <ModalInfoRow label={tLocal('worldmap.energyModal.required')} value={`⚡ ${showEnergyModal.required}`} valueColor="energy" />
+                <ModalInfoRow label={tLocal('worldmap.energyModal.youHave')} value={`⚡ ${gameState.energy}`} />
               </>
             )}
             <ModalInfoBox variant="info">
-              Wait for energy regeneration or use an energy potion!
+              {tLocal('worldmap.energyModal.waitMessage')}
             </ModalInfoBox>
             <ModalButton onClick={() => setShowEnergyModal(null)}>
               OK
@@ -1888,7 +1910,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
       {/* Quick Combat Pre-Combat Modal */}
       <GameModal
         isOpen={!!showQuickCombatModal}
-        title={showQuickCombatModal?.enemyName || 'Enemy Encounter'}
+        title={showQuickCombatModal?.enemyName || tLocal('worldmap.combatEncounter.titleFallback')}
         icon="⚔️"
         onClose={() => setShowQuickCombatModal(null)}
       >
@@ -1896,17 +1918,18 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
           <>
             <ModalText>
               {showQuickCombatModal.metadata?.encounterType === 'random'
-                ? `A group of wild enemies has appeared and blocks your path!`
-                : `You have encountered a powerful ${showQuickCombatModal.difficulty.toLowerCase()} enemy on the world map!`
+                ? tLocal('worldmap.combatEncounter.randomMessage')
+                : tLocal('worldmap.combatEncounter.powerfulMessage')
+                    .replace('{{difficulty}}', showQuickCombatModal.difficulty.toLowerCase())
               }
             </ModalText>
             <ModalDivider />
-            <ModalInfoRow label="Enemy:" value={showQuickCombatModal.enemyName} />
-            <ModalInfoRow label="Level:" value={showQuickCombatModal.enemyLevel} />
-            <ModalInfoRow label="Difficulty:" value={showQuickCombatModal.difficulty} valueColor={
+            <ModalInfoRow label={tLocal('worldmap.combatEncounter.enemy')} value={showQuickCombatModal.enemyName} />
+            <ModalInfoRow label={tLocal('worldmap.combatEncounter.level')} value={showQuickCombatModal.enemyLevel} />
+            <ModalInfoRow label={tLocal('worldmap.combatEncounter.difficulty')} value={showQuickCombatModal.difficulty} valueColor={
               showQuickCombatModal.difficulty === 'Elite' || showQuickCombatModal.difficulty === 'Boss' ? 'warning' : 'info'
             } />
-            <ModalInfoRow label="Enemy Count:" value={showQuickCombatModal.enemies.length} />
+            <ModalInfoRow label={tLocal('worldmap.combatEncounter.enemyCount')} value={showQuickCombatModal.enemies.length} />
             <ModalDivider />
 
             {/* Party comparison */}
@@ -1918,7 +1941,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
               fontSize: '13px',
               color: '#cbd5e1'
             }}>
-              <div><strong>Your Party:</strong></div>
+              <div><strong>{tLocal('worldmap.combatEncounter.yourParty')}</strong></div>
               {gameState.activeParty.map((hero) => (
                 <div key={hero.id} style={{ marginTop: '4px', fontSize: '12px' }}>
                   {hero.name} (Lv {hero.level}) - ❤️{hero.currentHP}/{hero.maxHP}
@@ -1928,7 +1951,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
 
             <ModalDivider />
             <ModalText>
-              Choose your combat mode:
+              {tLocal('worldmap.combatEncounter.chooseCombatMode')}
             </ModalText>
 
             <ModalButtonGroup>
@@ -1946,7 +1969,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
                 variant="primary"
                 fullWidth={false}
               >
-                ⚡ Auto Combat
+                ⚡ {tLocal('worldmap.combatEncounter.autoCombat')}
               </ModalButton>
               <ModalButton
                 onClick={() => {
@@ -1962,12 +1985,12 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
                 variant="secondary"
                 fullWidth={false}
               >
-                🎮 Manual Combat
+                🎮 {tLocal('worldmap.combatEncounter.manualCombat')}
               </ModalButton>
             </ModalButtonGroup>
 
             <ModalButton onClick={() => setShowQuickCombatModal(null)} variant="secondary" fullWidth>
-              Cancel
+              {tLocal('worldmap.combatEncounter.cancel')}
             </ModalButton>
           </>
         )}
@@ -2072,6 +2095,50 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
           </div>
         </div>
       )}
+
+      {/* Discard Grey Items Confirmation Modal */}
+      <GameModal
+        isOpen={!!showDiscardGreyModal}
+        title={tLocal('inventoryScreen.inventoryPanel.buttons.discardAllGrey')}
+        icon="🗑️"
+        onClose={() => setShowDiscardGreyModal(null)}
+        maxWidth="400px"
+      >
+        <ModalText>
+          {showDiscardGreyModal && tLocal('inventoryScreen.inventoryPanel.confirmDiscardGrey', { count: showDiscardGreyModal.count })
+            .replace('{{count}}', showDiscardGreyModal.count.toString())}
+        </ModalText>
+        <div style={{ display: 'flex', gap: SPACING[3], marginTop: SPACING[4] }}>
+          <ModalButton
+            onClick={() => setShowDiscardGreyModal(null)}
+            variant="secondary"
+          >
+            {t('common.cancel')}
+          </ModalButton>
+          <ModalButton
+            onClick={async () => {
+              if (!showDiscardGreyModal) return;
+
+              // Discard all grey items
+              for (const item of showDiscardGreyModal.items) {
+                await gameActions.removeItem(item.id);
+              }
+
+              gameActions.forceUpdate();
+              gameActions.saveGame();
+
+              const successMessage = tLocal('inventoryScreen.inventoryPanel.discardedGrey', { count: showDiscardGreyModal.count })
+                .replace('{{count}}', showDiscardGreyModal.count.toString());
+
+              setShowDiscardGreyModal(null);
+              setShowMessageModal(successMessage);
+            }}
+            variant="danger"
+          >
+            {t('common.confirm')}
+          </ModalButton>
+        </div>
+      </GameModal>
     </>
   );
 }

@@ -53,9 +53,6 @@ export class Equipment {
     }
 
     // Check level requirement
-    console.log('🔍 Equipment.equip() - Hero:', this.hero.name, 'Level:', this.hero.level, 'Hero ID:', this.hero.id);
-    console.log('🔍 Equipment.equip() - Item:', item.getDisplayName(), 'Required Level:', item.level);
-
     if (item.level > this.hero.level) {
       return {
         success: false,

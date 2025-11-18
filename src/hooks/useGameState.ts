@@ -115,6 +115,7 @@ export interface GameStateActions {
   updatePlayerPos: (x: number, y: number) => Promise<void>;
   updateWorldMap: (worldMap: WorldMap) => Promise<void>;
   addDiscoveredLocation: (location: { name: string; x: number; y: number; type: StaticObjectType }) => Promise<void>;
+  clearDiscoveredLocations: () => Promise<void>;
 
   // Save/Load actions
   saveGame: () => Promise<void>;
@@ -852,9 +853,17 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
             // CRITICAL: Always preserve allHeroes and activeParty from prev state!
             // Realtime updates should NEVER overwrite hero data
 
-            // CRITICAL: Also preserve energy from prev state!
-            // Energy changes locally (movement, regeneration) and should only save OUT to DB,
-            // never load back IN from Realtime updates (causes energy jumps due to autosave debounce)
+            // CRITICAL: IGNORE energy from Realtime updates!
+            // Energy changes locally (movement, spending) and should only save OUT to DB.
+            // Energy regeneration is handled by hourly cron job in database.
+            //
+            // Accepting energy from Realtime causes issues with multiple tabs:
+            // - Tab 1: Spends energy (239)
+            // - Cron job: Adds +10 energy (249)
+            // - Tab 2: Gets Realtime update (249), thinks energy was added
+            // - Result: Duplicate/inconsistent energy across tabs
+            //
+            // Energy will be synced correctly on next page load when profile is fetched.
 
             // Calculate max energy dynamically from bank vault tier
             const bankEnergyBonus = getBankEnergyBonus(updatedProfile.bank_vault_tier || 0);
@@ -1266,6 +1275,14 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           discoveredLocations: [...prev.discoveredLocations, location]
         };
       });
+      scheduleAutoSave();
+    },
+
+    clearDiscoveredLocations: async () => {
+      setState(prev => ({
+        ...prev,
+        discoveredLocations: []
+      }));
       scheduleAutoSave();
     },
 

@@ -13,9 +13,17 @@
 declare global {
   interface Window {
     __DEBUG__?: typeof DEBUG_CONFIG;
+    __gameActions?: unknown;
+    __gameState?: unknown;
     enableUnlimitedEnergy?: () => void;
     disableUnlimitedEnergy?: () => void;
     toggleUnlimitedEnergy?: () => void;
+    resetDailyGacha?: () => Promise<void>;
+    showGachaState?: () => Promise<void>;
+    resetWorldMap?: () => Promise<void>;
+    fixDuplicateHeroes?: () => Promise<void>;
+    showAllHeroes?: () => void;
+    revealMap?: () => void;
   }
 }
 
@@ -72,7 +80,7 @@ if (typeof window !== 'undefined') {
    * Reset daily free gacha summon
    * Allows using free summon again today
    */
-  (window as any).resetDailyGacha = async () => {
+  window.resetDailyGacha = async () => {
     try {
       const { supabase } = await import('../lib/supabase');
       const { data: { session } } = await supabase.auth.getSession();
@@ -100,7 +108,7 @@ if (typeof window !== 'undefined') {
   /**
    * Show current gacha state
    */
-  (window as any).showGachaState = async () => {
+  window.showGachaState = async () => {
     try {
       const { supabase } = await import('../lib/supabase');
       const { data: { session } } = await supabase.auth.getSession();
@@ -137,7 +145,7 @@ if (typeof window !== 'undefined') {
    * Reset worldmap - generates new map
    * Clears worldmap from database so it regenerates with new town names
    */
-  (window as any).resetWorldMap = async () => {
+  window.resetWorldMap = async () => {
     try {
       const { supabase } = await import('../lib/supabase');
       const { data: { session } } = await supabase.auth.getSession();
@@ -170,7 +178,7 @@ if (typeof window !== 'undefined') {
    * DISABLED - Fix duplicate heroes
    * This function has been disabled due to bugs that deleted all heroes
    */
-  (window as any).fixDuplicateHeroes = async () => {
+  window.fixDuplicateHeroes = async () => {
     console.error('❌ This function has been DISABLED due to bugs.');
     console.error('   It incorrectly detected all heroes as duplicates.');
     console.error('   Use window.showAllHeroes() to see your current heroes.');
@@ -179,9 +187,8 @@ if (typeof window !== 'undefined') {
   /**
    * Show all heroes in the collection
    */
-  (window as any).showAllHeroes = () => {
-    const gameActions = (window as any).__gameActions;
-    const gameState = (window as any).__gameState;
+  window.showAllHeroes = () => {
+    const gameState = window.__gameState as { allHeroes: Array<{ name: string; heroClass: string; level: number; id: string }> } | undefined;
 
     if (!gameState) {
       console.error('❌ Game not loaded yet');
@@ -190,7 +197,7 @@ if (typeof window !== 'undefined') {
 
     console.log('📋 All Heroes in Collection:');
     console.log(`   Total: ${gameState.allHeroes.length} heroes`);
-    gameState.allHeroes.forEach((hero: any, index: number) => {
+    gameState.allHeroes.forEach((hero, index: number) => {
       console.log(`   ${index + 1}. ${hero.name} (${hero.heroClass}) - Lv${hero.level} - ID: ${hero.id}`);
     });
   };
@@ -199,11 +206,11 @@ if (typeof window !== 'undefined') {
    * Reveal entire world map (remove fog of war)
    * Explores all tiles on the map
    */
-  (window as any).revealMap = () => {
-    const gameActions = (window as any).__gameActions;
-    const gameState = (window as any).__gameState;
+  window.revealMap = () => {
+    const gameActions = window.__gameActions as { addDiscoveredLocation: (loc: { name: string; x: number; y: number; type: string }) => void } | undefined;
+    const gameState = window.__gameState as { worldMap?: { tiles: Array<Array<{ isExplored: boolean; staticObject?: { name: string; type: string }; x: number; y: number }>> } } | undefined;
 
-    if (!gameState) {
+    if (!gameState || !gameActions) {
       console.error('❌ Game not loaded yet');
       return;
     }

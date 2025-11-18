@@ -137,7 +137,7 @@ function WorldMapViewerComponent({
   onCancelMovement,
   onRegisterCancelMovement
 }: WorldMapViewerProps) {
-  const isMobile = useIsMobile();
+  const _isMobile = useIsMobile();
   const [zoom, setZoom] = useState(1);
   const [viewport, setViewport] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
@@ -293,7 +293,7 @@ function WorldMapViewerComponent({
   // Pathfinding and movement state
   const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[] | null>(null);
   const [isMoving, setIsMoving] = useState(false);
-  const [movementProgress, setMovementProgress] = useState(0); // 0 to 1 for interpolation between tiles
+  const [_movementProgress, setMovementProgress] = useState(0); // 0 to 1 for interpolation between tiles
   const [facingLeft, setFacingLeft] = useState(false); // Track if player is facing left
 
   // Perlin noise for smooth variant distribution (prevents checkerboard pattern)
@@ -1699,8 +1699,8 @@ function WorldMapViewerComponent({
     if (heroImage) {
       // Make hero slightly larger (1.2x tile size) and center it on the tile
       const heroSize = TILE_SIZE * 1.2;
-      let heroOffsetX = playerScreenX - (heroSize - TILE_SIZE) / 2;
-      let heroOffsetY = playerScreenY - (heroSize - TILE_SIZE) / 2;
+      const _heroOffsetX = playerScreenX - (heroSize - TILE_SIZE) / 2;
+      const heroOffsetY = playerScreenY - (heroSize - TILE_SIZE) / 2;
 
       // Add bouncing animation when moving (like riding a horse)
       if (isMoving && currentPath && currentPath.length > 0) {

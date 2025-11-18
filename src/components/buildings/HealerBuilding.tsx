@@ -32,7 +32,7 @@ export function HealerBuilding({
   onGoldChange,
   onSetHealerCooldown
 }: HealerBuildingProps) {
-  const [selectedHeroIndex, setSelectedHeroIndex] = useState<number | null>(null);
+  const [_selectedHeroIndex, setSelectedHeroIndex] = useState<number | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [cooldownRemaining, setCooldownRemaining] = useState<number>(0);
 

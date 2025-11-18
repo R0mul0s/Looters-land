@@ -138,8 +138,8 @@ export function SmithyBuilding({
               <div style={styles.itemsGrid}>
                 {equipmentItems.map(item => {
                   const enchantCost = TownService.calculateEnchantCost(item);
-                  const successRate = TownService.calculateEnchantSuccessRate(item);
-                  const canAfford = playerGold >= enchantCost && enchantCost > 0;
+                  const _successRate = TownService.calculateEnchantSuccessRate(item);
+                  const _canAfford = playerGold >= enchantCost && enchantCost > 0;
 
                   return (
                     <div

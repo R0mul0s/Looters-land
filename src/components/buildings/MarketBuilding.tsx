@@ -41,7 +41,7 @@ export function MarketBuilding({
 }: MarketBuildingProps) {
   const [activeTab, setActiveTab] = useState<MarketTab>('buy');
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
-  const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  const [_selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const [tooltip, setTooltip] = useState<{ item: Item; x: number; y: number } | null>(null);
   const [selectedItemIds, setSelectedItemIds] = useState<Set<string>>(new Set());
@@ -276,7 +276,7 @@ export function MarketBuilding({
   function renderBuyTab() {
     return (
       <div style={styles.shopGrid}>
-        {shopItems.map((shopItem, index) => (
+        {shopItems.map((shopItem) => (
           <div
             key={shopItem.item.id}
             style={styles.shopItemCard}

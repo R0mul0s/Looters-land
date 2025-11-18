@@ -14,7 +14,7 @@ import React from 'react';
 import { SyncStatusIndicator, type SyncStatus } from '../SyncStatusIndicator';
 import { t } from '../../localization/i18n';
 import { useIsMobile } from '../../hooks/useIsMobile';
-import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
+import { COLORS, SPACING, SHADOWS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
 import { flexBetween, flexColumn } from '../../styles/common';
 
 /**

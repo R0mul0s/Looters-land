@@ -26,7 +26,7 @@
 
 import React from 'react';
 import type { Item } from '../../engine/item/Item';
-import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT, Z_INDEX } from '../../styles/tokens';
+import { COLORS, SPACING, FONT_SIZE, FONT_WEIGHT } from '../../styles/tokens';
 
 interface ItemTooltipProps {
   item: Item;

@@ -199,7 +199,7 @@ export function HeroCollection({ heroes, activePartyIndices }: HeroCollectionPro
           </div>
         ) : (
           <div style={styles.heroesGrid}>
-            {filteredHeroes.map((hero, index) => {
+            {filteredHeroes.map((hero) => {
               const originalIndex = heroes.indexOf(hero);
               const inActiveParty = isInActiveParty(originalIndex);
 

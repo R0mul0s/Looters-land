@@ -327,7 +327,7 @@ export function BankBuilding({
     setTimeout(() => setMessage(null), 3000);
   };
 
-  const getRarityColor = (rarity: string) => {
+  const _getRarityColor = (rarity: string) => {
     switch (rarity.toLowerCase()) {
       case 'legendary': return '#ff8c00';
       case 'epic': return '#a855f7';
@@ -337,7 +337,7 @@ export function BankBuilding({
     }
   };
 
-  const getEnchantColor = (level: number) => {
+  const _getEnchantColor = (level: number) => {
     if (level === 0) return '#9ca3af';
     if (level <= 3) return '#10b981';
     if (level <= 6) return '#3b82f6';

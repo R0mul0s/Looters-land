@@ -10,7 +10,7 @@ import React, { useState } from 'react';
 import type { Hero } from '../../engine/hero/Hero';
 import { RARITY_COLORS } from '../../types/hero.types';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../../styles/tokens';
-import { flexColumn, flexCenter, flexBetween } from '../../styles/common';
+import { flexColumn, flexCenter } from '../../styles/common';
 
 interface PartyManagerProps {
   heroes: Hero[];
@@ -35,7 +35,7 @@ export function PartyManager({ heroes, activePartyIndices, onPartyChange }: Part
     }
   };
 
-  const getRoleIcon = (role: string) => {
+  const _getRoleIcon = (role: string) => {
     switch (role) {
       case 'tank': return '🛡️';
       case 'dps': return '⚔️';

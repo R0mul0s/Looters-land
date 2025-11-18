@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { COLORS, SPACING, BORDER_RADIUS, SHADOWS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
+import { COLORS, SPACING, SHADOWS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
 import { flexColumn, flexCenter } from '../../styles/common';
 
 type NavigationTab = 'inventory' | 'heroes' | 'quests' | 'guild';

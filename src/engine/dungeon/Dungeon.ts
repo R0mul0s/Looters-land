@@ -208,7 +208,7 @@ export class Dungeon implements IDungeon {
   /**
    * Complete combat in current room
    */
-  completeCombat(_heroes: Hero[]): RoomEventResult {
+  completeCombat(): RoomEventResult {
     const currentRoom = this.getCurrentRoom();
 
     if (!currentRoom) {
@@ -427,14 +427,14 @@ export class Dungeon implements IDungeon {
     const eventType = currentRoom.mysteryEventType || 'neutral';
     const description = currentRoom.mysteryDescription || 'Something mysterious happens...';
 
-    let result: RoomEventResult = {
+    const result: RoomEventResult = {
       success: true,
       message: description
     };
 
     // Apply effects based on event type
     switch (eventType) {
-      case 'positive':
+      case 'positive': {
         // Heal party
         const healAmount = 30 + Math.floor(Math.random() * 20);
         heroes.forEach(hero => {
@@ -447,8 +447,9 @@ export class Dungeon implements IDungeon {
           gold: Math.floor(50 + Math.random() * 100)
         };
         break;
+      }
 
-      case 'negative':
+      case 'negative': {
         // Damage party
         const damage = 15 + Math.floor(Math.random() * 20);
         const damagedHeroes = heroes.map(hero => {
@@ -460,6 +461,7 @@ export class Dungeon implements IDungeon {
         result.message += `\n⚠️ Your party takes damage!`;
         result.damage = { heroes: damagedHeroes };
         break;
+      }
 
       case 'neutral':
         // Small gold reward

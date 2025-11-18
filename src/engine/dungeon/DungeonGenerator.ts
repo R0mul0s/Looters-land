@@ -534,8 +534,7 @@ export class DungeonGenerator {
   private static populateBossRoom(
     room: Room,
     floorNumber: number,
-    difficultyMultiplier: number,
-    heroLevel?: number
+    difficultyMultiplier: number
   ): void {
     // Boss should be very challenging (1.6x floor level)
     const baseLevel = floorNumber * difficultyMultiplier;
@@ -561,8 +560,7 @@ export class DungeonGenerator {
   private static populateMysteryRoom(
     room: Room,
     floorNumber: number,
-    difficultyMultiplier: number,
-    heroLevel?: number
+    difficultyMultiplier: number
   ): void {
     const eventTypes: Array<'positive' | 'negative' | 'neutral'> = ['positive', 'negative', 'neutral'];
     room.mysteryEventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
@@ -642,8 +640,7 @@ export class DungeonGenerator {
   private static populateMiniBossRoom(
     room: Room,
     floorNumber: number,
-    difficultyMultiplier: number,
-    heroLevel?: number
+    difficultyMultiplier: number
   ): void {
     // Mini-boss is stronger than elite but weaker than boss (1.5x floor level)
     const baseLevel = floorNumber * difficultyMultiplier;

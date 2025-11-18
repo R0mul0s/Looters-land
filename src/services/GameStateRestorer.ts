@@ -15,6 +15,19 @@ import { Equipment } from '../engine/equipment/Equipment';
 import type { HeroClass } from '../types/hero.types';
 import type { ItemRarity, ItemSlot, ItemType } from '../types/item.types';
 
+interface SavedHero {
+  name: string;
+  class: string;
+  level: number;
+  experience?: number;
+  requiredXP?: number;
+  currentHP: number;
+  equippedItems?: Array<{
+    slot: string;
+    item: unknown;
+  }>;
+}
+
 /**
  * Restore hero from saved data
  *
@@ -27,7 +40,7 @@ import type { ItemRarity, ItemSlot, ItemType } from '../types/item.types';
  * ```
  */
 export function restoreHero(
-  savedHero: any
+  savedHero: SavedHero
 ): Hero {
   // Create hero instance
   const hero = new Hero(
@@ -45,7 +58,7 @@ export function restoreHero(
 
   // Restore equipped items FIRST (before restoring HP)
   if (savedHero.equippedItems && savedHero.equippedItems.length > 0) {
-    savedHero.equippedItems.forEach((equipped: any) => {
+    savedHero.equippedItems.forEach((equipped: unknown) => {
       // Restore the item from saved data
       const item = restoreItem(equipped.item);
       if (item && hero.equipment) {
@@ -78,7 +91,7 @@ export function restoreHero(
  * const item = restoreItem(savedData.inventory[0]);
  * ```
  */
-export function restoreItem(savedItem: any): Item {
+export function restoreItem(savedItem: unknown): Item {
   return new Item({
     id: savedItem.id,
     name: savedItem.name,
@@ -111,17 +124,17 @@ export function restoreItem(savedItem: any): Item {
  * }
  * ```
  */
-export function restoreGameState(savedState: any): {
+export function restoreGameState(savedState: unknown): {
   heroes: Hero[];
   inventory: Item[];
   gold: number;
   maxSlots: number;
 } {
   // Restore inventory items
-  const inventory = savedState.inventory.map((item: any) => restoreItem(item));
+  const inventory = savedState.inventory.map((item: unknown) => restoreItem(item));
 
   // Restore heroes with their equipped items
-  const heroes = savedState.heroes.map((savedHero: any) =>
+  const heroes = savedState.heroes.map((savedHero: unknown) =>
     restoreHero(savedHero)
   );
 

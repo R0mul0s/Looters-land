@@ -8,6 +8,7 @@ import { Inventory } from '../engine/item/Inventory';
 import { Equipment } from '../engine/equipment/Equipment';
 import type { DBHero, DBInventoryItem, DBEquipmentSlot } from '../types/database.types';
 import type { HeroClass } from '../types/hero.types';
+import type { ItemType, ItemSlot, ItemRarity } from '../types/item.types';
 
 export class GameStateConverter {
   /**
@@ -67,11 +68,11 @@ export class GameStateConverter {
     const item = new Item({
       id: slot.item_id,
       name: slot.item_name,
-      type: slot.item_type as any,
-      slot: slot.slot as any,
+      type: slot.item_type as ItemType,
+      slot: slot.slot as ItemSlot,
       icon: slot.icon || '⚔️',
       level: slot.level || 1,
-      rarity: slot.rarity as any,
+      rarity: slot.rarity as ItemRarity,
       stats: slot.base_stats,
       goldValue: slot.gold_value || 0,
       enchantLevel: slot.enchant_level || 0,
@@ -90,11 +91,11 @@ export class GameStateConverter {
     return new Item({
       id: dbItem.item_id,
       name: dbItem.item_name,
-      type: dbItem.item_type as any,
-      slot: dbItem.slot as any,
+      type: dbItem.item_type as ItemType,
+      slot: dbItem.slot as ItemSlot,
       icon: dbItem.icon,
       level: dbItem.level,
-      rarity: dbItem.rarity as any,
+      rarity: dbItem.rarity as ItemRarity,
       stats: dbItem.base_stats,
       goldValue: dbItem.gold_value,
       enchantLevel: dbItem.enchant_level,

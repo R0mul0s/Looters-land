@@ -262,7 +262,7 @@ export class GameSaveService {
         message: t('saveGame.saveSuccess'),
         saveId: gameSaveId
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Unexpected save error:', error);
       return {
         success: false,
@@ -418,7 +418,7 @@ export class GameSaveService {
           inventoryItems: (inventoryItems || []) as DBInventoryItem[]
         }
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Unexpected load error:', error);
       return {
         success: false,
@@ -475,7 +475,7 @@ export class GameSaveService {
         message: t('saveGame.loadSuccess'),
         saves: (saves || []) as GameSave[]
       };
-    } catch (error: any) {
+    } catch {
       return {
         success: false,
         message: t('saveGame.listFailed')
@@ -530,7 +530,7 @@ export class GameSaveService {
         success: true,
         message: t('saveGame.deleteSuccess')
       };
-    } catch (error: any) {
+    } catch {
       return {
         success: false,
         message: t('saveGame.deleteFailed')

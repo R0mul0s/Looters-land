@@ -98,7 +98,7 @@ export async function register(email: string, password: string): Promise<AuthRes
       user: data.user,
       session: undefined
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Registration error:', error);
     return {
       success: false,
@@ -159,7 +159,7 @@ export async function login(email: string, password: string): Promise<AuthResult
       user: data.user,
       session: data.session
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Login error:', error);
     return {
       success: false,
@@ -204,7 +204,7 @@ export async function logout(): Promise<AuthResult> {
       success: true,
       message: 'Logged out successfully'
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('❌ Logout error:', error);
     return {
       success: false,

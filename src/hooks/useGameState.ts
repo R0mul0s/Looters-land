@@ -869,13 +869,34 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
             const bankEnergyBonus = getBankEnergyBonus(updatedProfile.bank_vault_tier || 0);
             const calculatedMaxEnergy = ENERGY_CONFIG.MAX_ENERGY + bankEnergyBonus;
 
-            console.log(`🔄 Realtime profile update - IGNORING energy from DB (${updatedProfile.energy}), keeping local (${prev.energy})`);
+            // ENERGY SYNC LOGIC:
+            // 1. If DB energy > local energy: Accept DB value (cron job regeneration or bank upgrade)
+            // 2. If DB energy <= local energy: Keep local value (avoid overwrite from autosave race condition)
+            // 3. If maxEnergy increased: Add the difference to current energy (bank upgrade bonus)
+
+            const maxEnergyDiff = calculatedMaxEnergy - prev.maxEnergy;
+            let finalEnergy = prev.energy;
+
+            // Case 1: Bank upgrade - add bonus to current energy
+            if (maxEnergyDiff > 0) {
+              finalEnergy = prev.energy + maxEnergyDiff;
+              console.log(`⚡ Bank upgrade! MaxEnergy: ${prev.maxEnergy} → ${calculatedMaxEnergy}, Energy: ${prev.energy} → ${finalEnergy}`);
+            }
+            // Case 2: DB energy is higher - accept it (cron job regeneration)
+            else if (updatedProfile.energy > prev.energy) {
+              finalEnergy = updatedProfile.energy;
+              console.log(`🔋 Energy regenerated! DB (${updatedProfile.energy}) > Local (${prev.energy}), accepting DB value`);
+            }
+            // Case 3: Local energy is higher or equal - keep local (avoid autosave overwrite)
+            else {
+              console.log(`🔄 Realtime update - keeping local energy (${prev.energy}), ignoring DB (${updatedProfile.energy})`);
+            }
 
             return {
               ...prev,
               profile: updatedProfile,
-              // KEEP current energy - do not overwrite from Realtime!
-              energy: prev.energy,
+              // Smart energy sync: Accept DB if higher, keep local if lower
+              energy: finalEnergy,
               maxEnergy: calculatedMaxEnergy,
               gold: updatedProfile.gold,
               gems: updatedProfile.gems,

@@ -232,7 +232,6 @@ export function TownScreen({
             onClose={() => setSelectedBuilding(null)}
             onInventoryChange={onInventoryChange}
             onGoldChange={onGoldChange}
-            onEnergyChange={onEnergyChange}
             onBankVaultChange={onBankVaultChange}
             onMaxEnergyChange={onMaxEnergyChange}
           />

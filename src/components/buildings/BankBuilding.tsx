@@ -30,7 +30,7 @@ interface BankBuildingProps {
   onClose: () => void;
   onInventoryChange: (inventory: Inventory) => void;
   onGoldChange: (newGold: number) => void;
-  onEnergyChange: (newEnergy: number) => void;
+  // onEnergyChange: removed - energy is updated directly in database by BankService
   onBankVaultChange: (tier: number, maxSlots: number, totalItems: number) => void;
   onMaxEnergyChange: (newMaxEnergy: number) => void;
 }
@@ -47,7 +47,6 @@ export function BankBuilding({
   onClose,
   onInventoryChange,
   onGoldChange,
-  onEnergyChange,
   onBankVaultChange,
   onMaxEnergyChange
 }: BankBuildingProps) {
@@ -156,7 +155,10 @@ export function BankBuilding({
 
     if (result.success && result.newTier && result.newMaxSlots && result.newGold !== undefined && result.newEnergy !== undefined && result.newMaxEnergy) {
       onGoldChange(result.newGold);
-      onEnergyChange(result.newEnergy);
+      // NOTE: Energy is already updated in database by BankService.upgradeVault()
+      // Calling onEnergyChange() here would add energy twice (db + local state)
+      // The state will sync from database on next update/realtime event
+      // onEnergyChange(result.newEnergy); // REMOVED - causes duplicate energy add
       onBankVaultChange(result.newTier, result.newMaxSlots, bankTotalItems);
       onMaxEnergyChange(result.newMaxEnergy);
 

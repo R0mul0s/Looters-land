@@ -151,17 +151,17 @@ WHERE user_id != '00000000-0000-0000-0000-000000000000';
 
 ## Troubleshooting
 
-### Energy Auto-Regenerating in UI
+### Energy Not Syncing from Cron Job
 
-**Problem**: Energy increases automatically while playing (not from cron)
+**Problem**: Cron job adds energy in DB, but frontend doesn't update
 
-**Symptom**: Logs show `ACCEPTING higher energy from DB` frequently
+**Symptom**: Energy in DB is higher than in game UI, only syncs after F5
 
-**Cause**: Multiple tabs open + Realtime updates accepting DB energy
+**Cause**: Old logic completely ignored DB energy in Realtime updates
 
-**Solution**: ✅ **FIXED** - Energy is now ignored in Realtime updates (as of 2025-11-18)
+**Solution**: ✅ **FIXED** - Smart sync logic (as of 2025-11-18)
 
-Energy will only sync on page reload, preventing auto-regeneration issues.
+New logic accepts DB energy ONLY when it's higher than local (cron regeneration).
 
 ### Duplicate Regeneration (Energy +20 instead of +10)
 
@@ -242,35 +242,55 @@ Energy is displayed in game header with regen rate indicator:
 />
 ```
 
-### Realtime Updates
+### Realtime Updates - Smart Energy Sync
 
-**Energy is IGNORED in Realtime updates** to prevent issues with multiple tabs:
+**Energy uses SMART SYNC LOGIC** in Realtime updates (as of 2025-11-18):
 
 ```typescript
-// src/hooks/useGameState.ts
-// CRITICAL: IGNORE energy from Realtime updates!
-// Energy changes locally (movement, spending) and should only save OUT to DB.
-// Energy will be synced correctly on next page load when profile is fetched.
-console.log(`🔄 Realtime profile update - IGNORING energy from DB, keeping local`);
+// src/hooks/useGameState.ts - Lines 872-893
+// ENERGY SYNC LOGIC:
+// 1. If DB energy > local energy: Accept DB value (cron job regeneration)
+// 2. If DB energy <= local energy: Keep local value (avoid autosave overwrite)
+// 3. If maxEnergy increased: Add the difference (bank upgrade bonus)
+
+const maxEnergyDiff = calculatedMaxEnergy - prev.maxEnergy;
+let finalEnergy = prev.energy;
+
+// Case 1: Bank upgrade - add bonus to current energy
+if (maxEnergyDiff > 0) {
+  finalEnergy = prev.energy + maxEnergyDiff;
+  console.log(`⚡ Bank upgrade! MaxEnergy: ${prev.maxEnergy} → ${calculatedMaxEnergy}`);
+}
+// Case 2: DB energy is higher - accept it (cron job regeneration)
+else if (updatedProfile.energy > prev.energy) {
+  finalEnergy = updatedProfile.energy;
+  console.log(`🔋 Energy regenerated! DB (${updatedProfile.energy}) > Local (${prev.energy})`);
+}
+// Case 3: Local energy is higher or equal - keep local
+else {
+  console.log(`🔄 Realtime update - keeping local energy (${prev.energy})`);
+}
 
 return {
   ...prev,
-  energy: prev.energy,  // ALWAYS keep local energy
+  energy: finalEnergy,  // Smart sync!
   // ... rest of state
 };
 ```
 
-**Why energy is ignored in Realtime**:
-- ✅ Prevents duplicate energy from multiple tabs
-- ✅ Prevents race conditions with autosave
-- ✅ Local energy is always authoritative
-- ✅ DB energy syncs on page reload (fresh load from DB)
+**Why smart sync is needed**:
+- ✅ Accepts cron job regeneration (DB > local)
+- ✅ Prevents autosave race condition (DB <= local)
+- ✅ Preserves local energy changes (spending/movement)
+- ✅ Handles bank upgrade bonus correctly
+- ✅ Works with multiple tabs open
 
 **When energy syncs**:
-- ✅ Page reload/refresh - loads fresh energy from DB
-- ✅ Login - loads energy from DB
-- ✅ Initial load - loads energy from DB
-- ❌ Realtime updates - **IGNORED** to prevent conflicts
+- ✅ **Cron job regeneration** - Accepted if DB > local (Realtime)
+- ✅ **Bank upgrade** - Bonus added to current energy (Realtime)
+- ✅ **Page reload/refresh** - Fresh load from DB
+- ✅ **Login/Initial load** - Fresh load from DB
+- ❌ **Autosave overwrite** - Prevented by keeping local if DB <= local
 
 ---
 
@@ -365,11 +385,11 @@ A: Run `SELECT cron.unschedule('hourly-energy-regeneration');` in SQL Editor.
 **Q: What about the old useEnergyRegeneration hook?**
 A: It's deprecated but kept in codebase. Don't use it. It's marked with `@deprecated`.
 
-**Q: Why doesn't my energy update immediately when cron runs?**
-A: Energy from DB is ignored in Realtime updates to prevent conflicts. Refresh the page to see updated energy.
+**Q: Will my energy update automatically when cron runs?**
+A: Yes! The smart sync logic (added 2025-11-18) accepts DB energy if it's higher than local. You'll see `🔋 Energy regenerated!` in console and UI updates automatically via Realtime.
 
-**Q: I see duplicate "ACCEPTING higher energy" logs - is that a problem?**
-A: That was a bug (fixed 2025-11-18). Energy is now ignored in Realtime, preventing duplicates.
+**Q: What if I'm spending energy at the same time as cron runs?**
+A: No problem! If your local energy is lower due to spending, cron job increase will be accepted. If higher, local value is kept to preserve your actions.
 
 ---
 

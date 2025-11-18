@@ -23,8 +23,8 @@ export const DEBUG_CONFIG = {
   /** Unlimited gems */
   UNLIMITED_GEMS: false,
 
-  /** Fast energy regeneration (100x speed) */
-  FAST_ENERGY_REGEN: false,
+  // Note: FAST_ENERGY_REGEN removed - energy is now server-side via cron job
+  // Use SQL to test: SELECT regenerate_player_energy();
 };
 
 /**
@@ -53,15 +53,10 @@ if (typeof window !== 'undefined') {
     console.log(`⚡ Unlimited energy ${DEBUG_CONFIG.UNLIMITED_ENERGY ? 'ENABLED' : 'DISABLED'}`);
   };
 
-  (window as any).enableFastRegen = () => {
-    DEBUG_CONFIG.FAST_ENERGY_REGEN = true;
-    console.log('⚡ Fast energy regeneration ENABLED (100x speed)');
-  };
-
-  (window as any).disableFastRegen = () => {
-    DEBUG_CONFIG.FAST_ENERGY_REGEN = false;
-    console.log('⚡ Fast energy regeneration DISABLED');
-  };
+  // REMOVED: enableFastRegen / disableFastRegen
+  // Energy is now server-side via cron job (pg_cron)
+  // To test energy regen: Run in Supabase SQL Editor:
+  //   SELECT regenerate_player_energy();
 
   /**
    * Reset daily free gacha summon
@@ -246,8 +241,6 @@ if (typeof window !== 'undefined') {
   console.log('    - window.enableUnlimitedEnergy()');
   console.log('    - window.disableUnlimitedEnergy()');
   console.log('    - window.toggleUnlimitedEnergy()');
-  console.log('    - window.enableFastRegen()');
-  console.log('    - window.disableFastRegen()');
   console.log('  Gacha:');
   console.log('    - await window.showGachaState() - Show current gacha state');
   console.log('    - await window.resetDailyGacha() - Reset daily free summon');

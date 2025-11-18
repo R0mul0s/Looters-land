@@ -174,6 +174,32 @@ The frontend energy regeneration hook (`useEnergyRegeneration`) has been **disab
 
 Energy now regenerates **server-side only** via cron job.
 
+### Smart Sync Logic (2025-11-18)
+
+The frontend now uses **smart synchronization** to handle energy updates:
+
+```typescript
+// Accept DB energy if HIGHER (cron job regeneration)
+if (dbEnergy > localEnergy) {
+  energy = dbEnergy;  // ✅ Cron regen accepted
+}
+// Keep local energy if HIGHER or EQUAL (preserve user actions)
+else {
+  energy = localEnergy;  // ✅ Local changes preserved
+}
+```
+
+**Benefits**:
+- ✅ Cron job energy syncs automatically via Realtime
+- ✅ Local energy changes preserved (movement, spending)
+- ✅ No autosave overwrite issues
+- ✅ Works perfectly with multiple tabs
+
+**Console Logs**:
+- `🔋 Energy regenerated!` - When cron job energy is accepted
+- `🔄 Keeping local energy` - When local changes are preserved
+- `⚡ Bank upgrade!` - When max energy bonus is added
+
 ## Related Files
 
 - Migration: `supabase/migrations/20251118_add_hourly_energy_regen.sql`

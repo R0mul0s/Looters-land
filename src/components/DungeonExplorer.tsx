@@ -13,14 +13,14 @@ import type { Hero } from '../engine/hero/Hero';
 import type { Item } from '../engine/item/Item';
 import { DungeonMinimap } from './DungeonMinimap';
 import { t } from '../localization/i18n';
-import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../styles/tokens';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT } from '../styles/tokens';
 import { flexBetween, flexColumn, flexCenter } from '../styles/common';
 
 interface DungeonExplorerProps {
   dungeon: Dungeon;
   dungeonUpdateKey: number;
   heroes: Hero[];
-  onCombatStart: (enemies: any[]) => void;
+  onCombatStart: (enemies: unknown[]) => void;
   onTreasureLooted: (gold: number, items: Item[]) => void;
   onDungeonExit: () => void;
   onFloorComplete: () => void;
@@ -227,7 +227,7 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
         }
         break;
 
-      case 'exit':
+      case 'exit': {
         const result = dungeon.proceedToNextFloor();
         setMessage(result.message);
         if (result.success) {
@@ -235,6 +235,7 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
           setCurrentRoom(dungeon.getCurrentRoom());
           forceUpdate({});
         }
+      }
         break;
     }
   };

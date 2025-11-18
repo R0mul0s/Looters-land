@@ -64,6 +64,7 @@ function getHealthBarColor(hpPercent: number): string {
  * @param activeParty - Array of heroes in active party
  * @returns Average health percentage (0-100)
  */
+// eslint-disable-next-line react-refresh/only-export-components
 export function getPartyAverageHealth(activeParty: Hero[]): number {
   if (!activeParty || activeParty.length === 0) return 100;
 

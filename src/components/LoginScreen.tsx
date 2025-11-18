@@ -92,8 +92,9 @@ export function LoginScreen({ onLoginSuccess }: LoginScreenProps) {
           setError(result.message);
         }
       }
-    } catch (err: any) {
-      setError(err.message || t('auth.errorOccurred'));
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : t('auth.errorOccurred');
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

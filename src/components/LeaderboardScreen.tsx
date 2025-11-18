@@ -80,7 +80,7 @@ const CATEGORY_CONFIG: Record<
 export function LeaderboardScreen({
   userId,
   playerName,
-  playerLevel
+  playerLevel: _playerLevel // eslint-disable-line @typescript-eslint/no-unused-vars
 }: LeaderboardScreenProps) {
   const [activeCategory, setActiveCategory] = useState<LeaderboardCategory>('deepest_floor');
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);

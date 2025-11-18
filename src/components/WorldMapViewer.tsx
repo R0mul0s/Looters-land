@@ -1698,7 +1698,7 @@ function WorldMapViewerComponent({
       // Make hero slightly larger (1.2x tile size) and center it on the tile
       const heroSize = TILE_SIZE * 1.2;
       const heroOffsetX = playerScreenX - (heroSize - TILE_SIZE) / 2;
-      const heroOffsetY = playerScreenY - (heroSize - TILE_SIZE) / 2;
+      let heroOffsetY = playerScreenY - (heroSize - TILE_SIZE) / 2;
 
       // Add bouncing animation when moving (like riding a horse)
       if (isMoving && currentPath && currentPath.length > 0) {

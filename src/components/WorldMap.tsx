@@ -20,7 +20,7 @@
  * @lastModified 2025-11-18
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GameLayout, type GameScreen } from './GameLayout';
 import { WorldMapGenerator } from '../engine/worldmap/WorldMapGenerator';
 import { WorldMapViewer } from './WorldMapViewer';
@@ -48,16 +48,37 @@ import { supabase } from '../lib/supabase';
 import { t } from '../localization/i18n';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS, BLUR } from '../styles/tokens';
 import { flexColumn, flexCenter } from '../styles/common';
-import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, ObservationTower, HealingWell, DynamicObject, WanderingMonster, TravelingMerchant } from '../types/worldmap.types';
+import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, ObservationTower, HealingWell, WanderingMonster, TravelingMerchant, WeatherType, TimeOfDay, DynamicObject } from '../types/worldmap.types';
+import type { EquipmentSlotName } from '../types/equipment.types';
 import { DEBUG_CONFIG } from '../config/DEBUG_CONFIG';
 import { ENERGY_CONFIG, WORLDMAP_CONFIG } from '../config/BALANCE_CONFIG';
-import { generateRandomEnemy } from '../engine/combat/Enemy';
+import { generateRandomEnemy, Enemy } from '../engine/combat/Enemy';
 import { generateRareSpawnEncounter, generateWanderingMonsterEncounter } from '../engine/combat/NamedEnemies';
+import type { Item } from '../engine/item/Item';
 import logo from '../assets/images/logo.png';
+
+// Extend Window interface for debug commands
+declare global {
+  interface Window {
+    __gameActions?: GameStateActions;
+    __gameState?: GameState;
+  }
+}
+
+interface QuickCombatMetadata {
+  position?: { x: number; y: number };
+  type?: string;
+  [key: string]: unknown;
+}
+
+interface Loot {
+  gold: number;
+  items: Item[];
+}
 
 interface WorldMapProps {
   onEnterDungeon?: (dungeon: DungeonEntrance) => void;
-  onQuickCombat?: (enemies: any[], combatType: 'rare_spawn' | 'wandering_monster', metadata?: any) => void;
+  onQuickCombat?: (enemies: Enemy[], combatType: 'rare_spawn' | 'wandering_monster', metadata?: QuickCombatMetadata) => void;
   userEmail?: string;
   gameState?: GameState;
   gameActions?: GameStateActions;
@@ -99,11 +120,11 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
 
   // Expose gameActions and gameState to window for debug commands
   useEffect(() => {
-    (window as any).__gameActions = gameActions;
-    (window as any).__gameState = gameState;
+    window.__gameActions = gameActions;
+    window.__gameState = gameState;
     return () => {
-      delete (window as any).__gameActions;
-      delete (window as any).__gameState;
+      delete window.__gameActions;
+      delete window.__gameState;
     };
   }, [gameActions, gameState]);
 
@@ -121,23 +142,22 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
   const [showDungeonModal, setShowDungeonModal] = useState<DungeonEntrance | null>(null);
   const [showEnergyModal, setShowEnergyModal] = useState<{ message: string; required?: number } | null>(null);
   const [showUnexploredModal, setShowUnexploredModal] = useState(false);
-  const [showTeleportMenu, setShowTeleportMenu] = useState(false);
-  const [enchantItem, setEnchantItem] = useState<any | null>(null);
+  const [enchantItem, setEnchantItem] = useState<Item | null>(null);
   const [equipmentMessage, setEquipmentMessage] = useState<string | null>(null);
-  const [showTreasureChestModal, setShowTreasureChestModal] = useState<{ chest: TreasureChest; loot: any } | null>(null);
-  const [showHiddenPathModal, setShowHiddenPathModal] = useState<{ path: HiddenPath; loot: any } | null>(null);
+  const [showTreasureChestModal, setShowTreasureChestModal] = useState<{ chest: TreasureChest; loot: Loot } | null>(null);
+  const [showHiddenPathModal, setShowHiddenPathModal] = useState<{ path: HiddenPath; loot: Loot } | null>(null);
   const [showMerchantModal, setShowMerchantModal] = useState<TravelingMerchant | null>(null);
   const [showHealingWellModal, setShowHealingWellModal] = useState<HealingWell | null>(null);
   const [showMessageModal, setShowMessageModal] = useState<string | null>(null);
   const [showLowHealthWarning, setShowLowHealthWarning] = useState<{ type: 'dungeon' | 'combat'; action: () => void; averageHealth: number } | null>(null);
-  const [showDiscardGreyModal, setShowDiscardGreyModal] = useState<{ count: number; items: any[] } | null>(null);
+  const [showDiscardGreyModal, setShowDiscardGreyModal] = useState<{ count: number; items: Item[] } | null>(null);
   const [showQuickCombatModal, setShowQuickCombatModal] = useState<{
-    enemies: any[];
+    enemies: Enemy[];
     enemyName: string;
     enemyLevel: number;
     difficulty: string;
     combatType: 'rare_spawn' | 'wandering_monster';
-    metadata: any;
+    metadata: QuickCombatMetadata;
   } | null>(null);
 
   // Debug: Log when message modal state changes
@@ -586,7 +606,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
    * @param x - Object X coordinate
    * @param y - Object Y coordinate
    */
-  const handleDynamicObjectClick = (object: any, x: number, y: number) => {
+  const handleDynamicObjectClick = (object: DynamicObject, x: number, y: number) => {
     console.log('Clicked dynamic object:', object);
 
     // Move player to the object location
@@ -1143,19 +1163,19 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
 
   // Helper functions for weather and time display using systems
   const getWeatherIcon = (weather: string): string => {
-    return WeatherSystem.getWeatherDisplay(weather as any, tLocal).icon;
+    return WeatherSystem.getWeatherDisplay(weather as WeatherType, tLocal).icon;
   };
 
   const getWeatherLabel = (weather: string): string => {
-    return WeatherSystem.getWeatherDisplay(weather as any, tLocal).label;
+    return WeatherSystem.getWeatherDisplay(weather as WeatherType, tLocal).label;
   };
 
   const getTimeIcon = (time: string): string => {
-    return TimeOfDaySystem.getTimeDisplay(time as any, tLocal).icon;
+    return TimeOfDaySystem.getTimeDisplay(time as TimeOfDay, tLocal).icon;
   };
 
   const getTimeLabel = (time: string): string => {
-    return TimeOfDaySystem.getTimeDisplay(time as any, tLocal).label;
+    return TimeOfDaySystem.getTimeDisplay(time as TimeOfDay, tLocal).label;
   };
 
   const worldmapContent = (
@@ -1309,7 +1329,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
       }}
       onUnequipItem={async (hero, slotName) => {
         if (!hero.equipment) return;
-        const result = hero.equipment.unequip(slotName as any);
+        const result = hero.equipment.unequip(slotName as EquipmentSlotName);
         if (result.success && result.item) {
           await gameActions.addItem(result.item);
           gameActions.forceUpdate();
@@ -1593,7 +1613,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
             <ModalInfoRow label="🎒 Items:" value={showTreasureChestModal.loot.items.length} />
             <ModalDivider />
             <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-              {showTreasureChestModal.loot.items.map((item: any, i: number) => (
+              {showTreasureChestModal.loot.items.map((item, i: number) => (
                 <ItemDisplay key={`worldmap-treasure-${item.id || `item-${i}`}`} item={item} compact heroLevel={gameState.allHeroes[0]?.level} />
               ))}
             </div>
@@ -1619,7 +1639,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
             <ModalInfoRow label="🎒 Items:" value={showHiddenPathModal.loot.items.length} />
             <ModalDivider />
             <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-              {showHiddenPathModal.loot.items.map((item: any, i: number) => (
+              {showHiddenPathModal.loot.items.map((item, i: number) => (
                 <ItemDisplay key={i} item={item} compact heroLevel={gameState.allHeroes[0]?.level} />
               ))}
             </div>
@@ -1819,7 +1839,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
               {/* Current Stats */}
               <div style={{ marginBottom: '15px' }}>
                 <h4 style={{ color: '#f1f5f9', marginBottom: '10px' }}>Current Stats</h4>
-                {Object.entries(enchantItem.getEffectiveStats()).map(([stat, value]: [string, any]) => (
+                {Object.entries(enchantItem.getEffectiveStats()).map(([stat, value]: [string, number]) => (
                   <div key={stat} style={styles.infoRow}>
                     <span style={styles.label}>{stat}:</span>
                     <span style={styles.value}>{value}</span>

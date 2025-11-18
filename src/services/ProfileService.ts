@@ -30,8 +30,8 @@ export interface PlayerProfile {
   max_energy: number;
   current_world_x: number;
   current_world_y: number;
-  world_map_data?: any; // JSONB - serialized WorldMap
-  discovered_locations?: any[]; // JSONB array
+  world_map_data?: unknown; // JSONB - serialized WorldMap
+  discovered_locations?: unknown[]; // JSONB array
   // Multiplayer fields
   is_online?: boolean;
   last_seen?: string;

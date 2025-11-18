@@ -50,7 +50,7 @@ export class GlobalWorldStateService {
       if (error) {
         return {
           success: false,
-          message: `Failed to get global world state: ${error.message}`
+          message: `Failed to get global world state: ${error instanceof Error ? error.message : String(error)}`
         };
       }
 
@@ -59,10 +59,10 @@ export class GlobalWorldStateService {
         message: 'Global world state loaded',
         state: data as GlobalWorldState
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: `Unexpected error: ${error.message}`
+        message: `Unexpected error: ${error instanceof Error ? error.message : String(error)}`
       };
     }
   }

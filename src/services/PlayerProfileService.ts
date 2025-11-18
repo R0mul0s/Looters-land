@@ -23,7 +23,7 @@ export interface PlayerProfile {
   combat_power: number; // Total party combat power
   current_world_x: number;
   current_world_y: number;
-  world_map_data?: any;
+  world_map_data?: unknown;
   discovered_locations?: string[];
   gacha_summon_count: number;
   gacha_last_free_summon: string | null;
@@ -49,7 +49,7 @@ export interface PlayerProfileUpdate {
   combat_power?: number; // Total party combat power
   current_world_x?: number;
   current_world_y?: number;
-  world_map_data?: any;
+  world_map_data?: unknown;
   discovered_locations?: string[];
   gacha_summon_count?: number;
   gacha_last_free_summon?: string | null;
@@ -95,7 +95,7 @@ export class PlayerProfileService {
 
         return {
           success: false,
-          message: `Failed to get profile: ${error.message}`
+          message: `Failed to get profile: ${error instanceof Error ? error.message : String(error)}`
         };
       }
 
@@ -104,10 +104,10 @@ export class PlayerProfileService {
         message: 'Profile loaded',
         profile: data as PlayerProfile
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: `Unexpected error: ${error.message}`
+        message: `Unexpected error: ${error instanceof Error ? error.message : String(error)}`
       };
     }
   }
@@ -152,7 +152,7 @@ export class PlayerProfileService {
       if (error) {
         return {
           success: false,
-          message: `Failed to create profile: ${error.message}`
+          message: `Failed to create profile: ${error instanceof Error ? error.message : String(error)}`
         };
       }
 
@@ -161,10 +161,10 @@ export class PlayerProfileService {
         message: 'Profile created',
         profile: data as PlayerProfile
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: `Unexpected error: ${error.message}`
+        message: `Unexpected error: ${error instanceof Error ? error.message : String(error)}`
       };
     }
   }
@@ -198,7 +198,7 @@ export class PlayerProfileService {
         console.error('Update profile error:', error);
         return {
           success: false,
-          message: `Failed to update profile: ${error.message}`
+          message: `Failed to update profile: ${error instanceof Error ? error.message : String(error)}`
         };
       }
 
@@ -223,10 +223,10 @@ export class PlayerProfileService {
         message: 'Profile updated',
         profile: profile as PlayerProfile
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
-        message: `Unexpected error: ${error.message}`
+        message: `Unexpected error: ${error instanceof Error ? error.message : String(error)}`
       };
     }
   }

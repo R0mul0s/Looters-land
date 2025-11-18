@@ -46,7 +46,7 @@ interface LocalGameState {
         icon: string;
         level: number;
         rarity: string;
-        stats: any;
+        stats: Record<string, number>;
         goldValue: number;
         enchantLevel: number;
         setId: string | null;
@@ -62,7 +62,7 @@ interface LocalGameState {
     icon: string;
     level: number;
     rarity: string;
-    stats: any;
+    stats: Record<string, number>;
     goldValue: number;
     enchantLevel: number;
     setId: string | null;
@@ -109,7 +109,7 @@ export function saveToLocalStorage(
         currentHP: hero.currentHP,
         equippedItems: hero.equipment
           ? Object.entries(hero.equipment.slots)
-              .filter(([_, item]) => item !== null)
+              .filter(([, item]) => item !== null)
               .map(([slot, item]) => ({
                 slot,
                 item: {

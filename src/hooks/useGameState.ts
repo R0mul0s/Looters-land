@@ -21,13 +21,14 @@ import { Hero } from '../engine/hero/Hero';
 import { Inventory } from '../engine/item/Inventory';
 import { Equipment } from '../engine/equipment/Equipment';
 import { Item } from '../engine/item/Item';
+import type { ItemType, ItemSlot, ItemRarity, ItemStats } from '../types/item.types';
 import { PlayerProfileService } from '../services/PlayerProfileService';
 import type { PlayerProfile } from '../services/PlayerProfileService';
 import { GameSaveService } from '../services/GameSaveService';
 import { DynamicObjectUpdaterService } from '../services/DynamicObjectUpdaterService';
 import * as AuthService from '../services/AuthService';
 import type { WorldMap, StaticObjectType } from '../types/worldmap.types';
-import type { GachaState } from '../types/hero.types';
+import type { GachaState, HeroClass, HeroRarity } from '../types/hero.types';
 import { supabase } from '../lib/supabase';
 import type { SyncStatus } from '../components/SyncStatusIndicator';
 import { ENERGY_CONFIG, getBankEnergyBonus } from '../config/BALANCE_CONFIG';
@@ -181,7 +182,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
     lastSaveTime: null
   });
 
-  const [updateTrigger, setUpdateTrigger] = useState(0);
+  const [, setUpdateTrigger] = useState(0);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const userIdRef = useRef<string | null>(null);
   const stateRef = useRef<GameState>(state);
@@ -210,7 +211,6 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
    * ```
    */
   // Track if we're currently updating heroes to prevent stale saves
-  const isUpdatingHeroesRef = useRef(false);
   const lastHeroUpdateTimeRef = useRef(0);
 
   const scheduleAutoSave = useCallback((stateToSave?: GameState) => {
@@ -266,7 +266,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
 
     // Define these outside try block so they're available in catch block
     let currentState: GameState;
-    let profileUpdate: any;
+    let profileUpdate: Record<string, unknown>;
 
     try {
       isSavingRef.current = true;
@@ -382,7 +382,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
 
         // Reconstruct heroes from database
         saveResult.data.heroes.forEach(dbHero => {
-          const hero = new Hero(dbHero.hero_name, dbHero.hero_class as any, dbHero.level, dbHero.rarity as any || 'common');
+          const hero = new Hero(dbHero.hero_name, dbHero.hero_class as HeroClass, dbHero.level, (dbHero.rarity as HeroRarity) || 'common');
 
           hero.id = dbHero.id;
           hero.experience = dbHero.experience;
@@ -413,12 +413,12 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
               const item = new Item({
                 id: eq.item_id,
                 name: eq.item_name!,
-                type: (eq.item_type as any) || 'equipment', // Default to 'equipment' if not set
-                slot: eq.slot as any,
+                type: (eq.item_type as ItemType) || 'equipment', // Default to 'equipment' if not set
+                slot: eq.slot as ItemSlot,
                 icon: eq.icon!,
                 level: eq.level!,
-                rarity: eq.rarity as any,
-                stats: eq.base_stats as any || {},
+                rarity: eq.rarity as ItemRarity,
+                stats: (eq.base_stats as ItemStats) || {},
                 goldValue: eq.gold_value!,
                 enchantLevel: eq.enchant_level || 0,
                 setId: eq.set_id || undefined,
@@ -444,17 +444,17 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           const item = new Item({
             id: dbItem.item_id,
             name: dbItem.item_name,
-            type: (dbItem.item_type as any) || 'equipment', // Default to 'equipment' if not set
-            slot: dbItem.slot as any,
+            type: (dbItem.item_type as ItemType) || 'equipment', // Default to 'equipment' if not set
+            slot: dbItem.slot as ItemSlot,
             icon: dbItem.icon,
             level: dbItem.level,
-            rarity: dbItem.rarity as any,
-            stats: dbItem.base_stats as any || {},
+            rarity: dbItem.rarity as ItemRarity,
+            stats: (dbItem.base_stats as ItemStats) || {},
             goldValue: dbItem.gold_value,
             enchantLevel: dbItem.enchant_level,
             setId: dbItem.set_id || undefined,
             setName: dbItem.set_name || undefined,
-            location: dbItem.location as any || 'inventory' // Preserve location from database
+            location: (dbItem.location as 'inventory' | 'bank' | 'equipped') || 'inventory' // Preserve location from database
           });
 
           inventory.addItem(item);
@@ -667,13 +667,13 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       //     }
       //   });
       // }, 1000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('❌ Failed to load game:', error);
       setState(prev => ({
         ...prev,
         loading: false,
         profileLoading: false,
-        error: error.message
+        error: error instanceof Error ? error.message : 'Unknown error'
       }));
     } finally {
       // Reset loading flag
@@ -1053,7 +1053,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
       setTimeout(() => scheduleAutoSave(newState), 0);
     },
 
-    setMaxEnergy: async (newMaxEnergy: number) => {
+    setMaxEnergy: async () => {
       // Max energy is now calculated from bank vault tier
       // This function updates state to trigger re-render after bank upgrade
       // The actual maxEnergy is recalculated from bankVaultTier

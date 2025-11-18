@@ -229,8 +229,8 @@ export class Equipment {
     return stats.HP + (stats.ATK * 2) + (stats.DEF * 1.5) + stats.SPD + (stats.CRIT * 10);
   }
 
-  toJSON(): { slots: Record<string, any> } {
-    const slotsData: Record<string, any> = {};
+  toJSON(): { slots: Record<string, unknown> } {
+    const slotsData: Record<string, unknown> = {};
     Object.keys(this.slots).forEach(slotName => {
       const slot = slotName as EquipmentSlotName;
       slotsData[slotName] = this.slots[slot] ? this.slots[slot]!.toJSON() : null;
@@ -239,14 +239,14 @@ export class Equipment {
     return { slots: slotsData };
   }
 
-  static fromJSON(data: { slots: Record<string, any> }, hero: Hero): Equipment {
+  static fromJSON(data: { slots: Record<string, unknown> }, hero: Hero): Equipment {
     const equipment = new Equipment(hero);
 
     Object.keys(data.slots).forEach(slotName => {
       if (data.slots[slotName]) {
         const slot = slotName as EquipmentSlotName;
         // Note: Item.fromJSON will be imported when used
-        equipment.slots[slot] = data.slots[slotName] as any; // Will be Item after parsing
+        equipment.slots[slot] = data.slots[slotName] as Item; // Will be Item after parsing
       }
     });
 

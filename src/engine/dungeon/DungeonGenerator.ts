@@ -558,9 +558,7 @@ export class DungeonGenerator {
    * Populate mystery room
    */
   private static populateMysteryRoom(
-    room: Room,
-    floorNumber: number,
-    difficultyMultiplier: number
+    room: Room
   ): void {
     const eventTypes: Array<'positive' | 'negative' | 'neutral'> = ['positive', 'negative', 'neutral'];
     room.mysteryEventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];

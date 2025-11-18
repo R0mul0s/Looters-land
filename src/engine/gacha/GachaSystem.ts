@@ -13,7 +13,7 @@
  * @copyright 2025
  */
 
-import type { HeroTemplate, HeroRarity, SummonResult, GachaState } from '../../types/hero.types';
+import type { HeroTemplate, HeroRarity, GachaState } from '../../types/hero.types';
 import { HERO_POOL } from './HeroPool';
 
 export class GachaSystem {
@@ -42,7 +42,7 @@ export class GachaSystem {
   /**
    * Check if player can use daily free summon
    */
-  static canUseFreeSummon(gachaState: GachaState): boolean {
+  static canUseFreeSummon(_gachaState: GachaState): boolean {
     // DEBUG MODE: Always allow free summon for testing
     return true;
 

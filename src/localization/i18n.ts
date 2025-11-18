@@ -93,12 +93,12 @@ if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'cs')) {
  */
 export function t(key: string, replacements?: Record<string, string | number>): string {
   const keys = key.split('.');
-  let value: any = locales[currentLanguage];
+  let value: unknown = locales[currentLanguage];
 
   // Navigate through nested object
   for (const k of keys) {
-    if (value && typeof value === 'object' && k in value) {
-      value = value[k];
+    if (value && typeof value === 'object' && !Array.isArray(value) && k in value) {
+      value = (value as Record<string, unknown>)[k];
     } else {
       console.warn(`Translation key not found: ${key}`);
       return key; // Return key as fallback

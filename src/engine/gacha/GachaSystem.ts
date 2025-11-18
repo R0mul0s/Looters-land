@@ -42,7 +42,7 @@ export class GachaSystem {
   /**
    * Check if player can use daily free summon
    */
-  static canUseFreeSummon(_gachaState: GachaState): boolean {
+  static canUseFreeSummon(): boolean {
     // DEBUG MODE: Always allow free summon for testing
     return true;
 

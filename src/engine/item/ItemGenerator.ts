@@ -89,7 +89,7 @@ export class ItemGenerator {
     return prefix + slotName;
   }
 
-  static generateDescription(slot: ItemSlot, rarity: ItemRarity): string {
+  static generateDescription(slot: ItemSlot): string {
     const descriptions: Record<ItemSlot, string> = {
       helmet: 'Protects the head from enemy attacks.',
       weapon: 'A deadly weapon for combat.',

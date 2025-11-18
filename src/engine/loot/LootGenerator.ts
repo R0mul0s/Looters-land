@@ -10,6 +10,7 @@
  */
 
 import { ItemGenerator } from '../item/ItemGenerator';
+import type { Item } from '../item/Item';
 import type { Enemy } from '../combat/Enemy';
 import type { LootReward, LootConfig } from '../../types/loot.types';
 import type { EnemyType } from '../../types/combat.types';
@@ -62,8 +63,8 @@ export class LootGenerator {
   /**
    * Generate item drops from enemies
    */
-  private generateItems(enemies: Enemy[]): any[] {
-    const items: any[] = [];
+  private generateItems(enemies: Enemy[]): Item[] {
+    const items: Item[] = [];
 
     for (const enemy of enemies) {
       // Check if item drops
@@ -174,7 +175,7 @@ export class LootGenerator {
     const gold = Math.floor(baseGold[lootQuality] * (0.8 + Math.random() * 0.4));
 
     // Generate items
-    const items: any[] = [];
+    const items: Item[] = [];
     const count = itemCount[lootQuality];
 
     for (let i = 0; i < count; i++) {
@@ -216,7 +217,7 @@ export class LootGenerator {
     const gold = Math.floor(baseGold[lootQuality] * (0.8 + Math.random() * 0.4));
 
     // Generate items (all at least the quality of the path)
-    const items: any[] = [];
+    const items: Item[] = [];
     const count = itemCount[lootQuality];
 
     for (let i = 0; i < count; i++) {

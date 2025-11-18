@@ -188,7 +188,7 @@ const archerSkills: Skill[] = [
     'Increase SPD by 50% for 2 turns',
     3,
     'buff',
-    (caster: Combatant, _targets: Combatant[]): CombatActionResult => {
+    (caster: Combatant): CombatActionResult => {
       // Apply SPD buff to caster
       caster.addStatusEffect({
         name: 'Evasion',
@@ -266,7 +266,7 @@ const mageSkills: Skill[] = [
     'Reduce incoming damage by 40% for 3 turns',
     5,
     'buff',
-    (caster: Combatant, _targets: Combatant[]): CombatActionResult => {
+    (caster: Combatant): CombatActionResult => {
       // Apply damage reduction buff
       caster.addStatusEffect({
         name: 'Mana Shield',
@@ -386,7 +386,7 @@ const paladinSkills: Skill[] = [
     'Become immune to damage for 1 turn',
     5,
     'buff',
-    (caster: Combatant, _targets: Combatant[]): CombatActionResult => {
+    (caster: Combatant): CombatActionResult => {
       // Apply immunity buff
       caster.addStatusEffect({
         name: 'Divine Shield',

@@ -157,7 +157,7 @@ export class Enemy {
   /**
    * Simple AI - choose target and attack
    */
-  chooseAction(heroes: Combatant[], _enemies: Combatant[]): CombatActionResult | null {
+  chooseAction(heroes: Combatant[]): CombatActionResult | null {
     // Simple AI: attack random alive hero
     const aliveHeroes = heroes.filter(h => h.isAlive);
     if (aliveHeroes.length === 0) return null;

@@ -112,7 +112,7 @@ export class CombatEngine {
     this.log('Combat initialized!');
     this.log(`Heroes: ${this.heroes.map(h => h.name).join(', ')}`);
     this.log(
-      `Enemies: ${this.enemies.map((e: any) => `${e.name} (Lv.${e.level})`).join(', ')}`
+      `Enemies: ${this.enemies.map((e) => `${e.name} (Lv.${e.level})`).join(', ')}`
     );
   }
 
@@ -221,7 +221,7 @@ export class CombatEngine {
 
     if ('isEnemy' in character && character.isEnemy) {
       // Enemy AI chooses action
-      action = (character as any).chooseAction(this.heroes, this.enemies);
+      action = (character as Combatant & { chooseAction: (heroes: Combatant[], enemies: Combatant[]) => CombatActionResult }).chooseAction(this.heroes, this.enemies);
     } else {
       // Hero AI (simplified - will be enhanced with player control)
       action = this.heroAI(character);
@@ -245,7 +245,7 @@ export class CombatEngine {
     if (aliveEnemies.length === 0) return null;
 
     // Get skills if hero has them
-    const skills = 'getSkills' in hero ? (hero as any).getSkills() : [];
+    const skills = 'getSkills' in hero ? (hero as Combatant & { getSkills: () => unknown[] }).getSkills() : [];
 
     // Check if any skill is off cooldown
     for (let i = 0; i < skills.length; i++) {
@@ -254,7 +254,7 @@ export class CombatEngine {
 
       if (currentCD === 0) {
         // Use skill based on type
-        if (skill.type === 'heal' && 'class' in hero && (hero as any).class === 'cleric') {
+        if (skill.type === 'heal' && 'class' in hero && (hero as Combatant & { class: string }).class === 'cleric') {
           // Heal lowest HP ally
           const aliveHeroes = this.heroes.filter(h => h.isAlive);
           const lowestHPHero = aliveHeroes.reduce((lowest, h) =>
@@ -262,22 +262,22 @@ export class CombatEngine {
           );
 
           if (lowestHPHero.currentHP < lowestHPHero.maxHP * 0.6) {
-            return (hero as any).useSkill(i, [lowestHPHero]);
+            return (hero as Combatant & { useSkill: (index: number, targets: Combatant[]) => CombatActionResult }).useSkill(i, [lowestHPHero]);
           }
         } else if (skill.type === 'damage') {
           // Attack random enemy
           const target = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-          return (hero as any).useSkill(i, [target]);
+          return (hero as Combatant & { useSkill: (index: number, targets: Combatant[]) => CombatActionResult }).useSkill(i, [target]);
         } else if (skill.type === 'buff') {
           // Use buff
-          return (hero as any).useSkill(i, this.heroes.filter(h => h.isAlive));
+          return (hero as Combatant & { useSkill: (index: number, targets: Combatant[]) => CombatActionResult }).useSkill(i, this.heroes.filter(h => h.isAlive));
         }
       }
     }
 
     // Default: basic attack on random enemy
     const target = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-    return (hero as any).attack(target);
+    return (hero as Combatant & { attack: (target: Combatant) => CombatActionResult }).attack(target);
   }
 
   /**
@@ -289,7 +289,7 @@ export class CombatEngine {
     const attacker = action.attacker;
 
     switch (action.type) {
-      case 'basic_attack':
+      case 'basic_attack': {
         const critText = action.isCrit ? ' [CRIT!]' : '';
         this.log(
           `${attacker.name} attacks ${action.target?.name} for ${action.damage} damage${critText}`,
@@ -299,8 +299,9 @@ export class CombatEngine {
           this.log(`${action.target.name} has been defeated!`, 'death');
         }
         break;
+      }
 
-      case 'skill_damage':
+      case 'skill_damage': {
         const skillCritText = action.isCrit ? ' [CRIT!]' : '';
         this.log(
           `${attacker.name} uses ${action.skillName} on ${action.target?.name} for ${action.damage} damage${skillCritText}`,
@@ -313,6 +314,7 @@ export class CombatEngine {
           this.log(`${action.target.name} has been defeated!`, 'death');
         }
         break;
+      }
 
       case 'skill_damage_heal':
         this.log(
@@ -413,7 +415,7 @@ export class CombatEngine {
     const totalXP = Math.floor(baseXP * avgEnemyLevel * numEnemies);
 
     // Generate loot from defeated enemies
-    this.lootReward = this.lootGenerator.generateLoot(this.enemies as any[]);
+    this.lootReward = this.lootGenerator.generateLoot(this.enemies as Combatant[]);
 
     this.log(`\n💰 Rewards:`, 'info');
     this.log(`Experience: ${totalXP} XP`, 'info');

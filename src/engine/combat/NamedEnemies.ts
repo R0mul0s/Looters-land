@@ -215,6 +215,6 @@ export function isNamedEnemy(enemyName: string): boolean {
  */
 export function getNamedEnemiesByType(type: 'boss' | 'elite'): string[] {
   return Object.entries(NAMED_ENEMIES)
-    .filter(([_, config]) => config.type === type)
-    .map(([name, _]) => name);
+    .filter(([, config]) => config.type === type)
+    .map(([name]) => name);
 }

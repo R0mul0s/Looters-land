@@ -43,7 +43,7 @@ class SessionManager {
   private static instance: SessionManager;
   private sessionId: string | null = null;
   private userId: string | null = null;
-  private heartbeatInterval: NodeJS.Timeout | null = null;
+  private heartbeatInterval: ReturnType<typeof setTimeout> | null = null;
   private realtimeChannel: RealtimeChannel | null = null;
   private onSessionInvalidated: SessionInvalidatedCallback | null = null;
 

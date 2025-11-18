@@ -187,7 +187,6 @@ export function HealerBuilding({
                 <div
                   key={hero.id}
                   style={styles.heroCard}
-                  onClick={() => setSelectedHeroIndex(index)}
                 >
                   <div style={styles.heroIcon}>
                     {hero.class === 'warrior' && '⚔️'}

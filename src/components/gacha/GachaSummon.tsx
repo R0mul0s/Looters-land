@@ -32,7 +32,7 @@ export function GachaSummon({
   const [summonResults, setSummonResults] = useState<HeroTemplate[]>([]);
   const [showResults, setShowResults] = useState(false);
 
-  const canUseFreeSummon = GachaSystem.canUseFreeSummon(gachaState);
+  const canUseFreeSummon = GachaSystem.canUseFreeSummon();
   const canAffordSingle = playerGold >= GachaSystem.COST_SINGLE;
   const canAffordTen = playerGold >= GachaSystem.COST_TEN;
 

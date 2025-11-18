@@ -137,7 +137,7 @@ export function saveToLocalStorage(
         icon: item.icon,
         level: item.level,
         rarity: item.rarity,
-        stats: item.stats,
+        stats: { ...item.stats } as Record<string, number>,
         goldValue: item.goldValue,
         enchantLevel: item.enchantLevel,
         setId: item.setId,

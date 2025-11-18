@@ -13,7 +13,7 @@ import { Hero } from '../engine/hero/Hero';
 import { Item } from '../engine/item/Item';
 import { Equipment } from '../engine/equipment/Equipment';
 import type { HeroClass } from '../types/hero.types';
-import type { ItemRarity, ItemSlot, ItemType } from '../types/item.types';
+import type { ItemRarity, ItemSlot, ItemType, ItemStats } from '../types/item.types';
 
 interface SavedHero {
   name: string;
@@ -24,8 +24,30 @@ interface SavedHero {
   currentHP: number;
   equippedItems?: Array<{
     slot: string;
-    item: unknown;
+    item: SavedItem;
   }>;
+}
+
+interface SavedItem {
+  id: string;
+  name: string;
+  type?: string;
+  slot: string;
+  icon: string;
+  level: number;
+  rarity: string;
+  stats: Record<string, number>;
+  goldValue: number;
+  enchantLevel?: number;
+  setId?: string;
+  setName?: string;
+}
+
+interface SavedGameState {
+  inventory: SavedItem[];
+  heroes: SavedHero[];
+  gold: number;
+  maxSlots: number;
 }
 
 /**
@@ -58,7 +80,7 @@ export function restoreHero(
 
   // Restore equipped items FIRST (before restoring HP)
   if (savedHero.equippedItems && savedHero.equippedItems.length > 0) {
-    savedHero.equippedItems.forEach((equipped: unknown) => {
+    savedHero.equippedItems.forEach((equipped) => {
       // Restore the item from saved data
       const item = restoreItem(equipped.item);
       if (item && hero.equipment) {
@@ -91,7 +113,7 @@ export function restoreHero(
  * const item = restoreItem(savedData.inventory[0]);
  * ```
  */
-export function restoreItem(savedItem: unknown): Item {
+export function restoreItem(savedItem: SavedItem): Item {
   return new Item({
     id: savedItem.id,
     name: savedItem.name,
@@ -100,7 +122,7 @@ export function restoreItem(savedItem: unknown): Item {
     icon: savedItem.icon,
     level: savedItem.level,
     rarity: savedItem.rarity as ItemRarity,
-    stats: savedItem.stats,
+    stats: savedItem.stats as ItemStats,
     goldValue: savedItem.goldValue,
     enchantLevel: savedItem.enchantLevel,
     setId: savedItem.setId,
@@ -124,17 +146,17 @@ export function restoreItem(savedItem: unknown): Item {
  * }
  * ```
  */
-export function restoreGameState(savedState: unknown): {
+export function restoreGameState(savedState: SavedGameState): {
   heroes: Hero[];
   inventory: Item[];
   gold: number;
   maxSlots: number;
 } {
   // Restore inventory items
-  const inventory = savedState.inventory.map((item: unknown) => restoreItem(item));
+  const inventory = savedState.inventory.map((item) => restoreItem(item));
 
   // Restore heroes with their equipped items
-  const heroes = savedState.heroes.map((savedHero: unknown) =>
+  const heroes = savedState.heroes.map((savedHero) =>
     restoreHero(savedHero)
   );
 

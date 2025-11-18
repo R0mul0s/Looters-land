@@ -18,7 +18,6 @@ import type {
   Town,
   DungeonEntrance,
   WorldMapGenerationOptions,
-  MapEncounter,
   Portal,
   HiddenPath,
   TreasureChest,
@@ -28,8 +27,7 @@ import type {
   WanderingMonster,
   TravelingMerchant,
   WeatherType,
-  TimeOfDay,
-  TERRAIN_MOVEMENT_COST
+  TimeOfDay
 } from '../../types/worldmap.types';
 
 import { TERRAIN_MOVEMENT_COST as MOVEMENT_COSTS } from '../../types/worldmap.types';
@@ -104,8 +102,7 @@ export class WorldMapGenerator {
       height = 50,
       seed = `world-${Date.now()}`,
       townCount = 4,
-      dungeonCount = 5,
-      encounterCount = 15
+      dungeonCount = 5
     } = options;
 
     console.log('🗺️ Generating worldmap...', { width, height, seed, playerCombatPower });
@@ -710,7 +707,6 @@ export class WorldMapGenerator {
         y = Math.floor(Math.random() * height);
         tile = tiles[y][x];
 
-        const distFromCenter = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
         attempts++;
       } while (
         (tile.staticObject ||
@@ -891,9 +887,6 @@ export class WorldMapGenerator {
       );
 
       if (attempts >= 100) continue;
-
-      // Prefer placing towers on elevated terrain (mountains) for thematic reasons
-      const preferMountains = Math.random() > 0.5 && tile.terrain === 'mountains';
 
       const observationTower: ObservationTower = {
         id: `tower-${i}`,

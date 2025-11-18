@@ -112,8 +112,8 @@ export class Equipment {
 
   getAllEquipped(): Array<{ slot: string; item: Item }> {
     return Object.entries(this.slots)
-      .filter(([slot, item]) => item !== null)
-      .map(([slot, item]) => ({ slot, item: item as Item }));
+      .filter(([, item]) => item !== null)
+      .map(([, item]) => ({ slot, item: item as Item }));
   }
 
   getEquipped(slotName: EquipmentSlotName): Item | null {

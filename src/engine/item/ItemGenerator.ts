@@ -34,7 +34,7 @@ export class ItemGenerator {
       slot,
       type: 'equipment', // Explicitly set type
       stats,
-      description: this.generateDescription(slot, rarity)
+      description: this.generateDescription(slot)
     });
   }
 

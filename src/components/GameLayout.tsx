@@ -71,7 +71,7 @@ interface GameLayoutProps {
 export function GameLayout({
   playerName,
   playerEmail,
-  userId,
+  userId: _userId, // eslint-disable-line @typescript-eslint/no-unused-vars
   playerAvatar = 'hero1.png',
   gold,
   gems,

@@ -10,8 +10,7 @@
  */
 
 import React, { useEffect, useState, useRef } from 'react';
-import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../styles/tokens';
-import { flexColumn, flexCenter, flexBetween } from '../styles/common';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, SHADOWS } from '../styles/tokens';
 
 interface ChatBubbleProps {
   message: string;

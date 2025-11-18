@@ -53,7 +53,7 @@ export function TeleportMenu({
   discoveredLocations,
   currentEnergy,
   onTeleport,
-  onClose
+  onClose: _onClose // eslint-disable-line @typescript-eslint/no-unused-vars
 }: TeleportMenuProps) {
   const [selectedLocation, setSelectedLocation] = useState<TeleportLocation | null>(null);
   const [filter, setFilter] = useState<'all' | 'town' | 'dungeon'>('all');

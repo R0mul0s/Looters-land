@@ -164,7 +164,7 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
   /**
    * Render wall connections
    */
-  const renderWalls = (room: Room, _x: number, _y: number) => {
+  const renderWalls = (room: Room) => {
     const walls: React.CSSProperties = {
       position: 'absolute',
       top: 0,
@@ -336,7 +336,7 @@ export const DungeonMinimap: React.FC<DungeonMinimapProps> = ({
                 >
                 {room && (
                   <>
-                    {renderWalls(room, x, y)}
+                    {renderWalls(room)}
                     <span style={{ position: 'relative', zIndex: 1 }}>
                       {getRoomIcon(room)}
                     </span>

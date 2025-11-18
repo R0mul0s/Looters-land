@@ -11,7 +11,7 @@
 
 import React from 'react';
 import { t, getLanguage } from '../localization/i18n';
-import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../styles/tokens';
+import { SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS, SHADOWS } from '../styles/tokens';
 
 export type SyncStatus = 'idle' | 'saving' | 'success' | 'error';
 

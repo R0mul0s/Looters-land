@@ -49,8 +49,8 @@ export interface HeroInfo {
 }
 
 export interface AttackResult {
-  attacker: any; // Will be typed properly when we have full Hero type
-  target: any;
+  attacker: unknown; // Will be typed properly when we have full Hero type
+  target: unknown;
   damage: number;
   isCrit: boolean;
   type: 'basic_attack' | 'skill';

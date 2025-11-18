@@ -3,7 +3,6 @@
  */
 
 import type { Item } from '../engine/item/Item';
-import type { ItemStats } from './item.types';
 
 export type EquipmentSlotName = 'helmet' | 'weapon' | 'chest' | 'gloves' | 'legs' | 'boots' | 'accessory1' | 'accessory2';
 

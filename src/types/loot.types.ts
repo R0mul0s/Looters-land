@@ -10,7 +10,6 @@
  */
 
 import type { Item } from '../engine/item/Item';
-import type { ItemRarity } from './item.types';
 
 /**
  * Loot rewards from combat

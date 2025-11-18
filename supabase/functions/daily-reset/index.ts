@@ -12,7 +12,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.0';
 
-serve(async (req: Request) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+serve(async (_req: Request) => {
   try {
     // Create Supabase client with service role key
     // SUPABASE_SERVICE_ROLE_KEY is automatically provided by Supabase
@@ -122,7 +123,8 @@ serve(async (req: Request) => {
  * @param supabase - Supabase client
  * @returns Leaderboard data object
  */
-async function getLeaderboardData(supabase: any) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function getLeaderboardData(_supabase: unknown) {
   // TODO: Implement when leaderboard tables exist
   // This would query the daily_leaderboards table and return top players
   return {

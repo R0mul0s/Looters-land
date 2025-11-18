@@ -82,7 +82,7 @@ export interface InventoryStatistics {
 
 export interface InventoryData {
   maxSlots: number;
-  items: any[]; // Will be Item[] after parsing
+  items: unknown[]; // Will be Item[] after parsing
   gold: number;
   filters: InventoryFilters;
   sortBy: SortOption;

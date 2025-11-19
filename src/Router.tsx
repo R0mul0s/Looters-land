@@ -77,6 +77,7 @@ export function Router() {
   const [combatEngine] = useState(() => new CombatEngine());
   const [combatActive, setCombatActive] = useState(false);
   const [combatLog, setCombatLog] = useState<CombatLogEntry[]>([]);
+  const [combatLogCollapsed, setCombatLogCollapsed] = useState(false);
   const [currentEnemies, setCurrentEnemies] = useState<Enemy[]>([]);
   const [isManualMode] = useState(false);
   const [waitingForInput, setWaitingForInput] = useState(false);
@@ -1350,13 +1351,22 @@ export function Router() {
             )}
 
             {/* Combat Log */}
-            <div className="combat-log-container">
-              <h4 className="combat-log-title">{t('router.combatLog')}</h4>
-              {combatLog.slice(-20).map((entry, index) => (
-                <div key={index} className={`combat-log-entry ${entry.type}`}>
-                  {entry.message}
+            <div className={`combat-log-container ${combatLogCollapsed ? 'collapsed' : ''}`}>
+              <div className="combat-log-header" onClick={() => setCombatLogCollapsed(!combatLogCollapsed)}>
+                <h4 className="combat-log-title">{t('router.combatLog')}</h4>
+                <button className="combat-log-toggle">
+                  {combatLogCollapsed ? '▼' : '▲'}
+                </button>
+              </div>
+              {!combatLogCollapsed && (
+                <div className="combat-log-entries">
+                  {combatLog.slice(-20).map((entry, index) => (
+                    <div key={index} className={`combat-log-entry ${entry.type}`}>
+                      {entry.message}
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}

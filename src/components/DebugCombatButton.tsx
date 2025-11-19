@@ -24,7 +24,7 @@ export const DebugCombatButton: React.FC<DebugCombatButtonProps> = ({
   const [showMenu, setShowMenu] = useState(false);
 
   // Only show in development
-  if (process.env.NODE_ENV !== 'development') {
+  if (import.meta.env.MODE !== 'development') {
     return null;
   }
 

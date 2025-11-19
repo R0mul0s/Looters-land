@@ -98,6 +98,19 @@ export function Router() {
   const [characterAnimations, setCharacterAnimations] = useState<Record<string, string>>({});
   const [activeSkills, setActiveSkills] = useState<Record<string, string>>({});
 
+  // Debug manual combat state
+  useEffect(() => {
+    if (combatActive) {
+      console.log('🔍 Manual Combat State:', {
+        waitingForInput,
+        activeCharacter: activeCharacter?.name,
+        isManualMode,
+        combatEngineWaiting: combatEngine.waitingForPlayerInput,
+        combatEngineCurrent: combatEngine.currentCharacter?.name
+      });
+    }
+  }, [waitingForInput, activeCharacter, isManualMode, combatActive]);
+
   // Check authentication on mount
   useEffect(() => {
     const checkAuth = async () => {
@@ -1065,8 +1078,14 @@ export function Router() {
                     setIsManualMode(newIsManual);
                     combatEngine.setManualMode(newIsManual);
 
+                    // If switching to manual mode during auto combat
+                    if (newIsManual && !waitingForInput && combatEngine.isActive) {
+                      // The auto-combat loop will stop on next iteration
+                      // and set up waitingForInput automatically
+                      console.log('🎮 Switching to manual mode, waiting for next turn...');
+                    }
                     // If switching to auto mode during player input, continue auto combat
-                    if (!newIsManual && waitingForInput) {
+                    else if (!newIsManual && waitingForInput) {
                       setWaitingForInput(false);
                       setActiveCharacter(null);
                       setSelectedTarget(null);

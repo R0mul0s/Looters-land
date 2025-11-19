@@ -58,9 +58,9 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  min-width: 100px;
-  padding: 12px 8px 10px 8px;
+  gap: 8px;
+  min-width: 140px;
+  padding: 16px 12px 14px 12px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
   border: 3px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
@@ -111,17 +111,17 @@
 /* Initiative Badge (top-right corner) */
 .initiative-badge {
   position: absolute;
-  top: -10px;
-  right: -10px;
-  width: 32px;
-  height: 32px;
+  top: -12px;
+  right: -12px;
+  width: 38px;
+  height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #FFD700, #FFA500);
   border: 3px solid #000;
   border-radius: 50%;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: bold;
   color: #000;
   box-shadow: 0 3px 8px rgba(0, 0, 0, 0.6);
@@ -130,21 +130,21 @@
 
 /* Character Icon */
 .character-icon {
-  font-size: 32px;
-  margin-bottom: 4px;
+  font-size: 42px;
+  margin-bottom: 6px;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 /* Character Name */
 .character-name {
-  font-size: 8px;
+  font-size: 10px;
   color: white;
   text-align: center;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding: 0 4px;
+  padding: 0 6px;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
   font-weight: bold;
 }
@@ -152,12 +152,12 @@
 /* Mini HP Bar */
 .mini-hp-bar {
   width: 100%;
-  height: 6px;
+  height: 8px;
   background: rgba(0, 0, 0, 0.7);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  border-radius: 4px;
   overflow: hidden;
-  margin-top: 4px;
+  margin-top: 6px;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
 }
 

@@ -102,7 +102,7 @@ export async function register(email: string, password: string): Promise<AuthRes
     console.error('❌ Registration error:', error);
     return {
       success: false,
-      message: error.message || 'Registration failed'
+      message: error instanceof Error ? error.message : 'Registration failed'
     };
   }
 }
@@ -163,7 +163,7 @@ export async function login(email: string, password: string): Promise<AuthResult
     console.error('❌ Login error:', error);
     return {
       success: false,
-      message: error.message || 'Login failed'
+      message: error instanceof Error ? error.message : 'Login failed'
     };
   }
 }
@@ -208,7 +208,7 @@ export async function logout(): Promise<AuthResult> {
     console.error('❌ Logout error:', error);
     return {
       success: false,
-      message: error.message || 'Logout failed'
+      message: error instanceof Error ? error.message : 'Logout failed'
     };
   }
 }

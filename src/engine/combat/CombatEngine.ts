@@ -32,6 +32,7 @@ import type {
 } from '../../types/combat.types';
 import type { LootReward } from '../../types/loot.types';
 import { LootGenerator } from '../loot/LootGenerator';
+import type { Enemy } from './Enemy';
 
 export class CombatEngine {
   heroes: Combatant[];

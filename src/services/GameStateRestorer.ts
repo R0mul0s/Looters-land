@@ -122,7 +122,7 @@ export function restoreItem(savedItem: SavedItem): Item {
     icon: savedItem.icon,
     level: savedItem.level,
     rarity: savedItem.rarity as ItemRarity,
-    stats: savedItem.stats as ItemStats,
+    stats: (savedItem.stats as unknown as ItemStats) || { HP: 0, ATK: 0, DEF: 0, SPD: 0, CRIT: 0 },
     goldValue: savedItem.goldValue,
     enchantLevel: savedItem.enchantLevel,
     setId: savedItem.setId,

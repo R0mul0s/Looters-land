@@ -10,7 +10,7 @@
 
 import { supabase } from '../lib/supabase';
 import { Item } from '../engine/item/Item';
-import type { ItemType, ItemSlot, ItemRarity } from '../types/item.types';
+import type { ItemType, ItemSlot, ItemRarity, ItemStats } from '../types/item.types';
 import {
   BANK_CONFIG,
   getBankVaultSlots,
@@ -430,7 +430,7 @@ export class BankService {
       level: bankItem.level,
       rarity: bankItem.rarity as ItemRarity,
       goldValue: bankItem.gold_value,
-      stats: bankItem.base_stats,
+      stats: (bankItem.base_stats as ItemStats) || { HP: 0, ATK: 0, DEF: 0, SPD: 0, CRIT: 0 },
       enchantLevel: bankItem.enchant_level,
       setId: bankItem.set_id || undefined,
       setName: bankItem.set_name || undefined,

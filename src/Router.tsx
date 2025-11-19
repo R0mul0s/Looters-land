@@ -39,6 +39,7 @@ import { calculatePlayerScore } from './utils/scoreCalculator';
 import type { Item } from './engine/item/Item';
 import { CombatSpeedControl, type CombatSpeed } from './components/combat/CombatSpeedControl';
 import { InitiativeOrderBar } from './components/combat/InitiativeOrderBar';
+import { Tooltip, EnemyTooltip } from './components/combat/Tooltip';
 import { getSpeedDelay } from './utils/combatUtils';
 import './components/combat/CombatLayout.css';
 
@@ -1250,7 +1251,25 @@ export function Router() {
                   const isActive = combatEngine.currentCharacter?.id === enemy.id;
                   const baseBorderColor = enemy.type === 'boss' ? '#ff4444' : enemy.type === 'elite' ? '#ffaa00' : enemy.isAlive ? '#ff6b6b' : '#666';
                   return (
-                  <div key={enemy.id} style={{
+                  <Tooltip
+                    key={enemy.id}
+                    content={
+                      <EnemyTooltip
+                        enemy={{
+                          name: enemy.name,
+                          level: enemy.level,
+                          type: enemy.type,
+                          ATK: enemy.ATK,
+                          DEF: enemy.DEF,
+                          SPD: enemy.SPD,
+                          currentHP: enemy.currentHP,
+                          maxHP: enemy.maxHP
+                        }}
+                      />
+                    }
+                    position="left"
+                  >
+                  <div style={{
                     padding: '15px',
                     marginBottom: '10px',
                     background: enemy.isAlive ? '#4a2a2a' : '#1a1a2a',
@@ -1259,7 +1278,8 @@ export function Router() {
                     opacity: enemy.isAlive ? 1 : 0.5,
                     boxShadow: isActive ? '0 0 20px rgba(255, 215, 0, 0.6)' : 'none',
                     transform: isActive ? 'scale(1.02)' : 'none',
-                    transition: 'all 0.3s ease'
+                    transition: 'all 0.3s ease',
+                    cursor: 'help'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <span style={{ fontWeight: 'bold' }}>
@@ -1301,6 +1321,7 @@ export function Router() {
                       <span>⚡ {enemy.SPD}</span>
                     </div>
                   </div>
+                  </Tooltip>
                   );
                 })}
               </div>

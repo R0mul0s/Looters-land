@@ -912,28 +912,13 @@ export function Router() {
 
       {/* Combat Display - shown when combat is active (dungeon or quick combat) */}
       {combatActive && (inDungeon && currentDungeon || !inDungeon) && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            background: '#1a1a2e',
-            color: '#fff',
-            padding: '20px',
-            overflow: 'auto',
-            zIndex: 9999
-          }}>
+          <div className="combat-screen">
             {/* Combat Header */}
-            <div style={{
-              textAlign: 'center',
-              fontSize: '2em',
-              fontWeight: 'bold',
-              marginBottom: '20px',
-              padding: '15px',
-              background: combatEngine.combatResult === 'victory' ? '#28a745' : combatEngine.combatResult === 'defeat' ? '#dc3545' : '#495057',
-              borderRadius: '10px'
-            }}>
+            <div className={`combat-header ${
+              combatEngine.combatResult === 'victory' ? 'victory' :
+              combatEngine.combatResult === 'defeat' ? 'defeat' :
+              'active'
+            }`}>
               {combatEngine.combatResult === 'victory' && t('router.combatVictory')}
               {combatEngine.combatResult === 'defeat' && t('router.combatDefeat')}
               {!combatEngine.combatResult && t('router.combatTurn', { turn: combatEngine.turnCounter })}
@@ -941,11 +926,7 @@ export function Router() {
 
             {/* Combat Speed Control */}
             {!combatEngine.combatResult && !isManualMode && (
-              <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                marginBottom: '20px'
-              }}>
+              <div className="combat-speed-container">
                 <CombatSpeedControl
                   currentSpeed={combatSpeed}
                   onSpeedChange={setCombatSpeed}
@@ -964,44 +945,16 @@ export function Router() {
 
             {/* Defeat Screen - Exit Button */}
             {combatEngine.combatResult === 'defeat' && (
-              <div style={{
-                marginBottom: '20px',
-                padding: '20px',
-                background: 'linear-gradient(135deg, #dc3545 0%, #a71d2a 100%)',
-                borderRadius: '12px',
-                border: '3px solid #8b0000',
-                textAlign: 'center'
-              }}>
-                <h3 style={{
-                  color: '#fff',
-                  marginBottom: '15px',
-                  fontSize: '1.5em',
-                  fontWeight: 'bold',
-                  margin: '0 0 15px 0'
-                }}>
+              <div className="defeat-screen">
+                <h3 className="defeat-title">
                   {t('router.allHeroesFallen')}
                 </h3>
-                <p style={{
-                  color: '#ffcccc',
-                  marginBottom: '20px',
-                  fontSize: '1.1em'
-                }}>
+                <p className="defeat-message">
                   {t('router.defeatMessage')}
                 </p>
                 <button
                   onClick={inDungeon ? handleDungeonExit : handleQuickCombatExit}
-                  style={{
-                    width: '100%',
-                    fontSize: '1.3em',
-                    padding: '15px',
-                    background: 'linear-gradient(135deg, #6c757d 0%, #495057 100%)',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    cursor: 'pointer',
-                    fontWeight: 'bold',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.4)'
-                  }}
+                  className="defeat-button"
                 >
                   {t('router.returnToWorldMap')}
                 </button>
@@ -1018,69 +971,29 @@ export function Router() {
                 : combatEngine.lootReward;
 
               return (
-                <div style={{
-                  marginBottom: '20px',
-                  padding: '20px',
-                  background: 'linear-gradient(135deg, #ffd700 0%, #ffed4e 100%)',
-                  borderRadius: '12px',
-                  border: '3px solid #f0c000',
-                  boxShadow: '0 4px 8px rgba(255, 215, 0, 0.3)'
-                }}>
-                  <h3 style={{
-                    color: '#8b6914',
-                    marginBottom: '15px',
-                    textAlign: 'center',
-                    fontSize: '1.5em',
-                    fontWeight: 'bold',
-                    margin: '0 0 15px 0'
-                  }}>
+                <div className="victory-screen">
+                  <h3 className="victory-title">
                     {t('router.lootRewards')}
                   </h3>
 
                   {/* Instruction */}
-                  <div style={{
-                    padding: '10px',
-                    background: 'rgba(139, 105, 20, 0.1)',
-                    borderRadius: '8px',
-                    marginBottom: '15px',
-                    textAlign: 'center',
-                    color: '#8b6914',
-                    fontSize: '0.9em'
-                  }}>
+                  <div className="victory-instruction">
                     {t('router.lootInstruction')}
                   </div>
 
-                  <div style={{
-                    display: 'flex',
-                    gap: '20px',
-                    marginBottom: '15px'
-                  }}>
+                  <div className="victory-rewards-grid">
                     {/* Gold Reward */}
-                    <div style={{
-                      flex: 1,
-                      padding: '15px',
-                      background: 'rgba(255, 255, 255, 0.9)',
-                      borderRadius: '8px',
-                      textAlign: 'center',
-                      border: '2px solid #f0c000'
-                    }}>
-                      <div style={{ fontSize: '2em', marginBottom: '5px' }}>💰</div>
-                      <div style={{ fontSize: '1.5em', fontWeight: 'bold', color: '#8b6914' }}>
+                    <div className="victory-reward-box">
+                      <div className="reward-icon">💰</div>
+                      <div className="reward-value">
                         {t('router.goldAmount', { amount: actualLoot.gold })}
                       </div>
                     </div>
 
                     {/* Items Count */}
-                    <div style={{
-                      flex: 1,
-                      padding: '15px',
-                      background: 'rgba(255, 255, 255, 0.9)',
-                      borderRadius: '8px',
-                      textAlign: 'center',
-                      border: '2px solid #f0c000'
-                    }}>
-                      <div style={{ fontSize: '2em', marginBottom: '5px' }}>🎁</div>
-                      <div style={{ fontSize: '1.5em', fontWeight: 'bold', color: '#8b6914' }}>
+                    <div className="victory-reward-box">
+                      <div className="reward-icon">🎁</div>
+                      <div className="reward-value">
                         {t('router.itemsCount', { count: actualLoot.items.length })}
                       </div>
                     </div>
@@ -1088,36 +1001,18 @@ export function Router() {
 
                   {/* Loot Items */}
                   {actualLoot.items.length > 0 && (
-                    <div style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                      gap: '10px',
-                      padding: '15px',
-                      background: 'rgba(255, 255, 255, 0.7)',
-                      borderRadius: '8px',
-                      marginBottom: '15px'
-                    }}>
+                    <div className="loot-items-grid">
                       {actualLoot.items.map((item, index) => (
                         <div
                           key={`loot-${item.id || `loot-item-${index}`}`}
-                          style={{
-                            padding: '10px',
-                            background: '#fff',
-                            borderRadius: '6px',
-                            border: `2px solid ${item.getRarityColor()}`,
-                            textAlign: 'center'
-                          }}
+                          className="loot-item"
+                          style={{ border: `2px solid ${item.getRarityColor()}` }}
                         >
-                          <div style={{ fontSize: '2em', marginBottom: '5px' }}>{item.icon}</div>
-                          <div style={{
-                            fontSize: '0.9em',
-                            fontWeight: 'bold',
-                            color: item.getRarityColor(),
-                            marginBottom: '3px'
-                          }}>
+                          <div className="loot-item-icon">{item.icon}</div>
+                          <div className="loot-item-name" style={{ color: item.getRarityColor() }}>
                             {item.name}
                           </div>
-                          <div style={{ fontSize: '0.75em', color: '#666' }}>
+                          <div className="loot-item-details">
                             {item.getRarityDisplayName()} | Lv.{item.level}
                           </div>
                         </div>
@@ -1127,11 +1022,7 @@ export function Router() {
 
                   {/* Action Buttons */}
                   {actualLoot.items.length > 0 && (
-                    <div style={{
-                      display: 'flex',
-                      gap: '10px',
-                      marginBottom: '15px'
-                    }}>
+                    <div className="loot-actions">
                       <button
                         onClick={async () => {
                           // Collect all items to inventory
@@ -1142,17 +1033,7 @@ export function Router() {
                           actualLoot.items = [];
                           forceUpdate({});
                         }}
-                        style={{
-                          flex: 1,
-                          fontSize: '1.1em',
-                          padding: '12px',
-                          background: '#28a745',
-                          color: '#fff',
-                          border: 'none',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontWeight: 'bold'
-                        }}
+                        className="loot-button collect"
                       >
                         {t('router.collectAll')}
                       </button>
@@ -1165,17 +1046,7 @@ export function Router() {
                           actualLoot.gold = 0;
                           forceUpdate({});
                         }}
-                        style={{
-                          flex: 1,
-                          fontSize: '1.1em',
-                          padding: '12px',
-                          background: '#ffc107',
-                          color: '#000',
-                          border: 'none',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          fontWeight: 'bold'
-                        }}
+                        className="loot-button sell"
                       >
                         {t('router.sellAll')}
                       </button>
@@ -1183,14 +1054,7 @@ export function Router() {
                   )}
 
                   {actualLoot.items.length === 0 && actualLoot.gold === 0 && (
-                    <div style={{
-                      padding: '15px',
-                      background: 'rgba(255, 255, 255, 0.7)',
-                      borderRadius: '8px',
-                      textAlign: 'center',
-                      color: '#666',
-                      fontStyle: 'italic'
-                    }}>
+                    <div className="loot-empty">
                       {t('router.allLootCollected')}
                     </div>
                   )}
@@ -1198,18 +1062,7 @@ export function Router() {
                   {/* Continue Exploring Button */}
                   <button
                     onClick={handleDungeonVictoryContinue}
-                    style={{
-                      width: '100%',
-                      fontSize: '1.3em',
-                      padding: '15px',
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontWeight: 'bold',
-                      boxShadow: '0 4px 12px rgba(102, 126, 234, 0.4)'
-                    }}
+                    className="continue-button"
                   >
                     {t('router.continueExploring')}
                   </button>
@@ -1220,53 +1073,25 @@ export function Router() {
             {/* Combat Teams */}
             <div className="combat-teams-grid">
               {/* Heroes */}
-              <div>
-                <h3 style={{ marginBottom: '15px' }}>{t('router.heroes')}</h3>
+              <div className="combat-team-section">
+                <h3 className="combat-team-title">{t('router.heroes')}</h3>
                 {(gameState.activeParty || []).map((hero) => {
                   const isActive = combatEngine.currentCharacter?.id === hero.id;
+                  const hpPercentage = hero.currentHP / hero.maxHP;
+                  const hpClass = hpPercentage < 0.3 ? 'low' : hpPercentage < 0.6 ? 'medium' : 'high';
                   return (
-                  <div key={hero.id} style={{
-                    padding: '15px',
-                    marginBottom: '10px',
-                    background: hero.isAlive ? '#2a2a4a' : '#1a1a2a',
-                    borderRadius: '8px',
-                    border: isActive ? '3px solid #FFD700' : '2px solid ' + (hero.isAlive ? '#4a9eff' : '#666'),
-                    opacity: hero.isAlive ? 1 : 0.5,
-                    boxShadow: isActive ? '0 0 20px rgba(255, 215, 0, 0.6)' : 'none',
-                    transform: isActive ? 'scale(1.02)' : 'none',
-                    transition: 'all 0.3s ease'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span style={{ fontWeight: 'bold' }}>{hero.name}</span>
-                      <span>Lv.{hero.level}</span>
+                  <div key={hero.id} className={`character-card hero ${!hero.isAlive ? 'dead' : ''} ${isActive ? 'active' : ''}`}>
+                    <div className="character-card-header">
+                      <span className="character-name">{hero.name}</span>
+                      <span className="character-level">Lv.{hero.level}</span>
                     </div>
-                    <div style={{
-                      width: '100%',
-                      height: '20px',
-                      background: '#1a1a2a',
-                      borderRadius: '10px',
-                      overflow: 'hidden',
-                      position: 'relative'
-                    }}>
-                      <div style={{
-                        width: `${(hero.currentHP / hero.maxHP) * 100}%`,
-                        height: '100%',
-                        background: hero.currentHP / hero.maxHP < 0.3 ? '#dc3545' : hero.currentHP / hero.maxHP < 0.6 ? '#ffc107' : '#28a745',
-                        transition: 'width 0.3s'
-                      }} />
-                      <span style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        fontSize: '0.8em',
-                        fontWeight: 'bold',
-                        textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
-                      }}>
+                    <div className="character-hp-bar">
+                      <div className={`character-hp-fill ${hpClass}`} style={{ width: `${hpPercentage * 100}%` }} />
+                      <span className="character-hp-text">
                         {hero.currentHP}/{hero.maxHP}
                       </span>
                     </div>
-                    <div style={{ marginTop: '8px', display: 'flex', gap: '10px', fontSize: '0.9em' }}>
+                    <div className="character-stats">
                       <span>⚔️ {hero.ATK}</span>
                       <span>🛡️ {hero.DEF}</span>
                       <span>⚡ {hero.SPD}</span>
@@ -1277,11 +1102,12 @@ export function Router() {
               </div>
 
               {/* Enemies */}
-              <div>
-                <h3 style={{ marginBottom: '15px' }}>{t('router.enemies')}</h3>
+              <div className="combat-team-section">
+                <h3 className="combat-team-title">{t('router.enemies')}</h3>
                 {currentEnemies.map((enemy) => {
                   const isActive = combatEngine.currentCharacter?.id === enemy.id;
-                  const baseBorderColor = enemy.type === 'boss' ? '#ff4444' : enemy.type === 'elite' ? '#ffaa00' : enemy.isAlive ? '#ff6b6b' : '#666';
+                  const hpPercentage = enemy.currentHP / enemy.maxHP;
+                  const hpClass = hpPercentage < 0.3 ? 'low' : hpPercentage < 0.6 ? 'medium' : 'high';
                   return (
                   <Tooltip
                     key={enemy.id}
@@ -1301,53 +1127,22 @@ export function Router() {
                     }
                     position="left"
                   >
-                  <div style={{
-                    padding: '15px',
-                    marginBottom: '10px',
-                    background: enemy.isAlive ? '#4a2a2a' : '#1a1a2a',
-                    borderRadius: '8px',
-                    border: isActive ? '3px solid #FFD700' : '2px solid ' + baseBorderColor,
-                    opacity: enemy.isAlive ? 1 : 0.5,
-                    boxShadow: isActive ? '0 0 20px rgba(255, 215, 0, 0.6)' : 'none',
-                    transform: isActive ? 'scale(1.02)' : 'none',
-                    transition: 'all 0.3s ease',
-                    cursor: 'help'
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <span style={{ fontWeight: 'bold' }}>
+                  <div className={`character-card enemy ${!enemy.isAlive ? 'dead' : ''} ${isActive ? 'active' : ''} ${enemy.type === 'elite' ? 'elite' : ''} ${enemy.type === 'boss' ? 'boss' : ''}`}>
+                    <div className="character-card-header">
+                      <span className="character-name">
                         {enemy.type === 'boss' && '💀 '}
                         {enemy.type === 'elite' && '⭐ '}
                         {enemy.name}
                       </span>
-                      <span>Lv.{enemy.level}</span>
+                      <span className="character-level">Lv.{enemy.level}</span>
                     </div>
-                    <div style={{
-                      width: '100%',
-                      height: '20px',
-                      background: '#1a1a2a',
-                      borderRadius: '10px',
-                      overflow: 'hidden',
-                      position: 'relative'
-                    }}>
-                      <div style={{
-                        width: `${(enemy.currentHP / enemy.maxHP) * 100}%`,
-                        height: '100%',
-                        background: enemy.currentHP / enemy.maxHP < 0.3 ? '#dc3545' : enemy.currentHP / enemy.maxHP < 0.6 ? '#ffc107' : '#28a745',
-                        transition: 'width 0.3s'
-                      }} />
-                      <span style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        fontSize: '0.8em',
-                        fontWeight: 'bold',
-                        textShadow: '1px 1px 2px rgba(0,0,0,0.8)'
-                      }}>
+                    <div className="character-hp-bar">
+                      <div className={`character-hp-fill ${hpClass}`} style={{ width: `${hpPercentage * 100}%` }} />
+                      <span className="character-hp-text">
                         {enemy.currentHP}/{enemy.maxHP}
                       </span>
                     </div>
-                    <div style={{ marginTop: '8px', display: 'flex', gap: '10px', fontSize: '0.9em' }}>
+                    <div className="character-stats">
                       <span>⚔️ {enemy.ATK}</span>
                       <span>🛡️ {enemy.DEF}</span>
                       <span>⚡ {enemy.SPD}</span>
@@ -1361,37 +1156,10 @@ export function Router() {
 
             {/* Manual Combat Controls */}
             {waitingForInput && activeCharacter && (
-              <div style={{
-                background: 'linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%)',
-                padding: '16px',
-                borderRadius: '12px',
-                marginBottom: '20px',
-                border: '2px solid rgba(167, 139, 250, 0.5)',
-                boxShadow: '0 4px 16px rgba(102, 126, 234, 0.3)'
-              }}>
+              <div className="manual-combat-controls">
                 {/* Header with character name and auto switch */}
-                <div style={{
-                  background: 'rgba(0, 0, 0, 0.2)',
-                  padding: '10px 16px',
-                  borderRadius: '8px',
-                  marginBottom: '12px',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '12px'
-                }}>
-                  <h3 style={{
-                    margin: 0,
-                    fontSize: '1.1em',
-                    fontWeight: 'bold',
-                    color: '#fff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    flex: 1,
-                    justifyContent: 'center'
-                  }}>
+                <div className="manual-combat-header">
+                  <h3 className="manual-combat-title">
                     ⚔️ {activeCharacter.name}'s Turn
                   </h3>
                   <button
@@ -1433,27 +1201,7 @@ export function Router() {
                         }
                       }, 300);
                     }}
-                    style={{
-                      padding: '6px 12px',
-                      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                      color: '#fff',
-                      border: 'none',
-                      borderRadius: '6px',
-                      cursor: 'pointer',
-                      fontSize: '0.85em',
-                      fontWeight: '600',
-                      transition: 'all 0.2s',
-                      boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)',
-                      whiteSpace: 'nowrap'
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-1px)';
-                      e.currentTarget.style.boxShadow = '0 4px 10px rgba(16, 185, 129, 0.5)';
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0)';
-                      e.currentTarget.style.boxShadow = '0 2px 6px rgba(16, 185, 129, 0.3)';
-                    }}
+                    className="manual-auto-button"
                   >
                     🤖 Auto
                   </button>
@@ -1461,54 +1209,19 @@ export function Router() {
 
                 {/* Target Selection */}
                 {!selectedTarget ? (
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255, 255, 255, 0.1)'
-                  }}>
-                    <p style={{
-                      fontSize: '0.95em',
-                      marginBottom: '10px',
-                      textAlign: 'center',
-                      color: 'rgba(255, 255, 255, 0.9)',
-                      fontWeight: '500'
-                    }}>
+                  <div className="target-selection">
+                    <p className="target-selection-title">
                       🎯 Select Target
                     </p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div className="target-selection-grid">
                       {currentEnemies.filter(e => e.isAlive).map((enemy) => (
                         <button
                           key={enemy.id}
                           onClick={() => setSelectedTarget(enemy)}
-                          style={{
-                            padding: '10px 14px',
-                            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%)',
-                            color: '#1a202c',
-                            border: '2px solid rgba(251, 191, 36, 0.6)',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '0.95em',
-                            fontWeight: '600',
-                            transition: 'all 0.2s',
-                            textAlign: 'left',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.transform = 'translateX(4px)';
-                            e.currentTarget.style.borderColor = 'rgb(251, 191, 36)';
-                            e.currentTarget.style.boxShadow = '0 2px 8px rgba(251, 191, 36, 0.4)';
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.transform = 'translateX(0)';
-                            e.currentTarget.style.borderColor = 'rgba(251, 191, 36, 0.6)';
-                            e.currentTarget.style.boxShadow = 'none';
-                          }}
+                          className="target-button"
                         >
                           <span>{enemy.name}</span>
-                          <span style={{ fontSize: '0.85em', color: '#666' }}>
+                          <span className="target-button-hp">
                             HP: {enemy.currentHP}/{enemy.maxHP}
                           </span>
                         </button>
@@ -1518,38 +1231,13 @@ export function Router() {
                 ) : (
                   <div>
                     {/* Target Display */}
-                    <div style={{
-                      background: 'rgba(251, 191, 36, 0.15)',
-                      padding: '8px 12px',
-                      borderRadius: '6px',
-                      marginBottom: '12px',
-                      border: '1px solid rgba(251, 191, 36, 0.3)',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <span style={{ fontSize: '0.9em', color: 'rgba(255, 255, 255, 0.9)' }}>
+                    <div className="selected-target">
+                      <span className="selected-target-text">
                         🎯 Target: <strong>{selectedTarget.name}</strong>
                       </span>
                       <button
                         onClick={() => setSelectedTarget(null)}
-                        style={{
-                          padding: '4px 10px',
-                          background: 'rgba(255, 255, 255, 0.2)',
-                          border: '1px solid rgba(255, 255, 255, 0.3)',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          fontSize: '0.8em',
-                          color: '#fff',
-                          fontWeight: '500',
-                          transition: 'all 0.2s'
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
-                        }}
+                        className="selected-target-change"
                       >
                         Change
                       </button>
@@ -1579,49 +1267,18 @@ export function Router() {
                           }, 500);
                         }
                       }}
-                      style={{
-                        width: '100%',
-                        padding: '14px',
-                        marginBottom: '12px',
-                        background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                        color: '#fff',
-                        border: 'none',
-                        borderRadius: '8px',
-                        cursor: 'pointer',
-                        fontSize: '1.05em',
-                        fontWeight: 'bold',
-                        transition: 'all 0.2s',
-                        boxShadow: '0 2px 8px rgba(220, 38, 38, 0.3)'
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.5)';
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = '0 2px 8px rgba(220, 38, 38, 0.3)';
-                      }}
+                      className="attack-button"
                     >
                       ⚔️ Attack
                     </button>
 
                     {/* Skills Section */}
                     {'getSkills' in activeCharacter && activeCharacter.getSkills().length > 0 && (
-                      <div>
-                        <p style={{
-                          fontSize: '0.85em',
-                          marginBottom: '8px',
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          textAlign: 'center',
-                          fontWeight: '500'
-                        }}>
+                      <div className="skills-section">
+                        <p className="skills-title">
                           Skills:
                         </p>
-                        <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: activeCharacter.getSkills().length === 1 ? '1fr' : 'repeat(auto-fit, minmax(140px, 1fr))',
-                          gap: '8px'
-                        }}>
+                        <div className={`skills-grid ${activeCharacter.getSkills().length === 1 ? 'single' : 'multiple'}`}>
                           {activeCharacter.getSkills().map((skill, index) => {
                             const currentCooldown = (activeCharacter as Hero).cooldowns.get(skill.name) || 0;
                             const isOnCooldown = currentCooldown > 0;
@@ -1667,60 +1324,17 @@ export function Router() {
                                   }
                                 }}
                                 disabled={!canUse}
-                                style={{
-                                  padding: '12px 10px',
-                                  background: isOnCooldown
-                                    ? 'linear-gradient(135deg, #4b5563 0%, #374151 100%)'
-                                    : 'linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%)',
-                                  color: '#fff',
-                                  border: isOnCooldown ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(167, 139, 250, 0.3)',
-                                  borderRadius: '6px',
-                                  cursor: canUse ? 'pointer' : 'not-allowed',
-                                  fontSize: '0.9em',
-                                  fontWeight: '600',
-                                  transition: 'all 0.2s',
-                                  opacity: isOnCooldown ? 0.6 : 1,
-                                  display: 'flex',
-                                  flexDirection: 'column',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  gap: '4px',
-                                  minHeight: '60px',
-                                  boxShadow: isOnCooldown ? 'none' : '0 2px 6px rgba(139, 92, 246, 0.3)'
-                                }}
-                                onMouseOver={(e) => {
-                                  if (canUse) {
-                                    e.currentTarget.style.transform = 'translateY(-2px)';
-                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(139, 92, 246, 0.5)';
-                                  }
-                                }}
-                                onMouseOut={(e) => {
-                                  if (canUse) {
-                                    e.currentTarget.style.transform = 'translateY(0)';
-                                    e.currentTarget.style.boxShadow = '0 2px 6px rgba(139, 92, 246, 0.3)';
-                                  }
-                                }}
+                                className={`skill-button ${canUse ? 'available' : 'cooldown'}`}
                               >
-                                <span style={{ fontSize: '1.1em' }}>
+                                <span className="skill-button-name">
                                   🔮 {skill.name}
                                 </span>
                                 {isOnCooldown ? (
-                                  <span style={{
-                                    fontSize: '0.75em',
-                                    color: '#fbbf24',
-                                    fontWeight: '600',
-                                    background: 'rgba(0, 0, 0, 0.2)',
-                                    padding: '2px 8px',
-                                    borderRadius: '10px'
-                                  }}>
+                                  <span className="skill-button-cd">
                                     CD: {currentCooldown}
                                   </span>
                                 ) : skill.cooldown > 0 && (
-                                  <span style={{
-                                    fontSize: '0.7em',
-                                    color: 'rgba(255, 255, 255, 0.6)',
-                                    fontWeight: '500'
-                                  }}>
+                                  <span className="skill-button-cd-ready">
                                     CD: {skill.cooldown}
                                   </span>
                                 )}
@@ -1736,22 +1350,10 @@ export function Router() {
             )}
 
             {/* Combat Log */}
-            <div style={{
-              background: '#0d0d1a',
-              padding: '15px',
-              borderRadius: '8px',
-              maxHeight: '300px',
-              overflow: 'auto',
-              fontFamily: 'monospace',
-              fontSize: '0.9em'
-            }}>
-              <h4 style={{ marginBottom: '10px' }}>{t('router.combatLog')}</h4>
+            <div className="combat-log-container">
+              <h4 className="combat-log-title">{t('router.combatLog')}</h4>
               {combatLog.slice(-20).map((entry, index) => (
-                <div key={index} style={{
-                  padding: '5px',
-                  borderBottom: '1px solid #1a1a2a',
-                  color: entry.type === 'attack' ? '#ff6b6b' : entry.type === 'heal' ? '#51cf66' : entry.type === 'death' ? '#dc3545' : '#aaa'
-                }}>
+                <div key={index} className={`combat-log-entry ${entry.type}`}>
                   {entry.message}
                 </div>
               ))}

@@ -38,6 +38,7 @@ import { LeaderboardService } from './services/LeaderboardService';
 import { calculatePlayerScore } from './utils/scoreCalculator';
 import type { Item } from './engine/item/Item';
 import { CombatSpeedControl, type CombatSpeed } from './components/combat/CombatSpeedControl';
+import { InitiativeOrderBar } from './components/combat/InitiativeOrderBar';
 import { getSpeedDelay } from './utils/combatUtils';
 
 /**
@@ -917,6 +918,14 @@ export function Router() {
                   disabled={false}
                 />
               </div>
+            )}
+
+            {/* Initiative Order Bar */}
+            {!combatEngine.combatResult && combatEngine.turnOrder.length > 0 && (
+              <InitiativeOrderBar
+                turnOrder={combatEngine.turnOrder}
+                currentCharacter={combatEngine.currentCharacter}
+              />
             )}
 
             {/* Defeat Screen - Exit Button */}

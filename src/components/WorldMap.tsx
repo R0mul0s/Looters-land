@@ -57,14 +57,6 @@ import { generateRareSpawnEncounter, generateWanderingMonsterEncounter } from '.
 import type { Item } from '../engine/item/Item';
 import logo from '../assets/images/logo.png';
 
-// Extend Window interface for debug commands
-declare global {
-  interface Window {
-    __gameActions?: GameStateActions;
-    __gameState?: GameState;
-  }
-}
-
 interface QuickCombatMetadata {
   position?: { x: number; y: number };
   type?: string;
@@ -619,7 +611,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
       handleTravelingMerchantShop(object as TravelingMerchant);
     } else if (object.type === 'event') {
       // TODO: Implement random events
-      setShowMessageModal(t('worldmap.randomEventComingSoon', { eventType: object.eventType }));
+      setShowMessageModal(t('worldmap.randomEventComingSoon'));
     }
   };
 
@@ -1090,8 +1082,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
     }
     gameActions.updatePlayerPos(location.x, location.y);
 
-    // Close teleport menu and switch to worldmap
-    setShowTeleportMenu(false);
+    // Switch to worldmap
     setActiveScreen('worldmap');
 
     console.log(`Teleported to ${location.name} (${location.x}, ${location.y})`);
@@ -1483,9 +1474,6 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
               } else {
                 gameActions.removeGems(Math.abs(diff));
               }
-            }}
-            onEnergyChange={async (newEnergy) => {
-              await gameActions.setEnergy(newEnergy);
             }}
             onMaxEnergyChange={async (newMaxEnergy) => {
               await gameActions.setMaxEnergy(newMaxEnergy);

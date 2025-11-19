@@ -227,7 +227,7 @@ export function Router() {
 
     // Enemy difficulty probabilities based on LEVEL DIFFERENCE and dungeon difficulty
     // The dungeon difficulty is a multiplier on the base probabilities
-    let difficultyProbabilities;
+    let difficultyProbabilities: { easy: number; normal: number; hard: number; elite: number };
 
     if (levelDifference <= DUNGEON_CONFIG.LEVEL_DIFFERENCE_THRESHOLDS.veryEasy) {
       // Heroes are 3+ levels ABOVE dungeon (very easy for them)
@@ -695,7 +695,7 @@ export function Router() {
     // because gameState might be stale due to re-renders during combat
     const heroesAfterCombat = combatEngine.heroes as Hero[];
 
-    const result = currentDungeon.completeCombat(heroesAfterCombat);
+    const result = currentDungeon.completeCombat();
     console.log('✅ Combat completed:', result.message);
     console.log('✅ Current room after combat:', currentDungeon.getCurrentRoom());
 
@@ -745,7 +745,7 @@ export function Router() {
         hp: h.currentHP,
         maxHP: h.maxHP,
         level: h.level,
-        xp: h.experience,
+        xp: (h as Hero).experience,
         id: h.id
       })));
 
@@ -754,7 +754,7 @@ export function Router() {
         hp: h.currentHP,
         maxHP: h.maxHP,
         level: h.level,
-        xp: h.experience,
+        xp: (h as Hero).experience,
         id: h.id
       })));
 
@@ -1097,7 +1097,7 @@ export function Router() {
                       <button
                         onClick={async () => {
                           // Sell all items
-                          const totalValue = actualLoot.items.reduce((sum, item) => sum + item.value, 0);
+                          const totalValue = actualLoot.items.reduce((sum, item) => sum + item.goldValue, 0);
                           await gameActions.addGold(totalValue);
                           actualLoot.items = [];
                           actualLoot.gold = 0;
@@ -1533,7 +1533,8 @@ export function Router() {
                           gap: '8px'
                         }}>
                           {activeCharacter.getSkills().map((skill, index) => {
-                            const isOnCooldown = skill.currentCooldown > 0;
+                            const currentCooldown = (activeCharacter as Hero).cooldowns.get(skill.name) || 0;
+                            const isOnCooldown = currentCooldown > 0;
                             const canUse = !isOnCooldown;
 
                             return (
@@ -1541,13 +1542,21 @@ export function Router() {
                                 key={index}
                                 onClick={() => {
                                   if (canUse && activeCharacter && 'useSkill' in activeCharacter) {
-                                    const targets = skill.targetType === 'all_enemies'
-                                      ? currentEnemies.filter(e => e.isAlive)
-                                      : skill.targetType === 'all_allies'
-                                      ? gameState.activeParty.filter(h => h.isAlive)
-                                      : skill.targetType === 'self'
-                                      ? [activeCharacter]
-                                      : [selectedTarget];
+                                    // Determine targets based on skill type
+                                    let targets: Combatant[];
+                                    if (skill.type === 'buff') {
+                                      // Buffs target all allies
+                                      targets = gameState.activeParty.filter(h => h.isAlive);
+                                    } else if (skill.type === 'heal') {
+                                      // Heals target all allies
+                                      targets = gameState.activeParty.filter(h => h.isAlive);
+                                    } else if (skill.type === 'debuff') {
+                                      // Debuffs target all enemies
+                                      targets = currentEnemies.filter(e => e.isAlive);
+                                    } else {
+                                      // Damage skills target selected enemy
+                                      targets = selectedTarget ? [selectedTarget] : [currentEnemies.find(e => e.isAlive)!];
+                                    }
 
                                     activeCharacter.useSkill(index, targets);
                                     setCombatLog([...combatEngine.combatLog]);
@@ -1603,7 +1612,7 @@ export function Router() {
                                 }}
                               >
                                 <span style={{ fontSize: '1.1em' }}>
-                                  {skill.icon || '🔮'} {skill.name}
+                                  🔮 {skill.name}
                                 </span>
                                 {isOnCooldown ? (
                                   <span style={{
@@ -1614,7 +1623,7 @@ export function Router() {
                                     padding: '2px 8px',
                                     borderRadius: '10px'
                                   }}>
-                                    CD: {skill.currentCooldown}
+                                    CD: {currentCooldown}
                                   </span>
                                 ) : skill.cooldown > 0 && (
                                   <span style={{

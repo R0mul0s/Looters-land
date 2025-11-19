@@ -40,6 +40,7 @@ import type { Item } from './engine/item/Item';
 import { CombatSpeedControl, type CombatSpeed } from './components/combat/CombatSpeedControl';
 import { InitiativeOrderBar } from './components/combat/InitiativeOrderBar';
 import { getSpeedDelay } from './utils/combatUtils';
+import './components/combat/CombatLayout.css';
 
 /**
  * Combat metadata for quick combat encounters
@@ -1184,12 +1185,7 @@ export function Router() {
             })()}
 
             {/* Combat Teams */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
-              gap: '20px',
-              marginBottom: '20px'
-            }}>
+            <div className="combat-teams-grid">
               {/* Heroes */}
               <div>
                 <h3 style={{ marginBottom: '15px' }}>{t('router.heroes')}</h3>

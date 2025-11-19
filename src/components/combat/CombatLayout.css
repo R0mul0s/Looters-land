@@ -1,0 +1,354 @@
+/**
+ * Combat Layout Responsive Styles
+ *
+ * Responsive adjustments for combat screen to work well on mobile devices
+ */
+
+/* Desktop layout (default) */
+.combat-teams-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.combat-header {
+  text-align: center;
+  font-size: 2em;
+  font-weight: bold;
+  margin-bottom: 20px;
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.combat-log-container {
+  background: #0d0d1a;
+  padding: 15px;
+  border-radius: 8px;
+  max-height: 300px;
+  overflow: auto;
+  font-family: monospace;
+  font-size: 0.9em;
+}
+
+.combat-log-title {
+  margin-bottom: 10px;
+  font-size: 1.1em;
+}
+
+.combat-log-entry {
+  padding: 5px;
+  border-bottom: 1px solid #1a1a2a;
+}
+
+.character-card {
+  padding: 15px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+}
+
+.character-card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.character-name {
+  font-weight: bold;
+}
+
+.character-level {
+  font-size: 0.9em;
+}
+
+.character-hp-bar {
+  width: 100%;
+  height: 20px;
+  background: #1a1a2a;
+  border-radius: 10px;
+  overflow: hidden;
+  position: relative;
+}
+
+.character-stats {
+  margin-top: 8px;
+  display: flex;
+  gap: 10px;
+  font-size: 0.9em;
+}
+
+/* Tablet (768px - 1024px) */
+@media (max-width: 1024px) {
+  .combat-header {
+    font-size: 1.5em;
+    padding: 12px;
+    margin-bottom: 15px;
+  }
+
+  .combat-teams-grid {
+    gap: 15px;
+  }
+
+  .character-card {
+    padding: 12px;
+  }
+
+  .character-stats {
+    font-size: 0.85em;
+  }
+
+  .combat-log-container {
+    max-height: 250px;
+    padding: 12px;
+    font-size: 0.85em;
+  }
+}
+
+/* Mobile (max 768px) */
+@media (max-width: 768px) {
+  .combat-header {
+    font-size: 1.2em;
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+
+  /* Stack heroes and enemies vertically on mobile */
+  .combat-teams-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 15px;
+  }
+
+  .character-card {
+    padding: 10px;
+    margin-bottom: 8px;
+  }
+
+  .character-card-header {
+    margin-bottom: 6px;
+  }
+
+  .character-name {
+    font-size: 0.9em;
+  }
+
+  .character-level {
+    font-size: 0.8em;
+  }
+
+  .character-hp-bar {
+    height: 16px;
+  }
+
+  .character-stats {
+    margin-top: 6px;
+    gap: 8px;
+    font-size: 0.8em;
+    flex-wrap: wrap;
+  }
+
+  .combat-log-container {
+    max-height: 200px;
+    padding: 10px;
+    font-size: 0.8em;
+  }
+
+  .combat-log-title {
+    font-size: 1em;
+    margin-bottom: 8px;
+  }
+
+  .combat-log-entry {
+    padding: 4px;
+    font-size: 0.85em;
+  }
+}
+
+/* Small mobile (max 480px) */
+@media (max-width: 480px) {
+  .combat-header {
+    font-size: 1em;
+    padding: 8px;
+    margin-bottom: 10px;
+  }
+
+  .combat-teams-grid {
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .character-card {
+    padding: 8px;
+    margin-bottom: 6px;
+  }
+
+  .character-card-header {
+    margin-bottom: 5px;
+    font-size: 0.85em;
+  }
+
+  .character-name {
+    font-size: 0.85em;
+  }
+
+  .character-level {
+    font-size: 0.75em;
+  }
+
+  .character-hp-bar {
+    height: 14px;
+  }
+
+  .character-stats {
+    margin-top: 5px;
+    gap: 6px;
+    font-size: 0.75em;
+  }
+
+  .combat-log-container {
+    max-height: 150px;
+    padding: 8px;
+    font-size: 0.75em;
+  }
+
+  .combat-log-title {
+    font-size: 0.9em;
+    margin-bottom: 6px;
+  }
+
+  .combat-log-entry {
+    padding: 3px;
+    font-size: 0.8em;
+  }
+}
+
+/* Manual Combat Controls - Mobile adjustments */
+@media (max-width: 768px) {
+  .manual-combat-controls {
+    padding: 12px;
+    margin-bottom: 15px;
+  }
+
+  .manual-combat-header {
+    padding: 8px 12px;
+    margin-bottom: 10px;
+  }
+
+  .manual-combat-title {
+    font-size: 0.95em;
+  }
+
+  .skill-buttons-grid {
+    gap: 8px;
+  }
+
+  .skill-button {
+    padding: 10px 12px;
+    font-size: 0.85em;
+  }
+
+  .target-selection-grid {
+    gap: 8px;
+  }
+
+  .target-button {
+    padding: 8px 10px;
+    font-size: 0.8em;
+  }
+}
+
+@media (max-width: 480px) {
+  .manual-combat-controls {
+    padding: 10px;
+    margin-bottom: 12px;
+  }
+
+  .manual-combat-header {
+    padding: 6px 10px;
+    margin-bottom: 8px;
+  }
+
+  .manual-combat-title {
+    font-size: 0.85em;
+  }
+
+  .skill-buttons-grid {
+    gap: 6px;
+    grid-template-columns: 1fr;
+  }
+
+  .skill-button {
+    padding: 8px 10px;
+    font-size: 0.8em;
+  }
+
+  .target-selection-grid {
+    gap: 6px;
+    grid-template-columns: 1fr;
+  }
+
+  .target-button {
+    padding: 6px 8px;
+    font-size: 0.75em;
+  }
+}
+
+/* Victory/Defeat screens - Mobile adjustments */
+@media (max-width: 768px) {
+  .defeat-screen,
+  .victory-screen {
+    padding: 15px;
+    margin-bottom: 15px;
+  }
+
+  .defeat-title,
+  .victory-title {
+    font-size: 1.2em;
+    margin-bottom: 12px;
+  }
+
+  .defeat-message,
+  .victory-message {
+    font-size: 0.85em;
+    margin-bottom: 15px;
+  }
+
+  .loot-grid {
+    gap: 8px;
+  }
+
+  .loot-item {
+    padding: 8px;
+    font-size: 0.8em;
+  }
+}
+
+@media (max-width: 480px) {
+  .defeat-screen,
+  .victory-screen {
+    padding: 12px;
+    margin-bottom: 12px;
+  }
+
+  .defeat-title,
+  .victory-title {
+    font-size: 1em;
+    margin-bottom: 10px;
+  }
+
+  .defeat-message,
+  .victory-message {
+    font-size: 0.8em;
+    margin-bottom: 12px;
+  }
+
+  .loot-grid {
+    gap: 6px;
+    grid-template-columns: 1fr;
+  }
+
+  .loot-item {
+    padding: 6px;
+    font-size: 0.75em;
+  }
+}

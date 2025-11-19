@@ -1193,14 +1193,19 @@ export function Router() {
               {/* Heroes */}
               <div>
                 <h3 style={{ marginBottom: '15px' }}>{t('router.heroes')}</h3>
-                {(gameState.activeParty || []).map((hero) => (
+                {(gameState.activeParty || []).map((hero) => {
+                  const isActive = combatEngine.currentCharacter?.id === hero.id;
+                  return (
                   <div key={hero.id} style={{
                     padding: '15px',
                     marginBottom: '10px',
                     background: hero.isAlive ? '#2a2a4a' : '#1a1a2a',
                     borderRadius: '8px',
-                    border: '2px solid ' + (hero.isAlive ? '#4a9eff' : '#666'),
-                    opacity: hero.isAlive ? 1 : 0.5
+                    border: isActive ? '3px solid #FFD700' : '2px solid ' + (hero.isAlive ? '#4a9eff' : '#666'),
+                    opacity: hero.isAlive ? 1 : 0.5,
+                    boxShadow: isActive ? '0 0 20px rgba(255, 215, 0, 0.6)' : 'none',
+                    transform: isActive ? 'scale(1.02)' : 'none',
+                    transition: 'all 0.3s ease'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <span style={{ fontWeight: 'bold' }}>{hero.name}</span>
@@ -1238,20 +1243,27 @@ export function Router() {
                       <span>⚡ {hero.SPD}</span>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Enemies */}
               <div>
                 <h3 style={{ marginBottom: '15px' }}>{t('router.enemies')}</h3>
-                {currentEnemies.map((enemy) => (
+                {currentEnemies.map((enemy) => {
+                  const isActive = combatEngine.currentCharacter?.id === enemy.id;
+                  const baseBorderColor = enemy.type === 'boss' ? '#ff4444' : enemy.type === 'elite' ? '#ffaa00' : enemy.isAlive ? '#ff6b6b' : '#666';
+                  return (
                   <div key={enemy.id} style={{
                     padding: '15px',
                     marginBottom: '10px',
                     background: enemy.isAlive ? '#4a2a2a' : '#1a1a2a',
                     borderRadius: '8px',
-                    border: '2px solid ' + (enemy.type === 'boss' ? '#ff4444' : enemy.type === 'elite' ? '#ffaa00' : enemy.isAlive ? '#ff6b6b' : '#666'),
-                    opacity: enemy.isAlive ? 1 : 0.5
+                    border: isActive ? '3px solid #FFD700' : '2px solid ' + baseBorderColor,
+                    opacity: enemy.isAlive ? 1 : 0.5,
+                    boxShadow: isActive ? '0 0 20px rgba(255, 215, 0, 0.6)' : 'none',
+                    transform: isActive ? 'scale(1.02)' : 'none',
+                    transition: 'all 0.3s ease'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                       <span style={{ fontWeight: 'bold' }}>
@@ -1293,7 +1305,8 @@ export function Router() {
                       <span>⚡ {enemy.SPD}</span>
                     </div>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 

@@ -38,8 +38,10 @@ import { LeaderboardService } from './services/LeaderboardService';
 import { calculatePlayerScore } from './utils/scoreCalculator';
 import type { Item } from './engine/item/Item';
 import { CombatSpeedControl, type CombatSpeed } from './components/combat/CombatSpeedControl';
+import { CombatModeToggle, type CombatMode } from './components/combat/CombatModeToggle';
 import { InitiativeOrderBar } from './components/combat/InitiativeOrderBar';
 import { Tooltip, EnemyTooltip } from './components/combat/Tooltip';
+import { DamageNumberContainer } from './components/combat/DamageNumber';
 import { getSpeedDelay } from './utils/combatUtils';
 import { createTestEnemies, type TestScenario } from './debug/testCombat';
 import './components/combat/CombatLayout.css';
@@ -79,7 +81,7 @@ export function Router() {
   const [combatLog, setCombatLog] = useState<CombatLogEntry[]>([]);
   const [combatLogCollapsed, setCombatLogCollapsed] = useState(false);
   const [currentEnemies, setCurrentEnemies] = useState<Enemy[]>([]);
-  const [isManualMode] = useState(false);
+  const [isManualMode, setIsManualMode] = useState(false);
   const [waitingForInput, setWaitingForInput] = useState(false);
   const [activeCharacter, setActiveCharacter] = useState<Combatant | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<Combatant | null>(null);
@@ -90,6 +92,11 @@ export function Router() {
   const [quickCombatVictory, setQuickCombatVictory] = useState<QuickCombatVictory | null>(null);
   const [quickCombatDefeat, setQuickCombatDefeat] = useState(false);
   const [combatSpeed, setCombatSpeed] = useState<CombatSpeed>('NORMAL');
+
+  // Animation state
+  const [damageNumbers, setDamageNumbers] = useState<Array<{ id: string; characterId: string; value: number; type: 'damage' | 'heal' | 'critical' | 'miss' }>>([]);
+  const [characterAnimations, setCharacterAnimations] = useState<Record<string, string>>({});
+  const [activeSkills, setActiveSkills] = useState<Record<string, string>>({});
 
   // Check authentication on mount
   useEffect(() => {
@@ -462,6 +469,62 @@ export function Router() {
       // Set callback for combat end - use quick combat handler with captured metadata
       combatEngine.onCombatEnd = () => handleQuickCombatEnd(capturedMetadata);
 
+      // Set animation callbacks
+      combatEngine.onDamageDealt = (targetId: string, damage: number, isCritical: boolean) => {
+        const newDamage = {
+          id: `${targetId}-${Date.now()}-${Math.random()}`,
+          characterId: targetId,
+          value: damage,
+          type: (isCritical ? 'critical' : 'damage') as 'damage' | 'critical'
+        };
+        setDamageNumbers(prev => [...prev, newDamage]);
+        setCharacterAnimations(prev => ({ ...prev, [targetId]: 'taking-damage' }));
+        setTimeout(() => setCharacterAnimations(prev => {
+          const rest = { ...prev };
+          delete rest[targetId];
+          return rest;
+        }), 600);
+      };
+
+      combatEngine.onHealApplied = (targetId: string, amount: number) => {
+        const newHeal = {
+          id: `${targetId}-${Date.now()}-${Math.random()}`,
+          characterId: targetId,
+          value: amount,
+          type: 'heal' as const
+        };
+        setDamageNumbers(prev => [...prev, newHeal]);
+        setCharacterAnimations(prev => ({ ...prev, [targetId]: 'healing' }));
+        setTimeout(() => setCharacterAnimations(prev => {
+          const rest = { ...prev };
+          delete rest[targetId];
+          return rest;
+        }), 800);
+      };
+
+      combatEngine.onSkillUsed = (casterId: string, skillName: string) => {
+        setActiveSkills(prev => ({ ...prev, [casterId]: skillName }));
+        setCharacterAnimations(prev => ({ ...prev, [casterId]: 'using-skill' }));
+        setTimeout(() => {
+          setActiveSkills(prev => {
+            const rest = { ...prev }; delete rest[casterId];
+            return rest;
+          });
+          setCharacterAnimations(prev => {
+            const rest = { ...prev }; delete rest[casterId];
+            return rest;
+          });
+        }, 1500);
+      };
+
+      combatEngine.onAttackAnimation = (attackerId: string) => {
+        setCharacterAnimations(prev => ({ ...prev, [attackerId]: 'attacking' }));
+        setTimeout(() => setCharacterAnimations(prev => {
+          const rest = { ...prev }; delete rest[attackerId];
+          return rest;
+        }), 600);
+      };
+
       if (isManual) {
         // Execute enemy turns until we reach first hero
         while (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
@@ -684,6 +747,60 @@ export function Router() {
 
     // Set callback for combat end
     combatEngine.onCombatEnd = handleDungeonCombatEnd;
+
+    // Set animation callbacks
+    combatEngine.onDamageDealt = (targetId: string, damage: number, isCritical: boolean) => {
+      const newDamage = {
+        id: `${targetId}-${Date.now()}-${Math.random()}`,
+        characterId: targetId,
+        value: damage,
+        type: (isCritical ? 'critical' : 'damage') as 'damage' | 'critical'
+      };
+      setDamageNumbers(prev => [...prev, newDamage]);
+      setCharacterAnimations(prev => ({ ...prev, [targetId]: 'taking-damage' }));
+      setTimeout(() => setCharacterAnimations(prev => {
+        const rest = { ...prev }; delete rest[targetId];
+        return rest;
+      }), 600);
+    };
+
+    combatEngine.onHealApplied = (targetId: string, amount: number) => {
+      const newHeal = {
+        id: `${targetId}-${Date.now()}-${Math.random()}`,
+        characterId: targetId,
+        value: amount,
+        type: 'heal' as const
+      };
+      setDamageNumbers(prev => [...prev, newHeal]);
+      setCharacterAnimations(prev => ({ ...prev, [targetId]: 'healing' }));
+      setTimeout(() => setCharacterAnimations(prev => {
+        const rest = { ...prev }; delete rest[targetId];
+        return rest;
+      }), 800);
+    };
+
+    combatEngine.onSkillUsed = (casterId: string, skillName: string) => {
+      setActiveSkills(prev => ({ ...prev, [casterId]: skillName }));
+      setCharacterAnimations(prev => ({ ...prev, [casterId]: 'using-skill' }));
+      setTimeout(() => {
+        setActiveSkills(prev => {
+          const rest = { ...prev }; delete rest[casterId];
+          return rest;
+        });
+        setCharacterAnimations(prev => {
+          const rest = { ...prev }; delete rest[casterId];
+          return rest;
+        });
+      }, 1500);
+    };
+
+    combatEngine.onAttackAnimation = (attackerId: string) => {
+      setCharacterAnimations(prev => ({ ...prev, [attackerId]: 'attacking' }));
+      setTimeout(() => setCharacterAnimations(prev => {
+        const rest = { ...prev }; delete rest[attackerId];
+        return rest;
+      }), 600);
+    };
 
     if (isManualMode) {
       // Execute enemy turns until we reach first hero
@@ -925,14 +1042,24 @@ export function Router() {
               {!combatEngine.combatResult && t('router.combatTurn', { turn: combatEngine.turnCounter })}
             </div>
 
-            {/* Combat Speed Control */}
-            {!combatEngine.combatResult && !isManualMode && (
-              <div className="combat-speed-container">
-                <CombatSpeedControl
-                  currentSpeed={combatSpeed}
-                  onSpeedChange={setCombatSpeed}
+            {/* Combat Controls */}
+            {!combatEngine.combatResult && (
+              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+                {/* Combat Mode Toggle */}
+                <CombatModeToggle
+                  currentMode={isManualMode ? 'manual' : 'auto'}
+                  onModeChange={(mode: CombatMode) => setIsManualMode(mode === 'manual')}
                   disabled={false}
                 />
+
+                {/* Combat Speed Control - Only show in auto mode */}
+                {!isManualMode && (
+                  <CombatSpeedControl
+                    currentSpeed={combatSpeed}
+                    onSpeedChange={setCombatSpeed}
+                    disabled={false}
+                  />
+                )}
               </div>
             )}
 
@@ -1080,8 +1207,28 @@ export function Router() {
                   const isActive = combatEngine.currentCharacter?.id === hero.id;
                   const hpPercentage = hero.currentHP / hero.maxHP;
                   const hpClass = hpPercentage < 0.3 ? 'low' : hpPercentage < 0.6 ? 'medium' : 'high';
+                  const animation = characterAnimations[hero.id] || '';
+                  const activeSkill = activeSkills[hero.id];
+                  const heroDamages = damageNumbers.filter(d => d.characterId === hero.id);
+
                   return (
-                  <div key={hero.id} className={`character-card hero ${!hero.isAlive ? 'dead' : ''} ${isActive ? 'active' : ''}`}>
+                  <div key={hero.id} className={`character-card hero ${!hero.isAlive ? 'dead' : ''} ${isActive ? 'active' : ''} ${animation}`} style={{ position: 'relative' }}>
+                    {/* Skill Indicator */}
+                    {activeSkill && (
+                      <div className="skill-indicator">
+                        🔮 {activeSkill}
+                      </div>
+                    )}
+
+                    {/* Damage Numbers */}
+                    {heroDamages.map(dmg => (
+                      <DamageNumberContainer
+                        key={dmg.id}
+                        damages={[dmg]}
+                        onRemove={(id) => setDamageNumbers(prev => prev.filter(d => d.id !== id))}
+                      />
+                    ))}
+
                     <div className="character-card-header">
                       <span className="character-name">{hero.name}</span>
                       <span className="character-level">Lv.{hero.level}</span>
@@ -1109,6 +1256,10 @@ export function Router() {
                   const isActive = combatEngine.currentCharacter?.id === enemy.id;
                   const hpPercentage = enemy.currentHP / enemy.maxHP;
                   const hpClass = hpPercentage < 0.3 ? 'low' : hpPercentage < 0.6 ? 'medium' : 'high';
+                  const animation = characterAnimations[enemy.id] || '';
+                  const activeSkill = activeSkills[enemy.id];
+                  const enemyDamages = damageNumbers.filter(d => d.characterId === enemy.id);
+
                   return (
                   <Tooltip
                     key={enemy.id}
@@ -1128,7 +1279,23 @@ export function Router() {
                     }
                     position="left"
                   >
-                  <div className={`character-card enemy ${!enemy.isAlive ? 'dead' : ''} ${isActive ? 'active' : ''} ${enemy.type === 'elite' ? 'elite' : ''} ${enemy.type === 'boss' ? 'boss' : ''}`}>
+                  <div className={`character-card enemy ${!enemy.isAlive ? 'dead' : ''} ${isActive ? 'active' : ''} ${enemy.type === 'elite' ? 'elite' : ''} ${enemy.type === 'boss' ? 'boss' : ''} ${animation}`} style={{ position: 'relative' }}>
+                    {/* Skill Indicator */}
+                    {activeSkill && (
+                      <div className="skill-indicator">
+                        🔮 {activeSkill}
+                      </div>
+                    )}
+
+                    {/* Damage Numbers */}
+                    {enemyDamages.map(dmg => (
+                      <DamageNumberContainer
+                        key={dmg.id}
+                        damages={[dmg]}
+                        onRemove={(id) => setDamageNumbers(prev => prev.filter(d => d.id !== id))}
+                      />
+                    ))}
+
                     <div className="character-card-header">
                       <span className="character-name">
                         {enemy.type === 'boss' && '💀 '}

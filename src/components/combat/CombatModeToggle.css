@@ -1,0 +1,97 @@
+/**
+ * Combat Mode Toggle Styles
+ */
+
+.combat-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.6);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  font-family: 'Press Start 2P', cursive;
+}
+
+.mode-label {
+  font-size: 10px;
+  color: #FFD700;
+  white-space: nowrap;
+}
+
+.mode-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.mode-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: white;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.mode-button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #FFD700;
+  transform: translateY(-1px);
+}
+
+.mode-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.mode-button.active {
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  border-color: #FFD700;
+  color: #000;
+  font-weight: bold;
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+}
+
+.mode-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mode-icon {
+  font-size: 12px;
+}
+
+.mode-text {
+  font-size: 8px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .combat-mode-toggle {
+    padding: 6px 8px;
+    gap: 6px;
+  }
+
+  .mode-label {
+    font-size: 8px;
+  }
+
+  .mode-button {
+    padding: 5px 8px;
+    gap: 3px;
+  }
+
+  .mode-icon {
+    font-size: 10px;
+  }
+
+  .mode-text {
+    font-size: 7px;
+  }
+}

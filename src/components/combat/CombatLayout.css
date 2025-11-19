@@ -441,6 +441,104 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
+/* Character Card Animations */
+.character-card.attacking {
+  animation: cardAttack 0.6s ease-out;
+}
+
+.character-card.taking-damage {
+  animation: cardShake 0.4s ease-in-out;
+}
+
+.character-card.using-skill {
+  animation: cardSkillGlow 1s ease-out;
+}
+
+.character-card.healing {
+  animation: cardHeal 0.8s ease-out;
+}
+
+@keyframes cardAttack {
+  0% {
+    transform: translateX(0) scale(1);
+  }
+  30% {
+    transform: translateX(-8px) scale(1.03);
+  }
+  60% {
+    transform: translateX(8px) scale(1.03);
+  }
+  100% {
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes cardShake {
+  0%, 100% {
+    transform: translateX(0) rotate(0deg);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-4px) rotate(-2deg);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(4px) rotate(2deg);
+  }
+}
+
+@keyframes cardSkillGlow {
+  0% {
+    box-shadow: 0 0 0 rgba(138, 43, 226, 0);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(138, 43, 226, 0.8), 0 0 80px rgba(138, 43, 226, 0.4);
+  }
+  100% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@keyframes cardHeal {
+  0% {
+    box-shadow: 0 0 0 rgba(68, 255, 68, 0);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(68, 255, 68, 0.8), 0 0 60px rgba(68, 255, 68, 0.4);
+  }
+  100% {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+}
+
+/* Skill Indicator Badge */
+.skill-indicator {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #8b5cf6 0%, #6b46c1 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 2px solid #FFD700;
+  font-size: 10px;
+  font-weight: bold;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+  z-index: 10;
+  animation: skillBadgePulse 1.5s infinite;
+}
+
+@keyframes skillBadgePulse {
+  0%, 100% {
+    transform: translateX(-50%) scale(1);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+  }
+  50% {
+    transform: translateX(-50%) scale(1.05);
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.9);
+  }
+}
+
 /* Combat Log */
 .combat-log-container {
   background: linear-gradient(135deg, rgba(13, 13, 26, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%);

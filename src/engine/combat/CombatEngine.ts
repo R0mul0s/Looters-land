@@ -63,6 +63,12 @@ export class CombatEngine {
   onUpdate: (() => void) | null;
   onWaitForInput: ((character: Combatant) => void) | null;
 
+  // Animation callbacks
+  onDamageDealt: ((targetId: string, damage: number, isCritical: boolean) => void) | null;
+  onHealApplied: ((targetId: string, amount: number) => void) | null;
+  onSkillUsed: ((casterId: string, skillName: string) => void) | null;
+  onAttackAnimation: ((attackerId: string) => void) | null;
+
   constructor() {
     this.heroes = [];
     this.enemies = [];
@@ -91,6 +97,12 @@ export class CombatEngine {
     this.onCombatEnd = null;
     this.onUpdate = null;
     this.onWaitForInput = null;
+
+    // Animation callbacks
+    this.onDamageDealt = null;
+    this.onHealApplied = null;
+    this.onSkillUsed = null;
+    this.onAttackAnimation = null;
   }
 
   /**
@@ -300,6 +312,15 @@ export class CombatEngine {
           `${attacker.name} attacks ${action.target?.name} for ${action.damage} damage${critText}`,
           'attack'
         );
+
+        // Trigger animations
+        if (this.onAttackAnimation) {
+          this.onAttackAnimation(attacker.id);
+        }
+        if (this.onDamageDealt && action.target && action.damage > 0) {
+          this.onDamageDealt(action.target.id, action.damage, action.isCrit || false);
+        }
+
         if (action.target && !action.target.isAlive) {
           this.log(`${action.target.name} has been defeated!`, 'death');
         }
@@ -312,6 +333,15 @@ export class CombatEngine {
           `${attacker.name} uses ${action.skillName} on ${action.target?.name} for ${action.damage} damage${skillCritText}`,
           'skill'
         );
+
+        // Trigger animations
+        if (this.onSkillUsed && action.skillName) {
+          this.onSkillUsed(attacker.id, action.skillName);
+        }
+        if (this.onDamageDealt && action.target && action.damage > 0) {
+          this.onDamageDealt(action.target.id, action.damage, action.isCrit || false);
+        }
+
         if (action.effect) {
           this.log(`  → ${action.effect}`, 'skill');
         }
@@ -326,6 +356,18 @@ export class CombatEngine {
           `${attacker.name} uses ${action.skillName} on ${action.target?.name} for ${action.damage} damage and heals for ${action.healAmount} HP`,
           'skill'
         );
+
+        // Trigger animations
+        if (this.onSkillUsed && action.skillName) {
+          this.onSkillUsed(attacker.id, action.skillName);
+        }
+        if (this.onDamageDealt && action.target && action.damage > 0) {
+          this.onDamageDealt(action.target.id, action.damage, false);
+        }
+        if (this.onHealApplied && action.healAmount && action.healAmount > 0) {
+          this.onHealApplied(attacker.id, action.healAmount);
+        }
+
         if (action.target && !action.target.isAlive) {
           this.log(`${action.target.name} has been defeated!`, 'death');
         }
@@ -333,9 +375,21 @@ export class CombatEngine {
 
       case 'skill_aoe':
         this.log(`${attacker.name} uses ${action.skillName} on all targets!`, 'skill');
+
+        // Trigger skill animation
+        if (this.onSkillUsed && action.skillName) {
+          this.onSkillUsed(attacker.id, action.skillName);
+        }
+
         action.results?.forEach(result => {
           const critText = result.isCrit ? ' [CRIT!]' : '';
           this.log(`  → ${result.target.name} takes ${result.damage} damage${critText}`, 'skill');
+
+          // Trigger damage animation for each target
+          if (this.onDamageDealt && result.damage > 0) {
+            this.onDamageDealt(result.target.id, result.damage, result.isCrit || false);
+          }
+
           if (!result.target.isAlive) {
             this.log(`  → ${result.target.name} has been defeated!`, 'death');
           }
@@ -347,19 +401,43 @@ export class CombatEngine {
           `${attacker.name} uses ${action.skillName} on ${action.target?.name}, healing for ${action.healAmount} HP`,
           'heal'
         );
+
+        // Trigger animations
+        if (this.onSkillUsed && action.skillName) {
+          this.onSkillUsed(attacker.id, action.skillName);
+        }
+        if (this.onHealApplied && action.target && action.healAmount && action.healAmount > 0) {
+          this.onHealApplied(action.target.id, action.healAmount);
+        }
         break;
 
       case 'skill_group_heal':
         this.log(`${attacker.name} uses ${action.skillName} on all allies!`, 'heal');
+
+        // Trigger skill animation
+        if (this.onSkillUsed && action.skillName) {
+          this.onSkillUsed(attacker.id, action.skillName);
+        }
+
         action.results?.forEach(result => {
           if (result.healAmount && result.healAmount > 0) {
             this.log(`  → ${result.target.name} heals for ${result.healAmount} HP`, 'heal');
+
+            // Trigger heal animation for each target
+            if (this.onHealApplied) {
+              this.onHealApplied(result.target.id, result.healAmount);
+            }
           }
         });
         break;
 
       case 'skill_buff':
         this.log(`${attacker.name} uses ${action.skillName}: ${action.effect}`, 'skill');
+
+        // Trigger skill animation
+        if (this.onSkillUsed && action.skillName) {
+          this.onSkillUsed(attacker.id, action.skillName);
+        }
         break;
     }
   }

@@ -207,7 +207,10 @@ if (typeof window !== 'undefined') {
    * Explores all tiles on the map
    */
   window.revealMap = () => {
-    const gameActions = window.__gameActions as { addDiscoveredLocation: (loc: { name: string; x: number; y: number; type: string }) => void } | undefined;
+    const gameActions = window.__gameActions as {
+      addDiscoveredLocation: (loc: { name: string; x: number; y: number; type: string }) => void;
+      updateWorldMap: (worldMap: unknown) => Promise<void>;
+    } | undefined;
     const gameState = window.__gameState as { worldMap?: { tiles: Array<Array<{ isExplored: boolean; staticObject?: { name: string; type: string }; x: number; y: number }>> } } | undefined;
 
     if (!gameState || !gameActions) {

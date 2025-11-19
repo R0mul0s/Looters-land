@@ -199,19 +199,19 @@ export class DungeonGenerator {
         this.populateRestRoom(room, floorNumber);
         break;
       case 'boss':
-        this.populateBossRoom(room, floorNumber, difficultyMultiplier, heroLevel);
+        this.populateBossRoom(room, floorNumber, difficultyMultiplier);
         break;
       case 'shrine':
         this.populateShrineRoom(room);
         break;
       case 'mystery':
-        this.populateMysteryRoom(room, floorNumber, difficultyMultiplier, heroLevel);
+        this.populateMysteryRoom(room);
         break;
       case 'elite':
         this.populateEliteRoom(room, floorNumber, difficulty, difficultyMultiplier, heroLevel);
         break;
       case 'miniboss':
-        this.populateMiniBossRoom(room, floorNumber, difficultyMultiplier, heroLevel);
+        this.populateMiniBossRoom(room, floorNumber, difficultyMultiplier);
         break;
     }
 

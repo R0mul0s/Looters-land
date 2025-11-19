@@ -245,12 +245,12 @@ export class CombatEngine {
     if (aliveEnemies.length === 0) return null;
 
     // Get skills if hero has them
-    const skills = 'getSkills' in hero ? (hero as Combatant & { getSkills: () => unknown[] }).getSkills() : [];
+    const skills = 'getSkills' in hero ? (hero as Combatant & { getSkills: () => Array<{ name: string; type: string }> }).getSkills() : [];
 
     // Check if any skill is off cooldown
     for (let i = 0; i < skills.length; i++) {
       const skill = skills[i];
-      const currentCD = 'cooldowns' in hero ? hero.cooldowns.get(skill.name) || 0 : 0;
+      const currentCD = 'cooldowns' in hero ? (hero as Combatant & { cooldowns: Map<string, number> }).cooldowns.get(skill.name) || 0 : 0;
 
       if (currentCD === 0) {
         // Use skill based on type
@@ -262,22 +262,26 @@ export class CombatEngine {
           );
 
           if (lowestHPHero.currentHP < lowestHPHero.maxHP * 0.6) {
-            return (hero as Combatant & { useSkill: (index: number, targets: Combatant[]) => CombatActionResult }).useSkill(i, [lowestHPHero]);
+            return (hero as Combatant & { useSkill: (index: number, targets: Combatant[]) => CombatActionResult | null }).useSkill(i, [lowestHPHero])!;
           }
         } else if (skill.type === 'damage') {
           // Attack random enemy
           const target = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-          return (hero as Combatant & { useSkill: (index: number, targets: Combatant[]) => CombatActionResult }).useSkill(i, [target]);
+          return (hero as Combatant & { useSkill: (index: number, targets: Combatant[]) => CombatActionResult | null }).useSkill(i, [target])!;
         } else if (skill.type === 'buff') {
           // Use buff
-          return (hero as Combatant & { useSkill: (index: number, targets: Combatant[]) => CombatActionResult }).useSkill(i, this.heroes.filter(h => h.isAlive));
+          return (hero as Combatant & { useSkill: (index: number, targets: Combatant[]) => CombatActionResult | null }).useSkill(i, this.heroes.filter(h => h.isAlive))!;
         }
       }
     }
 
     // Default: basic attack on random enemy
     const target = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-    return (hero as Combatant & { attack: (target: Combatant) => CombatActionResult }).attack(target);
+    const result = (hero as Combatant & { attack: (target: Combatant) => { attacker: Combatant; target: Combatant; damage: number; isCrit?: boolean; type: string } }).attack(target);
+    return {
+      ...result,
+      type: 'basic_attack'
+    } as CombatActionResult;
   }
 
   /**
@@ -415,7 +419,7 @@ export class CombatEngine {
     const totalXP = Math.floor(baseXP * avgEnemyLevel * numEnemies);
 
     // Generate loot from defeated enemies
-    this.lootReward = this.lootGenerator.generateLoot(this.enemies as Combatant[]);
+    this.lootReward = this.lootGenerator.generateLoot(this.enemies as Enemy[]);
 
     this.log(`\n💰 Rewards:`, 'info');
     this.log(`Experience: ${totalXP} XP`, 'info');

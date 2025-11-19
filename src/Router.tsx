@@ -411,7 +411,7 @@ export function Router() {
    * Run auto combat for quick encounters
    */
   const runQuickAutoCombat = async () => {
-    while (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
+    while (combatEngine.isActive && !combatEngine.waitingForPlayerInput && !isManualMode) {
       combatEngine.executeTurn();
       setCombatLog([...combatEngine.combatLog]);
       forceUpdate({});
@@ -419,6 +419,12 @@ export function Router() {
       // Wait between turns for visibility - use current speed setting
       const delay = getSpeedDelay(combatSpeed);
       await new Promise(resolve => setTimeout(resolve, delay));
+    }
+
+    // If we stopped because of manual mode switch, set up for player input
+    if (combatEngine.isActive && isManualMode) {
+      setWaitingForInput(true);
+      setActiveCharacter(combatEngine.currentCharacter);
     }
   };
 
@@ -827,15 +833,21 @@ export function Router() {
    */
   const runDungeonAutoCombat = async () => {
     // Run auto combat loop with UI updates
-    while (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
+    while (combatEngine.isActive && !combatEngine.waitingForPlayerInput && !isManualMode) {
       combatEngine.executeTurn();
       setCombatLog([...combatEngine.combatLog]);
       forceUpdate({});
 
       // Wait between turns for visibility
-      if (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
+      if (combatEngine.isActive && !combatEngine.waitingForPlayerInput && !isManualMode) {
         await new Promise(resolve => setTimeout(resolve, COMBAT_CONFIG.AUTO_COMBAT_DELAY));
       }
+    }
+
+    // If we stopped because of manual mode switch, set up for player input
+    if (combatEngine.isActive && isManualMode) {
+      setWaitingForInput(true);
+      setActiveCharacter(combatEngine.currentCharacter);
     }
   };
 
@@ -1048,7 +1060,27 @@ export function Router() {
                 {/* Combat Mode Toggle */}
                 <CombatModeToggle
                   currentMode={isManualMode ? 'manual' : 'auto'}
-                  onModeChange={(mode: CombatMode) => setIsManualMode(mode === 'manual')}
+                  onModeChange={(mode: CombatMode) => {
+                    const newIsManual = mode === 'manual';
+                    setIsManualMode(newIsManual);
+                    combatEngine.setManualMode(newIsManual);
+
+                    // If switching to auto mode during player input, continue auto combat
+                    if (!newIsManual && waitingForInput) {
+                      setWaitingForInput(false);
+                      setActiveCharacter(null);
+                      setSelectedTarget(null);
+
+                      // Continue auto combat
+                      setTimeout(() => {
+                        if (inDungeon) {
+                          runDungeonAutoCombat();
+                        } else {
+                          runQuickAutoCombat();
+                        }
+                      }, 100);
+                    }
+                  }}
                   disabled={false}
                 />
 

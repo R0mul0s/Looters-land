@@ -1481,7 +1481,6 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
             onSetHealerCooldown={async (cooldownUntil) => {
               await gameActions.setHealerCooldown(cooldownUntil);
             }}
-            onStoredGoldChange={() => {}} // Deprecated
             onBankVaultChange={(tier, maxSlots, totalItems) => {
               gameActions.updateBankVault(tier, maxSlots, totalItems);
             }}
@@ -1849,7 +1848,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
                       if (result.success) {
                         setShowMessageModal(t('worldmap.enchantSuccess', { message: result.message, chance: result.chance.toString() }));
                         gameActions.saveGame();
-                        setEnchantItem({ ...enchantItem }); // Force re-render
+                        gameActions.forceUpdate(); // Force re-render
                       } else {
                         setShowMessageModal(t('worldmap.enchantFailed', { message: result.message, chance: result.chance.toString() }));
                       }

@@ -602,7 +602,7 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           activePartyIndices,
           inventory,
           playerPos: { x: profile.current_world_x, y: profile.current_world_y },
-          worldMap: profile.world_map_data || null,
+          worldMap: (profile.world_map_data as WorldMap) || null,
           discoveredLocations: (profile.discovered_locations || []).map(str => {
             try {
               return JSON.parse(str);

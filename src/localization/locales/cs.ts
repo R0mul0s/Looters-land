@@ -1304,6 +1304,9 @@ export const cs: LocaleKeys = {
       enchantButton: 'Vylepšit předmět',
       maxEnchant: 'Maximální úroveň vylepšení',
       notEnoughGold: 'Nedostatek zlata',
+      tabs: {
+        otherItems: 'Ostatní předměty',
+      },
       warning: {
         title: 'Varování:',
         message: 'Vylepšení může selhat! Zlato je utraceno i při neúspěchu.',

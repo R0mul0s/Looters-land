@@ -5,9 +5,12 @@
  * Shows equipped items, inventory grid, and equipment actions.
  * Supports item equipping, unequipping, enchanting, and auto-equip.
  *
+ * Updated to sort heroes with active party members first and highlight them
+ * with green border and "Active" badge for better visibility.
+ *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-18
+ * @lastModified 2025-11-19
  */
 
 import React, { useState } from 'react';
@@ -16,7 +19,7 @@ import type { Item } from '../engine/item/Item';
 import type { Inventory } from '../engine/item/Inventory';
 import { CLASS_ICONS, RARITY_COLORS } from '../types/hero.types';
 import { t } from '../localization/i18n';
-import { COLORS, SPACING } from '../styles/tokens';
+import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../styles/tokens';
 import { flexCenter } from '../styles/common';
 import { GameModal } from './ui/GameModal';
 import { ModalButton, ModalButtonGroup, ModalDivider, ModalText } from './ui/ModalContent';
@@ -28,6 +31,8 @@ import '../App.css';
 interface InventoryScreenProps {
   /** Array of heroes to manage equipment for */
   heroes: Hero[];
+  /** Array of heroes in active party (for highlighting) */
+  activeParty?: Hero[];
   /** Inventory containing all items */
   inventory: Inventory;
   /** Callback when equipping an item */
@@ -58,6 +63,7 @@ interface InventoryScreenProps {
  */
 export function InventoryScreen({
   heroes,
+  activeParty = [],
   inventory,
   onEquipItem,
   onUnequipItem,
@@ -73,8 +79,28 @@ export function InventoryScreen({
   const [tooltip, setTooltip] = useState<{ item: Item; equippedItem: Item | null; x: number; y: number } | null>(null);
   const [itemDetailModal, setItemDetailModal] = useState<Item | null>(null);
   const [showDestroyModal, setShowDestroyModal] = useState<{ item: Item; itemName: string } | null>(null);
+  const [showAllHeroes, setShowAllHeroes] = useState(false);
 
-  const selectedHero = heroes[selectedHeroIndex];
+  // Sort heroes: active party members first, then others
+  const activePartyIds = new Set(activeParty.map(hero => hero.id));
+  const sortedHeroes = [...heroes].sort((a, b) => {
+    const aIsActive = activePartyIds.has(a.id);
+    const bIsActive = activePartyIds.has(b.id);
+
+    // Active heroes first
+    if (aIsActive && !bIsActive) return -1;
+    if (!aIsActive && bIsActive) return 1;
+
+    // Within same group, maintain original order
+    return 0;
+  });
+
+  // Show only first 4 heroes initially, or all if toggled
+  const INITIAL_HEROES_COUNT = 4;
+  const displayedHeroes = showAllHeroes ? sortedHeroes : sortedHeroes.slice(0, INITIAL_HEROES_COUNT);
+  const hasMoreHeroes = sortedHeroes.length > INITIAL_HEROES_COUNT;
+
+  const selectedHero = sortedHeroes[selectedHeroIndex];
 
   // Show loading state if no heroes available
   if (!selectedHero || heroes.length === 0) {
@@ -278,44 +304,57 @@ export function InventoryScreen({
 
   return (
     <div style={styles.container}>
-      {/* Hero Selector */}
-      <div className="hero-selector">
-        <h3>{t('inventoryScreen.selectHero')}</h3>
-        <div className="hero-buttons">
-          {heroes.map((hero, index) => (
+      {/* Hero Tabs */}
+      <div style={styles.tabsContainer}>
+        {displayedHeroes.map((hero, index) => {
+          const isActive = activePartyIds.has(hero.id);
+          return (
             <button
               key={hero.id}
-              className={`hero-btn ${index === selectedHeroIndex ? 'active' : ''}`}
-              onClick={() => setSelectedHeroIndex(index)}
               style={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
+                ...styles.tab,
+                ...(index === selectedHeroIndex ? styles.tabActive : {}),
+                ...(isActive && {
+                  border: '2px solid #10b981',
+                  boxShadow: index === selectedHeroIndex
+                    ? '0 4px 12px rgba(16, 185, 129, 0.6)'
+                    : '0 0 8px rgba(16, 185, 129, 0.4)',
+                  background: index === selectedHeroIndex
+                    ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+                    : 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.1) 100%)'
+                })
               }}
+              onClick={() => setSelectedHeroIndex(index)}
             >
-              <span
-                style={{
-                  padding: '2px 6px',
-                  fontSize: '9px',
-                  fontWeight: '700',
-                  color: 'white',
-                  borderRadius: '4px',
-                  textTransform: 'capitalize',
-                  background: RARITY_COLORS[hero.rarity],
-                  boxShadow: '0 1px 4px rgba(0, 0, 0, 0.3)'
-                }}
-              >
-                {hero.rarity}
-              </span>
-              {CLASS_ICONS[hero.class]} {hero.name} {t('inventoryScreen.levelFormat')}{hero.level})
+              {isActive && (
+                <span
+                  style={{
+                    marginRight: SPACING[1],
+                    fontSize: FONT_SIZE.xs,
+                    fontWeight: FONT_WEIGHT.bold
+                  }}
+                >
+                  ✓
+                </span>
+              )}
+              {hero.name} (Lv.{hero.level})
             </button>
-          ))}
-        </div>
+          );
+        })}
+
+        {/* Show All/Show Less Toggle */}
+        {hasMoreHeroes && (
+          <button
+            style={styles.toggleButton}
+            onClick={() => setShowAllHeroes(!showAllHeroes)}
+          >
+            {showAllHeroes ? '▲ Skrýt' : `▼ Zobrazit vše (${sortedHeroes.length - INITIAL_HEROES_COUNT})`}
+          </button>
+        )}
       </div>
 
       {/* Main Grid */}
-      <div className="equipment-grid">
+      <div className="equipment-grid" style={{ padding: SPACING.lg, flex: 1, overflow: 'auto' }}>
         {/* Equipment Panel */}
         <div className="equipment-panel">
           <h3>⚔️ {t('inventoryScreen.equipment.title')}</h3>
@@ -756,7 +795,48 @@ const styles: Record<string, React.CSSProperties> = {
     height: '100%',
     background: `linear-gradient(135deg, ${COLORS.bgDarkSolid} 0%, ${COLORS.bgDarkAlt} 100%)`,
     overflow: 'auto',
-    padding: SPACING.lg,
+    display: 'flex',
+    flexDirection: 'column',
     boxSizing: 'border-box'
+  },
+  tabsContainer: {
+    display: 'flex',
+    gap: SPACING[2],
+    padding: `${SPACING.md} ${SPACING.lg}`,
+    borderBottom: '1px solid rgba(45, 212, 191, 0.2)',
+    overflowX: 'auto',
+    flexWrap: 'wrap',
+    backgroundColor: 'rgba(15, 23, 42, 0.5)'
+  },
+  tab: {
+    padding: `${SPACING[2]} ${SPACING.md}`,
+    background: 'rgba(45, 212, 191, 0.1)',
+    border: '1px solid rgba(45, 212, 191, 0.3)',
+    borderRadius: BORDER_RADIUS.md,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.semibold,
+    cursor: 'pointer',
+    transition: TRANSITIONS.allBase,
+    whiteSpace: 'nowrap'
+  },
+  tabActive: {
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
+    color: COLORS.bgDarkAlt,
+    border: `1px solid ${COLORS.primary}`,
+    boxShadow: '0 4px 12px rgba(45, 212, 191, 0.4)'
+  },
+  toggleButton: {
+    padding: `${SPACING[2]} ${SPACING.md}`,
+    background: 'rgba(100, 116, 139, 0.2)',
+    border: '1px solid rgba(100, 116, 139, 0.4)',
+    borderRadius: BORDER_RADIUS.md,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.semibold,
+    cursor: 'pointer',
+    transition: TRANSITIONS.allBase,
+    whiteSpace: 'nowrap',
+    opacity: 0.8
   }
 };

@@ -1,9 +1,12 @@
 /**
  * Town Screen Component - Main town UI with building navigation
  *
+ * Updated to pass heroes and activeParty props to SmithyBuilding for hero-specific
+ * item tabs with active party highlighting.
+ *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-16
+ * @lastModified 2025-11-19
  */
 
 import React, { useState, useEffect } from 'react';
@@ -184,6 +187,8 @@ export function TownScreen({
           <SmithyBuilding
             inventory={inventory}
             playerGold={playerGold}
+            heroes={heroes}
+            activeParty={activeParty}
             onClose={() => setSelectedBuilding(null)}
             onInventoryChange={onInventoryChange}
             onGoldChange={onGoldChange}

@@ -37,6 +37,8 @@ import { ModalText, ModalDivider, ModalInfoRow, ModalInfoBox, ModalButton } from
 import { LeaderboardService } from './services/LeaderboardService';
 import { calculatePlayerScore } from './utils/scoreCalculator';
 import type { Item } from './engine/item/Item';
+import { CombatSpeedControl, type CombatSpeed } from './components/combat/CombatSpeedControl';
+import { getSpeedDelay } from './utils/combatUtils';
 
 /**
  * Combat metadata for quick combat encounters
@@ -82,6 +84,7 @@ export function Router() {
   const [quickCombatMetadata, setQuickCombatMetadata] = useState<QuickCombatMetadata | null>(null);
   const [quickCombatVictory, setQuickCombatVictory] = useState<QuickCombatVictory | null>(null);
   const [quickCombatDefeat, setQuickCombatDefeat] = useState(false);
+  const [combatSpeed, setCombatSpeed] = useState<CombatSpeed>('NORMAL');
 
   // Check authentication on mount
   useEffect(() => {
@@ -370,8 +373,9 @@ export function Router() {
       setCombatLog([...combatEngine.combatLog]);
       forceUpdate({});
 
-      // Wait between turns for visibility
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Wait between turns for visibility - use current speed setting
+      const delay = getSpeedDelay(combatSpeed);
+      await new Promise(resolve => setTimeout(resolve, delay));
     }
   };
 
@@ -899,6 +903,21 @@ export function Router() {
               {combatEngine.combatResult === 'defeat' && t('router.combatDefeat')}
               {!combatEngine.combatResult && t('router.combatTurn', { turn: combatEngine.turnCounter })}
             </div>
+
+            {/* Combat Speed Control */}
+            {!combatEngine.combatResult && !isManualMode && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                marginBottom: '20px'
+              }}>
+                <CombatSpeedControl
+                  currentSpeed={combatSpeed}
+                  onSpeedChange={setCombatSpeed}
+                  disabled={false}
+                />
+              </div>
+            )}
 
             {/* Defeat Screen - Exit Button */}
             {combatEngine.combatResult === 'defeat' && (

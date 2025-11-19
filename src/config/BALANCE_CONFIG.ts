@@ -29,6 +29,13 @@ export const COMBAT_CONFIG = {
   /** Auto-combat delay between turns in milliseconds */
   AUTO_COMBAT_DELAY: 1000,
 
+  /** Combat speed presets (delay in milliseconds) */
+  SPEED_PRESETS: {
+    NORMAL: 1000,    // 1x - 1 second per turn
+    FAST: 500,       // 2x - 0.5 seconds per turn
+    VERY_FAST: 250,  // 4x - 0.25 seconds per turn
+  } as const,
+
   /** Delay before showing defeat alert (ms) */
   DEFEAT_ALERT_DELAY: 500,
 } as const;

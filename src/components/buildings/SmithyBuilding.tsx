@@ -1,14 +1,19 @@
 /**
  * Smithy Building Component - Equipment enchanting and repair services
  *
+ * Features hero tabs to view equipped items per hero, plus "Other Items" tab
+ * for unequipped inventory items. Equipped items sorted by slot, unequipped
+ * items sorted by level > rarity > type.
+ *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-15
+ * @lastModified 2025-11-19
  */
 
 import React, { useState } from 'react';
 import type { Inventory } from '../../engine/item/Inventory';
 import type { Item } from '../../engine/item/Item';
+import type { Hero } from '../../engine/hero/Hero';
 import { TownService } from '../../services/TownService';
 import { t } from '../../localization/i18n';
 import { COLORS, SPACING, BORDER_RADIUS, FONT_SIZE, FONT_WEIGHT, TRANSITIONS } from '../../styles/tokens';
@@ -17,6 +22,8 @@ import { flexBetween, flexColumn } from '../../styles/common';
 interface SmithyBuildingProps {
   inventory: Inventory;
   playerGold: number;
+  heroes: Hero[];
+  activeParty: Hero[];
   onClose: () => void;
   onInventoryChange: (inventory: Inventory) => void;
   onGoldChange: (newGold: number) => void;
@@ -25,12 +32,29 @@ interface SmithyBuildingProps {
 export function SmithyBuilding({
   inventory,
   playerGold,
+  heroes,
+  activeParty,
   onClose,
   onInventoryChange,
   onGoldChange
 }: SmithyBuildingProps) {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [selectedTab, setSelectedTab] = useState<'other' | number>(0); // Default to first hero (index 0)
+
+  // Sort heroes: active party members first, then others
+  const activePartyIds = new Set(activeParty.map(hero => hero.id));
+  const sortedHeroes = [...heroes].sort((a, b) => {
+    const aIsActive = activePartyIds.has(a.id);
+    const bIsActive = activePartyIds.has(b.id);
+
+    // Active heroes first
+    if (aIsActive && !bIsActive) return -1;
+    if (!aIsActive && bIsActive) return 1;
+
+    // Within same group, maintain original order
+    return 0;
+  });
 
   const handleEnchantItem = (item: Item) => {
     const cost = TownService.calculateEnchantCost(item);
@@ -54,12 +78,44 @@ export function SmithyBuilding({
     setTimeout(() => setMessage(null), 4000);
   };
 
-  // Get equipment items only (no consumables, etc.)
-  let equipmentItems = inventory.items.filter(
-    item => ['helmet', 'chest', 'legs', 'boots', 'weapon', 'shield', 'accessory'].includes(item.slot)
-  );
+  // Get equipment items based on selected tab
+  let equipmentItems: Item[] = [];
 
-  // Sort by rarity, then level
+  if (selectedTab === 'other') {
+    // Show only unequipped items from inventory
+    const equippedItemIds = new Set<string>();
+    sortedHeroes.forEach(hero => {
+      if (hero.equipment) {
+        hero.equipment.getAllEquipped().forEach(({ item }) => {
+          equippedItemIds.add(item.id);
+        });
+      }
+    });
+
+    equipmentItems = inventory.items.filter(
+      item => ['helmet', 'chest', 'legs', 'boots', 'weapon', 'shield', 'accessory'].includes(item.slot) &&
+              !equippedItemIds.has(item.id)
+    );
+  } else {
+    // Show equipped items for selected hero
+    const selectedHero = sortedHeroes[selectedTab as number];
+    if (selectedHero?.equipment) {
+      equipmentItems = selectedHero.equipment.getAllEquipped().map(({ item }) => item);
+    }
+  }
+
+  // Sort items based on tab
+  const slotOrder: Record<string, number> = {
+    helmet: 1,
+    weapon: 2,
+    chest: 3,
+    gloves: 4,
+    legs: 5,
+    boots: 6,
+    shield: 7,
+    accessory: 8
+  };
+
   const rarityOrder: Record<string, number> = {
     mythic: 6,
     legendary: 5,
@@ -69,14 +125,26 @@ export function SmithyBuilding({
     common: 1
   };
 
-  equipmentItems = equipmentItems.sort((a, b) => {
-    // First by rarity (descending)
-    const rarityDiff = (rarityOrder[b.rarity.toLowerCase()] || 0) - (rarityOrder[a.rarity.toLowerCase()] || 0);
-    if (rarityDiff !== 0) return rarityDiff;
+  if (selectedTab === 'other') {
+    // Sort unequipped items by level > rarity > type
+    equipmentItems = equipmentItems.sort((a, b) => {
+      // Level (descending)
+      const levelDiff = b.level - a.level;
+      if (levelDiff !== 0) return levelDiff;
 
-    // Then by level (descending)
-    return b.level - a.level;
-  });
+      // Rarity (descending)
+      const rarityDiff = (rarityOrder[b.rarity.toLowerCase()] || 0) - (rarityOrder[a.rarity.toLowerCase()] || 0);
+      if (rarityDiff !== 0) return rarityDiff;
+
+      // Type (ascending by slot order)
+      return (slotOrder[a.slot] || 99) - (slotOrder[b.slot] || 99);
+    });
+  } else {
+    // Sort equipped items by slot order
+    equipmentItems = equipmentItems.sort((a, b) => {
+      return (slotOrder[a.slot] || 99) - (slotOrder[b.slot] || 99);
+    });
+  }
 
   const getRarityColor = (rarity: string) => {
     switch (rarity.toLowerCase()) {
@@ -119,6 +187,41 @@ export function SmithyBuilding({
           <span style={styles.resourceIcon}>💰</span>
           <span style={styles.resourceValue}>{playerGold.toLocaleString()}g</span>
         </div>
+      </div>
+
+      {/* Hero Tabs */}
+      <div style={styles.tabsContainer}>
+        {sortedHeroes.map((hero, index) => {
+          const isActive = activePartyIds.has(hero.id);
+          return (
+            <button
+              key={hero.id}
+              style={{
+                ...styles.tab,
+                ...(selectedTab === index ? styles.tabActive : {}),
+                ...(isActive ? styles.tabActiveHero : {})
+              }}
+              onClick={() => {
+                setSelectedTab(index);
+                setSelectedItem(null); // Clear selection when switching tabs
+              }}
+            >
+              {isActive && '✓ '}{hero.name} (Lv.{hero.level})
+            </button>
+          );
+        })}
+        <button
+          style={{
+            ...styles.tab,
+            ...(selectedTab === 'other' ? styles.tabActive : {})
+          }}
+          onClick={() => {
+            setSelectedTab('other');
+            setSelectedItem(null); // Clear selection when switching tabs
+          }}
+        >
+          📦 {t('buildings.smithy.tabs.otherItems')}
+        </button>
       </div>
 
       <div style={styles.content}>
@@ -340,6 +443,36 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: FONT_SIZE.base,
     fontWeight: FONT_WEIGHT.semibold,
     color: COLORS.goldLight
+  },
+  tabsContainer: {
+    display: 'flex',
+    gap: SPACING[2],
+    padding: `${SPACING.md} ${SPACING.lg}`,
+    borderBottom: '1px solid rgba(45, 212, 191, 0.2)',
+    overflowX: 'auto',
+    flexWrap: 'wrap'
+  },
+  tab: {
+    padding: `${SPACING[2]} ${SPACING.md}`,
+    background: 'rgba(45, 212, 191, 0.1)',
+    border: '1px solid rgba(45, 212, 191, 0.3)',
+    borderRadius: BORDER_RADIUS.md,
+    color: COLORS.textGray,
+    fontSize: FONT_SIZE.sm,
+    fontWeight: FONT_WEIGHT.semibold,
+    cursor: 'pointer',
+    transition: TRANSITIONS.allBase,
+    whiteSpace: 'nowrap'
+  },
+  tabActive: {
+    background: `linear-gradient(135deg, ${COLORS.primary} 0%, ${COLORS.primaryDark} 100%)`,
+    color: COLORS.bgDarkAlt,
+    border: `1px solid ${COLORS.primary}`,
+    boxShadow: '0 4px 12px rgba(45, 212, 191, 0.4)'
+  },
+  tabActiveHero: {
+    border: '2px solid #10b981',
+    boxShadow: '0 0 12px rgba(16, 185, 129, 0.4)'
   },
   content: {
     flex: 1,

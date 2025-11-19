@@ -15,9 +15,11 @@
  * - Modal dialogs for confirmations and information
  * - Real-time multiplayer with chat system
  *
+ * Updated to pass activeParty prop to InventoryScreen for hero highlighting.
+ *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-18
+ * @lastModified 2025-11-19
  */
 
 import React, { useEffect, useState } from 'react';
@@ -1298,7 +1300,8 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
 
   const inventoryContent = (
     <InventoryScreen
-      heroes={isInTown ? gameState.allHeroes : gameState.activeParty}
+      heroes={gameState.allHeroes}
+      activeParty={gameState.activeParty}
       inventory={gameState.inventory}
       isInTown={isInTown}
       onEquipItem={async (hero, item) => {

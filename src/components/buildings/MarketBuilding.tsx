@@ -1,9 +1,11 @@
 /**
  * Market Building Component - Buy and sell items
  *
+ * Updated sell tab to sort items by level > rarity > type for better organization.
+ *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-18
+ * @lastModified 2025-11-19
  */
 
 import React, { useState, useEffect } from 'react';
@@ -323,7 +325,7 @@ export function MarketBuilding({
   }
 
   function renderSellTab() {
-    // Sort inventory items by rarity, then level
+    // Sort inventory items by level > rarity > type
     const rarityOrder: Record<string, number> = {
       mythic: 6,
       legendary: 5,
@@ -333,13 +335,30 @@ export function MarketBuilding({
       common: 1
     };
 
+    const typeOrder: Record<string, number> = {
+      helmet: 1,
+      weapon: 2,
+      chest: 3,
+      gloves: 4,
+      legs: 5,
+      boots: 6,
+      shield: 7,
+      accessory: 8,
+      consumable: 9,
+      material: 10
+    };
+
     const sortedItems = [...inventory.items].sort((a, b) => {
-      // First by rarity (descending)
+      // First by level (descending)
+      const levelDiff = b.level - a.level;
+      if (levelDiff !== 0) return levelDiff;
+
+      // Then by rarity (descending)
       const rarityDiff = (rarityOrder[b.rarity.toLowerCase()] || 0) - (rarityOrder[a.rarity.toLowerCase()] || 0);
       if (rarityDiff !== 0) return rarityDiff;
 
-      // Then by level (descending)
-      return b.level - a.level;
+      // Then by type (ascending)
+      return (typeOrder[a.slot] || 99) - (typeOrder[b.slot] || 99);
     });
 
     const selectedItems = inventory.items.filter(item => selectedItemIds.has(item.id));

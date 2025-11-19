@@ -193,6 +193,7 @@ export function Router() {
         mode: 'auto'
       });
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState.activeParty]);
 
   // Show loading while checking auth

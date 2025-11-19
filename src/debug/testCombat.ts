@@ -147,8 +147,28 @@ export function printAvailableScenarios(): void {
 
 // Make it globally available for browser console
 if (typeof window !== 'undefined') {
-  (window as any).createTestEnemies = createTestEnemies;
-  (window as any).printTestScenario = printTestScenario;
-  (window as any).printAvailableScenarios = printAvailableScenarios;
-  (window as any).TEST_SCENARIOS = TEST_SCENARIOS;
+  (window as typeof window & {
+    createTestEnemies: typeof createTestEnemies;
+    printTestScenario: typeof printTestScenario;
+    printAvailableScenarios: typeof printAvailableScenarios;
+    TEST_SCENARIOS: typeof TEST_SCENARIOS;
+  }).createTestEnemies = createTestEnemies;
+  (window as typeof window & {
+    createTestEnemies: typeof createTestEnemies;
+    printTestScenario: typeof printTestScenario;
+    printAvailableScenarios: typeof printAvailableScenarios;
+    TEST_SCENARIOS: typeof TEST_SCENARIOS;
+  }).printTestScenario = printTestScenario;
+  (window as typeof window & {
+    createTestEnemies: typeof createTestEnemies;
+    printTestScenario: typeof printTestScenario;
+    printAvailableScenarios: typeof printAvailableScenarios;
+    TEST_SCENARIOS: typeof TEST_SCENARIOS;
+  }).printAvailableScenarios = printAvailableScenarios;
+  (window as typeof window & {
+    createTestEnemies: typeof createTestEnemies;
+    printTestScenario: typeof printTestScenario;
+    printAvailableScenarios: typeof printAvailableScenarios;
+    TEST_SCENARIOS: typeof TEST_SCENARIOS;
+  }).TEST_SCENARIOS = TEST_SCENARIOS;
 }

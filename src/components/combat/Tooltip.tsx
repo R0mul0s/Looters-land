@@ -24,13 +24,10 @@ export const Tooltip: React.FC<TooltipProps> = ({
   delay = 300
 }) => {
   const [visible, setVisible] = useState(false);
-  const [coords, setCoords] = useState({ x: 0, y: 0 });
   const timeoutRef = useRef<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const handleMouseEnter = (e: React.MouseEvent) => {
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    setCoords({ x: rect.left, y: rect.top });
+  const handleMouseEnter = () => {
 
     timeoutRef.current = window.setTimeout(() => {
       setVisible(true);

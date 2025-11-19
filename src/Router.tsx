@@ -1407,7 +1407,7 @@ export function Router() {
                   </button>
                 </div>
 
-                {/* Target Selection */}
+                {/* Target Selection or Selected Target Display */}
                 {!selectedTarget ? (
                   <div className="target-selection">
                     <p className="target-selection-title">
@@ -1471,79 +1471,79 @@ export function Router() {
                     >
                       ⚔️ Attack
                     </button>
+                  </div>
+                )}
 
-                    {/* Skills Section */}
-                    {'getSkills' in activeCharacter && activeCharacter.getSkills().length > 0 && (
-                      <div className="skills-section">
-                        <p className="skills-title">
-                          Skills:
-                        </p>
-                        <div className={`skills-grid ${activeCharacter.getSkills().length === 1 ? 'single' : 'multiple'}`}>
-                          {activeCharacter.getSkills().map((skill, index) => {
-                            const currentCooldown = (activeCharacter as Hero).cooldowns.get(skill.name) || 0;
-                            const isOnCooldown = currentCooldown > 0;
-                            const canUse = !isOnCooldown;
+                {/* Skills Section - Always visible */}
+                {'getSkills' in activeCharacter && activeCharacter.getSkills().length > 0 && (
+                  <div className="skills-section">
+                    <p className="skills-title">
+                      Skills:
+                    </p>
+                    <div className={`skills-grid ${activeCharacter.getSkills().length === 1 ? 'single' : 'multiple'}`}>
+                      {activeCharacter.getSkills().map((skill, index) => {
+                        const currentCooldown = (activeCharacter as Hero).cooldowns.get(skill.name) || 0;
+                        const isOnCooldown = currentCooldown > 0;
+                        const canUse = !isOnCooldown;
 
-                            return (
-                              <button
-                                key={index}
-                                onClick={() => {
-                                  if (canUse && activeCharacter && 'useSkill' in activeCharacter) {
-                                    // Determine targets based on skill type
-                                    let targets: Combatant[];
-                                    if (skill.type === 'buff') {
-                                      // Buffs target all allies
-                                      targets = gameState.activeParty.filter(h => h.isAlive);
-                                    } else if (skill.type === 'heal') {
-                                      // Heals target all allies
-                                      targets = gameState.activeParty.filter(h => h.isAlive);
-                                    } else if (skill.type === 'debuff') {
-                                      // Debuffs target all enemies
-                                      targets = currentEnemies.filter(e => e.isAlive);
-                                    } else {
-                                      // Damage skills target selected enemy
-                                      targets = selectedTarget ? [selectedTarget] : [currentEnemies.find(e => e.isAlive)!];
-                                    }
+                        return (
+                          <button
+                            key={index}
+                            onClick={() => {
+                              if (canUse && activeCharacter && 'useSkill' in activeCharacter) {
+                                // Determine targets based on skill type
+                                let targets: Combatant[];
+                                if (skill.type === 'buff') {
+                                  // Buffs target all allies
+                                  targets = gameState.activeParty.filter(h => h.isAlive);
+                                } else if (skill.type === 'heal') {
+                                  // Heals target all allies
+                                  targets = gameState.activeParty.filter(h => h.isAlive);
+                                } else if (skill.type === 'debuff') {
+                                  // Debuffs target all enemies
+                                  targets = currentEnemies.filter(e => e.isAlive);
+                                } else {
+                                  // Damage skills target selected enemy
+                                  targets = selectedTarget ? [selectedTarget] : [currentEnemies.find(e => e.isAlive)!];
+                                }
 
-                                    activeCharacter.useSkill(index, targets);
+                                activeCharacter.useSkill(index, targets);
+                                setCombatLog([...combatEngine.combatLog]);
+                                setSelectedTarget(null);
+                                setWaitingForInput(false);
+
+                                setTimeout(() => {
+                                  if (combatEngine.isActive) {
+                                    combatEngine.executeTurn();
                                     setCombatLog([...combatEngine.combatLog]);
-                                    setSelectedTarget(null);
-                                    setWaitingForInput(false);
 
-                                    setTimeout(() => {
-                                      if (combatEngine.isActive) {
-                                        combatEngine.executeTurn();
-                                        setCombatLog([...combatEngine.combatLog]);
-
-                                        if (combatEngine.waitingForPlayerInput) {
-                                          setWaitingForInput(true);
-                                          setActiveCharacter(combatEngine.currentCharacter);
-                                        }
-                                      }
-                                    }, 500);
+                                    if (combatEngine.waitingForPlayerInput) {
+                                      setWaitingForInput(true);
+                                      setActiveCharacter(combatEngine.currentCharacter);
+                                    }
                                   }
-                                }}
-                                disabled={!canUse}
-                                className={`skill-button ${canUse ? 'available' : 'cooldown'}`}
-                              >
-                                <span className="skill-button-name">
-                                  🔮 {skill.name}
-                                </span>
-                                {isOnCooldown ? (
-                                  <span className="skill-button-cd">
-                                    CD: {currentCooldown}
-                                  </span>
-                                ) : skill.cooldown > 0 && (
-                                  <span className="skill-button-cd-ready">
-                                    CD: {skill.cooldown}
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
+                                }, 500);
+                              }
+                            }}
+                            disabled={!canUse}
+                            className={`skill-button ${canUse ? 'available' : 'cooldown'}`}
+                          >
+                            <span className="skill-button-name">
+                              🔮 {skill.name}
+                            </span>
+                            {isOnCooldown ? (
+                              <span className="skill-button-cd">
+                                CD: {currentCooldown}
+                              </span>
+                            ) : skill.cooldown > 0 && (
+                              <span className="skill-button-cd-ready">
+                                CD: {skill.cooldown}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>

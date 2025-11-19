@@ -41,6 +41,7 @@ import { CombatSpeedControl, type CombatSpeed } from './components/combat/Combat
 import { InitiativeOrderBar } from './components/combat/InitiativeOrderBar';
 import { Tooltip, EnemyTooltip } from './components/combat/Tooltip';
 import { getSpeedDelay } from './utils/combatUtils';
+import { createTestEnemies, type TestScenario } from './debug/testCombat';
 import './components/combat/CombatLayout.css';
 
 /**
@@ -163,6 +164,36 @@ export function Router() {
       unsubscribe();
     };
   }, []);
+
+  // Setup debug test combat function
+  useEffect(() => {
+    window.__startTestCombat = (scenario: string = 'mixed') => {
+      const validScenarios: TestScenario[] = ['mixed', 'boss', 'elite', 'swarm', 'tough'];
+      const testScenario = validScenarios.includes(scenario as TestScenario)
+        ? (scenario as TestScenario)
+        : 'mixed';
+
+      console.log(`⚔️ Starting test combat: ${testScenario}`);
+
+      const avgLevel = gameState.activeParty && gameState.activeParty.length > 0
+        ? Math.floor(gameState.activeParty.reduce((sum, h) => sum + h.level, 0) / gameState.activeParty.length)
+        : 5;
+
+      const enemies = createTestEnemies(testScenario, avgLevel);
+
+      console.log(`📋 Spawned ${enemies.length} enemies:`);
+      enemies.forEach((e, i) => {
+        const icon = e.type === 'boss' ? '💀' : e.type === 'elite' ? '⭐' : '👹';
+        console.log(`  ${i + 1}. ${icon} ${e.name} (Lv.${e.level}, ${e.type})`);
+      });
+
+      handleQuickCombat(enemies, 'wandering_monster', {
+        position: { x: 0, y: 0 },
+        type: 'debug_test',
+        mode: 'auto'
+      });
+    };
+  }, [gameState.activeParty]);
 
   // Show loading while checking auth
   if (authLoading) {

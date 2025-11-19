@@ -15,6 +15,7 @@ declare global {
     __DEBUG__?: typeof DEBUG_CONFIG;
     __gameActions?: unknown;
     __gameState?: unknown;
+    __startTestCombat?: (scenario?: string) => void;
     enableUnlimitedEnergy?: () => void;
     disableUnlimitedEnergy?: () => void;
     toggleUnlimitedEnergy?: () => void;
@@ -24,6 +25,7 @@ declare global {
     fixDuplicateHeroes?: () => Promise<void>;
     showAllHeroes?: () => void;
     revealMap?: () => void;
+    listTestCombatScenarios?: () => void;
   }
 }
 
@@ -256,6 +258,19 @@ if (typeof window !== 'undefined') {
     console.log(`📍 Total tiles: ${worldMap.tiles.length * worldMap.tiles[0].length}`);
   };
 
+  /**
+   * List available test combat scenarios
+   */
+  window.listTestCombatScenarios = () => {
+    console.log('⚔️ TEST COMBAT SCENARIOS:');
+    console.log('  mixed     - 3 enemies: 1 normal, 1 elite, varied levels [Medium]');
+    console.log('  boss      - 1 boss + 2 minions [Hard]');
+    console.log('  elite     - 3 elite enemies [Very Hard]');
+    console.log('  swarm     - 5 weak enemies (tests initiative bar) [Easy]');
+    console.log('  tough     - 1 elite + 1 boss, high level [Extreme]');
+    console.log('\n💡 Usage: window.__startTestCombat("mixed")');
+  };
+
   console.log('🐛 Debug commands available:');
   console.log('  Energy:');
   console.log('    - window.enableUnlimitedEnergy()');
@@ -270,4 +285,7 @@ if (typeof window !== 'undefined') {
   console.log('  World Map:');
   console.log('    - await window.resetWorldMap() - Generate new world map');
   console.log('    - window.revealMap() - Reveal entire map (remove fog of war)');
+  console.log('  Combat Testing (PHASE 1):');
+  console.log('    - window.__startTestCombat("mixed") - Start test combat');
+  console.log('    - window.listTestCombatScenarios() - List all scenarios');
 }

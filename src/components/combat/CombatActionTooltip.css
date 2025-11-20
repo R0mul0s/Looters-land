@@ -1,0 +1,202 @@
+/**
+ * Combat Action Tooltip Styles
+ */
+
+.combat-action-tooltip {
+  position: absolute;
+  z-index: 1000;
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.98) 0%, rgba(13, 13, 26, 0.98) 100%);
+  border: 3px solid rgba(255, 215, 0, 0.5);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+  min-width: 200px;
+  max-width: 300px;
+  animation: tooltipFadeIn 0.2s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Tooltip arrow */
+.tooltip-arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+/* Arrow positions */
+.combat-action-tooltip.bottom .tooltip-arrow {
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 10px 12px 10px;
+  border-color: transparent transparent rgba(255, 215, 0, 0.5) transparent;
+}
+
+.combat-action-tooltip.top .tooltip-arrow {
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 12px 10px 0 10px;
+  border-color: rgba(255, 215, 0, 0.5) transparent transparent transparent;
+}
+
+.combat-action-tooltip.right .tooltip-arrow {
+  left: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 10px 12px 10px 0;
+  border-color: transparent rgba(255, 215, 0, 0.5) transparent transparent;
+}
+
+.combat-action-tooltip.left .tooltip-arrow {
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 10px 0 10px 12px;
+  border-color: transparent transparent transparent rgba(255, 215, 0, 0.5);
+}
+
+/* Header */
+.tooltip-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.tooltip-target-name {
+  font-weight: bold;
+  color: #FFD700;
+  font-size: 0.95em;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+}
+
+.tooltip-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: white;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+  transition: all 0.2s;
+}
+
+.tooltip-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #FFD700;
+}
+
+/* Actions */
+.tooltip-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tooltip-action-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9em;
+  font-weight: 600;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.tooltip-action-button.attack {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.tooltip-action-button.attack:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.6);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.tooltip-action-button.skill.available {
+  background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+  color: white;
+  border-color: rgba(167, 139, 250, 0.5);
+}
+
+.tooltip-action-button.skill.available:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.tooltip-action-button.skill.cooldown {
+  background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+  color: rgba(255, 255, 255, 0.5);
+  border-color: rgba(255, 255, 255, 0.1);
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.action-icon {
+  font-size: 1.2em;
+  display: flex;
+  align-items: center;
+}
+
+.action-text {
+  flex: 1;
+  text-align: left;
+}
+
+.action-cooldown {
+  font-size: 0.8em;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: #fbbf24;
+}
+
+.tooltip-skills {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .combat-action-tooltip {
+    min-width: 180px;
+    max-width: 250px;
+    padding: 10px;
+  }
+
+  .tooltip-action-button {
+    padding: 8px 10px;
+    font-size: 0.85em;
+  }
+
+  .action-icon {
+    font-size: 1.1em;
+  }
+}

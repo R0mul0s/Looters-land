@@ -114,8 +114,8 @@
 
 .tooltip-action-button {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 4px;
   padding: 10px 12px;
   border: 2px solid transparent;
   border-radius: 8px;
@@ -124,6 +124,20 @@
   font-weight: 600;
   transition: all 0.2s;
   position: relative;
+  text-align: left;
+}
+
+.action-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.action-description {
+  font-size: 0.75em;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.3;
 }
 
 .tooltip-action-button.attack {

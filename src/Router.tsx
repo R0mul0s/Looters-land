@@ -1477,7 +1477,7 @@ export function Router() {
 
               {/* Combat Controls */}
               <div className="combat-bottom-controls">
-                <div className="combat-round-display">Round {Math.ceil(combatEngine.turnCounter / (gameState.activeParty.length + currentEnemies.length))}</div>
+                <div className="combat-round-display">Round {Math.floor(combatEngine.turnCounter / (gameState.activeParty.filter(h => h.isAlive).length + currentEnemies.filter(e => e.isAlive).length)) + 1}</div>
                 <CombatSpeedControl
                   currentSpeed={combatSpeed}
                   onSpeedChange={(speed: CombatSpeed) => {

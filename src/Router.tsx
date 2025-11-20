@@ -39,7 +39,6 @@ import { calculatePlayerScore } from './utils/scoreCalculator';
 import type { Item } from './engine/item/Item';
 import { CombatSpeedControl, type CombatSpeed } from './components/combat/CombatSpeedControl';
 import { CombatModeToggle, type CombatMode } from './components/combat/CombatModeToggle';
-import { InitiativeOrderBar } from './components/combat/InitiativeOrderBar';
 import { Tooltip, EnemyTooltip } from './components/combat/Tooltip';
 import { DamageNumberContainer } from './components/combat/DamageNumber';
 import { CombatActionTooltip } from './components/combat/CombatActionTooltip';
@@ -1058,89 +1057,6 @@ export function Router() {
       {/* Combat Display - shown when combat is active (dungeon or quick combat) */}
       {combatActive && (inDungeon && currentDungeon || !inDungeon) && (
           <div className="combat-screen">
-            {/* Combat Header */}
-            <div className={`combat-header ${
-              combatEngine.combatResult === 'victory' ? 'victory' :
-              combatEngine.combatResult === 'defeat' ? 'defeat' :
-              'active'
-            }`}>
-              {combatEngine.combatResult === 'victory' && t('router.combatVictory')}
-              {combatEngine.combatResult === 'defeat' && t('router.combatDefeat')}
-              {!combatEngine.combatResult && t('router.combatTurn', { turn: combatEngine.turnCounter })}
-            </div>
-
-            {/* Combat Controls */}
-            {!combatEngine.combatResult && (
-              <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                {/* Combat Mode Toggle */}
-                <CombatModeToggle
-                  currentMode={isManualMode ? 'manual' : 'auto'}
-                  onModeChange={(mode: CombatMode) => {
-                    const newIsManual = mode === 'manual';
-                    setIsManualMode(newIsManual);
-                    combatEngine.setManualMode(newIsManual);
-
-                    // If switching to manual mode during auto combat
-                    if (newIsManual && !waitingForInput && combatEngine.isActive) {
-                      console.log('🎮 Switching to manual mode');
-                      // Get current character - try multiple sources
-                      let currentChar = combatEngine.currentCharacter;
-
-                      // If no current character, try turn order
-                      if (!currentChar && combatEngine.turnOrder.length > 0) {
-                        currentChar = combatEngine.turnOrder[0];
-                      }
-
-                      // If still no character, get first alive hero
-                      if (!currentChar) {
-                        currentChar = gameState.activeParty.find(h => h.isAlive);
-                      }
-
-                      if (currentChar) {
-                        setActiveCharacter(currentChar);
-                        setWaitingForInput(true);
-                        console.log('✅ Set active character:', currentChar.name);
-                      } else {
-                        console.error('❌ No character found for manual mode!');
-                      }
-                    }
-                    // If switching to auto mode during player input, continue auto combat
-                    else if (!newIsManual && waitingForInput) {
-                      setWaitingForInput(false);
-                      setActiveCharacter(null);
-                      setTooltipTarget(null);
-
-                      // Continue auto combat
-                      setTimeout(() => {
-                        if (inDungeon) {
-                          runDungeonAutoCombat();
-                        } else {
-                          runQuickAutoCombat();
-                        }
-                      }, 100);
-                    }
-                  }}
-                  disabled={false}
-                />
-
-                {/* Combat Speed Control - Only show in auto mode */}
-                {!isManualMode && (
-                  <CombatSpeedControl
-                    currentSpeed={combatSpeed}
-                    onSpeedChange={setCombatSpeed}
-                    disabled={false}
-                  />
-                )}
-              </div>
-            )}
-
-            {/* Initiative Order Bar */}
-            {!combatEngine.combatResult && combatEngine.turnOrder.length > 0 && (
-              <InitiativeOrderBar
-                turnOrder={combatEngine.turnOrder}
-                currentCharacter={combatEngine.currentCharacter}
-              />
-            )}
 
             {/* Defeat Screen - Exit Button */}
             {combatEngine.combatResult === 'defeat' && (
@@ -1354,6 +1270,13 @@ export function Router() {
                                 if (combatEngine.waitingForPlayerInput) {
                                   setWaitingForInput(true);
                                   setActiveCharacter(combatEngine.currentCharacter);
+                                } else if (!isManualMode) {
+                                  // Continue auto combat if switched to auto
+                                  if (inDungeon) {
+                                    runDungeonAutoCombat();
+                                  } else {
+                                    runQuickAutoCombat();
+                                  }
                                 }
                               }
                             }, 500);
@@ -1468,6 +1391,13 @@ export function Router() {
                                 if (combatEngine.waitingForPlayerInput) {
                                   setWaitingForInput(true);
                                   setActiveCharacter(combatEngine.currentCharacter);
+                                } else if (!isManualMode) {
+                                  // Continue auto combat if switched to auto
+                                  if (inDungeon) {
+                                    runDungeonAutoCombat();
+                                  } else {
+                                    runQuickAutoCombat();
+                                  }
                                 }
                               }
                             }, 500);
@@ -1488,6 +1418,13 @@ export function Router() {
                                 if (combatEngine.waitingForPlayerInput) {
                                   setWaitingForInput(true);
                                   setActiveCharacter(combatEngine.currentCharacter);
+                                } else if (!isManualMode) {
+                                  // Continue auto combat if switched to auto
+                                  if (inDungeon) {
+                                    runDungeonAutoCombat();
+                                  } else {
+                                    runQuickAutoCombat();
+                                  }
                                 }
                               }
                             }, 500);
@@ -1551,10 +1488,11 @@ export function Router() {
                   currentMode={isManualMode ? 'manual' : 'auto'}
                   onModeChange={(mode: CombatMode) => {
                     const manual = mode === 'manual';
+                    setIsManualMode(manual);
                     combatEngine.setManualMode(manual);
 
                     if (manual) {
-                      setWaitingForInput(combatEngine.waitingForPlayerInput);
+                      // Switching to manual mode
                       let currentChar = combatEngine.currentCharacter;
                       if (!currentChar && combatEngine.turnOrder.length > 0) {
                         currentChar = combatEngine.turnOrder[0];
@@ -1563,26 +1501,23 @@ export function Router() {
                         currentChar = gameState.activeParty.find(h => h.isAlive);
                       }
                       setActiveCharacter(currentChar || null);
+                      setWaitingForInput(true);
+                      console.log('🎮 Switched to manual mode, active:', currentChar?.name);
                     } else {
+                      // Switching to auto mode
                       setWaitingForInput(false);
                       setActiveCharacter(null);
                       setTooltipTarget(null);
+                      console.log('🤖 Switching to auto mode');
 
+                      // Continue auto combat
                       setTimeout(() => {
-                        if (combatEngine.isActive) {
-                          combatEngine.executeTurn();
-                          setCombatLog([...combatEngine.combatLog]);
-
-                          const autoLoop = setInterval(() => {
-                            if (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
-                              combatEngine.executeTurn();
-                              setCombatLog([...combatEngine.combatLog]);
-                            } else {
-                              clearInterval(autoLoop);
-                            }
-                          }, 500);
+                        if (inDungeon) {
+                          runDungeonAutoCombat();
+                        } else {
+                          runQuickAutoCombat();
                         }
-                      }, 300);
+                      }, 100);
                     }
                   }}
                 />

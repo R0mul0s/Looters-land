@@ -86,6 +86,7 @@ export const CombatActionTooltip: React.FC<CombatActionTooltipProps> = ({
                   onClick={() => canUse && onSkillUse(originalIndex)}
                   disabled={!canUse}
                   className={`tooltip-action-button skill ${canUse ? 'available' : 'cooldown'}`}
+                  title={skill.description}
                 >
                   <span className="action-icon">🔮</span>
                   <span className="action-text">{skill.name}</span>

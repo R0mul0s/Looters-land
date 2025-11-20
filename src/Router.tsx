@@ -1343,6 +1343,17 @@ export function Router() {
                   // Check if this enemy is clickable in manual mode
                   const isClickable = waitingForInput && isManualMode && enemy.isAlive && activeCharacter;
 
+                  // Debug clickability
+                  if (enemy.isAlive && isManualMode) {
+                    console.log(`Enemy ${enemy.name} clickable:`, {
+                      isClickable,
+                      waitingForInput,
+                      isManualMode,
+                      hasActiveChar: !!activeCharacter,
+                      activeCharName: activeCharacter?.name
+                    });
+                  }
+
                   return (
                   <Tooltip
                     key={enemy.id}

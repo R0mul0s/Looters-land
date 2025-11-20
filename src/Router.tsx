@@ -1081,12 +1081,25 @@ export function Router() {
                     // If switching to manual mode during auto combat
                     if (newIsManual && !waitingForInput && combatEngine.isActive) {
                       console.log('🎮 Switching to manual mode');
-                      // Get current character from turn order
-                      const currentChar = combatEngine.currentCharacter || combatEngine.turnOrder[0];
+                      // Get current character - try multiple sources
+                      let currentChar = combatEngine.currentCharacter;
+
+                      // If no current character, try turn order
+                      if (!currentChar && combatEngine.turnOrder.length > 0) {
+                        currentChar = combatEngine.turnOrder[0];
+                      }
+
+                      // If still no character, get first alive hero
+                      if (!currentChar) {
+                        currentChar = gameState.activeParty.find(h => h.isAlive);
+                      }
+
                       if (currentChar) {
                         setActiveCharacter(currentChar);
                         setWaitingForInput(true);
                         console.log('✅ Set active character:', currentChar.name);
+                      } else {
+                        console.error('❌ No character found for manual mode!');
                       }
                     }
                     // If switching to auto mode during player input, continue auto combat

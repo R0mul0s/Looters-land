@@ -1261,6 +1261,11 @@ export function Router() {
                             setCombatLog([...combatEngine.combatLog]);
                             setTooltipTarget(null);
 
+                            // Remove character from turn order and clear waiting state
+                            combatEngine.turnOrder.shift();
+                            combatEngine.waitingForPlayerInput = false;
+                            combatEngine.currentCharacter = null;
+
                             // Execute next turn after delay
                             setTimeout(() => {
                               if (combatEngine.isActive) {
@@ -1391,6 +1396,11 @@ export function Router() {
                             setCombatLog([...combatEngine.combatLog]);
                             setTooltipTarget(null);
 
+                            // Remove character from turn order and clear waiting state
+                            combatEngine.turnOrder.shift();
+                            combatEngine.waitingForPlayerInput = false;
+                            combatEngine.currentCharacter = null;
+
                             // Execute next turn after delay
                             setTimeout(() => {
                               if (combatEngine.isActive) {
@@ -1426,6 +1436,11 @@ export function Router() {
                             (activeCharacter as Hero).useSkill(skillIndex, [enemy]);
                             setCombatLog([...combatEngine.combatLog]);
                             setTooltipTarget(null);
+
+                            // Remove character from turn order and clear waiting state
+                            combatEngine.turnOrder.shift();
+                            combatEngine.waitingForPlayerInput = false;
+                            combatEngine.currentCharacter = null;
 
                             // Execute next turn after delay
                             setTimeout(() => {
@@ -1504,7 +1519,7 @@ export function Router() {
 
               {/* Combat Controls */}
               <div className="combat-bottom-controls">
-                <div className="combat-round-display">Round {Math.floor(combatEngine.turnCounter / (gameState.activeParty.filter(h => h.isAlive).length + currentEnemies.filter(e => e.isAlive).length)) + 1}</div>
+                <div className="combat-round-display">Round {combatEngine.turnCounter}</div>
                 <CombatSpeedControl
                   currentSpeed={combatSpeed}
                   onSpeedChange={(speed: CombatSpeed) => {

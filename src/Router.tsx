@@ -1260,23 +1260,32 @@ export function Router() {
                             (activeCharacter as Hero).useSkill(skillIndex, [hero]);
                             setCombatLog([...combatEngine.combatLog]);
                             setTooltipTarget(null);
-                            setWaitingForInput(false);
 
+                            // Execute next turn after delay
                             setTimeout(() => {
                               if (combatEngine.isActive) {
                                 combatEngine.executeTurn();
                                 setCombatLog([...combatEngine.combatLog]);
+                                forceUpdate({});
 
-                                if (combatEngine.waitingForPlayerInput) {
+                                // Always check if we need player input again
+                                if (combatEngine.waitingForPlayerInput && isManualMode) {
                                   setWaitingForInput(true);
                                   setActiveCharacter(combatEngine.currentCharacter);
+                                  console.log('🎯 Waiting for next input:', combatEngine.currentCharacter?.name);
                                 } else if (!isManualMode) {
                                   // Continue auto combat if switched to auto
+                                  setWaitingForInput(false);
+                                  setActiveCharacter(null);
                                   if (inDungeon) {
                                     runDungeonAutoCombat();
                                   } else {
                                     runQuickAutoCombat();
                                   }
+                                } else {
+                                  // Manual mode but not waiting (combat might be over)
+                                  setWaitingForInput(false);
+                                  setActiveCharacter(null);
                                 }
                               }
                             }, 500);
@@ -1381,23 +1390,32 @@ export function Router() {
                             activeCharacter.attack(enemy);
                             setCombatLog([...combatEngine.combatLog]);
                             setTooltipTarget(null);
-                            setWaitingForInput(false);
 
+                            // Execute next turn after delay
                             setTimeout(() => {
                               if (combatEngine.isActive) {
                                 combatEngine.executeTurn();
                                 setCombatLog([...combatEngine.combatLog]);
+                                forceUpdate({});
 
-                                if (combatEngine.waitingForPlayerInput) {
+                                // Always check if we need player input again
+                                if (combatEngine.waitingForPlayerInput && isManualMode) {
                                   setWaitingForInput(true);
                                   setActiveCharacter(combatEngine.currentCharacter);
+                                  console.log('🎯 Waiting for next input:', combatEngine.currentCharacter?.name);
                                 } else if (!isManualMode) {
                                   // Continue auto combat if switched to auto
+                                  setWaitingForInput(false);
+                                  setActiveCharacter(null);
                                   if (inDungeon) {
                                     runDungeonAutoCombat();
                                   } else {
                                     runQuickAutoCombat();
                                   }
+                                } else {
+                                  // Manual mode but not waiting (combat might be over)
+                                  setWaitingForInput(false);
+                                  setActiveCharacter(null);
                                 }
                               }
                             }, 500);
@@ -1408,23 +1426,32 @@ export function Router() {
                             (activeCharacter as Hero).useSkill(skillIndex, [enemy]);
                             setCombatLog([...combatEngine.combatLog]);
                             setTooltipTarget(null);
-                            setWaitingForInput(false);
 
+                            // Execute next turn after delay
                             setTimeout(() => {
                               if (combatEngine.isActive) {
                                 combatEngine.executeTurn();
                                 setCombatLog([...combatEngine.combatLog]);
+                                forceUpdate({});
 
-                                if (combatEngine.waitingForPlayerInput) {
+                                // Always check if we need player input again
+                                if (combatEngine.waitingForPlayerInput && isManualMode) {
                                   setWaitingForInput(true);
                                   setActiveCharacter(combatEngine.currentCharacter);
+                                  console.log('🎯 Waiting for next input:', combatEngine.currentCharacter?.name);
                                 } else if (!isManualMode) {
                                   // Continue auto combat if switched to auto
+                                  setWaitingForInput(false);
+                                  setActiveCharacter(null);
                                   if (inDungeon) {
                                     runDungeonAutoCombat();
                                   } else {
                                     runQuickAutoCombat();
                                   }
+                                } else {
+                                  // Manual mode but not waiting (combat might be over)
+                                  setWaitingForInput(false);
+                                  setActiveCharacter(null);
                                 }
                               }
                             }, 500);

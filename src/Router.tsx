@@ -42,9 +42,11 @@ import { CombatModeToggle, type CombatMode } from './components/combat/CombatMod
 import { InitiativeOrderBar } from './components/combat/InitiativeOrderBar';
 import { Tooltip, EnemyTooltip } from './components/combat/Tooltip';
 import { DamageNumberContainer } from './components/combat/DamageNumber';
+import { CombatActionTooltip } from './components/combat/CombatActionTooltip';
 import { getSpeedDelay } from './utils/combatUtils';
 import { createTestEnemies, type TestScenario } from './debug/testCombat';
 import './components/combat/CombatLayout.css';
+import heroPortrait from './assets/images/Portrait/king_arthur.png';
 
 /**
  * Combat metadata for quick combat encounters
@@ -85,6 +87,7 @@ export function Router() {
   const [waitingForInput, setWaitingForInput] = useState(false);
   const [activeCharacter, setActiveCharacter] = useState<Combatant | null>(null);
   const [selectedTarget, setSelectedTarget] = useState<Combatant | null>(null);
+  const [tooltipTarget, setTooltipTarget] = useState<Combatant | null>(null);
   const [showDungeonVictory, setShowDungeonVictory] = useState(false);
   const [dungeonUpdateKey, setDungeonUpdateKey] = useState(0);
   const [, forceUpdate] = useState({});
@@ -1280,8 +1283,16 @@ export function Router() {
                   const activeSkill = activeSkills[hero.id];
                   const heroDamages = damageNumbers.filter(d => d.characterId === hero.id);
 
+                  // Check if this hero is clickable in manual mode
+                  const isClickable = waitingForInput && isManualMode && hero.isAlive && activeCharacter;
+
                   return (
-                  <div key={hero.id} className={`character-card hero ${!hero.isAlive ? 'dead' : ''} ${isActive ? 'active' : ''} ${animation}`} style={{ position: 'relative' }}>
+                  <div
+                    key={hero.id}
+                    className={`character-card hero ${!hero.isAlive ? 'dead' : ''} ${isActive ? 'active' : ''} ${animation} ${isClickable ? 'clickable' : ''}`}
+                    style={{ position: 'relative' }}
+                    onClick={() => isClickable && setTooltipTarget(hero)}
+                  >
                     {/* Skill Indicator */}
                     {activeSkill && (
                       <div className="skill-indicator">
@@ -1298,21 +1309,61 @@ export function Router() {
                       />
                     ))}
 
-                    <div className="character-card-header">
-                      <span className="character-name">{hero.name}</span>
-                      <span className="character-level">Lv.{hero.level}</span>
+                    {/* Avatar */}
+                    <img src={heroPortrait} alt={hero.name} className="character-avatar" />
+
+                    {/* Character Info */}
+                    <div className="character-info">
+                      <div className="character-card-header">
+                        <span className="character-name">{hero.name}</span>
+                        <span className="character-level">Lv.{hero.level}</span>
+                      </div>
+                      <div className="character-hp-bar">
+                        <div className={`character-hp-fill ${hpClass}`} style={{ width: `${hpPercentage * 100}%` }} />
+                        <span className="character-hp-text">
+                          {hero.currentHP}/{hero.maxHP}
+                        </span>
+                      </div>
+                      <div className="character-stats">
+                        <span>⚔️ {hero.ATK}</span>
+                        <span>🛡️ {hero.DEF}</span>
+                        <span>⚡ {hero.SPD}</span>
+                      </div>
                     </div>
-                    <div className="character-hp-bar">
-                      <div className={`character-hp-fill ${hpClass}`} style={{ width: `${hpPercentage * 100}%` }} />
-                      <span className="character-hp-text">
-                        {hero.currentHP}/{hero.maxHP}
-                      </span>
-                    </div>
-                    <div className="character-stats">
-                      <span>⚔️ {hero.ATK}</span>
-                      <span>🛡️ {hero.DEF}</span>
-                      <span>⚡ {hero.SPD}</span>
-                    </div>
+
+                    {/* Tooltip */}
+                    {tooltipTarget?.id === hero.id && activeCharacter && (
+                      <CombatActionTooltip
+                        activeCharacter={activeCharacter}
+                        target={hero}
+                        onAttack={() => {
+                          // This shouldn't happen for heroes, but include for completeness
+                          setTooltipTarget(null);
+                        }}
+                        onSkillUse={(skillIndex) => {
+                          if ('useSkill' in activeCharacter) {
+                            (activeCharacter as Hero).useSkill(skillIndex, [hero]);
+                            setCombatLog([...combatEngine.combatLog]);
+                            setTooltipTarget(null);
+                            setWaitingForInput(false);
+
+                            setTimeout(() => {
+                              if (combatEngine.isActive) {
+                                combatEngine.executeTurn();
+                                setCombatLog([...combatEngine.combatLog]);
+
+                                if (combatEngine.waitingForPlayerInput) {
+                                  setWaitingForInput(true);
+                                  setActiveCharacter(combatEngine.currentCharacter);
+                                }
+                              }
+                            }, 500);
+                          }
+                        }}
+                        onClose={() => setTooltipTarget(null)}
+                        position="right"
+                      />
+                    )}
                   </div>
                   );
                 })}
@@ -1328,6 +1379,9 @@ export function Router() {
                   const animation = characterAnimations[enemy.id] || '';
                   const activeSkill = activeSkills[enemy.id];
                   const enemyDamages = damageNumbers.filter(d => d.characterId === enemy.id);
+
+                  // Check if this enemy is clickable in manual mode
+                  const isClickable = waitingForInput && isManualMode && enemy.isAlive && activeCharacter;
 
                   return (
                   <Tooltip
@@ -1348,7 +1402,11 @@ export function Router() {
                     }
                     position="left"
                   >
-                  <div className={`character-card enemy ${!enemy.isAlive ? 'dead' : ''} ${isActive ? 'active' : ''} ${enemy.type === 'elite' ? 'elite' : ''} ${enemy.type === 'boss' ? 'boss' : ''} ${animation}`} style={{ position: 'relative' }}>
+                  <div
+                    className={`character-card enemy ${!enemy.isAlive ? 'dead' : ''} ${isActive ? 'active' : ''} ${enemy.type === 'elite' ? 'elite' : ''} ${enemy.type === 'boss' ? 'boss' : ''} ${animation} ${isClickable ? 'clickable' : ''}`}
+                    style={{ position: 'relative' }}
+                    onClick={() => isClickable && setTooltipTarget(enemy)}
+                  >
                     {/* Skill Indicator */}
                     {activeSkill && (
                       <div className="skill-indicator">
@@ -1365,25 +1423,81 @@ export function Router() {
                       />
                     ))}
 
-                    <div className="character-card-header">
-                      <span className="character-name">
-                        {enemy.type === 'boss' && '💀 '}
-                        {enemy.type === 'elite' && '⭐ '}
-                        {enemy.name}
-                      </span>
-                      <span className="character-level">Lv.{enemy.level}</span>
+                    {/* Avatar - using enemy icon for now */}
+                    <div className="character-avatar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px' }}>
+                      {enemy.type === 'boss' && '💀'}
+                      {enemy.type === 'elite' && '⭐'}
+                      {enemy.type === 'normal' && '👹'}
                     </div>
-                    <div className="character-hp-bar">
-                      <div className={`character-hp-fill ${hpClass}`} style={{ width: `${hpPercentage * 100}%` }} />
-                      <span className="character-hp-text">
-                        {enemy.currentHP}/{enemy.maxHP}
-                      </span>
+
+                    {/* Character Info */}
+                    <div className="character-info">
+                      <div className="character-card-header">
+                        <span className="character-name">{enemy.name}</span>
+                        <span className="character-level">Lv.{enemy.level}</span>
+                      </div>
+                      <div className="character-hp-bar">
+                        <div className={`character-hp-fill ${hpClass}`} style={{ width: `${hpPercentage * 100}%` }} />
+                        <span className="character-hp-text">
+                          {enemy.currentHP}/{enemy.maxHP}
+                        </span>
+                      </div>
+                      <div className="character-stats">
+                        <span>⚔️ {enemy.ATK}</span>
+                        <span>🛡️ {enemy.DEF}</span>
+                        <span>⚡ {enemy.SPD}</span>
+                      </div>
                     </div>
-                    <div className="character-stats">
-                      <span>⚔️ {enemy.ATK}</span>
-                      <span>🛡️ {enemy.DEF}</span>
-                      <span>⚡ {enemy.SPD}</span>
-                    </div>
+
+                    {/* Tooltip */}
+                    {tooltipTarget?.id === enemy.id && activeCharacter && (
+                      <CombatActionTooltip
+                        activeCharacter={activeCharacter}
+                        target={enemy}
+                        onAttack={() => {
+                          if (activeCharacter) {
+                            activeCharacter.attack(enemy);
+                            setCombatLog([...combatEngine.combatLog]);
+                            setTooltipTarget(null);
+                            setWaitingForInput(false);
+
+                            setTimeout(() => {
+                              if (combatEngine.isActive) {
+                                combatEngine.executeTurn();
+                                setCombatLog([...combatEngine.combatLog]);
+
+                                if (combatEngine.waitingForPlayerInput) {
+                                  setWaitingForInput(true);
+                                  setActiveCharacter(combatEngine.currentCharacter);
+                                }
+                              }
+                            }, 500);
+                          }
+                        }}
+                        onSkillUse={(skillIndex) => {
+                          if ('useSkill' in activeCharacter) {
+                            (activeCharacter as Hero).useSkill(skillIndex, [enemy]);
+                            setCombatLog([...combatEngine.combatLog]);
+                            setTooltipTarget(null);
+                            setWaitingForInput(false);
+
+                            setTimeout(() => {
+                              if (combatEngine.isActive) {
+                                combatEngine.executeTurn();
+                                setCombatLog([...combatEngine.combatLog]);
+
+                                if (combatEngine.waitingForPlayerInput) {
+                                  setWaitingForInput(true);
+                                  setActiveCharacter(combatEngine.currentCharacter);
+                                }
+                              }
+                            }, 500);
+                          }
+                        }}
+                        onClose={() => setTooltipTarget(null)}
+                        position="left"
+                      />
+                    )}
                   </div>
                   </Tooltip>
                   );

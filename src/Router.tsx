@@ -1191,7 +1191,9 @@ export function Router() {
               <div className="combat-team-section">
                 <h3 className="combat-team-title">{t('router.heroes')}</h3>
                 {(gameState.activeParty || []).map((hero) => {
-                  const isActive = combatEngine.currentCharacter?.id === hero.id;
+                  // Use turnOrder[0] or activeCharacter for current turn indicator
+                  const currentTurnChar = combatEngine.turnOrder[0] || activeCharacter;
+                  const isActive = currentTurnChar?.id === hero.id;
                   const hpPercentage = hero.currentHP / hero.maxHP;
                   const hpClass = hpPercentage < 0.3 ? 'low' : hpPercentage < 0.6 ? 'medium' : 'high';
                   const animation = characterAnimations[hero.id] || '';
@@ -1257,7 +1259,27 @@ export function Router() {
                         }}
                         onSkillUse={(skillIndex) => {
                           if ('useSkill' in activeCharacter) {
-                            (activeCharacter as Hero).useSkill(skillIndex, [hero]);
+                            // Determine targets based on skill type
+                            const hero = activeCharacter as Hero;
+                            const skill = hero.getSkills()[skillIndex];
+                            let targets: Combatant[];
+
+                            // For heal/buff skills on allies, check if it's a group skill
+                            if (skill.type === 'heal' || skill.type === 'buff') {
+                              // Check if skill name contains "Group" or "All" for AoE
+                              if (skill.name.includes('Group') || skill.name.includes('All')) {
+                                // Group heal/buff - target all alive allies
+                                targets = gameState.activeParty.filter(h => h.isAlive);
+                              } else {
+                                // Single target heal/buff - use clicked hero
+                                targets = [tooltipTarget as Combatant];
+                              }
+                            } else {
+                              // Damage/debuff skill - use clicked target
+                              targets = [tooltipTarget as Combatant];
+                            }
+
+                            hero.useSkill(skillIndex, targets);
                             setCombatLog([...combatEngine.combatLog]);
                             setTooltipTarget(null);
 
@@ -1309,7 +1331,9 @@ export function Router() {
               <div className="combat-team-section">
                 <h3 className="combat-team-title">{t('router.enemies')}</h3>
                 {currentEnemies.map((enemy) => {
-                  const isActive = combatEngine.currentCharacter?.id === enemy.id;
+                  // Use turnOrder[0] or activeCharacter for current turn indicator
+                  const currentTurnChar = combatEngine.turnOrder[0] || activeCharacter;
+                  const isActive = currentTurnChar?.id === enemy.id;
                   const hpPercentage = enemy.currentHP / enemy.maxHP;
                   const hpClass = hpPercentage < 0.3 ? 'low' : hpPercentage < 0.6 ? 'medium' : 'high';
                   const animation = characterAnimations[enemy.id] || '';
@@ -1433,7 +1457,26 @@ export function Router() {
                         }}
                         onSkillUse={(skillIndex) => {
                           if ('useSkill' in activeCharacter) {
-                            (activeCharacter as Hero).useSkill(skillIndex, [enemy]);
+                            // Determine targets based on skill type
+                            const hero = activeCharacter as Hero;
+                            const skill = hero.getSkills()[skillIndex];
+                            let targets: Combatant[];
+
+                            // Check if it's an AoE damage skill
+                            if (skill.type === 'damage' || skill.type === 'debuff') {
+                              if (skill.name.includes('AoE') || skill.name.includes('All') || skill.name.includes('Area')) {
+                                // AoE skill - target all alive enemies
+                                targets = currentEnemies.filter(e => e.isAlive);
+                              } else {
+                                // Single target skill - use clicked enemy
+                                targets = [enemy];
+                              }
+                            } else {
+                              // Shouldn't happen (heal/buff on enemy), but use single target
+                              targets = [enemy];
+                            }
+
+                            hero.useSkill(skillIndex, targets);
                             setCombatLog([...combatEngine.combatLog]);
                             setTooltipTarget(null);
 

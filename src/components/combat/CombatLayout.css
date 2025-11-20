@@ -361,7 +361,7 @@
   box-shadow: 0 0 20px rgba(255, 68, 68, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Character Avatar/Portrait */
+/* Character Avatar/portrait */
 .character-avatar {
   width: 60px;
   height: 60px;
@@ -996,6 +996,155 @@
   }
 }
 
+/* Combat Bottom Panel */
+.combat-bottom-panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95) 0%, rgba(13, 13, 26, 0.95) 100%);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+/* Combat Status Text */
+.combat-status-text {
+  text-align: center;
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.9em;
+  color: #FFD700;
+  padding: 10px;
+  background: rgba(255, 215, 0, 0.1);
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  border-radius: 8px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Mini Initiative Order */
+.combat-mini-initiative {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+}
+
+.mini-initiative-label {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.75em;
+  color: #FFD700;
+  white-space: nowrap;
+}
+
+.mini-initiative-order {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  flex: 1;
+  padding: 4px 0;
+}
+
+.mini-initiative-order::-webkit-scrollbar {
+  height: 6px;
+}
+
+.mini-initiative-order::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.mini-initiative-order::-webkit-scrollbar-thumb {
+  background: rgba(255, 215, 0, 0.3);
+  border-radius: 3px;
+}
+
+.mini-initiative-card {
+  position: relative;
+  width: 45px;
+  height: 45px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.mini-initiative-card.active {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.4), rgba(255, 165, 0, 0.4));
+  border-color: #FFD700;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  transform: scale(1.15);
+}
+
+.mini-initiative-card.dead {
+  opacity: 0.3;
+  filter: grayscale(100%);
+}
+
+.mini-initiative-icon {
+  font-size: 20px;
+}
+
+.mini-initiative-arrow {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #FFD700;
+  font-size: 16px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  animation: bounce 1s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateX(-50%) translateY(0);
+  }
+  50% {
+    transform: translateX(-50%) translateY(-4px);
+  }
+}
+
+/* Combat Bottom Controls */
+.combat-bottom-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+}
+
+.combat-round-display {
+  font-family: 'Press Start 2P', cursive;
+  font-size: 0.85em;
+  color: #FFD700;
+  padding: 8px 12px;
+  background: rgba(255, 215, 0, 0.1);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+  border-radius: 6px;
+  white-space: nowrap;
+}
+
 /* Mobile (max 768px) */
 @media (max-width: 768px) {
   .combat-screen {
@@ -1365,5 +1514,33 @@
 
   .skill-button-cd {
     font-size: 0.7em;
+  }
+
+  /* Bottom Panel - Mobile */
+  .combat-bottom-panel {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .combat-status-text {
+    font-size: 0.85em;
+    padding: 8px;
+  }
+
+  .mini-initiative-label {
+    font-size: 0.7em;
+  }
+
+  .mini-initiative-card {
+    width: 35px;
+    height: 35px;
+  }
+
+  .mini-initiative-icon {
+    font-size: 16px;
+  }
+
+  .combat-round-display {
+    font-size: 0.8em;
   }
 }

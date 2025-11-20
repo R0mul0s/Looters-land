@@ -27,7 +27,7 @@ import { Hero } from './engine/hero/Hero';
 import * as AuthService from './services/AuthService';
 import { sessionManager } from './services/SessionManager';
 import { CombatEngine } from './engine/combat/CombatEngine';
-import type { Enemy } from './engine/combat/Enemy';
+import { Enemy } from './engine/combat/Enemy';
 import type { Combatant, CombatLogEntry } from './types/combat.types';
 import { t } from './localization/i18n';
 import { DUNGEON_CONFIG, COMBAT_CONFIG } from './config/BALANCE_CONFIG';
@@ -46,7 +46,7 @@ import { CombatActionTooltip } from './components/combat/CombatActionTooltip';
 import { getSpeedDelay } from './utils/combatUtils';
 import { createTestEnemies, type TestScenario } from './debug/testCombat';
 import './components/combat/CombatLayout.css';
-import heroPortrait from './assets/images/Portrait/king_arthur.png';
+import heroPortrait from './assets/images/portrait/king_arthur1.png';
 
 /**
  * Combat metadata for quick combat encounters
@@ -86,7 +86,6 @@ export function Router() {
   const [isManualMode, setIsManualMode] = useState(false);
   const [waitingForInput, setWaitingForInput] = useState(false);
   const [activeCharacter, setActiveCharacter] = useState<Combatant | null>(null);
-  const [selectedTarget, setSelectedTarget] = useState<Combatant | null>(null);
   const [tooltipTarget, setTooltipTarget] = useState<Combatant | null>(null);
   const [showDungeonVictory, setShowDungeonVictory] = useState(false);
   const [dungeonUpdateKey, setDungeonUpdateKey] = useState(0);
@@ -411,7 +410,7 @@ export function Router() {
     setCombatLog([]);
     setWaitingForInput(false);
     setActiveCharacter(null);
-    setSelectedTarget(null);
+    setTooltipTarget(null);
     setQuickCombatMetadata(null);
   };
 
@@ -599,7 +598,7 @@ export function Router() {
       setCombatActive(true);
       setWaitingForInput(false);
       setActiveCharacter(null);
-      setSelectedTarget(null);
+      setTooltipTarget(null);
       forceUpdate({});
 
       // Show defeat modal
@@ -751,7 +750,7 @@ export function Router() {
       setCombatLog([]);
       setWaitingForInput(false);
       setActiveCharacter(null);
-      setSelectedTarget(null);
+      setTooltipTarget(null);
     }, 1000);
   };
 
@@ -893,7 +892,7 @@ export function Router() {
       setShowDungeonVictory(false);
       setWaitingForInput(false);
       setActiveCharacter(null);
-      setSelectedTarget(null);
+      setTooltipTarget(null);
       forceUpdate({});
 
       // Show defeat alert and exit dungeon
@@ -960,7 +959,7 @@ export function Router() {
       setShowDungeonVictory(true);
       setWaitingForInput(false);
       setActiveCharacter(null);
-      setSelectedTarget(null);
+      setTooltipTarget(null);
       forceUpdate({});
     }
   };
@@ -1109,7 +1108,7 @@ export function Router() {
                     else if (!newIsManual && waitingForInput) {
                       setWaitingForInput(false);
                       setActiveCharacter(null);
-                      setSelectedTarget(null);
+                      setTooltipTarget(null);
 
                       // Continue auto combat
                       setTimeout(() => {
@@ -1505,42 +1504,75 @@ export function Router() {
               </div>
             </div>
 
-            {/* Manual Combat Controls */}
-            {waitingForInput && activeCharacter && (
-              <div className="manual-combat-controls">
-                {/* Header with character name and auto switch */}
-                <div className="manual-combat-header">
-                  <h3 className="manual-combat-title">
-                    ⚔️ {activeCharacter.name}'s Turn
-                  </h3>
-                  <button
-                    onClick={() => {
-                      // If currently waiting for input, execute auto action for current character first
-                      if (activeCharacter && combatEngine.waitingForPlayerInput) {
-                        // Find a valid target (first alive enemy)
-                        const target = currentEnemies.find(e => e.isAlive);
-                        if (target && activeCharacter) {
-                          // Execute basic attack as auto action
-                          const action = activeCharacter.attack(target);
-                          if (action) {
-                            setCombatLog([...combatEngine.combatLog]);
-                          }
-                        }
+            {/* Bottom Combat Controls */}
+            <div className="combat-bottom-panel">
+              {/* Combat Status Text */}
+              {waitingForInput && activeCharacter && (
+                <div className="combat-status-text">
+                  🎯 {activeCharacter.name} - Select Target
+                </div>
+              )}
+
+              {/* Mini Initiative Order */}
+              <div className="combat-mini-initiative">
+                <div className="mini-initiative-label">Turn Order:</div>
+                <div className="mini-initiative-order">
+                  {combatEngine.turnOrder.slice(0, 6).map((combatant, index) => {
+                    const isActive = combatant.id === activeCharacter?.id;
+                    return (
+                      <div
+                        key={combatant.id}
+                        className={`mini-initiative-card ${isActive ? 'active' : ''} ${!combatant.isAlive ? 'dead' : ''}`}
+                      >
+                        <div className="mini-initiative-icon">
+                          {combatant instanceof Enemy ? (
+                            combatant.type === 'boss' ? '💀' : combatant.type === 'elite' ? '⭐' : '👹'
+                          ) : (
+                            '🛡️'
+                          )}
+                        </div>
+                        {index === 0 && <div className="mini-initiative-arrow">▶</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Combat Controls */}
+              <div className="combat-bottom-controls">
+                <div className="combat-round-display">Round {Math.ceil(combatEngine.turnCounter / (gameState.activeParty.length + currentEnemies.length))}</div>
+                <CombatSpeedControl
+                  currentSpeed={combatSpeed}
+                  onSpeedChange={(speed: CombatSpeed) => {
+                    setCombatSpeed(speed);
+                  }}
+                />
+                <CombatModeToggle
+                  currentMode={isManualMode ? 'manual' : 'auto'}
+                  onModeChange={(mode: CombatMode) => {
+                    const manual = mode === 'manual';
+                    combatEngine.setManualMode(manual);
+
+                    if (manual) {
+                      setWaitingForInput(combatEngine.waitingForPlayerInput);
+                      let currentChar = combatEngine.currentCharacter;
+                      if (!currentChar && combatEngine.turnOrder.length > 0) {
+                        currentChar = combatEngine.turnOrder[0];
                       }
-
-                      // Switch to auto mode
-                      combatEngine.setManualMode(false);
+                      if (!currentChar) {
+                        currentChar = gameState.activeParty.find(h => h.isAlive);
+                      }
+                      setActiveCharacter(currentChar || null);
+                    } else {
                       setWaitingForInput(false);
-                      setSelectedTarget(null);
                       setActiveCharacter(null);
+                      setTooltipTarget(null);
 
-                      // Continue combat in auto mode
                       setTimeout(() => {
                         if (combatEngine.isActive) {
                           combatEngine.executeTurn();
                           setCombatLog([...combatEngine.combatLog]);
 
-                          // Keep executing turns until combat ends
                           const autoLoop = setInterval(() => {
                             if (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
                               combatEngine.executeTurn();
@@ -1551,154 +1583,11 @@ export function Router() {
                           }, 500);
                         }
                       }, 300);
-                    }}
-                    className="manual-auto-button"
-                  >
-                    🤖 Auto
-                  </button>
-                </div>
-
-                {/* Target Selection or Selected Target Display */}
-                {!selectedTarget ? (
-                  <div className="target-selection">
-                    <p className="target-selection-title">
-                      🎯 Select Target
-                    </p>
-                    <div className="target-selection-grid">
-                      {currentEnemies.filter(e => e.isAlive).map((enemy) => (
-                        <button
-                          key={enemy.id}
-                          onClick={() => setSelectedTarget(enemy)}
-                          className="target-button"
-                        >
-                          <span>{enemy.name}</span>
-                          <span className="target-button-hp">
-                            HP: {enemy.currentHP}/{enemy.maxHP}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    {/* Target Display */}
-                    <div className="selected-target">
-                      <span className="selected-target-text">
-                        🎯 Target: <strong>{selectedTarget.name}</strong>
-                      </span>
-                      <button
-                        onClick={() => setSelectedTarget(null)}
-                        className="selected-target-change"
-                      >
-                        Change
-                      </button>
-                    </div>
-
-                    {/* Attack Button */}
-                    <button
-                      onClick={() => {
-                        if (activeCharacter && selectedTarget) {
-                          const result = activeCharacter.attack(selectedTarget);
-                          if (result) {
-                            setCombatLog([...combatEngine.combatLog]);
-                          }
-                          setSelectedTarget(null);
-                          setWaitingForInput(false);
-
-                          setTimeout(() => {
-                            if (combatEngine.isActive) {
-                              combatEngine.executeTurn();
-                              setCombatLog([...combatEngine.combatLog]);
-
-                              if (combatEngine.waitingForPlayerInput) {
-                                setWaitingForInput(true);
-                                setActiveCharacter(combatEngine.currentCharacter);
-                              }
-                            }
-                          }, 500);
-                        }
-                      }}
-                      className="attack-button"
-                    >
-                      ⚔️ Attack
-                    </button>
-
-                    {/* Skills Section - Show when target is selected */}
-                    {'getSkills' in activeCharacter && activeCharacter.getSkills().length > 0 && (
-                      <div className="skills-section">
-                        <p className="skills-title">
-                          Skills:
-                        </p>
-                        <div className={`skills-grid ${activeCharacter.getSkills().length === 1 ? 'single' : 'multiple'}`}>
-                          {activeCharacter.getSkills().map((skill, index) => {
-                            const currentCooldown = (activeCharacter as Hero).cooldowns.get(skill.name) || 0;
-                            const isOnCooldown = currentCooldown > 0;
-                            const canUse = !isOnCooldown;
-
-                            return (
-                              <button
-                                key={index}
-                                onClick={() => {
-                                  if (canUse && activeCharacter && 'useSkill' in activeCharacter) {
-                                    // Determine targets based on skill type
-                                    let targets: Combatant[];
-                                    if (skill.type === 'buff') {
-                                      // Buffs target all allies
-                                      targets = gameState.activeParty.filter(h => h.isAlive);
-                                    } else if (skill.type === 'heal') {
-                                      // Heals target all allies
-                                      targets = gameState.activeParty.filter(h => h.isAlive);
-                                    } else if (skill.type === 'debuff') {
-                                      // Debuffs target all enemies
-                                      targets = currentEnemies.filter(e => e.isAlive);
-                                    } else {
-                                      // Damage skills target selected enemy
-                                      targets = selectedTarget ? [selectedTarget] : [currentEnemies.find(e => e.isAlive)!];
-                                    }
-
-                                    activeCharacter.useSkill(index, targets);
-                                    setCombatLog([...combatEngine.combatLog]);
-                                    setSelectedTarget(null);
-                                    setWaitingForInput(false);
-
-                                    setTimeout(() => {
-                                      if (combatEngine.isActive) {
-                                        combatEngine.executeTurn();
-                                        setCombatLog([...combatEngine.combatLog]);
-
-                                        if (combatEngine.waitingForPlayerInput) {
-                                          setWaitingForInput(true);
-                                          setActiveCharacter(combatEngine.currentCharacter);
-                                        }
-                                      }
-                                    }, 500);
-                                  }
-                                }}
-                                disabled={!canUse}
-                                className={`skill-button ${canUse ? 'available' : 'cooldown'}`}
-                              >
-                                <span className="skill-button-name">
-                                  🔮 {skill.name}
-                                </span>
-                                {isOnCooldown ? (
-                                  <span className="skill-button-cd">
-                                    CD: {currentCooldown}
-                                  </span>
-                                ) : skill.cooldown > 0 && (
-                                  <span className="skill-button-cd-ready">
-                                    CD: {skill.cooldown}
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                    }
+                  }}
+                />
               </div>
-            )}
+            </div>
 
             {/* Combat Log */}
             <div className={`combat-log-container ${combatLogCollapsed ? 'collapsed' : ''}`}>

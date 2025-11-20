@@ -1080,9 +1080,14 @@ export function Router() {
 
                     // If switching to manual mode during auto combat
                     if (newIsManual && !waitingForInput && combatEngine.isActive) {
-                      // The auto-combat loop will stop on next iteration
-                      // and set up waitingForInput automatically
-                      console.log('🎮 Switching to manual mode, waiting for next turn...');
+                      console.log('🎮 Switching to manual mode');
+                      // Get current character from turn order
+                      const currentChar = combatEngine.currentCharacter || combatEngine.turnOrder[0];
+                      if (currentChar) {
+                        setActiveCharacter(currentChar);
+                        setWaitingForInput(true);
+                        console.log('✅ Set active character:', currentChar.name);
+                      }
                     }
                     // If switching to auto mode during player input, continue auto combat
                     else if (!newIsManual && waitingForInput) {

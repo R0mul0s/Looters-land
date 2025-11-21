@@ -69,6 +69,7 @@ export class CombatEngine {
   onHealApplied: ((targetId: string, amount: number) => void) | null;
   onSkillUsed: ((casterId: string, skillName: string) => void) | null;
   onAttackAnimation: ((attackerId: string) => void) | null;
+// Combo system (Phase 3)  comboCounter: number;  lastAttacker: Combatant | null;  comboTarget: Combatant | null;  maxComboReached: number;
 
   constructor() {
     this.heroes = [];
@@ -104,6 +105,7 @@ export class CombatEngine {
     this.onHealApplied = null;
     this.onSkillUsed = null;
     this.onAttackAnimation = null;
+// Combo system    this.comboCounter = 0;    this.lastAttacker = null;    this.comboTarget = null;    this.maxComboReached = 0;
   }
 
   /**
@@ -336,6 +338,11 @@ export class CombatEngine {
           this.onDamageDealt(action.target.id, action.damage, action.isCrit || false);
         }
 
+        // Update combo tracking
+        if (action.target) {
+          this.updateCombo(attacker, action.target, true);
+        }
+
         if (action.target && !action.target.isAlive) {
           this.log(t('combat.defeated', { name: action.target.name }), 'death');
         }
@@ -360,6 +367,11 @@ export class CombatEngine {
         if (action.effect) {
           this.log(`  → ${action.effect}`, 'skill');
         }
+        // Update combo tracking
+        if (action.target) {
+          this.updateCombo(attacker, action.target, true);
+        }
+
         if (action.target && !action.target.isAlive) {
           this.log(t('combat.defeated', { name: action.target.name }), 'death');
         }
@@ -381,6 +393,11 @@ export class CombatEngine {
         }
         if (this.onHealApplied && action.healAmount && action.healAmount > 0) {
           this.onHealApplied(attacker.id, action.healAmount);
+        }
+
+        // Update combo tracking
+        if (action.target) {
+          this.updateCombo(attacker, action.target, true);
         }
 
         if (action.target && !action.target.isAlive) {
@@ -623,5 +640,52 @@ export class CombatEngine {
 
     // Continue to next character
     this.executeTurn();
+  }
+
+  // ============================================================================
+  // COMBO SYSTEM (Phase 3)
+  // ============================================================================
+
+  /**
+   * Get combo damage multiplier
+   * +10% per combo hit, max 5 combo (50% bonus)
+   */
+  getComboMultiplier(): number {
+    const comboBonus = Math.min(this.comboCounter, 5) * 0.1;
+    return 1.0 + comboBonus;
+  }
+
+  /**
+   * Update combo counter after an attack
+   */
+  updateCombo(attacker: Combatant, target: Combatant, didHit: boolean): void {
+    if (!didHit) {
+      this.resetCombo();
+      return;
+    }
+    // Check if same attacker and same target
+    if (this.lastAttacker?.id === attacker.id && this.comboTarget?.id === target.id) {
+      this.comboCounter++;
+      if (this.comboCounter > this.maxComboReached) {
+        this.maxComboReached = this.comboCounter;
+      }
+      if (this.comboCounter >= 3) {
+        this.log(t('combat.combo', { count: this.comboCounter }), 'skill');
+      }
+    } else {
+      // Different attacker or target - start new combo
+      this.comboCounter = 1;
+      this.lastAttacker = attacker;
+      this.comboTarget = target;
+    }
+  }
+
+  /**
+   * Reset combo (on miss or target death)
+   */
+  resetCombo(): void {
+    this.comboCounter = 0;
+    this.lastAttacker = null;
+    this.comboTarget = null;
   }
 }

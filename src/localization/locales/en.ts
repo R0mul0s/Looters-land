@@ -121,6 +121,7 @@ export const en = {
     critical: 'CRIT!',
     defeated: '{name} has been defeated!',
     stunned: 'Stunned!',
+    combo: '{count}x COMBO!',
 
     // Skills
     usesSkill: '{attacker} uses {skill} on {target}',
@@ -273,6 +274,7 @@ export const en = {
   // ============================================================================
   statusEffects: {
     stunned: 'Stunned!',
+    combo: '{count}x COMBO!',
     atkBuff: '+30% ATK for 3 turns',
     spdBuff: '+50% SPD for 2 turns',
     defBuff: '+40% DEF for 3 turns',

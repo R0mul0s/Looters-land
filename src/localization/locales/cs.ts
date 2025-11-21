@@ -123,6 +123,7 @@ export const cs: LocaleKeys = {
     critical: 'KRITICKÝ ZÁSAH!',
     defeated: '{name} byl poražen!',
     stunned: 'Omráčen!',
+    combo: '{count}x KOMBO!',
 
     // Skills
     usesSkill: '{attacker} použil {skill} na {target}',
@@ -275,6 +276,7 @@ export const cs: LocaleKeys = {
   // ============================================================================
   statusEffects: {
     stunned: 'Omráčen!',
+    combo: '{count}x KOMBO!',
     atkBuff: '+30% útoku na 3 kola',
     spdBuff: '+50% rychlosti na 2 kola',
     defBuff: '+40% obrany na 3 kola',

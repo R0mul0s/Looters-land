@@ -43,6 +43,7 @@ import { CombatModeToggle, type CombatMode } from './components/combat/CombatMod
 // Tooltip removed - was blocking clicks on enemies
 import { DamageNumberContainer } from './components/combat/DamageNumber';
 import { CombatLog } from './components/combat/CombatLog';
+import { ComboCounter } from './components/combat/ComboCounter';
 import { CombatActionTooltip } from './components/combat/CombatActionTooltip';
 import { getSpeedDelay, calculateTurnGauge } from './utils/combatUtils';
 import { createTestEnemies, type TestScenario } from './debug/testCombat';
@@ -82,6 +83,7 @@ export function Router() {
   const [combatEngine] = useState(() => new CombatEngine());
   const [combatActive, setCombatActive] = useState(false);
   const [combatLog, setCombatLog] = useState<CombatLogEntry[]>([]);
+  const [comboCount, setComboCount] = useState(0);
   const [currentEnemies, setCurrentEnemies] = useState<Enemy[]>([]);
   const [isManualMode, setIsManualMode] = useState(false);
   const [waitingForInput, setWaitingForInput] = useState(false);
@@ -434,7 +436,7 @@ export function Router() {
     // Keep executing turns until we need player input again or combat ends
     while (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
       combatEngine.executeTurn();
-      setCombatLog([...combatEngine.combatLog]);
+      setCombatLog([...combatEngine.combatLog]); setComboCount(combatEngine.comboCounter);
       forceUpdate({});
 
       // Check if combat ended after this turn
@@ -472,7 +474,7 @@ export function Router() {
     // Use combat engine's manual mode flag instead of React state (which updates asynchronously)
     while (combatEngine.isActive && !combatEngine.waitingForPlayerInput && !combatEngine.isManualMode) {
       combatEngine.executeTurn();
-      setCombatLog([...combatEngine.combatLog]);
+      setCombatLog([...combatEngine.combatLog]); setComboCount(combatEngine.comboCounter);
       forceUpdate({});
 
       // Wait between turns for visibility - use current speed setting
@@ -529,7 +531,7 @@ export function Router() {
       // Initialize combat
       combatEngine.initialize(activeHeroes, enemies);
       combatEngine.isManualMode = isManual;
-      setCombatLog([...combatEngine.combatLog]);
+      setCombatLog([...combatEngine.combatLog]); setComboCount(combatEngine.comboCounter);
 
       // Set callback for combat end - use quick combat handler with captured metadata
       combatEngine.onCombatEnd = () => handleQuickCombatEnd(capturedMetadata);
@@ -594,7 +596,7 @@ export function Router() {
         // Execute enemy turns until we reach first hero
         while (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
           combatEngine.executeTurn();
-          setCombatLog([...combatEngine.combatLog]);
+          setCombatLog([...combatEngine.combatLog]); setComboCount(combatEngine.comboCounter);
         }
 
         if (combatEngine.waitingForPlayerInput) {
@@ -808,7 +810,7 @@ export function Router() {
     // Initialize combat
     combatEngine.initialize(activeHeroes, enemies);
     combatEngine.isManualMode = isManualMode;
-    setCombatLog([...combatEngine.combatLog]);
+    setCombatLog([...combatEngine.combatLog]); setComboCount(combatEngine.comboCounter);
 
     // Set callback for combat end
     combatEngine.onCombatEnd = handleDungeonCombatEnd;
@@ -871,7 +873,7 @@ export function Router() {
       // Execute enemy turns until we reach first hero
       while (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
         combatEngine.executeTurn();
-        setCombatLog([...combatEngine.combatLog]);
+        setCombatLog([...combatEngine.combatLog]); setComboCount(combatEngine.comboCounter);
       }
 
       // Now set up for player input
@@ -895,7 +897,7 @@ export function Router() {
     // Use combat engine's manual mode flag instead of React state (which updates asynchronously)
     while (combatEngine.isActive && !combatEngine.waitingForPlayerInput && !combatEngine.isManualMode) {
       combatEngine.executeTurn();
-      setCombatLog([...combatEngine.combatLog]);
+      setCombatLog([...combatEngine.combatLog]); setComboCount(combatEngine.comboCounter);
       forceUpdate({});
 
       // Wait between turns for visibility
@@ -1379,7 +1381,7 @@ export function Router() {
                               // Use executeManualAction to properly handle the action
                               // This will check victory conditions and continue combat flow
                               combatEngine.executeManualAction(actionResult);
-                              setCombatLog([...combatEngine.combatLog]);
+                              setCombatLog([...combatEngine.combatLog]); setComboCount(combatEngine.comboCounter);
 
                               // Continue combat - will execute AI turns until next hero or combat ends
                               setTimeout(() => {
@@ -1537,7 +1539,7 @@ export function Router() {
                               // Use executeManualAction to properly handle the action
                               // This will check victory conditions and continue combat flow
                               combatEngine.executeManualAction(actionResult);
-                              setCombatLog([...combatEngine.combatLog]);
+                              setCombatLog([...combatEngine.combatLog]); setComboCount(combatEngine.comboCounter);
 
                               // Continue combat - will execute AI turns until next hero or combat ends
                               setTimeout(() => {
@@ -1583,7 +1585,7 @@ export function Router() {
                               // Use executeManualAction to properly handle the action
                               // This will check victory conditions and continue combat flow
                               combatEngine.executeManualAction(actionResult);
-                              setCombatLog([...combatEngine.combatLog]);
+                              setCombatLog([...combatEngine.combatLog]); setComboCount(combatEngine.comboCounter);
 
                               // Continue combat - will execute AI turns until next hero or combat ends
                               setTimeout(() => {
@@ -1661,7 +1663,7 @@ export function Router() {
                       // If turn order is empty, we need to start a new turn
                       if (combatEngine.turnOrder.length === 0 && combatEngine.isActive) {
                         combatEngine.executeTurn();
-                        setCombatLog([...combatEngine.combatLog]);
+                        setCombatLog([...combatEngine.combatLog]); setComboCount(combatEngine.comboCounter);
                         forceUpdate({});
                       }
 
@@ -1701,6 +1703,9 @@ export function Router() {
                 />
               </div>
             </div>
+
+            {/* Combo Counter */}
+            <ComboCounter comboCount={comboCount} />
 
             {/* Combat Log */}
             <CombatLog

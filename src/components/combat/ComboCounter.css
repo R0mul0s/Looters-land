@@ -1,0 +1,53 @@
+/**
+ * Combo Counter Styles
+ */
+
+.combo-counter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.2), rgba(251, 146, 60, 0.1));
+  border: 2px solid #fb923c;
+  border-radius: 8px;
+  animation: combo-pulse 0.5s ease-out;
+}
+
+.combo-counter.maxed {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(251, 146, 60, 0.2));
+  border-color: #ef4444;
+  animation: combo-glow 1s ease-in-out infinite;
+}
+
+.combo-count {
+  font-size: 1.5em;
+  font-weight: bold;
+  color: #fb923c;
+}
+
+.combo-counter.maxed .combo-count {
+  color: #ef4444;
+}
+
+.combo-label {
+  font-size: 0.9em;
+  color: rgba(255, 255, 255, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.combo-bonus {
+  font-size: 1em;
+  font-weight: 600;
+  color: #22c55e;
+}
+
+@keyframes combo-pulse {
+  0% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes combo-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
+}

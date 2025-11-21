@@ -27,6 +27,7 @@ import type { HeroClass, HeroStats, BaseStats, HeroInfo, AttackResult, StatusEff
 import type { Equipment } from '../equipment/Equipment';
 import { getSkillsForClass, type Skill } from '../combat/Skill';
 import type { CombatActionResult, Combatant, Element, ElementResistances } from '../../types/combat.types';
+import { Position, POSITION_BONUSES, type PositionBonuses } from '../../types/combat.types';
 
 export class Hero {
   id: string;
@@ -72,6 +73,8 @@ export class Hero {
   // Elemental properties
   resistances: ElementResistances;  // Elemental resistance percentages
   weaknesses: Element[];            // Elements that deal extra damage
+n  // Position system (Phase 3)
+  position: Position;
 
   // Progression
   experience: number;
@@ -140,6 +143,7 @@ export class Hero {
     // Initialize elemental resistances based on class
     this.resistances = this.initializeResistances();
     this.weaknesses = this.initializeWeaknesses();
+// Initialize position based on class    this.position = this.getDefaultPosition();
   }
 
   private initializeStats(): HeroStats {
@@ -539,6 +543,39 @@ export class Hero {
     }
 
     return Math.min(reduction, 90); // Cap at 90% reduction
+  }
+
+  /**
+  /**
+   * Get default position based on hero class
+   */
+  private getDefaultPosition(): Position {
+    switch (this.class) {
+      case 'warrior':
+      case 'paladin':
+        return Position.FRONT;
+      case 'archer':
+        return Position.MIDDLE;
+      case 'mage':
+      case 'cleric':
+        return Position.BACK;
+      default:
+        return Position.MIDDLE;
+    }
+  }
+
+  /**
+   * Set hero position
+   */
+  setPosition(position: Position): void {
+    this.position = position;
+  }
+
+  /**
+   * Get position bonuses
+   */
+  getPositionBonuses(): PositionBonuses {
+    return POSITION_BONUSES[this.position];
   }
 
   /**

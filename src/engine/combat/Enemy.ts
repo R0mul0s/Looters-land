@@ -30,6 +30,7 @@ import type {
   ElementResistances
 } from '../../types/combat.types';
 import type { StatusEffect } from '../../types/hero.types';
+import { Position, POSITION_BONUSES, type PositionBonuses } from '../../types/combat.types';
 
 export class Enemy {
   id: string;
@@ -56,6 +57,7 @@ export class Enemy {
   // Elemental properties
   resistances: ElementResistances;
   weaknesses: Element[];
+// Position system (Phase 3)  position: Position;
 
   constructor(name: string, level: number = 1, type: EnemyType = 'normal') {
     this.id = `enemy_${Date.now()}_${Math.random()}`;
@@ -95,6 +97,7 @@ export class Enemy {
     // Initialize elemental resistances based on type
     this.resistances = this.initializeResistances();
     this.weaknesses = this.initializeWeaknesses();
+// Initialize position based on enemy type    this.position = this.determinePosition();
   }
 
   private initializeStats(): {
@@ -406,6 +409,28 @@ export class Enemy {
       }
     }
     return Math.min(reduction, 90);
+  }
+
+  /**
+   * Determine position based on enemy type
+   */
+  private determinePosition(): Position {
+    // Bosses and elites in front (aggressive)
+    if (this.type === 'boss' || this.type === 'elite') {
+      return Position.FRONT;
+    }
+    // Normal enemies randomized with bias towards middle
+    const roll = Math.random();
+    if (roll < 0.3) return Position.FRONT;
+    if (roll < 0.8) return Position.MIDDLE;
+    return Position.BACK;
+  }
+
+  /**
+   * Get position bonuses
+   */
+  getPositionBonuses(): PositionBonuses {
+    return POSITION_BONUSES[this.position];
   }
 
   getCombatStats() {

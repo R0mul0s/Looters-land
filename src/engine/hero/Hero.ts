@@ -143,7 +143,8 @@ n  // Position system (Phase 3)
     // Initialize elemental resistances based on class
     this.resistances = this.initializeResistances();
     this.weaknesses = this.initializeWeaknesses();
-// Initialize position based on class    this.position = this.getDefaultPosition();
+// Initialize position based on class
+    this.position = this.getDefaultPosition();
   }
 
   private initializeStats(): HeroStats {

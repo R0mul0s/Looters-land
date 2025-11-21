@@ -122,6 +122,14 @@ export const en = {
     defeated: '{name} has been defeated!',
     stunned: 'Stunned!',
     combo: '{count}x COMBO!',
+    position: {
+      front: 'Front',
+      middle: 'Middle',
+      back: 'Back',
+      empty: 'Empty',
+    },
+    partyFormation: 'Party Formation',
+    enemyFormation: 'Enemy Formation',
     comboLabel: 'COMBO',
 
     // Skills
@@ -276,6 +284,14 @@ export const en = {
   statusEffects: {
     stunned: 'Stunned!',
     combo: '{count}x COMBO!',
+    position: {
+      front: 'Front',
+      middle: 'Middle',
+      back: 'Back',
+      empty: 'Empty',
+    },
+    partyFormation: 'Party Formation',
+    enemyFormation: 'Enemy Formation',
     comboLabel: 'COMBO',
     atkBuff: '+30% ATK for 3 turns',
     spdBuff: '+50% SPD for 2 turns',

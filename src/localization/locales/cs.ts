@@ -124,6 +124,14 @@ export const cs: LocaleKeys = {
     defeated: '{name} byl poražen!',
     stunned: 'Omráčen!',
     combo: '{count}x KOMBO!',
+    position: {
+      front: 'Přední',
+      middle: 'Střední',
+      back: 'Zadní',
+      empty: 'Prázdné',
+    },
+    partyFormation: 'Formace skupiny',
+    enemyFormation: 'Formace nepřátel',
     comboLabel: 'KOMBO',
 
     // Skills
@@ -278,6 +286,14 @@ export const cs: LocaleKeys = {
   statusEffects: {
     stunned: 'Omráčen!',
     combo: '{count}x KOMBO!',
+    position: {
+      front: 'Přední',
+      middle: 'Střední',
+      back: 'Zadní',
+      empty: 'Prázdné',
+    },
+    partyFormation: 'Formace skupiny',
+    enemyFormation: 'Formace nepřátel',
     comboLabel: 'KOMBO',
     atkBuff: '+30% útoku na 3 kola',
     spdBuff: '+50% rychlosti na 2 kola',

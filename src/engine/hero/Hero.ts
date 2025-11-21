@@ -513,7 +513,7 @@ export class Hero {
   /**
    * Get effective stat value including status effect modifiers
    */
-  getEffectiveStat(baseStat: number, statName: 'ATK' | 'DEF' | 'SPD' | 'CRIT'): number {
+  getEffectiveStat(baseStat: number, statName: 'ATK' | 'DEF' | 'SPD' | 'CRIT' | 'ACC' | 'EVA'): number {
     let modifier = 0;
 
     for (const effect of this.statusEffects) {

@@ -54,6 +54,7 @@ export interface AttackResult {
   damage: number;
   isCrit: boolean;
   didMiss?: boolean;
+  element?: string;
   type: 'basic_attack' | 'skill';
   skillName?: string;
 }

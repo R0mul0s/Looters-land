@@ -1,10 +1,11 @@
-# ⚔️ PHASE 2.5: Combat Mechanics Depth (Continued)
+# ⚔️ PHASE 2.5: Combat Mechanics Depth (Continued) ✅ COMPLETED
 
 > **Dokončení PHASE 2 - Status Effects a Combat Log**
 >
 > ⏱️ Odhadovaný čas: 4-6 hodin
 > 🔴 Priorita: HIGH
 > 📦 Závislosti: PHASE 2 (Steps 1-3)
+n> ✅ **STAV: HOTOVO** (2025-11-21)
 
 ---
 

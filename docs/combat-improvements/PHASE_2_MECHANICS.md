@@ -1,10 +1,11 @@
-# ⚔️ PHASE 2: Combat Mechanics Depth
+# ⚔️ PHASE 2: Combat Mechanics Depth ✅ COMPLETED
 
 > **Přidání tactical depth do core combat systému**
 >
 > ⏱️ Odhadovaný čas: 12-16 hodin
 > 🔴 Priorita: HIGH
 > 📦 Závislosti: PHASE 1 (tooltips pro zobrazení resistances)
+n> ✅ **STAV: HOTOVO** (2025-11-21)
 
 ---
 

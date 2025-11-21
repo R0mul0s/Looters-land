@@ -44,6 +44,7 @@ import { CombatModeToggle, type CombatMode } from './components/combat/CombatMod
 import { DamageNumberContainer } from './components/combat/DamageNumber';
 import { CombatLog } from './components/combat/CombatLog';
 import { ComboCounter } from './components/combat/ComboCounter';
+import { FormationDisplay } from './components/combat/FormationDisplay';
 import { CombatActionTooltip } from './components/combat/CombatActionTooltip';
 import { getSpeedDelay, calculateTurnGauge } from './utils/combatUtils';
 import { createTestEnemies, type TestScenario } from './debug/testCombat';
@@ -1702,6 +1703,12 @@ export function Router() {
                   }}
                 />
               </div>
+            </div>
+
+            {/* Formation Display */}
+            <div className="combat-formations">
+              <FormationDisplay combatants={gameState.activeParty || []} compact={true} />
+              <FormationDisplay combatants={currentEnemies} isEnemyFormation={true} compact={true} />
             </div>
 
             {/* Combo Counter */}

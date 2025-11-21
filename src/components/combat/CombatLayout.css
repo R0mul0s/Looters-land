@@ -1849,3 +1849,14 @@
     font-size: 0.8em;
   }
 }
+
+/* Formation container */
+.combat-formations {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.combat-formations > * {
+  flex: 1;
+}

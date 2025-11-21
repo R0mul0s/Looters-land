@@ -56,7 +56,7 @@ export const CombatLog: React.FC<CombatLogProps> = ({
 }) => {
   const logEndRef = useRef<HTMLDivElement>(null);
   const [filter, setFilter] = useState<LogFilter>('all');
-  const [autoScroll, setAutoScroll] = useState(true);
+  const [autoScroll, setAutoScroll] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Auto-scroll to bottom when new entries arrive

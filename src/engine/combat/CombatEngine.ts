@@ -293,7 +293,7 @@ export class CombatEngine {
 
     // Default: basic attack on random enemy
     const target = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-    const result = (hero as Combatant & { attack: (target: Combatant) => { attacker: Combatant; target: Combatant; damage: number; isCrit?: boolean; type: string } }).attack(target);
+    const result = (hero as Combatant & { attack: (target: Combatant) => { attacker: Combatant; target: Combatant; damage: number; isCrit?: boolean; type: string } }).attack(target, this.getComboMultiplier());
     return {
       ...result,
       type: 'basic_attack'

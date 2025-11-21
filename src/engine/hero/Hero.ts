@@ -350,7 +350,7 @@ n  // Position system (Phase 3)
     return this.currentHP - oldHP;
   }
 
-  attack(target: Combatant): AttackResult | null {
+  attack(target: Combatant, comboMultiplier: number = 1.0): AttackResult | null {
     if (!this.isAlive || !target.isAlive) return null;
 
     // Use combat stats with status effects applied
@@ -377,7 +377,7 @@ n  // Position system (Phase 3)
 
     // Hit succeeded - proceed with normal damage calculation
     const isCrit = Math.random() * 100 < combatStats.CRIT;
-    const damage = combatStats.ATK;
+    const damage = Math.floor(combatStats.ATK * comboMultiplier);
     const element: Element = 'physical'; // Basic attacks are physical damage
     const finalDamage = target.takeDamage(damage, isCrit, element);
 

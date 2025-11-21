@@ -279,11 +279,11 @@ export class Enemy {
    * Simple AI - choose target and attack
    */
   chooseAction(heroes: Combatant[]): CombatActionResult | null {
-    // Simple AI: attack random alive hero
+    // AI with position-based targeting
     const aliveHeroes = heroes.filter(h => h.isAlive);
     if (aliveHeroes.length === 0) return null;
 
-    // Prioritize low HP targets (20% chance) or random
+    // Prioritize low HP targets (20% chance)
     let target: Combatant;
     if (Math.random() < 0.2) {
       // Attack lowest HP target
@@ -291,11 +291,32 @@ export class Enemy {
         hero.currentHP < lowest.currentHP ? hero : lowest
       );
     } else {
-      // Random target
-      target = aliveHeroes[Math.floor(Math.random() * aliveHeroes.length)];
+      // Position-weighted random target (Front=3, Middle=2, Back=1)
+      target = this.selectTargetByPosition(aliveHeroes);
     }
 
     return this.attack(target);
+  }
+
+  /**
+   * Select target based on position weights (aggro system)
+   * Front row heroes are more likely to be targeted
+   */
+  private selectTargetByPosition(targets: Combatant[]): Combatant {
+    const weights = targets.map(t => {
+      const pos = 'position' in t ? (t as { position: Position }).position : Position.MIDDLE;
+      return POSITION_BONUSES[pos].aggroWeight;
+    });
+
+    const totalWeight = weights.reduce((sum, w) => sum + w, 0);
+    let roll = Math.random() * totalWeight;
+
+    for (let i = 0; i < targets.length; i++) {
+      roll -= weights[i];
+      if (roll <= 0) return targets[i];
+    }
+
+    return targets[targets.length - 1];
   }
 
   attack(target: Combatant): CombatActionResult | null {

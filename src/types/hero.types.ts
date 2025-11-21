@@ -53,6 +53,7 @@ export interface AttackResult {
   target: unknown;
   damage: number;
   isCrit: boolean;
+  didMiss?: boolean;
   type: 'basic_attack' | 'skill';
   skillName?: string;
 }
@@ -61,7 +62,7 @@ export interface StatusEffect {
   name: string;
   duration: number;
   type: 'buff' | 'debuff';
-  stat?: 'ATK' | 'DEF' | 'SPD' | 'CRIT' | 'damageReduction'; // Which stat is affected
+  stat?: 'ATK' | 'DEF' | 'SPD' | 'CRIT' | 'ACC' | 'EVA' | 'damageReduction'; // Which stat is affected
   value?: number; // Percentage modifier (e.g., 30 for +30%)
   stun?: boolean; // If true, character skips turns
   immunity?: boolean; // If true, character is immune to damage

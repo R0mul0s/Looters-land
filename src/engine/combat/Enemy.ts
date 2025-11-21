@@ -305,7 +305,7 @@ export class Enemy {
   private selectTargetByPosition(targets: Combatant[]): Combatant {
     const weights = targets.map(t => {
       const pos = 'position' in t ? (t as { position: Position }).position : Position.MIDDLE;
-      return POSITION_BONUSES[pos].aggroWeight;
+      const bonuses = POSITION_BONUSES[pos]; return bonuses ? bonuses.aggroWeight : 2;
     });
 
     const totalWeight = weights.reduce((sum, w) => sum + w, 0);

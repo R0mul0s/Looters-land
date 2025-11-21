@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-12
+ * @lastModified 2025-11-20
  */
 
 import type { LocaleKeys } from './en';
@@ -103,6 +103,14 @@ export const cs: LocaleKeys = {
 
     // Turn info
     turnCounter: 'Kolo',
+    turn: {
+      now: 'TEĎ',
+      position: '#{position}',
+      wait: 'Čeká',
+    },
+    round: 'Kolo {number}',
+    selectTargetFor: '{name} - Vyber cíl',
+    turnOrder: 'Pořadí tahů',
 
     // Combat log
     combatInitialized: 'Boj zahájen!',
@@ -111,12 +119,19 @@ export const cs: LocaleKeys = {
 
     // Actions
     attacks: '{attacker} útočí na {target} za {damage} poškození',
+    miss: '{attacker} útočí na {target}, ale mine!',
     critical: 'KRITICKÝ ZÁSAH!',
     defeated: '{name} byl poražen!',
+    stunned: 'Omráčen!',
 
     // Skills
     usesSkill: '{attacker} použil {skill} na {target}',
+    usesSkillDamage: '{attacker} použil {skill} na {target} za {damage} poškození',
+    usesSkillDamageHeal: '{attacker} použil {skill} na {target} za {damage} poškození a uzdravil se o {heal} životů',
+    usesSkillHeal: '{attacker} použil {skill} na {target}, uzdravil o {heal} životů',
+    usesSkillBuff: '{attacker} použil {skill}: {effect}',
     usesSkillAoE: '{attacker} použil {skill} na všechny cíle!',
+    usesSkillGroupHeal: '{attacker} použil {skill} na všechny spojence!',
     takeDamage: '{target} utrpěl {damage} poškození',
     healsFor: '{target} se uzdravil o {amount} životů',
 
@@ -125,10 +140,30 @@ export const cs: LocaleKeys = {
     nextTurn: 'Další kolo',
     attack: 'Útok',
     useSkill: 'Použít schopnost',
+    estDamage: 'Odhad poškození',
+    cooldown: 'CD',
 
     // Status
     waitingForInput: 'Čekám na tvůj příkaz...',
     selectTarget: 'Vyber cíl',
+
+    // Combat log component
+    log: {
+      title: 'Bojový protokol',
+      autoScroll: 'Auto-scroll',
+      export: 'Exportovat',
+      total: 'Celkem',
+      turns: 'Kola',
+      empty: 'Bojový protokol je prázdný. Zahajte boj pro zobrazení akcí.',
+      noEntries: 'Žádné {filter} záznamy k zobrazení.',
+      filter: {
+        all: 'Vše',
+        attack: 'Útok',
+        skill: 'Schopnost',
+        heal: 'Léčení',
+        death: 'Smrt',
+      },
+    },
   },
 
   // ============================================================================
@@ -138,71 +173,76 @@ export const cs: LocaleKeys = {
     // Warrior
     heavySlash: {
       name: 'Těžký Sek',
-      description: 'Způsob 150% útoku poškození jednomu cíli',
+      description: 'Způsobí 150% ATK poškození jednomu cíli',
     },
     shieldBash: {
       name: 'Úder Štítem',
-      description: 'Způsob 80% útoku poškození a omráčení na 1 kolo',
+      description: 'Způsobí 80% ATK poškození a omráčení na 1 kolo',
     },
     battleCry: {
       name: 'Válečný Pokřik',
-      description: 'Zvýší útok týmu o 30% na 3 kola',
+      description: 'Zvýší ATK týmu o 30% na 3 kola',
+      effect: '+30% ATK na 3 kola',
     },
 
     // Archer
     preciseShot: {
       name: 'Přesný Výstřel',
-      description: 'Způsob 180% útoku poškození se zaručeným kritickým zásahem',
+      description: 'Způsobí 180% ATK poškození se zaručeným kritickým zásahem',
     },
     multiShot: {
       name: 'Vícenásobný Výstřel',
-      description: 'Způsob 80% útoku poškození všem nepřátelům',
+      description: 'Způsobí 80% ATK poškození všem nepřátelům',
     },
     evasion: {
       name: 'Úhyb',
-      description: 'Zvýší rychlost o 50% na 2 kola',
+      description: 'Zvýší SPD o 50% na 2 kola',
+      effect: '+50% SPD na 2 kola',
     },
 
     // Mage
     fireball: {
       name: 'Ohnivá Koule',
-      description: 'Způsob 200% útoku magické poškození jednomu cíli',
+      description: 'Způsobí 200% ATK magické poškození jednomu cíli',
     },
     chainLightning: {
       name: 'Řetězový Blesk',
-      description: 'Způsob 120% útoku poškození všem nepřátelům',
+      description: 'Způsobí 120% ATK poškození všem nepřátelům',
     },
     manaShield: {
       name: 'Manový Štít',
       description: 'Sníží přijímané poškození o 40% na 3 kola',
+      effect: '-40% poškození na 3 kola',
     },
 
     // Cleric
     heal: {
       name: 'Léčení',
-      description: 'Obnoví 100 životů jednomu spojenci',
+      description: 'Obnoví 60% HP jednomu spojenci',
     },
     groupHeal: {
       name: 'Skupinové Léčení',
-      description: 'Obnoví 60 životů všem spojencům',
+      description: 'Obnoví 30% HP všem spojencům',
     },
     holySmite: {
       name: 'Svaté Strestání',
-      description: 'Způsob 100% útoku světelné poškození',
+      description: 'Způsobí 100% ATK světelné poškození',
     },
 
     // Paladin
     smite: {
       name: 'Strestání',
-      description: 'Způsob 130% útoku poškození a uzdrav se za 30% způsobeného poškození',
+      description: 'Způsobí 130% ATK poškození a uzdraví se za 30% způsobeného poškození',
     },
     divineShield: {
       name: 'Božský Štít',
       description: 'Získej imunitu vůči poškození na 1 kolo',
+      effect: 'Imunita na 1 kolo',
     },
     blessing: {
       name: 'Požehnání',
-      description: 'Zvýší obranu spojence o 40% na 3 kola',
+      description: 'Zvýší DEF spojence o 40% na 3 kola',
+      effect: '+40% DEF na 3 kola',
     },
   },
 

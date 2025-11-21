@@ -113,7 +113,7 @@ export function t(key: string, replacements?: Record<string, string | number>): 
 
   // Replace placeholders if provided
   if (replacements) {
-    return value.replace(/\{\{(\w+)\}\}/g, (match, placeholder) => {
+    return value.replace(/\{(\w+)\}/g, (match, placeholder) => {
       return placeholder in replacements ? String(replacements[placeholder]) : match;
     });
   }

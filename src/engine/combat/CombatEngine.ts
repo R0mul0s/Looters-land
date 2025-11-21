@@ -21,7 +21,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-15
+ * @lastModified 2025-11-20
  */
 
 import type {
@@ -32,7 +32,8 @@ import type {
 } from '../../types/combat.types';
 import type { LootReward } from '../../types/loot.types';
 import { LootGenerator } from '../loot/LootGenerator';
-import type { Enemy } from './Enemy';
+import { Enemy } from './Enemy';
+import { t } from '../../localization/i18n';
 
 export class CombatEngine {
   heroes: Combatant[];
@@ -169,8 +170,8 @@ export class CombatEngine {
         continue;
       }
 
-      // If manual mode and this is a hero, wait for player input
-      if (this.isManualMode && !('isEnemy' in character && character.isEnemy)) {
+      // If manual mode and this is a hero (not an enemy), wait for player input
+      if (this.isManualMode && !(character instanceof Enemy)) {
         this.waitingForPlayerInput = true;
         this.currentCharacter = character;
 
@@ -307,9 +308,23 @@ export class CombatEngine {
 
     switch (action.type) {
       case 'basic_attack': {
-        const critText = action.isCrit ? ' [CRIT!]' : '';
+        // Check for miss first
+        if (action.didMiss) {
+          this.log(
+            t('combat.miss', { attacker: attacker.name, target: action.target?.name }),
+            'attack'
+          );
+          // Still trigger attack animation even on miss
+          if (this.onAttackAnimation) {
+            this.onAttackAnimation(attacker.id);
+          }
+          break;
+        }
+
+        // Hit succeeded - log damage
+        const critText = action.isCrit ? ` [${t('combat.critical')}]` : '';
         this.log(
-          `${attacker.name} attacks ${action.target?.name} for ${action.damage} damage${critText}`,
+          t('combat.attacks', { attacker: attacker.name, target: action.target?.name, damage: action.damage }) + critText,
           'attack'
         );
 
@@ -322,15 +337,15 @@ export class CombatEngine {
         }
 
         if (action.target && !action.target.isAlive) {
-          this.log(`${action.target.name} has been defeated!`, 'death');
+          this.log(t('combat.defeated', { name: action.target.name }), 'death');
         }
         break;
       }
 
       case 'skill_damage': {
-        const skillCritText = action.isCrit ? ' [CRIT!]' : '';
+        const skillCritText = action.isCrit ? ` [${t('combat.critical')}]` : '';
         this.log(
-          `${attacker.name} uses ${action.skillName} on ${action.target?.name} for ${action.damage} damage${skillCritText}`,
+          t('combat.usesSkillDamage', { attacker: attacker.name, skill: action.skillName, target: action.target?.name, damage: action.damage }) + skillCritText,
           'skill'
         );
 
@@ -346,14 +361,14 @@ export class CombatEngine {
           this.log(`  → ${action.effect}`, 'skill');
         }
         if (action.target && !action.target.isAlive) {
-          this.log(`${action.target.name} has been defeated!`, 'death');
+          this.log(t('combat.defeated', { name: action.target.name }), 'death');
         }
         break;
       }
 
       case 'skill_damage_heal':
         this.log(
-          `${attacker.name} uses ${action.skillName} on ${action.target?.name} for ${action.damage} damage and heals for ${action.healAmount} HP`,
+          t('combat.usesSkillDamageHeal', { attacker: attacker.name, skill: action.skillName, target: action.target?.name, damage: action.damage, heal: action.healAmount }),
           'skill'
         );
 
@@ -369,12 +384,12 @@ export class CombatEngine {
         }
 
         if (action.target && !action.target.isAlive) {
-          this.log(`${action.target.name} has been defeated!`, 'death');
+          this.log(t('combat.defeated', { name: action.target.name }), 'death');
         }
         break;
 
       case 'skill_aoe':
-        this.log(`${attacker.name} uses ${action.skillName} on all targets!`, 'skill');
+        this.log(t('combat.usesSkillAoE', { attacker: attacker.name, skill: action.skillName }), 'skill');
 
         // Trigger skill animation
         if (this.onSkillUsed && action.skillName) {
@@ -382,8 +397,8 @@ export class CombatEngine {
         }
 
         action.results?.forEach(result => {
-          const critText = result.isCrit ? ' [CRIT!]' : '';
-          this.log(`  → ${result.target.name} takes ${result.damage} damage${critText}`, 'skill');
+          const aoeCritText = result.isCrit ? ` [${t('combat.critical')}]` : '';
+          this.log(`  → ${t('combat.takeDamage', { target: result.target.name, damage: result.damage })}${aoeCritText}`, 'skill');
 
           // Trigger damage animation for each target
           if (this.onDamageDealt && result.damage > 0) {
@@ -391,14 +406,14 @@ export class CombatEngine {
           }
 
           if (!result.target.isAlive) {
-            this.log(`  → ${result.target.name} has been defeated!`, 'death');
+            this.log(`  → ${t('combat.defeated', { name: result.target.name })}`, 'death');
           }
         });
         break;
 
       case 'skill_heal':
         this.log(
-          `${attacker.name} uses ${action.skillName} on ${action.target?.name}, healing for ${action.healAmount} HP`,
+          t('combat.usesSkillHeal', { attacker: attacker.name, skill: action.skillName, target: action.target?.name, heal: action.healAmount }),
           'heal'
         );
 
@@ -412,7 +427,7 @@ export class CombatEngine {
         break;
 
       case 'skill_group_heal':
-        this.log(`${attacker.name} uses ${action.skillName} on all allies!`, 'heal');
+        this.log(t('combat.usesSkillGroupHeal', { attacker: attacker.name, skill: action.skillName }), 'heal');
 
         // Trigger skill animation
         if (this.onSkillUsed && action.skillName) {
@@ -421,7 +436,7 @@ export class CombatEngine {
 
         action.results?.forEach(result => {
           if (result.healAmount && result.healAmount > 0) {
-            this.log(`  → ${result.target.name} heals for ${result.healAmount} HP`, 'heal');
+            this.log(`  → ${t('combat.healsFor', { target: result.target.name, amount: result.healAmount })}`, 'heal');
 
             // Trigger heal animation for each target
             if (this.onHealApplied) {
@@ -432,7 +447,7 @@ export class CombatEngine {
         break;
 
       case 'skill_buff':
-        this.log(`${attacker.name} uses ${action.skillName}: ${action.effect}`, 'skill');
+        this.log(t('combat.usesSkillBuff', { attacker: attacker.name, skill: action.skillName, effect: action.effect }), 'skill');
 
         // Trigger skill animation
         if (this.onSkillUsed && action.skillName) {

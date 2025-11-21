@@ -218,6 +218,7 @@ export async function logout(): Promise<AuthResult> {
  *
  * Retrieves the current authenticated user and session.
  * Returns null if no active session exists.
+ * Automatically clears invalid refresh tokens.
  *
  * @returns Current session data or null
  *
@@ -235,6 +236,13 @@ export async function getCurrentSession() {
 
     if (error) {
       console.error('❌ Failed to get session:', error.message);
+
+      // If refresh token is invalid, clear it
+      if (error.message.includes('Invalid Refresh Token') || error.message.includes('Refresh Token Not Found')) {
+        console.log('🧹 Clearing invalid refresh token...');
+        await supabase.auth.signOut();
+      }
+
       return null;
     }
 

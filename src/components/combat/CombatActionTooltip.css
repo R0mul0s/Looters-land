@@ -1,10 +1,25 @@
 /**
  * Combat Action Tooltip Styles
+ *
+ * Styling for the action selection tooltip that appears when clicking
+ * on characters in manual combat mode.
+ *
+ * Contains:
+ * - Tooltip container with fixed positioning
+ * - Fade-in animation
+ * - Header with draggable area and close button
+ * - Action buttons (Attack, Skills)
+ * - Skill cooldown indicators
+ * - Mobile responsive adjustments
+ *
+ * @author Roman Hlaváček - rhsoft.cz
+ * @copyright 2025
+ * @lastModified 2025-11-20
  */
 
 .combat-action-tooltip {
-  position: absolute;
-  z-index: 1000;
+  position: fixed;
+  z-index: 9999;
   background: linear-gradient(135deg, rgba(26, 26, 46, 0.98) 0%, rgba(13, 13, 26, 0.98) 100%);
   border: 3px solid rgba(255, 215, 0, 0.5);
   border-radius: 12px;
@@ -13,6 +28,8 @@
   min-width: 200px;
   max-width: 300px;
   animation: tooltipFadeIn 0.2s ease-out;
+  /* Prevent overflow clipping */
+  pointer-events: auto;
 }
 
 @keyframes tooltipFadeIn {
@@ -26,45 +43,9 @@
   }
 }
 
-/* Tooltip arrow */
+/* Tooltip arrow - hidden when overlaying on card */
 .tooltip-arrow {
-  position: absolute;
-  width: 0;
-  height: 0;
-  border-style: solid;
-}
-
-/* Arrow positions */
-.combat-action-tooltip.bottom .tooltip-arrow {
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 0 10px 12px 10px;
-  border-color: transparent transparent rgba(255, 215, 0, 0.5) transparent;
-}
-
-.combat-action-tooltip.top .tooltip-arrow {
-  bottom: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 12px 10px 0 10px;
-  border-color: rgba(255, 215, 0, 0.5) transparent transparent transparent;
-}
-
-.combat-action-tooltip.right .tooltip-arrow {
-  left: -12px;
-  top: 50%;
-  transform: translateY(-50%);
-  border-width: 10px 12px 10px 0;
-  border-color: transparent rgba(255, 215, 0, 0.5) transparent transparent;
-}
-
-.combat-action-tooltip.left .tooltip-arrow {
-  right: -12px;
-  top: 50%;
-  transform: translateY(-50%);
-  border-width: 10px 0 10px 12px;
-  border-color: transparent transparent transparent rgba(255, 215, 0, 0.5);
+  display: none;
 }
 
 /* Header */
@@ -75,6 +56,8 @@
   margin-bottom: 10px;
   padding-bottom: 8px;
   border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+  cursor: move;
+  user-select: none;
 }
 
 .tooltip-target-name {
@@ -200,9 +183,10 @@
 /* Mobile responsive */
 @media (max-width: 768px) {
   .combat-action-tooltip {
-    min-width: 180px;
-    max-width: 250px;
-    padding: 10px;
+    min-width: 160px;
+    max-width: 200px;
+    padding: 8px;
+    right: 4px;
   }
 
   .tooltip-action-button {

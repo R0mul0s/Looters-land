@@ -17,7 +17,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-20
  */
 
 import type {
@@ -25,7 +25,9 @@ import type {
   EnemyInfo,
   EnemyTypeMultipliers,
   CombatActionResult,
-  Combatant
+  Combatant,
+  Element,
+  ElementResistances
 } from '../../types/combat.types';
 import type { StatusEffect } from '../../types/hero.types';
 
@@ -42,12 +44,18 @@ export class Enemy {
   DEF: number;
   SPD: number;
   CRIT: number;
+  ACC: number;  // Accuracy rating (determines hit chance)
+  EVA: number;  // Evasion rating (determines dodge chance)
 
   // Combat state
   currentHP: number;
   isAlive: boolean;
   initiative: number;
   statusEffects: StatusEffect[];
+
+  // Elemental properties
+  resistances: ElementResistances;
+  weaknesses: Element[];
 
   constructor(name: string, level: number = 1, type: EnemyType = 'normal') {
     this.id = `enemy_${Date.now()}_${Math.random()}`;
@@ -63,11 +71,30 @@ export class Enemy {
     this.SPD = stats.SPD;
     this.CRIT = stats.CRIT;
 
+    // Initialize Accuracy/Evasion (enemies have slightly lower ACC than heroes)
+    // ACC: Base 90 + (SPD * 0.4) - enemies are less accurate
+    // EVA: Base 0 + (SPD * 0.25) - enemies are slightly easier to hit
+    this.ACC = 90 + Math.floor(this.SPD * 0.4);
+    this.EVA = Math.floor(this.SPD * 0.25);
+
+    // Elite and Boss enemies get accuracy/evasion bonuses
+    if (this.type === 'boss') {
+      this.ACC += 20;
+      this.EVA += 15;
+    } else if (this.type === 'elite') {
+      this.ACC += 10;
+      this.EVA += 8;
+    }
+
     // Combat state
     this.currentHP = this.maxHP;
     this.isAlive = true;
     this.initiative = 0;
     this.statusEffects = [];
+
+    // Initialize elemental resistances based on type
+    this.resistances = this.initializeResistances();
+    this.weaknesses = this.initializeWeaknesses();
   }
 
   private initializeStats(): {
@@ -108,12 +135,82 @@ export class Enemy {
     };
   }
 
+  /**
+   * Initialize elemental resistances based on enemy type
+   * Bosses and elites have better resistances
+   */
+  private initializeResistances(): ElementResistances {
+    const baseResistances: ElementResistances = {
+      physical: 0,
+      fire: 0,
+      ice: 0,
+      lightning: 0,
+      holy: 0,
+      dark: 0
+    };
+
+    // Type-based resistance bonuses
+    if (this.type === 'boss') {
+      // Bosses have 15% resistance to all elements
+      baseResistances.physical = 15;
+      baseResistances.fire = 15;
+      baseResistances.ice = 15;
+      baseResistances.lightning = 15;
+      baseResistances.holy = 15;
+      baseResistances.dark = 15;
+    } else if (this.type === 'elite') {
+      // Elites have 10% resistance to all elements
+      baseResistances.physical = 10;
+      baseResistances.fire = 10;
+      baseResistances.ice = 10;
+      baseResistances.lightning = 10;
+      baseResistances.holy = 10;
+      baseResistances.dark = 10;
+    }
+
+    // Random elemental affinity for variety
+    // 20% chance for enemy to have affinity (high resistance) to one element
+    if (Math.random() < 0.2) {
+      const elements: Element[] = ['fire', 'ice', 'lightning', 'holy', 'dark'];
+      const affinityElement = elements[Math.floor(Math.random() * elements.length)];
+      baseResistances[affinityElement] += 30;  // +30% to one random element
+    }
+
+    return baseResistances;
+  }
+
+  /**
+   * Initialize elemental weaknesses
+   * Normal enemies might have weaknesses, elites/bosses rarely do
+   */
+  private initializeWeaknesses(): Element[] {
+    // Elites and bosses rarely have weaknesses
+    if (this.type === 'elite' && Math.random() < 0.3) {
+      // 30% chance for elite to have one weakness
+      const elements: Element[] = ['fire', 'ice', 'lightning', 'holy', 'dark'];
+      return [elements[Math.floor(Math.random() * elements.length)]];
+    }
+
+    if (this.type === 'boss') {
+      // Bosses don't have weaknesses
+      return [];
+    }
+
+    // Normal enemies: 50% chance to have a weakness
+    if (Math.random() < 0.5) {
+      const elements: Element[] = ['fire', 'ice', 'lightning', 'holy', 'dark'];
+      return [elements[Math.floor(Math.random() * elements.length)]];
+    }
+
+    return [];
+  }
+
   rollInitiative(): number {
     this.initiative = this.SPD + Math.floor(Math.random() * 11);
     return this.initiative;
   }
 
-  takeDamage(rawDamage: number, isCrit: boolean = false): number {
+  takeDamage(rawDamage: number, isCrit: boolean = false, element: Element = 'physical'): number {
     if (!this.isAlive) return 0;
 
     // Check immunity first
@@ -129,12 +226,33 @@ export class Enemy {
       finalDamage = Math.floor(rawDamage * 1.5 * (100 / (100 + this.DEF * 0.5)));
     }
 
+    // Apply elemental resistance/weakness
+    let elementalModifier = 1.0;
+    if (element in this.resistances) {
+      const resistance = this.resistances[element];
+      elementalModifier = 1 - (resistance / 100);
+
+      // Check for weakness
+      if (this.weaknesses.includes(element)) {
+        elementalModifier *= 1.5;
+        console.log(`💥 ${this.name} is WEAK to ${element}!`);
+      } else if (resistance > 0) {
+        console.log(`🛡️ ${this.name} resists ${element} damage (${resistance}%)`);
+      } else if (resistance < 0) {
+        console.log(`💢 ${this.name} is vulnerable to ${element}!`);
+      }
+    }
+    finalDamage = Math.floor(finalDamage * elementalModifier);
+
     // Apply damage reduction from status effects
     const statusReduction = this.getDamageReduction();
     if (statusReduction > 0) {
       finalDamage = Math.floor(finalDamage * (1 - statusReduction / 100));
       console.log(`🛡️ ${this.name}'s damage reduced by ${statusReduction}%`);
     }
+
+    // Ensure minimum 1 damage (unless immune)
+    finalDamage = Math.max(1, finalDamage);
 
     this.currentHP -= finalDamage;
 
@@ -182,15 +300,39 @@ export class Enemy {
 
     // Use combat stats with status effects applied
     const combatStats = this.getCombatStats();
+    const targetStats = target.getCombatStats();
+
+    // Roll for hit/miss using accuracy and evasion
+    const hitRoll = Math.random() * 100;
+    const hitChance = 100 + (combatStats.ACC - targetStats.EVA) / 10;
+    const cappedHitChance = Math.max(5, Math.min(95, hitChance));
+    const didHit = hitRoll < cappedHitChance;
+
+    // If miss, return early with didMiss flag
+    if (!didHit) {
+      return {
+        attacker: this,
+        target: target,
+        damage: 0,
+        isCrit: false,
+        didMiss: true,
+        type: 'basic_attack'
+      };
+    }
+
+    // Hit succeeded - proceed with normal damage calculation
     const isCrit = Math.random() * 100 < combatStats.CRIT;
     const damage = combatStats.ATK;
-    const finalDamage = target.takeDamage(damage, isCrit);
+    const element: Element = 'physical'; // Basic attacks are physical damage
+    const finalDamage = target.takeDamage(damage, isCrit, element);
 
     return {
       attacker: this,
       target: target,
       damage: finalDamage,
       isCrit: isCrit,
+      didMiss: false,
+      element: element,
       type: 'basic_attack'
     };
   }
@@ -271,7 +413,9 @@ export class Enemy {
       ATK: this.getEffectiveStat(this.ATK, 'ATK'),
       DEF: this.getEffectiveStat(this.DEF, 'DEF'),
       SPD: this.getEffectiveStat(this.SPD, 'SPD'),
-      CRIT: this.getEffectiveStat(this.CRIT, 'CRIT')
+      CRIT: this.getEffectiveStat(this.CRIT, 'CRIT'),
+      ACC: this.getEffectiveStat(this.ACC, 'ACC'),
+      EVA: this.getEffectiveStat(this.EVA, 'EVA')
     };
   }
 

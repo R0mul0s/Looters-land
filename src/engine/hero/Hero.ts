@@ -20,13 +20,13 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-15
+ * @lastModified 2025-11-20
  */
 
 import type { HeroClass, HeroStats, BaseStats, HeroInfo, AttackResult, StatusEffect, HeroRarity } from '../../types/hero.types';
 import type { Equipment } from '../equipment/Equipment';
 import { getSkillsForClass, type Skill } from '../combat/Skill';
-import type { CombatActionResult, Combatant } from '../../types/combat.types';
+import type { CombatActionResult, Combatant, Element, ElementResistances } from '../../types/combat.types';
 
 export class Hero {
   id: string;
@@ -47,6 +47,8 @@ export class Hero {
   DEF: number;
   SPD: number;
   CRIT: number;
+  ACC: number;  // Accuracy rating (determines hit chance)
+  EVA: number;  // Evasion rating (determines dodge chance)
 
   // Base stats (without equipment)
   baseMaxHP: number;
@@ -54,6 +56,8 @@ export class Hero {
   baseDEF: number;
   baseSPD: number;
   baseCRIT: number;
+  baseACC: number;
+  baseEVA: number;
 
   // Combat state
   currentHP: number;
@@ -64,6 +68,10 @@ export class Hero {
   cooldowns: Map<string, number>;
   ultimateCharge: number;
   statusEffects: StatusEffect[];
+
+  // Elemental properties
+  resistances: ElementResistances;  // Elemental resistance percentages
+  weaknesses: Element[];            // Elements that deal extra damage
 
   // Progression
   experience: number;
@@ -104,12 +112,20 @@ export class Hero {
     this.SPD = stats.SPD;
     this.CRIT = stats.CRIT;
 
+    // Initialize Accuracy/Evasion based on SPD
+    // ACC: Base 100 + (SPD * 0.5) - faster heroes are more accurate
+    // EVA: Base 0 + (SPD * 0.3) - faster heroes are harder to hit
+    this.ACC = 100 + Math.floor(this.SPD * 0.5);
+    this.EVA = Math.floor(this.SPD * 0.3);
+
     // Store base stats
     this.baseMaxHP = this.maxHP;
     this.baseATK = this.ATK;
     this.baseDEF = this.DEF;
     this.baseSPD = this.SPD;
     this.baseCRIT = this.CRIT;
+    this.baseACC = this.ACC;
+    this.baseEVA = this.EVA;
 
     // Combat state
     this.currentHP = this.maxHP;
@@ -120,6 +136,10 @@ export class Hero {
     this.cooldowns = new Map();
     this.ultimateCharge = 0;
     this.statusEffects = [];
+
+    // Initialize elemental resistances based on class
+    this.resistances = this.initializeResistances();
+    this.weaknesses = this.initializeWeaknesses();
   }
 
   private initializeStats(): HeroStats {
@@ -197,12 +217,74 @@ export class Hero {
     };
   }
 
+  /**
+   * Initialize elemental resistances based on hero class
+   * @returns Resistance percentages for each element
+   */
+  private initializeResistances(): ElementResistances {
+    const baseResistances: ElementResistances = {
+      physical: 0,
+      fire: 0,
+      ice: 0,
+      lightning: 0,
+      holy: 0,
+      dark: 0
+    };
+
+    // Class-specific resistances
+    switch (this.class) {
+      case 'warrior':
+        baseResistances.physical = 20;  // 20% physical resistance from heavy armor
+        break;
+      case 'archer':
+        // Archers have no special resistances (rely on evasion)
+        break;
+      case 'mage':
+        baseResistances.fire = 15;
+        baseResistances.ice = 15;
+        baseResistances.lightning = 15;
+        break;
+      case 'cleric':
+        baseResistances.holy = 30;      // Strong holy resistance
+        baseResistances.dark = -20;     // Weak to dark (negative = extra damage)
+        break;
+      case 'paladin':
+        baseResistances.physical = 10;
+        baseResistances.holy = 20;
+        baseResistances.dark = -10;
+        break;
+    }
+
+    return baseResistances;
+  }
+
+  /**
+   * Initialize elemental weaknesses based on hero class
+   * @returns Array of elements that deal bonus damage
+   */
+  private initializeWeaknesses(): Element[] {
+    switch (this.class) {
+      case 'warrior':
+        return ['lightning'];  // Heavy armor conducts electricity
+      case 'archer':
+        return [];             // No specific weakness
+      case 'mage':
+        return ['physical'];   // Frail, weak to physical attacks
+      case 'cleric':
+        return ['dark'];       // Holy warriors weak to darkness
+      case 'paladin':
+        return ['dark'];       // Holy warriors weak to darkness
+      default:
+        return [];
+    }
+  }
+
   rollInitiative(): number {
     this.initiative = this.SPD + Math.floor(Math.random() * 11);
     return this.initiative;
   }
 
-  takeDamage(rawDamage: number, isCrit: boolean = false): number {
+  takeDamage(rawDamage: number, isCrit: boolean = false, element: Element = 'physical'): number {
     if (!this.isAlive) return 0;
 
     // Check immunity first
@@ -218,12 +300,33 @@ export class Hero {
       finalDamage = Math.floor(rawDamage * 1.5 * (100 / (100 + this.DEF * 0.5)));
     }
 
+    // Apply elemental resistance/weakness
+    let elementalModifier = 1.0;
+    if (element in this.resistances) {
+      const resistance = this.resistances[element];
+      elementalModifier = 1 - (resistance / 100);
+
+      // Check for weakness (50% bonus damage)
+      if (this.weaknesses.includes(element)) {
+        elementalModifier *= 1.5;
+        console.log(`💥 ${this.name} is WEAK to ${element}!`);
+      } else if (resistance > 0) {
+        console.log(`🛡️ ${this.name} resists ${element} damage (${resistance}%)`);
+      } else if (resistance < 0) {
+        console.log(`💢 ${this.name} is vulnerable to ${element}!`);
+      }
+    }
+    finalDamage = Math.floor(finalDamage * elementalModifier);
+
     // Apply damage reduction from status effects (e.g., Mana Shield)
     const statusReduction = this.getDamageReduction();
     if (statusReduction > 0) {
       finalDamage = Math.floor(finalDamage * (1 - statusReduction / 100));
       console.log(`🛡️ ${this.name}'s damage reduced by ${statusReduction}%`);
     }
+
+    // Minimum 1 damage
+    finalDamage = Math.max(1, finalDamage);
 
     this.currentHP -= finalDamage;
 
@@ -248,15 +351,39 @@ export class Hero {
 
     // Use combat stats with status effects applied
     const combatStats = this.getCombatStats();
+    const targetStats = target.getCombatStats();
+
+    // Roll for hit/miss using accuracy and evasion
+    const hitRoll = Math.random() * 100;
+    const hitChance = 100 + (combatStats.ACC - targetStats.EVA) / 10;
+    const cappedHitChance = Math.max(5, Math.min(95, hitChance));
+    const didHit = hitRoll < cappedHitChance;
+
+    // If miss, return early with didMiss flag
+    if (!didHit) {
+      return {
+        attacker: this,
+        target: target,
+        damage: 0,
+        isCrit: false,
+        didMiss: true,
+        type: 'basic_attack'
+      };
+    }
+
+    // Hit succeeded - proceed with normal damage calculation
     const isCrit = Math.random() * 100 < combatStats.CRIT;
     const damage = combatStats.ATK;
-    const finalDamage = target.takeDamage(damage, isCrit);
+    const element: Element = 'physical'; // Basic attacks are physical damage
+    const finalDamage = target.takeDamage(damage, isCrit, element);
 
     return {
       attacker: this,
       target: target,
       damage: finalDamage,
       isCrit: isCrit,
+      didMiss: false,
+      element: element,
       type: 'basic_attack'
     };
   }
@@ -422,7 +549,9 @@ export class Hero {
       ATK: this.getEffectiveStat(this.ATK, 'ATK'),
       DEF: this.getEffectiveStat(this.DEF, 'DEF'),
       SPD: this.getEffectiveStat(this.SPD, 'SPD'),
-      CRIT: this.getEffectiveStat(this.CRIT, 'CRIT')
+      CRIT: this.getEffectiveStat(this.CRIT, 'CRIT'),
+      ACC: this.getEffectiveStat(this.ACC, 'ACC'),
+      EVA: this.getEffectiveStat(this.EVA, 'EVA')
     };
   }
 

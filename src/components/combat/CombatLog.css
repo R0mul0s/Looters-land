@@ -1,0 +1,195 @@
+/**
+ * Combat Log Component Styles
+ */
+
+.combat-log-component {
+  background: #0d0d1a;
+  border-radius: 8px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  overflow: visible;
+  min-height: 50px;
+}
+
+.combat-log-header {
+  padding: 12px 15px;
+  background: rgba(139, 92, 246, 0.1);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.combat-log-header:hover {
+  background: rgba(139, 92, 246, 0.15);
+}
+
+.combat-log-title {
+  margin: 0;
+  font-size: 1em;
+  font-weight: 600;
+  color: #a78bfa;
+}
+
+.combat-log-toggle {
+  background: none;
+  border: none;
+  color: #a78bfa;
+  font-size: 1em;
+  cursor: pointer;
+  padding: 0 5px;
+}
+
+.combat-log-controls {
+  padding: 10px 15px;
+  background: rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.combat-log-filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.combat-log-filter-btn {
+  padding: 4px 10px;
+  font-size: 0.75em;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.05);
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.combat-log-filter-btn:hover {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.combat-log-filter-btn.active {
+  background: rgba(139, 92, 246, 0.3);
+  border-color: #8b5cf6;
+}
+
+.combat-log-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.combat-log-autoscroll {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85em;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  user-select: none;
+}
+
+.combat-log-autoscroll input {
+  cursor: pointer;
+}
+
+.combat-log-export-btn {
+  padding: 4px 10px;
+  font-size: 0.75em;
+  background: rgba(16, 185, 129, 0.2);
+  border: 1px solid #10b981;
+  border-radius: 12px;
+  cursor: pointer;
+  color: #10b981;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.combat-log-export-btn:hover {
+  background: rgba(16, 185, 129, 0.3);
+}
+
+.combat-log-entries-container {
+  overflow-y: auto;
+  padding: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.5) rgba(0, 0, 0, 0.2);
+}
+
+.combat-log-entries-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.combat-log-entries-container::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.combat-log-entries-container::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.5);
+  border-radius: 3px;
+}
+
+.combat-log-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.9em;
+  font-style: italic;
+}
+
+.combat-log-message {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.combat-log-turn-badge {
+  padding: 2px 6px;
+  background: rgba(139, 92, 246, 0.2);
+  border-radius: 10px;
+  font-size: 0.7em;
+  color: #a78bfa;
+  font-weight: 600;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.combat-log-highlight {
+  background: rgba(59, 130, 246, 0.3);
+  padding: 1px 3px;
+  border-radius: 3px;
+  font-weight: bold;
+}
+
+.combat-log-footer {
+  padding: 8px 15px;
+  background: rgba(0, 0, 0, 0.2);
+  border-top: 1px solid rgba(139, 92, 246, 0.2);
+  display: flex;
+  gap: 20px;
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .combat-log-controls {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .combat-log-filters {
+    width: 100%;
+  }
+
+  .combat-log-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

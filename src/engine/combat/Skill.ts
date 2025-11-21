@@ -17,36 +17,50 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-07
+ * @lastModified 2025-11-20
  */
 
 import type {
   SkillType,
   SkillExecuteFunction,
   CombatActionResult,
-  Combatant
+  Combatant,
+  Element
 } from '../../types/combat.types';
 import type { HeroClass } from '../../types/hero.types';
+import { t } from '../../localization/i18n';
 
 export class Skill {
-  name: string;
-  description: string;
+  /** Localization key for skill name (e.g., 'skills.heavySlash.name') */
+  nameKey: string;
+  /** Localization key for skill description */
+  descriptionKey: string;
   cooldown: number; // in turns
   type: SkillType;
   execute: SkillExecuteFunction;
 
   constructor(
-    name: string,
-    description: string,
+    nameKey: string,
+    descriptionKey: string,
     cooldown: number,
     type: SkillType,
     execute: SkillExecuteFunction
   ) {
-    this.name = name;
-    this.description = description;
+    this.nameKey = nameKey;
+    this.descriptionKey = descriptionKey;
     this.cooldown = cooldown;
     this.type = type;
     this.execute = execute;
+  }
+
+  /** Get localized skill name */
+  get name(): string {
+    return t(this.nameKey);
+  }
+
+  /** Get localized skill description */
+  get description(): string {
+    return t(this.descriptionKey);
   }
 }
 
@@ -55,35 +69,38 @@ export class Skill {
 // ============================================================================
 const warriorSkills: Skill[] = [
   new Skill(
-    'Heavy Slash',
-    'Deal 150% ATK damage to single target',
+    'skills.heavySlash.name',
+    'skills.heavySlash.description',
     2,
     'damage',
     (caster: Combatant, targets: Combatant[]): CombatActionResult => {
       const target = targets[0];
       const isCrit = Math.random() * 100 < caster.CRIT;
       const damage = Math.floor(caster.ATK * 1.5);
-      const finalDamage = target.takeDamage(damage, isCrit);
+      const element: Element = 'physical';
+      const finalDamage = target.takeDamage(damage, isCrit, element);
 
       return {
         attacker: caster,
         target: target,
         damage: finalDamage,
         isCrit: isCrit,
-        skillName: 'Heavy Slash',
+        element: element,
+        skillName: t('skills.heavySlash.name'),
         type: 'skill_damage'
       };
     }
   ),
   new Skill(
-    'Shield Bash',
-    'Deal 80% ATK damage and stun for 1 turn',
+    'skills.shieldBash.name',
+    'skills.shieldBash.description',
     3,
     'damage',
     (caster: Combatant, targets: Combatant[]): CombatActionResult => {
       const target = targets[0];
       const damage = Math.floor(caster.ATK * 0.8);
-      const finalDamage = target.takeDamage(damage, false);
+      const element: Element = 'physical';
+      const finalDamage = target.takeDamage(damage, false, element);
 
       // Apply stun debuff
       target.addStatusEffect({
@@ -97,22 +114,23 @@ const warriorSkills: Skill[] = [
         attacker: caster,
         target: target,
         damage: finalDamage,
-        skillName: 'Shield Bash',
+        element: element,
+        skillName: t('skills.shieldBash.name'),
         type: 'skill_damage',
-        effect: 'Stunned!'
+        effect: t('combat.stunned')
       };
     }
   ),
   new Skill(
-    'Battle Cry',
-    'Increase team ATK by 30% for 3 turns',
+    'skills.battleCry.name',
+    'skills.battleCry.description',
     5,
     'buff',
     (caster: Combatant, targets: Combatant[]): CombatActionResult => {
       // Apply buff to all targets
       targets.forEach(target => {
         target.addStatusEffect({
-          name: 'Battle Cry',
+          name: t('skills.battleCry.name'),
           duration: 3,
           type: 'buff',
           stat: 'ATK',
@@ -123,9 +141,9 @@ const warriorSkills: Skill[] = [
       return {
         attacker: caster,
         targets: targets,
-        skillName: 'Battle Cry',
+        skillName: t('skills.battleCry.name'),
         type: 'skill_buff',
-        effect: '+30% ATK for 3 turns'
+        effect: t('skills.battleCry.effect')
       };
     }
   )
@@ -136,37 +154,40 @@ const warriorSkills: Skill[] = [
 // ============================================================================
 const archerSkills: Skill[] = [
   new Skill(
-    'Precise Shot',
-    'Deal 180% ATK damage with guaranteed crit',
+    'skills.preciseShot.name',
+    'skills.preciseShot.description',
     2,
     'damage',
     (caster: Combatant, targets: Combatant[]): CombatActionResult => {
       const target = targets[0];
       const damage = Math.floor(caster.ATK * 1.8);
-      const finalDamage = target.takeDamage(damage, true);
+      const element: Element = 'physical';
+      const finalDamage = target.takeDamage(damage, true, element);
 
       return {
         attacker: caster,
         target: target,
         damage: finalDamage,
         isCrit: true,
-        skillName: 'Precise Shot',
+        element: element,
+        skillName: t('skills.preciseShot.name'),
         type: 'skill_damage'
       };
     }
   ),
   new Skill(
-    'Multi-Shot',
-    'Deal 80% ATK damage to all enemies',
+    'skills.multiShot.name',
+    'skills.multiShot.description',
     4,
     'damage',
     (caster: Combatant, targets: Combatant[]): CombatActionResult => {
+      const element: Element = 'physical';
       const results: Array<{ target: Combatant; damage: number; isCrit: boolean }> = [];
       targets.forEach(target => {
         if (target.isAlive) {
           const damage = Math.floor(caster.ATK * 0.8);
           const isCrit = Math.random() * 100 < caster.CRIT;
-          const finalDamage = target.takeDamage(damage, isCrit);
+          const finalDamage = target.takeDamage(damage, isCrit, element);
           results.push({
             target: target,
             damage: finalDamage,
@@ -177,21 +198,22 @@ const archerSkills: Skill[] = [
 
       return {
         attacker: caster,
-        skillName: 'Multi-Shot',
+        element: element,
+        skillName: t('skills.multiShot.name'),
         type: 'skill_aoe',
         results: results
       };
     }
   ),
   new Skill(
-    'Evasion',
-    'Increase SPD by 50% for 2 turns',
+    'skills.evasion.name',
+    'skills.evasion.description',
     3,
     'buff',
     (caster: Combatant): CombatActionResult => {
       // Apply SPD buff to caster
       caster.addStatusEffect({
-        name: 'Evasion',
+        name: t('skills.evasion.name'),
         duration: 2,
         type: 'buff',
         stat: 'SPD',
@@ -200,9 +222,9 @@ const archerSkills: Skill[] = [
 
       return {
         attacker: caster,
-        skillName: 'Evasion',
+        skillName: t('skills.evasion.name'),
         type: 'skill_buff',
-        effect: '+50% SPD for 2 turns'
+        effect: t('skills.evasion.effect')
       };
     }
   )
@@ -213,38 +235,41 @@ const archerSkills: Skill[] = [
 // ============================================================================
 const mageSkills: Skill[] = [
   new Skill(
-    'Fireball',
-    'Deal 200% ATK magic damage to single target',
+    'skills.fireball.name',
+    'skills.fireball.description',
     2,
     'damage',
     (caster: Combatant, targets: Combatant[]): CombatActionResult => {
       const target = targets[0];
       const isCrit = Math.random() * 100 < caster.CRIT;
       const damage = Math.floor(caster.ATK * 2.0);
-      const finalDamage = target.takeDamage(damage, isCrit);
+      const element: Element = 'fire';
+      const finalDamage = target.takeDamage(damage, isCrit, element);
 
       return {
         attacker: caster,
         target: target,
         damage: finalDamage,
         isCrit: isCrit,
-        skillName: 'Fireball',
+        element: element,
+        skillName: t('skills.fireball.name'),
         type: 'skill_damage'
       };
     }
   ),
   new Skill(
-    'Chain Lightning',
-    'Deal 120% ATK damage to all enemies',
+    'skills.chainLightning.name',
+    'skills.chainLightning.description',
     4,
     'damage',
     (caster: Combatant, targets: Combatant[]): CombatActionResult => {
+      const element: Element = 'lightning';
       const results: Array<{ target: Combatant; damage: number; isCrit: boolean }> = [];
       targets.forEach(target => {
         if (target.isAlive) {
           const damage = Math.floor(caster.ATK * 1.2);
           const isCrit = Math.random() * 100 < caster.CRIT;
-          const finalDamage = target.takeDamage(damage, isCrit);
+          const finalDamage = target.takeDamage(damage, isCrit, element);
           results.push({
             target: target,
             damage: finalDamage,
@@ -255,21 +280,22 @@ const mageSkills: Skill[] = [
 
       return {
         attacker: caster,
-        skillName: 'Chain Lightning',
+        element: element,
+        skillName: t('skills.chainLightning.name'),
         type: 'skill_aoe',
         results: results
       };
     }
   ),
   new Skill(
-    'Mana Shield',
-    'Reduce incoming damage by 40% for 3 turns',
+    'skills.manaShield.name',
+    'skills.manaShield.description',
     5,
     'buff',
     (caster: Combatant): CombatActionResult => {
       // Apply damage reduction buff
       caster.addStatusEffect({
-        name: 'Mana Shield',
+        name: t('skills.manaShield.name'),
         duration: 3,
         type: 'buff',
         stat: 'damageReduction',
@@ -278,9 +304,9 @@ const mageSkills: Skill[] = [
 
       return {
         attacker: caster,
-        skillName: 'Mana Shield',
+        skillName: t('skills.manaShield.name'),
         type: 'skill_buff',
-        effect: '-40% damage taken for 3 turns'
+        effect: t('skills.manaShield.effect')
       };
     }
   )
@@ -291,33 +317,33 @@ const mageSkills: Skill[] = [
 // ============================================================================
 const clericSkills: Skill[] = [
   new Skill(
-    'Heal',
-    'Restore 100 HP to single ally',
+    'skills.heal.name',
+    'skills.heal.description',
     2,
     'heal',
     (caster: Combatant, targets: Combatant[]): CombatActionResult => {
       const target = targets[0];
-      const healAmount = target.heal(100);
+      const healAmount = target.heal(target.maxHP * 0.6); // 60% of target's max HP
 
       return {
         attacker: caster,
         target: target,
         healAmount: healAmount,
-        skillName: 'Heal',
+        skillName: t('skills.heal.name'),
         type: 'skill_heal'
       };
     }
   ),
   new Skill(
-    'Group Heal',
-    'Restore 60 HP to all allies',
+    'skills.groupHeal.name',
+    'skills.groupHeal.description',
     4,
     'heal',
     (caster: Combatant, targets: Combatant[]): CombatActionResult => {
       const results: Array<{ target: Combatant; healAmount: number }> = [];
       targets.forEach(target => {
         if (target.isAlive) {
-          const healAmount = target.heal(60);
+          const healAmount = target.heal(Math.floor(target.maxHP * 0.3)); // 30% of target's max HP
           results.push({
             target: target,
             healAmount: healAmount
@@ -327,27 +353,29 @@ const clericSkills: Skill[] = [
 
       return {
         attacker: caster,
-        skillName: 'Group Heal',
+        skillName: t('skills.groupHeal.name'),
         type: 'skill_group_heal',
         results: results
       };
     }
   ),
   new Skill(
-    'Holy Smite',
-    'Deal 100% ATK holy damage',
+    'skills.holySmite.name',
+    'skills.holySmite.description',
     3,
     'damage',
     (caster: Combatant, targets: Combatant[]): CombatActionResult => {
       const target = targets[0];
       const damage = caster.ATK;
-      const finalDamage = target.takeDamage(damage, false);
+      const element: Element = 'holy';
+      const finalDamage = target.takeDamage(damage, false, element);
 
       return {
         attacker: caster,
         target: target,
         damage: finalDamage,
-        skillName: 'Holy Smite',
+        element: element,
+        skillName: t('skills.holySmite.name'),
         type: 'skill_damage'
       };
     }
@@ -359,15 +387,16 @@ const clericSkills: Skill[] = [
 // ============================================================================
 const paladinSkills: Skill[] = [
   new Skill(
-    'Smite',
-    'Deal 130% ATK damage and heal self for 30% damage dealt',
+    'skills.smite.name',
+    'skills.smite.description',
     2,
     'damage',
     (caster: Combatant, targets: Combatant[]): CombatActionResult => {
       const target = targets[0];
       const damage = Math.floor(caster.ATK * 1.3);
       const isCrit = Math.random() * 100 < caster.CRIT;
-      const finalDamage = target.takeDamage(damage, isCrit);
+      const element: Element = 'holy';
+      const finalDamage = target.takeDamage(damage, isCrit, element);
       const healAmount = caster.heal(Math.floor(finalDamage * 0.3));
 
       return {
@@ -376,20 +405,21 @@ const paladinSkills: Skill[] = [
         damage: finalDamage,
         isCrit: isCrit,
         healAmount: healAmount,
-        skillName: 'Smite',
+        element: element,
+        skillName: t('skills.smite.name'),
         type: 'skill_damage_heal'
       };
     }
   ),
   new Skill(
-    'Divine Shield',
-    'Become immune to damage for 1 turn',
+    'skills.divineShield.name',
+    'skills.divineShield.description',
     5,
     'buff',
     (caster: Combatant): CombatActionResult => {
       // Apply immunity buff
       caster.addStatusEffect({
-        name: 'Divine Shield',
+        name: t('skills.divineShield.name'),
         duration: 1,
         type: 'buff',
         immunity: true
@@ -397,15 +427,15 @@ const paladinSkills: Skill[] = [
 
       return {
         attacker: caster,
-        skillName: 'Divine Shield',
+        skillName: t('skills.divineShield.name'),
         type: 'skill_buff',
-        effect: 'Immune to damage for 1 turn'
+        effect: t('skills.divineShield.effect')
       };
     }
   ),
   new Skill(
-    'Blessing',
-    'Increase ally DEF by 40% for 3 turns',
+    'skills.blessing.name',
+    'skills.blessing.description',
     3,
     'buff',
     (caster: Combatant, targets: Combatant[]): CombatActionResult => {
@@ -413,7 +443,7 @@ const paladinSkills: Skill[] = [
 
       // Apply DEF buff to target
       target.addStatusEffect({
-        name: 'Blessing',
+        name: t('skills.blessing.name'),
         duration: 3,
         type: 'buff',
         stat: 'DEF',
@@ -423,9 +453,9 @@ const paladinSkills: Skill[] = [
       return {
         attacker: caster,
         target: target,
-        skillName: 'Blessing',
+        skillName: t('skills.blessing.name'),
         type: 'skill_buff',
-        effect: '+40% DEF for 3 turns'
+        effect: t('skills.blessing.effect')
       };
     }
   )

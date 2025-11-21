@@ -8,13 +8,14 @@
  * - Route handling (single route for main game)
  * - Combat system integration (dungeon and quick combat)
  * - Combat UI rendering (heroes, enemies, manual controls)
+ * - Turn gauge display with localization
  * - Victory/defeat modals with rewards display
  * - Authentication state management
  * - Single useGameState instance passed to WorldMap (shared state pattern)
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-16
+ * @lastModified 2025-11-20
  */
 
 import { useState, useEffect } from 'react';
@@ -28,7 +29,7 @@ import * as AuthService from './services/AuthService';
 import { sessionManager } from './services/SessionManager';
 import { CombatEngine } from './engine/combat/CombatEngine';
 import { Enemy } from './engine/combat/Enemy';
-import type { Combatant, CombatLogEntry } from './types/combat.types';
+import type { Combatant, CombatLogEntry, CombatActionResult } from './types/combat.types';
 import { t } from './localization/i18n';
 import { DUNGEON_CONFIG, COMBAT_CONFIG } from './config/BALANCE_CONFIG';
 import { LoginScreen } from './components/LoginScreen';
@@ -39,10 +40,11 @@ import { calculatePlayerScore } from './utils/scoreCalculator';
 import type { Item } from './engine/item/Item';
 import { CombatSpeedControl, type CombatSpeed } from './components/combat/CombatSpeedControl';
 import { CombatModeToggle, type CombatMode } from './components/combat/CombatModeToggle';
-import { Tooltip, EnemyTooltip } from './components/combat/Tooltip';
+// Tooltip removed - was blocking clicks on enemies
 import { DamageNumberContainer } from './components/combat/DamageNumber';
+import { CombatLog } from './components/combat/CombatLog';
 import { CombatActionTooltip } from './components/combat/CombatActionTooltip';
-import { getSpeedDelay } from './utils/combatUtils';
+import { getSpeedDelay, calculateTurnGauge } from './utils/combatUtils';
 import { createTestEnemies, type TestScenario } from './debug/testCombat';
 import './components/combat/CombatLayout.css';
 import heroPortrait from './assets/images/portrait/king_arthur1.png';
@@ -80,12 +82,12 @@ export function Router() {
   const [combatEngine] = useState(() => new CombatEngine());
   const [combatActive, setCombatActive] = useState(false);
   const [combatLog, setCombatLog] = useState<CombatLogEntry[]>([]);
-  const [combatLogCollapsed, setCombatLogCollapsed] = useState(false);
   const [currentEnemies, setCurrentEnemies] = useState<Enemy[]>([]);
   const [isManualMode, setIsManualMode] = useState(false);
   const [waitingForInput, setWaitingForInput] = useState(false);
   const [activeCharacter, setActiveCharacter] = useState<Combatant | null>(null);
   const [tooltipTarget, setTooltipTarget] = useState<Combatant | null>(null);
+  const [tooltipCardElement, setTooltipCardElement] = useState<HTMLElement | null>(null);
   const [showDungeonVictory, setShowDungeonVictory] = useState(false);
   const [dungeonUpdateKey, setDungeonUpdateKey] = useState(0);
   const [, forceUpdate] = useState({});
@@ -422,10 +424,53 @@ export function Router() {
    * @param enemies - Array of Enemy instances for this combat encounter
    */
   /**
+   * Continue manual combat after player action
+   * Executes turns until we hit another hero's turn or combat ends
+   */
+  const continueManualCombat = async () => {
+    // Use combat engine's manual mode flag instead of React state
+    if (!combatEngine.isManualMode || !combatEngine.isActive) return;
+
+    // Keep executing turns until we need player input again or combat ends
+    while (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
+      combatEngine.executeTurn();
+      setCombatLog([...combatEngine.combatLog]);
+      forceUpdate({});
+
+      // Check if combat ended after this turn
+      if (!combatEngine.isActive) {
+        console.log('🏆 Combat ended during manual mode');
+        setWaitingForInput(false);
+        setActiveCharacter(null);
+        setTooltipTarget(null);
+        return;
+      }
+
+      // Small delay for animations (only if combat is still active)
+      if (combatEngine.isActive && !combatEngine.waitingForPlayerInput) {
+        await new Promise(resolve => setTimeout(resolve, 300));
+      }
+    }
+
+    // If we stopped because we need player input, set it up
+    if (combatEngine.waitingForPlayerInput && combatEngine.isManualMode) {
+      setWaitingForInput(true);
+      setActiveCharacter(combatEngine.currentCharacter);
+      console.log('🎯 Waiting for next input:', combatEngine.currentCharacter?.name);
+    } else {
+      // Combat ended
+      setWaitingForInput(false);
+      setActiveCharacter(null);
+      setTooltipTarget(null);
+    }
+  };
+
+  /**
    * Run auto combat for quick encounters
    */
   const runQuickAutoCombat = async () => {
-    while (combatEngine.isActive && !combatEngine.waitingForPlayerInput && !isManualMode) {
+    // Use combat engine's manual mode flag instead of React state (which updates asynchronously)
+    while (combatEngine.isActive && !combatEngine.waitingForPlayerInput && !combatEngine.isManualMode) {
       combatEngine.executeTurn();
       setCombatLog([...combatEngine.combatLog]);
       forceUpdate({});
@@ -436,7 +481,7 @@ export function Router() {
     }
 
     // If we stopped because of manual mode switch, set up for player input
-    if (combatEngine.isActive && isManualMode) {
+    if (combatEngine.isActive && combatEngine.isManualMode) {
       setWaitingForInput(true);
       setActiveCharacter(combatEngine.currentCharacter);
     }
@@ -847,19 +892,20 @@ export function Router() {
    */
   const runDungeonAutoCombat = async () => {
     // Run auto combat loop with UI updates
-    while (combatEngine.isActive && !combatEngine.waitingForPlayerInput && !isManualMode) {
+    // Use combat engine's manual mode flag instead of React state (which updates asynchronously)
+    while (combatEngine.isActive && !combatEngine.waitingForPlayerInput && !combatEngine.isManualMode) {
       combatEngine.executeTurn();
       setCombatLog([...combatEngine.combatLog]);
       forceUpdate({});
 
       // Wait between turns for visibility
-      if (combatEngine.isActive && !combatEngine.waitingForPlayerInput && !isManualMode) {
+      if (combatEngine.isActive && !combatEngine.waitingForPlayerInput && !combatEngine.isManualMode) {
         await new Promise(resolve => setTimeout(resolve, COMBAT_CONFIG.AUTO_COMBAT_DELAY));
       }
     }
 
     // If we stopped because of manual mode switch, set up for player input
-    if (combatEngine.isActive && isManualMode) {
+    if (combatEngine.isActive && combatEngine.isManualMode) {
       setWaitingForInput(true);
       setActiveCharacter(combatEngine.currentCharacter);
     }
@@ -1201,14 +1247,19 @@ export function Router() {
                   const heroDamages = damageNumbers.filter(d => d.characterId === hero.id);
 
                   // Check if this hero is clickable in manual mode
-                  const isClickable = waitingForInput && isManualMode && hero.isAlive && activeCharacter;
+                  const isClickable = waitingForInput && combatEngine.isManualMode && hero.isAlive && activeCharacter;
 
                   return (
                   <div
                     key={hero.id}
                     className={`character-card hero ${!hero.isAlive ? 'dead' : ''} ${isActive ? 'active' : ''} ${animation} ${isClickable ? 'clickable' : ''}`}
                     style={{ position: 'relative' }}
-                    onClick={() => isClickable && setTooltipTarget(hero)}
+                    onClick={(e) => {
+                      if (isClickable) {
+                        setTooltipTarget(hero);
+                        setTooltipCardElement(e.currentTarget as HTMLElement);
+                      }
+                    }}
                   >
                     {/* Skill Indicator */}
                     {activeSkill && (
@@ -1232,7 +1283,10 @@ export function Router() {
                     {/* Character Info */}
                     <div className="character-info">
                       <div className="character-card-header">
-                        <span className="character-name">{hero.name}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+                          <span className="character-name">{hero.name}</span>
+                          <span className={`character-rarity ${hero.rarity}`}>{hero.rarity}</span>
+                        </div>
                         <span className="character-level">Lv.{hero.level}</span>
                       </div>
                       <div className="character-hp-bar">
@@ -1241,11 +1295,50 @@ export function Router() {
                           {hero.currentHP}/{hero.maxHP}
                         </span>
                       </div>
+                      {/* Turn Gauge Bar */}
+                      {(() => {
+                        const gauge = calculateTurnGauge(hero, combatEngine.turnOrder);
+                        const displayText = gauge.textKey === 'combat.turn.position'
+                          ? t('combat.turn.position', { position: gauge.position + 1 })
+                          : t(gauge.textKey);
+
+                        return (
+                          <div className="character-turn-gauge">
+                            <div className="character-turn-fill" style={{ width: `${gauge.percentage}%` }} />
+                            <span className="character-turn-text">
+                              {displayText}
+                            </span>
+                          </div>
+                        );
+                      })()}
                       <div className="character-stats">
                         <span>⚔️ {hero.ATK}</span>
                         <span>🛡️ {hero.DEF}</span>
                         <span>⚡ {hero.SPD}</span>
                       </div>
+                      {/* Status Effects */}
+                      {hero.statusEffects && hero.statusEffects.length > 0 && (
+                        <div className="character-status-effects">
+                          {hero.statusEffects.map((effect, idx) => {
+                            const icon = effect.stun ? '💫' : effect.immunity ? '🛡️' :
+                              effect.stat === 'ATK' ? '⚔️' : effect.stat === 'DEF' ? '🛡️' :
+                              effect.stat === 'SPD' ? '⚡' : effect.stat === 'CRIT' ? '🎯' :
+                              effect.stat === 'damageReduction' ? '🔰' : effect.type === 'buff' ? '↑' : '↓';
+                            const effectClass = effect.stun ? 'stun' : effect.immunity ? 'immunity' : effect.type;
+                            return (
+                              <span
+                                key={idx}
+                                className={`status-effect ${effectClass}`}
+                                title={`${effect.name} (${effect.duration} ${effect.duration === 1 ? 'turn' : 'turns'})`}
+                              >
+                                <span className="status-effect-icon">{icon}</span>
+                                {effect.value ? `${effect.value > 0 ? '+' : ''}${effect.value}%` : effect.name.substring(0, 3)}
+                                <span className="duration">{effect.duration}</span>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     {/* Tooltip */}
@@ -1279,47 +1372,28 @@ export function Router() {
                               targets = [tooltipTarget as Combatant];
                             }
 
-                            hero.useSkill(skillIndex, targets);
-                            setCombatLog([...combatEngine.combatLog]);
+                            const actionResult = hero.useSkill(skillIndex, targets);
                             setTooltipTarget(null);
 
-                            // Remove character from turn order and clear waiting state
-                            combatEngine.turnOrder.shift();
-                            combatEngine.waitingForPlayerInput = false;
-                            combatEngine.currentCharacter = null;
+                            if (actionResult) {
+                              // Use executeManualAction to properly handle the action
+                              // This will check victory conditions and continue combat flow
+                              combatEngine.executeManualAction(actionResult);
+                              setCombatLog([...combatEngine.combatLog]);
 
-                            // Execute next turn after delay
-                            setTimeout(() => {
-                              if (combatEngine.isActive) {
-                                combatEngine.executeTurn();
-                                setCombatLog([...combatEngine.combatLog]);
-                                forceUpdate({});
-
-                                // Always check if we need player input again
-                                if (combatEngine.waitingForPlayerInput && isManualMode) {
-                                  setWaitingForInput(true);
-                                  setActiveCharacter(combatEngine.currentCharacter);
-                                  console.log('🎯 Waiting for next input:', combatEngine.currentCharacter?.name);
-                                } else if (!isManualMode) {
-                                  // Continue auto combat if switched to auto
-                                  setWaitingForInput(false);
-                                  setActiveCharacter(null);
-                                  if (inDungeon) {
-                                    runDungeonAutoCombat();
-                                  } else {
-                                    runQuickAutoCombat();
-                                  }
-                                } else {
-                                  // Manual mode but not waiting (combat might be over)
-                                  setWaitingForInput(false);
-                                  setActiveCharacter(null);
-                                }
-                              }
-                            }, 500);
+                              // Continue combat - will execute AI turns until next hero or combat ends
+                              setTimeout(() => {
+                                continueManualCombat();
+                              }, 500);
+                            }
                           }
                         }}
-                        onClose={() => setTooltipTarget(null)}
+                        onClose={() => {
+                          setTooltipTarget(null);
+                          setTooltipCardElement(null);
+                        }}
                         position="right"
+                        cardElement={tooltipCardElement}
                       />
                     )}
                   </div>
@@ -1341,42 +1415,19 @@ export function Router() {
                   const enemyDamages = damageNumbers.filter(d => d.characterId === enemy.id);
 
                   // Check if this enemy is clickable in manual mode
-                  const isClickable = waitingForInput && isManualMode && enemy.isAlive && activeCharacter;
-
-                  // Debug clickability
-                  if (enemy.isAlive && isManualMode) {
-                    console.log(`Enemy ${enemy.name} clickable:`, {
-                      isClickable,
-                      waitingForInput,
-                      isManualMode,
-                      hasActiveChar: !!activeCharacter,
-                      activeCharName: activeCharacter?.name
-                    });
-                  }
+                  const isClickable = waitingForInput && combatEngine.isManualMode && enemy.isAlive && activeCharacter;
 
                   return (
-                  <Tooltip
-                    key={enemy.id}
-                    content={
-                      <EnemyTooltip
-                        enemy={{
-                          name: enemy.name,
-                          level: enemy.level,
-                          type: enemy.type,
-                          ATK: enemy.ATK,
-                          DEF: enemy.DEF,
-                          SPD: enemy.SPD,
-                          currentHP: enemy.currentHP,
-                          maxHP: enemy.maxHP
-                        }}
-                      />
-                    }
-                    position="left"
-                  >
                   <div
+                    key={enemy.id}
                     className={`character-card enemy ${!enemy.isAlive ? 'dead' : ''} ${isActive ? 'active' : ''} ${enemy.type === 'elite' ? 'elite' : ''} ${enemy.type === 'boss' ? 'boss' : ''} ${animation} ${isClickable ? 'clickable' : ''}`}
                     style={{ position: 'relative' }}
-                    onClick={() => isClickable && setTooltipTarget(enemy)}
+                    onClick={(e) => {
+                      if (isClickable) {
+                        setTooltipTarget(enemy);
+                        setTooltipCardElement(e.currentTarget as HTMLElement);
+                      }
+                    }}
                   >
                     {/* Skill Indicator */}
                     {activeSkill && (
@@ -1404,7 +1455,12 @@ export function Router() {
                     {/* Character Info */}
                     <div className="character-info">
                       <div className="character-card-header">
-                        <span className="character-name">{enemy.name}</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', overflow: 'hidden' }}>
+                          <span className="character-name">{enemy.name}</span>
+                          <span className={`character-rarity ${enemy.type === 'normal' ? 'common' : enemy.type === 'elite' ? 'rare' : 'legendary'}`}>
+                            {enemy.type}
+                          </span>
+                        </div>
                         <span className="character-level">Lv.{enemy.level}</span>
                       </div>
                       <div className="character-hp-bar">
@@ -1413,11 +1469,50 @@ export function Router() {
                           {enemy.currentHP}/{enemy.maxHP}
                         </span>
                       </div>
+                      {/* Turn Gauge Bar */}
+                      {(() => {
+                        const gauge = calculateTurnGauge(enemy, combatEngine.turnOrder);
+                        const displayText = gauge.textKey === 'combat.turn.position'
+                          ? t('combat.turn.position', { position: gauge.position + 1 })
+                          : t(gauge.textKey);
+
+                        return (
+                          <div className="character-turn-gauge">
+                            <div className="character-turn-fill" style={{ width: `${gauge.percentage}%` }} />
+                            <span className="character-turn-text">
+                              {displayText}
+                            </span>
+                          </div>
+                        );
+                      })()}
                       <div className="character-stats">
                         <span>⚔️ {enemy.ATK}</span>
                         <span>🛡️ {enemy.DEF}</span>
                         <span>⚡ {enemy.SPD}</span>
                       </div>
+                      {/* Status Effects */}
+                      {enemy.statusEffects && enemy.statusEffects.length > 0 && (
+                        <div className="character-status-effects">
+                          {enemy.statusEffects.map((effect, idx) => {
+                            const icon = effect.stun ? '💫' : effect.immunity ? '🛡️' :
+                              effect.stat === 'ATK' ? '⚔️' : effect.stat === 'DEF' ? '🛡️' :
+                              effect.stat === 'SPD' ? '⚡' : effect.stat === 'CRIT' ? '🎯' :
+                              effect.stat === 'damageReduction' ? '🔰' : effect.type === 'buff' ? '↑' : '↓';
+                            const effectClass = effect.stun ? 'stun' : effect.immunity ? 'immunity' : effect.type;
+                            return (
+                              <span
+                                key={idx}
+                                className={`status-effect ${effectClass}`}
+                                title={`${effect.name} (${effect.duration} ${effect.duration === 1 ? 'turn' : 'turns'})`}
+                              >
+                                <span className="status-effect-icon">{icon}</span>
+                                {effect.value ? `${effect.value > 0 ? '+' : ''}${effect.value}%` : effect.name.substring(0, 3)}
+                                <span className="duration">{effect.duration}</span>
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     {/* Tooltip */}
@@ -1427,43 +1522,28 @@ export function Router() {
                         target={enemy}
                         onAttack={() => {
                           if (activeCharacter) {
-                            activeCharacter.attack(enemy);
-                            setCombatLog([...combatEngine.combatLog]);
+                            const attackResult = activeCharacter.attack(enemy);
                             setTooltipTarget(null);
 
-                            // Remove character from turn order and clear waiting state
-                            combatEngine.turnOrder.shift();
-                            combatEngine.waitingForPlayerInput = false;
-                            combatEngine.currentCharacter = null;
+                            if (attackResult) {
+                              // Convert AttackResult to CombatActionResult
+                              const actionResult: CombatActionResult = {
+                                ...attackResult,
+                                type: 'basic_attack',
+                                attacker: activeCharacter,
+                                target: enemy
+                              };
 
-                            // Execute next turn after delay
-                            setTimeout(() => {
-                              if (combatEngine.isActive) {
-                                combatEngine.executeTurn();
-                                setCombatLog([...combatEngine.combatLog]);
-                                forceUpdate({});
+                              // Use executeManualAction to properly handle the action
+                              // This will check victory conditions and continue combat flow
+                              combatEngine.executeManualAction(actionResult);
+                              setCombatLog([...combatEngine.combatLog]);
 
-                                // Always check if we need player input again
-                                if (combatEngine.waitingForPlayerInput && isManualMode) {
-                                  setWaitingForInput(true);
-                                  setActiveCharacter(combatEngine.currentCharacter);
-                                  console.log('🎯 Waiting for next input:', combatEngine.currentCharacter?.name);
-                                } else if (!isManualMode) {
-                                  // Continue auto combat if switched to auto
-                                  setWaitingForInput(false);
-                                  setActiveCharacter(null);
-                                  if (inDungeon) {
-                                    runDungeonAutoCombat();
-                                  } else {
-                                    runQuickAutoCombat();
-                                  }
-                                } else {
-                                  // Manual mode but not waiting (combat might be over)
-                                  setWaitingForInput(false);
-                                  setActiveCharacter(null);
-                                }
-                              }
-                            }, 500);
+                              // Continue combat - will execute AI turns until next hero or combat ends
+                              setTimeout(() => {
+                                continueManualCombat();
+                              }, 500);
+                            }
                           }
                         }}
                         onSkillUse={(skillIndex) => {
@@ -1475,9 +1555,18 @@ export function Router() {
 
                             // Check if it's an AoE damage skill
                             if (skill.type === 'damage' || skill.type === 'debuff') {
-                              if (skill.name.includes('AoE') || skill.name.includes('All') || skill.name.includes('Area')) {
+                              // Check for AoE keywords in skill name
+                              const isAoE = skill.name.includes('AoE') ||
+                                           skill.name.includes('All') ||
+                                           skill.name.includes('Area') ||
+                                           skill.name.includes('Multi') ||
+                                           skill.name.includes('Splash') ||
+                                           skill.name.includes('Chain');
+
+                              if (isAoE) {
                                 // AoE skill - target all alive enemies
                                 targets = currentEnemies.filter(e => e.isAlive);
+                                console.log(`🎯 AoE skill ${skill.name} targeting ${targets.length} enemies`);
                               } else {
                                 // Single target skill - use clicked enemy
                                 targets = [enemy];
@@ -1487,51 +1576,31 @@ export function Router() {
                               targets = [enemy];
                             }
 
-                            hero.useSkill(skillIndex, targets);
-                            setCombatLog([...combatEngine.combatLog]);
+                            const actionResult = hero.useSkill(skillIndex, targets);
                             setTooltipTarget(null);
 
-                            // Remove character from turn order and clear waiting state
-                            combatEngine.turnOrder.shift();
-                            combatEngine.waitingForPlayerInput = false;
-                            combatEngine.currentCharacter = null;
+                            if (actionResult) {
+                              // Use executeManualAction to properly handle the action
+                              // This will check victory conditions and continue combat flow
+                              combatEngine.executeManualAction(actionResult);
+                              setCombatLog([...combatEngine.combatLog]);
 
-                            // Execute next turn after delay
-                            setTimeout(() => {
-                              if (combatEngine.isActive) {
-                                combatEngine.executeTurn();
-                                setCombatLog([...combatEngine.combatLog]);
-                                forceUpdate({});
-
-                                // Always check if we need player input again
-                                if (combatEngine.waitingForPlayerInput && isManualMode) {
-                                  setWaitingForInput(true);
-                                  setActiveCharacter(combatEngine.currentCharacter);
-                                  console.log('🎯 Waiting for next input:', combatEngine.currentCharacter?.name);
-                                } else if (!isManualMode) {
-                                  // Continue auto combat if switched to auto
-                                  setWaitingForInput(false);
-                                  setActiveCharacter(null);
-                                  if (inDungeon) {
-                                    runDungeonAutoCombat();
-                                  } else {
-                                    runQuickAutoCombat();
-                                  }
-                                } else {
-                                  // Manual mode but not waiting (combat might be over)
-                                  setWaitingForInput(false);
-                                  setActiveCharacter(null);
-                                }
-                              }
-                            }, 500);
+                              // Continue combat - will execute AI turns until next hero or combat ends
+                              setTimeout(() => {
+                                continueManualCombat();
+                              }, 500);
+                            }
                           }
                         }}
-                        onClose={() => setTooltipTarget(null)}
+                        onClose={() => {
+                          setTooltipTarget(null);
+                          setTooltipCardElement(null);
+                        }}
                         position="left"
+                        cardElement={tooltipCardElement}
                       />
                     )}
                   </div>
-                  </Tooltip>
                   );
                 })}
               </div>
@@ -1542,13 +1611,13 @@ export function Router() {
               {/* Combat Status Text */}
               {waitingForInput && activeCharacter && (
                 <div className="combat-status-text">
-                  🎯 {activeCharacter.name} - Select Target
+                  🎯 {t('combat.selectTargetFor', { name: activeCharacter.name })}
                 </div>
               )}
 
               {/* Mini Initiative Order */}
               <div className="combat-mini-initiative">
-                <div className="mini-initiative-label">Turn Order:</div>
+                <div className="mini-initiative-label">{t('combat.turnOrder')}:</div>
                 <div className="mini-initiative-order">
                   {combatEngine.turnOrder.slice(0, 6).map((combatant, index) => {
                     const isActive = combatant.id === activeCharacter?.id;
@@ -1573,7 +1642,7 @@ export function Router() {
 
               {/* Combat Controls */}
               <div className="combat-bottom-controls">
-                <div className="combat-round-display">Round {combatEngine.turnCounter}</div>
+                <div className="combat-round-display">{t('combat.round', { number: combatEngine.turnCounter })}</div>
                 <CombatSpeedControl
                   currentSpeed={combatSpeed}
                   onSpeedChange={(speed: CombatSpeed) => {
@@ -1589,6 +1658,13 @@ export function Router() {
 
                     if (manual) {
                       // Switching to manual mode
+                      // If turn order is empty, we need to start a new turn
+                      if (combatEngine.turnOrder.length === 0 && combatEngine.isActive) {
+                        combatEngine.executeTurn();
+                        setCombatLog([...combatEngine.combatLog]);
+                        forceUpdate({});
+                      }
+
                       let currentChar = combatEngine.currentCharacter;
                       if (!currentChar && combatEngine.turnOrder.length > 0) {
                         currentChar = combatEngine.turnOrder[0];
@@ -1604,16 +1680,22 @@ export function Router() {
                       setWaitingForInput(false);
                       setActiveCharacter(null);
                       setTooltipTarget(null);
-                      console.log('🤖 Switching to auto mode');
 
-                      // Continue auto combat
-                      setTimeout(() => {
+                      // Reset combat engine's waiting state
+                      combatEngine.waitingForPlayerInput = false;
+                      combatEngine.currentCharacter = null;
+
+                      console.log('🤖 Switching to auto mode, turnOrder length:', combatEngine.turnOrder.length);
+
+                      // Continue auto combat immediately
+                      // Don't use setTimeout - run immediately so the combat continues
+                      if (combatEngine.isActive) {
                         if (inDungeon) {
                           runDungeonAutoCombat();
                         } else {
                           runQuickAutoCombat();
                         }
-                      }, 100);
+                      }
                     }
                   }}
                 />
@@ -1621,23 +1703,12 @@ export function Router() {
             </div>
 
             {/* Combat Log */}
-            <div className={`combat-log-container ${combatLogCollapsed ? 'collapsed' : ''}`}>
-              <div className="combat-log-header" onClick={() => setCombatLogCollapsed(!combatLogCollapsed)}>
-                <h4 className="combat-log-title">{t('router.combatLog')}</h4>
-                <button className="combat-log-toggle">
-                  {combatLogCollapsed ? '▼' : '▲'}
-                </button>
-              </div>
-              {!combatLogCollapsed && (
-                <div className="combat-log-entries">
-                  {combatLog.slice(-20).map((entry, index) => (
-                    <div key={index} className={`combat-log-entry ${entry.type}`}>
-                      {entry.message}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <CombatLog
+              entries={combatLog}
+              maxHeight={250}
+              showFilters={true}
+              highlightNames={gameState.activeParty?.map(h => h.name) || []}
+            />
           </div>
         )}
 

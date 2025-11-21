@@ -818,7 +818,23 @@ h4 {
 
 .combat-log-entry {
     margin-bottom: 5px;
-    padding: 3px 0;
+    padding: 5px 8px;
+    border-radius: 4px;
+    animation: logEntryAppear 0.3s ease-out;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+@keyframes logEntryAppear {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 .combat-log-entry.turn {
@@ -827,23 +843,77 @@ h4 {
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px solid #495057;
+    background: rgba(255, 193, 7, 0.1);
+}
+
+.combat-log-entry.turn::before {
+    content: '⏱️';
 }
 
 .combat-log-entry.attack {
     color: #ff6b6b;
+    background: rgba(255, 107, 107, 0.1);
+}
+
+.combat-log-entry.attack::before {
+    content: '⚔️';
 }
 
 .combat-log-entry.skill {
     color: #a29bfe;
+    background: rgba(162, 155, 254, 0.1);
+}
+
+.combat-log-entry.skill::before {
+    content: '✨';
 }
 
 .combat-log-entry.heal {
     color: #55efc4;
+    background: rgba(85, 239, 196, 0.1);
+}
+
+.combat-log-entry.heal::before {
+    content: '💚';
 }
 
 .combat-log-entry.death {
     color: #d63031;
     font-weight: bold;
+    background: rgba(214, 48, 49, 0.15);
+}
+
+.combat-log-entry.death::before {
+    content: '💀';
+}
+
+.combat-log-entry.debuff {
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.combat-log-entry.debuff::before {
+    content: '⬇️';
+}
+
+.combat-log-entry.level_up {
+    color: #fde047;
+    font-weight: bold;
+    background: rgba(253, 224, 71, 0.15);
+    animation: logEntryAppear 0.3s ease-out, levelUpGlow 1s ease-in-out;
+}
+
+.combat-log-entry.level_up::before {
+    content: '🎉';
+}
+
+@keyframes levelUpGlow {
+    0%, 100% {
+        box-shadow: none;
+    }
+    50% {
+        box-shadow: 0 0 10px rgba(253, 224, 71, 0.5);
+    }
 }
 
 .combat-log-entry.victory {
@@ -852,6 +922,12 @@ h4 {
     font-size: 1.1em;
     text-align: center;
     margin: 10px 0;
+    background: rgba(0, 184, 148, 0.15);
+    justify-content: center;
+}
+
+.combat-log-entry.victory::before {
+    content: '🏆';
 }
 
 .combat-log-entry.defeat {
@@ -860,10 +936,21 @@ h4 {
     font-size: 1.1em;
     text-align: center;
     margin: 10px 0;
+    background: rgba(214, 48, 49, 0.15);
+    justify-content: center;
+}
+
+.combat-log-entry.defeat::before {
+    content: '💔';
 }
 
 .combat-log-entry.info {
     color: #74b9ff;
+    background: rgba(116, 185, 255, 0.1);
+}
+
+.combat-log-entry.info::before {
+    content: 'ℹ️';
 }
 
 /* Combat Stats */

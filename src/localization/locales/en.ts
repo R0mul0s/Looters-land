@@ -6,7 +6,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-12
+ * @lastModified 2025-11-20
  */
 
 export const en = {
@@ -101,6 +101,14 @@ export const en = {
 
     // Turn info
     turnCounter: 'Turn',
+    turn: {
+      now: 'NOW',
+      position: '#{position}',
+      wait: 'Wait',
+    },
+    round: 'Round {number}',
+    selectTargetFor: '{name} - Select Target',
+    turnOrder: 'Turn Order',
 
     // Combat log
     combatInitialized: 'Combat initialized!',
@@ -109,12 +117,19 @@ export const en = {
 
     // Actions
     attacks: '{attacker} attacks {target} for {damage} damage',
+    miss: '{attacker} attacks {target} but misses!',
     critical: 'CRIT!',
     defeated: '{name} has been defeated!',
+    stunned: 'Stunned!',
 
     // Skills
     usesSkill: '{attacker} uses {skill} on {target}',
+    usesSkillDamage: '{attacker} uses {skill} on {target} for {damage} damage',
+    usesSkillDamageHeal: '{attacker} uses {skill} on {target} for {damage} damage and heals for {heal} HP',
+    usesSkillHeal: '{attacker} uses {skill} on {target}, healing for {heal} HP',
+    usesSkillBuff: '{attacker} uses {skill}: {effect}',
     usesSkillAoE: '{attacker} uses {skill} on all targets!',
+    usesSkillGroupHeal: '{attacker} uses {skill} on all allies!',
     takeDamage: '{target} takes {damage} damage',
     healsFor: '{target} heals for {amount} HP',
 
@@ -123,10 +138,30 @@ export const en = {
     nextTurn: 'Next Turn',
     attack: 'Attack',
     useSkill: 'Use Skill',
+    estDamage: 'Est. Damage',
+    cooldown: 'CD',
 
     // Status
     waitingForInput: 'Waiting for your action...',
     selectTarget: 'Select a target',
+
+    // Combat Log Component
+    log: {
+      title: 'Combat Log',
+      autoScroll: 'Auto-scroll',
+      export: 'Export',
+      total: 'Total',
+      turns: 'Turns',
+      empty: 'Combat log is empty. Start combat to see actions here.',
+      noEntries: 'No {filter} entries to display.',
+      filter: {
+        all: 'All',
+        attack: 'Attack',
+        skill: 'Skill',
+        heal: 'Heal',
+        death: 'Death',
+      },
+    },
   },
 
   // ============================================================================
@@ -145,6 +180,7 @@ export const en = {
     battleCry: {
       name: 'Battle Cry',
       description: 'Increase team ATK by 30% for 3 turns',
+      effect: '+30% ATK for 3 turns',
     },
 
     // Archer
@@ -159,6 +195,7 @@ export const en = {
     evasion: {
       name: 'Evasion',
       description: 'Increase SPD by 50% for 2 turns',
+      effect: '+50% SPD for 2 turns',
     },
 
     // Mage
@@ -173,6 +210,7 @@ export const en = {
     manaShield: {
       name: 'Mana Shield',
       description: 'Reduce incoming damage by 40% for 3 turns',
+      effect: '-40% damage for 3 turns',
     },
 
     // Cleric
@@ -197,10 +235,12 @@ export const en = {
     divineShield: {
       name: 'Divine Shield',
       description: 'Become immune to damage for 1 turn',
+      effect: 'Immune for 1 turn',
     },
     blessing: {
       name: 'Blessing',
       description: 'Increase ally DEF by 40% for 3 turns',
+      effect: '+40% DEF for 3 turns',
     },
   },
 

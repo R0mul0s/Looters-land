@@ -1,7 +1,27 @@
 /**
- * Combat Layout Responsive Styles
+ * Combat Layout Styles
  *
- * Responsive adjustments for combat screen to work well on mobile devices
+ * Complete styling for the combat screen including character cards,
+ * HP bars, turn gauge bars, status effects, and combat animations.
+ *
+ * Contains:
+ * - Combat screen container and layout
+ * - Character cards (heroes and enemies)
+ * - HP bars with color coding (high/medium/low)
+ * - Turn gauge bars showing initiative order
+ * - Character names, levels, and rarity badges
+ * - Status effect indicators (buffs/debuffs)
+ * - Combat log styling
+ * - Manual control panel
+ * - Skill buttons and cooldown indicators
+ * - Combat animations (attack, damage, skill usage)
+ * - Mini initiative order display
+ * - Combat speed controls
+ * - Responsive mobile adjustments
+ *
+ * @author Roman Hlaváček - rhsoft.cz
+ * @copyright 2025
+ * @lastModified 2025-11-20
  */
 
 /* Combat Screen Container */
@@ -291,6 +311,7 @@
   display: flex;
   gap: 12px;
   align-items: center;
+  overflow: visible;
 }
 
 .character-card::before {
@@ -409,19 +430,123 @@
 
 .character-name {
   font-weight: bold;
-  font-size: 0.95em;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  font-size: 1.05em;
+  color: #ffffff;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 1), 0 0 10px rgba(255, 255, 255, 0.3);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .character-level {
-  font-size: 0.8em;
-  padding: 3px 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 0.85em;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 165, 0, 0.2));
+  border-radius: 12px;
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  color: #FFD700;
+  font-weight: bold;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 2px 6px rgba(255, 215, 0, 0.3);
+}
+
+/* Hero level badge - blue theme */
+.character-card.hero .character-level {
+  background: linear-gradient(135deg, rgba(74, 158, 255, 0.3), rgba(59, 130, 246, 0.3));
+  border-color: rgba(74, 158, 255, 0.6);
+  color: #4a9eff;
+  box-shadow: 0 2px 6px rgba(74, 158, 255, 0.4);
+}
+
+/* Enemy level badges - different colors by type */
+.character-card.enemy .character-level {
+  background: linear-gradient(135deg, rgba(156, 163, 175, 0.3), rgba(107, 114, 128, 0.3));
+  border-color: rgba(156, 163, 175, 0.5);
+  color: #d1d5db;
+  box-shadow: 0 2px 6px rgba(156, 163, 175, 0.3);
+}
+
+.character-card.enemy.elite .character-level {
+  background: linear-gradient(135deg, rgba(255, 170, 0, 0.3), rgba(255, 140, 0, 0.3));
+  border-color: rgba(255, 170, 0, 0.6);
+  color: #ffaa00;
+  box-shadow: 0 2px 6px rgba(255, 170, 0, 0.4);
+}
+
+.character-card.enemy.boss .character-level {
+  background: linear-gradient(135deg, rgba(255, 68, 68, 0.3), rgba(220, 38, 38, 0.3));
+  border-color: rgba(255, 68, 68, 0.6);
+  color: #ff4444;
+  box-shadow: 0 2px 6px rgba(255, 68, 68, 0.5);
+}
+
+/* Rarity Badge */
+.character-rarity {
+  font-size: 0.7em;
+  padding: 2px 6px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-left: 6px;
+  border: 1px solid;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.character-rarity.common {
+  background: linear-gradient(135deg, rgba(156, 163, 175, 0.3), rgba(107, 114, 128, 0.3));
+  border-color: rgba(156, 163, 175, 0.5);
+  color: #9ca3af;
+}
+
+.character-rarity.uncommon {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(22, 163, 74, 0.3));
+  border-color: rgba(34, 197, 94, 0.6);
+  color: #22c55e;
+}
+
+.character-rarity.rare {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3));
+  border-color: rgba(59, 130, 246, 0.6);
+  color: #3b82f6;
+}
+
+.character-rarity.epic {
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.3), rgba(147, 51, 234, 0.3));
+  border-color: rgba(168, 85, 247, 0.6);
+  color: #a855f7;
+}
+
+.character-rarity.legendary {
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    rgba(251, 146, 60, 0.5) 0%,
+    rgba(255, 193, 7, 0.5) 25%,
+    rgba(255, 215, 0, 0.6) 50%,
+    rgba(255, 193, 7, 0.5) 75%,
+    rgba(251, 146, 60, 0.5) 100%
+  );
+  background-size: 400% 400%;
+  border: 2px solid rgba(251, 146, 60, 0.8);
+  color: #fb923c;
+  animation: rarityGlow 4s ease-in-out infinite;
+  overflow: hidden;
+}
+
+@keyframes rarityGlow {
+  0% {
+    background-position: 0% 50%;
+    border-color: rgba(251, 146, 60, 0.8);
+  }
+  50% {
+    background-position: 100% 50%;
+    border-color: rgba(255, 215, 0, 0.95);
+  }
+  100% {
+    background-position: 0% 50%;
+    border-color: rgba(251, 146, 60, 0.8);
+  }
 }
 
 .character-hp-bar {
@@ -468,6 +593,57 @@
   z-index: 2;
 }
 
+/* Turn Gauge Bar - Shows when character will act next */
+.character-turn-gauge {
+  width: 100%;
+  height: 12px;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  margin-top: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+.character-turn-fill {
+  height: 100%;
+  transition: width 0.4s ease;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 50%, #a855f7 100%);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+}
+
+/* Turn gauge for active character (their turn now) */
+.character-card.active .character-turn-fill {
+  background: linear-gradient(90deg, #ffd700 0%, #ffaa00 50%, #ff8800 100%);
+  box-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+  animation: turnGaugePulse 1.5s ease-in-out infinite;
+}
+
+@keyframes turnGaugePulse {
+  0%, 100% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.character-turn-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.65em;
+  font-weight: 600;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 1);
+  z-index: 2;
+  color: #ffffff;
+  white-space: nowrap;
+}
+
 .character-stats {
   display: flex;
   gap: 8px;
@@ -481,6 +657,110 @@
   background: rgba(255, 255, 255, 0.05);
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Status Effects Indicators */
+.character-status-effects {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  font-size: 0.75em;
+}
+
+.status-effect {
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: help;
+  transition: all 0.2s;
+}
+
+.status-effect.buff {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.3) 0%, rgba(22, 163, 74, 0.3) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.6);
+  color: #86efac;
+}
+
+.status-effect.buff:hover {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.5) 0%, rgba(22, 163, 74, 0.5) 100%);
+  border-color: #86efac;
+}
+
+.status-effect.debuff {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3) 0%, rgba(220, 38, 38, 0.3) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.6);
+  color: #fca5a5;
+}
+
+.status-effect.debuff:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.5) 0%, rgba(220, 38, 38, 0.5) 100%);
+  border-color: #fca5a5;
+}
+
+/* Status effect icons */
+.status-effect-icon {
+  margin-right: 2px;
+  font-size: 0.9em;
+}
+
+/* Specific status effect styles */
+.status-effect.stun {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.4) 0%, rgba(217, 119, 6, 0.4) 100%);
+  border: 1px solid rgba(251, 191, 36, 0.7);
+  color: #fde047;
+  animation: stunPulse 0.5s ease-in-out infinite alternate;
+}
+
+.status-effect.immunity {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.4) 0%, rgba(37, 99, 235, 0.4) 100%);
+  border: 1px solid rgba(59, 130, 246, 0.7);
+  color: #93c5fd;
+  animation: immunityGlow 1s ease-in-out infinite alternate;
+}
+
+/* Status effect appear animation */
+.status-effect {
+  animation: statusAppear 0.3s ease-out;
+}
+
+@keyframes statusAppear {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes stunPulse {
+  from {
+    box-shadow: 0 0 5px rgba(251, 191, 36, 0.5);
+  }
+  to {
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.8);
+  }
+}
+
+@keyframes immunityGlow {
+  from {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+  }
+  to {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.9);
+  }
+}
+
+/* Duration indicator */
+.status-effect .duration {
+  font-size: 0.8em;
+  opacity: 0.8;
+  margin-left: 2px;
 }
 
 /* Clickable target indicator in manual mode */
@@ -603,6 +883,8 @@
 
 /* Combat Log */
 .combat-log-container {
+  display: flex;
+  flex-direction: column;
   background: linear-gradient(135deg, rgba(13, 13, 26, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%);
   border: 2px solid rgba(255, 255, 255, 0.15);
   border-radius: 12px;
@@ -611,6 +893,8 @@
   font-size: 0.9em;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
   transition: all 0.3s ease;
+  min-height: 280px;
+  max-height: 320px;
 }
 
 .combat-log-container.collapsed {
@@ -656,6 +940,8 @@
 }
 
 .combat-log-entries {
+  flex: 1;
+  min-height: 200px;
   max-height: 250px;
   overflow-y: auto;
   padding: 12px 16px;
@@ -1132,6 +1418,7 @@
   background: rgba(0, 0, 0, 0.3);
   border: 2px solid rgba(255, 255, 255, 0.15);
   border-radius: 8px;
+  flex-wrap: wrap;
 }
 
 .combat-round-display {
@@ -1189,6 +1476,15 @@
 
   .character-hp-bar {
     height: 16px;
+  }
+
+  .character-turn-gauge {
+    height: 10px;
+    margin-top: 3px;
+  }
+
+  .character-turn-text {
+    font-size: 0.6em;
   }
 
   .character-stats {
@@ -1364,6 +1660,15 @@
 
   .character-hp-bar {
     height: 14px;
+  }
+
+  .character-turn-gauge {
+    height: 8px;
+    margin-top: 2px;
+  }
+
+  .character-turn-text {
+    font-size: 0.55em;
   }
 
   .character-stats {

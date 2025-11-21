@@ -192,3 +192,50 @@ export interface EnemyTypeMultipliers {
   atk: number;
   def: number;
 }
+
+// ============================================================================
+// PHASE 3: POSITIONING SYSTEM
+// ============================================================================
+
+/**
+ * Combat position/formation
+ */
+export enum Position {
+  FRONT = 'front',
+  MIDDLE = 'middle',
+  BACK = 'back'
+}
+
+/**
+ * Position bonuses configuration
+ */
+export interface PositionBonuses {
+  physicalDamage: number;
+  spellDamage: number;
+  damageReduction: number;
+  aggroWeight: number;
+}
+
+/**
+ * Position configuration with bonuses
+ */
+export const POSITION_BONUSES: Record<Position, PositionBonuses> = {
+  [Position.FRONT]: {
+    physicalDamage: 10,
+    spellDamage: -10,
+    damageReduction: -10,
+    aggroWeight: 3
+  },
+  [Position.MIDDLE]: {
+    physicalDamage: 0,
+    spellDamage: 0,
+    damageReduction: 0,
+    aggroWeight: 2
+  },
+  [Position.BACK]: {
+    physicalDamage: -10,
+    spellDamage: 15,
+    damageReduction: 10,
+    aggroWeight: 1
+  }
+};

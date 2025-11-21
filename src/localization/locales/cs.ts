@@ -163,6 +163,7 @@ export const cs: LocaleKeys = {
         heal: 'Léčení',
         death: 'Smrt',
       },
+// Position System (Phase 3)    partyFormation: 'Formace týmu',    enemyFormation: 'Formace nepřátel',    position: {      front: 'Přední',      middle: 'Střední',      back: 'Zadní',      aggro: 'Aggro',      empty: 'Prázdné',      bonuses: 'Bonusy pozice',      frontBonus: 'Přední: +10% Fyz. poškození, -10% obrana, 3x Aggro',      middleBonus: 'Střední: Vyvážená, 2x Aggro',      backBonus: 'Zadní: +15% Magické poškození, +10% obrana, 1x Aggro',    },
     },
   },
 

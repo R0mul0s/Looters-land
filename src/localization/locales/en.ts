@@ -161,6 +161,7 @@ export const en = {
         heal: 'Heal',
         death: 'Death',
       },
+// Position System (Phase 3)    partyFormation: 'Party Formation',    enemyFormation: 'Enemy Formation',    position: {      front: 'Front',      middle: 'Middle',      back: 'Back',      aggro: 'Aggro',      empty: 'Empty',      bonuses: 'Position Bonuses',      frontBonus: 'Front: +10% Phys Dmg, -10% Defense, 3x Aggro',      middleBonus: 'Middle: Balanced, 2x Aggro',      backBonus: 'Back: +15% Spell Dmg, +10% Defense, 1x Aggro',    },
     },
   },
 

@@ -111,9 +111,10 @@ export function t(key: string, replacements?: Record<string, string | number>): 
     return key;
   }
 
-  // Replace placeholders if provided
+  // Replace placeholders if provided (supports both {{key}} and {key} syntax)
   if (replacements) {
-    return value.replace(/\{(\w+)\}/g, (match, placeholder) => {
+    return value.replace(/\{\{(\w+)\}\}|\{(\w+)\}/g, (match, doubleBrace, singleBrace) => {
+      const placeholder = doubleBrace || singleBrace;
       return placeholder in replacements ? String(replacements[placeholder]) : match;
     });
   }

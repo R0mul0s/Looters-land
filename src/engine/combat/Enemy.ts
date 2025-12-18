@@ -57,7 +57,8 @@ export class Enemy {
   // Elemental properties
   resistances: ElementResistances;
   weaknesses: Element[];
-// Position system (Phase 3)  position: Position;
+// Position system (Phase 3)
+  position: Position;
 
   constructor(name: string, level: number = 1, type: EnemyType = 'normal') {
     this.id = `enemy_${Date.now()}_${Math.random()}`;
@@ -97,7 +98,8 @@ export class Enemy {
     // Initialize elemental resistances based on type
     this.resistances = this.initializeResistances();
     this.weaknesses = this.initializeWeaknesses();
-// Initialize position based on enemy type    this.position = this.determinePosition();
+// Initialize position based on enemy type
+    this.position = this.determinePosition();
   }
 
   private initializeStats(): {

@@ -69,7 +69,11 @@ export class CombatEngine {
   onHealApplied: ((targetId: string, amount: number) => void) | null;
   onSkillUsed: ((casterId: string, skillName: string) => void) | null;
   onAttackAnimation: ((attackerId: string) => void) | null;
-// Combo system (Phase 3)  comboCounter: number;  lastAttacker: Combatant | null;  comboTarget: Combatant | null;  maxComboReached: number;
+// Combo system (Phase 3)
+  comboCounter: number;
+  lastAttacker: Combatant | null;
+  comboTarget: Combatant | null;
+  maxComboReached: number;
 
   constructor() {
     this.heroes = [];
@@ -105,7 +109,11 @@ export class CombatEngine {
     this.onHealApplied = null;
     this.onSkillUsed = null;
     this.onAttackAnimation = null;
-// Combo system    this.comboCounter = 0;    this.lastAttacker = null;    this.comboTarget = null;    this.maxComboReached = 0;
+// Combo system
+    this.comboCounter = 0;
+    this.lastAttacker = null;
+    this.comboTarget = null;
+    this.maxComboReached = 0;
   }
 
   /**
@@ -657,6 +665,7 @@ export class CombatEngine {
 
   /**
    * Update combo counter after an attack
+   * Same attacker must hit same target consecutively
    */
   updateCombo(attacker: Combatant, target: Combatant, didHit: boolean): void {
     if (!didHit) {

@@ -200,11 +200,13 @@ export interface EnemyTypeMultipliers {
 /**
  * Combat position/formation
  */
-export enum Position {
-  FRONT = 'front',
-  MIDDLE = 'middle',
-  BACK = 'back'
-}
+export const Position = {
+  FRONT: 'front',
+  MIDDLE: 'middle',
+  BACK: 'back'
+} as const;
+
+export type Position = typeof Position[keyof typeof Position];
 
 /**
  * Position bonuses configuration

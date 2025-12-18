@@ -1,0 +1,40 @@
+/**
+ * Combat Screen Component Styles
+ *
+ * @author Roman Hlaváček - rhsoft.cz
+ * @copyright 2025
+ */
+
+/* Combat Screen is styled via CombatLayout.css */
+/* This file contains additional CombatScreen-specific styles */
+
+.combat-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  margin: 15px 0;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.combat-formations {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin: 15px 0;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .combat-controls {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .combat-formations {
+    grid-template-columns: 1fr;
+  }
+}

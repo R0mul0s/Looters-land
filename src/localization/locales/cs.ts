@@ -401,6 +401,16 @@ export const cs: LocaleKeys = {
     abandonWarning: '⚠️ Varování: Opuštění podzemí nyní způsobí ztrátu veškeré sebrané kořisti a pokroku!\n\nOpravdu chcete podzemí opustit?',
     defeatAllEnemies: '⚠️ Poraž všechny nepřátele pro pokračování!',
 
+    // Room completion messages (BUG-003 fix)
+    mustDefeatEnemies: 'Musíš porazit všechny nepřátele před opuštěním místnosti!',
+    mustDefeatBoss: 'Musíš porazit bosse před opuštěním místnosti!',
+    mustDefeatMiniBoss: 'Musíš porazit mini-bosse před opuštěním místnosti!',
+    mustLootTreasure: 'Musíš sebrat poklad před opuštěním místnosti!',
+    mustDisarmTrap: 'Musíš zneškodnit past před opuštěním místnosti!',
+    mustUseRest: 'Musíš odpočívat před opuštěním místnosti!',
+    mustUseShrine: 'Musíš použít svatyni před opuštěním místnosti!',
+    mustResolveMystery: 'Musíš prozkoumat záhadu před opuštěním místnosti!',
+
     // Statistics labels
     floor: 'Patro:',
     enemiesDefeated: 'Poražení nepřátelé:',

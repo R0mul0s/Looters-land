@@ -6,8 +6,10 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-10
+ * @lastModified 2026-01-19
  */
+
+import type { DungeonTierConfig, DungeonDefinition, TierLevel, ItemRarity } from '../types/dungeon.types';
 
 // ============================================================================
 // COMBAT SYSTEM
@@ -475,6 +477,197 @@ export const MARKET_CONFIG = {
     LARGE_POTION_COST: 500,
   },
 } as const;
+
+// ============================================================================
+// DUNGEON TIER SYSTEM
+// ============================================================================
+
+/**
+ * Default tier configurations for all dungeons
+ */
+export const DUNGEON_TIER_CONFIGS: Record<TierLevel, DungeonTierConfig> = {
+  1: {
+    tier: 1,
+    name: 'Easy',
+    floorsPerTier: 5,
+    enemyLevelMultiplier: 1.0,
+    lootRarityMin: 'common',
+    lootRarityMax: 'uncommon',
+    goldMultiplier: 1.0,
+    bossDropRarity: 'rare',
+  },
+  2: {
+    tier: 2,
+    name: 'Normal',
+    floorsPerTier: 5,
+    enemyLevelMultiplier: 1.5,
+    lootRarityMin: 'uncommon',
+    lootRarityMax: 'rare',
+    goldMultiplier: 2.0,
+    bossDropRarity: 'epic',
+  },
+  3: {
+    tier: 3,
+    name: 'Hard',
+    floorsPerTier: 5,
+    enemyLevelMultiplier: 2.0,
+    lootRarityMin: 'rare',
+    lootRarityMax: 'epic',
+    goldMultiplier: 4.0,
+    bossDropRarity: 'epic',
+  },
+  4: {
+    tier: 4,
+    name: 'Elite',
+    floorsPerTier: 5,
+    enemyLevelMultiplier: 3.0,
+    lootRarityMin: 'epic',
+    lootRarityMax: 'legendary',
+    goldMultiplier: 8.0,
+    bossDropRarity: 'legendary',
+  },
+};
+
+/**
+ * Dungeon definitions - all available dungeons in the game
+ */
+export const DUNGEON_DEFINITIONS: DungeonDefinition[] = [
+  {
+    id: 'forgotten-mines',
+    name: 'Forgotten Mines',
+    theme: 'mines',
+    description: 'Ancient mining tunnels overrun with goblins and cave creatures.',
+    baseEnemyLevel: 5,
+    tiers: Object.values(DUNGEON_TIER_CONFIGS),
+    unlockRequirement: undefined, // Always unlocked
+    icon: '⛏️',
+    backgroundColor: '#4a3728',
+  },
+  {
+    id: 'elven-catacombs',
+    name: 'Elven Catacombs',
+    theme: 'catacombs',
+    description: 'Cursed burial grounds of fallen elven warriors.',
+    baseEnemyLevel: 10,
+    tiers: Object.values(DUNGEON_TIER_CONFIGS),
+    unlockRequirement: {
+      dungeonId: 'forgotten-mines',
+      tierCompleted: 2,
+    },
+    icon: '🏛️',
+    backgroundColor: '#2d4a3d',
+  },
+  {
+    id: 'dwarven-depths',
+    name: 'Dwarven Depths',
+    theme: 'depths',
+    description: 'Abandoned dwarven fortress deep underground.',
+    baseEnemyLevel: 15,
+    tiers: Object.values(DUNGEON_TIER_CONFIGS),
+    unlockRequirement: {
+      dungeonId: 'elven-catacombs',
+      tierCompleted: 2,
+    },
+    icon: '🏔️',
+    backgroundColor: '#3d3d4a',
+  },
+  {
+    id: 'arcane-sanctum',
+    name: 'Arcane Sanctum',
+    theme: 'sanctum',
+    description: 'Magical tower corrupted by dark sorcery.',
+    baseEnemyLevel: 20,
+    tiers: Object.values(DUNGEON_TIER_CONFIGS),
+    unlockRequirement: {
+      dungeonId: 'dwarven-depths',
+      tierCompleted: 2,
+    },
+    icon: '🔮',
+    backgroundColor: '#4a2d4a',
+  },
+  {
+    id: 'dragons-lair',
+    name: "Dragon's Lair",
+    theme: 'lair',
+    description: 'The legendary domain of the ancient dragon.',
+    baseEnemyLevel: 30,
+    tiers: Object.values(DUNGEON_TIER_CONFIGS),
+    unlockRequirement: {
+      dungeonId: 'arcane-sanctum',
+      tierCompleted: 3,
+    },
+    icon: '🐉',
+    backgroundColor: '#4a1a1a',
+  },
+];
+
+/**
+ * Tier reward configurations
+ */
+export const TIER_REWARDS = {
+  /** Base gold reward per tier (multiplied by tier's goldMultiplier) */
+  BASE_GOLD: {
+    1: 500,
+    2: 1500,
+    3: 4000,
+    4: 10000,
+  } as Record<TierLevel, number>,
+
+  /** Item count per tier completion */
+  ITEM_COUNT: {
+    1: { min: 2, max: 3 },
+    2: { min: 3, max: 4 },
+    3: { min: 4, max: 5 },
+    4: { min: 5, max: 6 },
+  } as Record<TierLevel, { min: number; max: number }>,
+
+  /** XP reward per tier */
+  EXPERIENCE: {
+    1: 500,
+    2: 1500,
+    3: 4000,
+    4: 10000,
+  } as Record<TierLevel, number>,
+} as const;
+
+/**
+ * Rarity order for comparison
+ */
+export const RARITY_ORDER: ItemRarity[] = ['common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic'];
+
+/**
+ * Get dungeon definition by ID
+ */
+export function getDungeonDefinition(id: string): DungeonDefinition | undefined {
+  return DUNGEON_DEFINITIONS.find(d => d.id === id);
+}
+
+/**
+ * Get tier config for a specific tier
+ */
+export function getTierConfig(tier: TierLevel): DungeonTierConfig {
+  return DUNGEON_TIER_CONFIGS[tier];
+}
+
+/**
+ * Check if a rarity is within a min/max range
+ */
+export function isRarityInRange(rarity: ItemRarity, min: ItemRarity, max: ItemRarity): boolean {
+  const rarityIndex = RARITY_ORDER.indexOf(rarity);
+  const minIndex = RARITY_ORDER.indexOf(min);
+  const maxIndex = RARITY_ORDER.indexOf(max);
+  return rarityIndex >= minIndex && rarityIndex <= maxIndex;
+}
+
+/**
+ * Get random rarity within a range
+ */
+export function getRandomRarityInRange(min: ItemRarity, max: ItemRarity): ItemRarity {
+  const minIndex = RARITY_ORDER.indexOf(min);
+  const maxIndex = RARITY_ORDER.indexOf(max);
+  const randomIndex = Math.floor(Math.random() * (maxIndex - minIndex + 1)) + minIndex;
+  return RARITY_ORDER[randomIndex];
+}
 
 // ============================================================================
 // TYPE EXPORTS

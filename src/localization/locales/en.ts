@@ -399,6 +399,16 @@ export const en = {
     abandonWarning: '⚠️ Warning: Leaving the dungeon now will cause you to lose all collected loot and progress!\n\nAre you sure you want to abandon the dungeon?',
     defeatAllEnemies: '⚠️ Defeat all enemies to proceed!',
 
+    // Room completion messages (BUG-003 fix)
+    mustDefeatEnemies: 'You must defeat all enemies before leaving this room!',
+    mustDefeatBoss: 'You must defeat the boss before leaving this room!',
+    mustDefeatMiniBoss: 'You must defeat the mini-boss before leaving this room!',
+    mustLootTreasure: 'You must loot the treasure before leaving this room!',
+    mustDisarmTrap: 'You must disarm the trap before leaving this room!',
+    mustUseRest: 'You must rest before leaving this room!',
+    mustUseShrine: 'You must use the shrine before leaving this room!',
+    mustResolveMystery: 'You must investigate the mystery before leaving this room!',
+
     // Statistics labels
     floor: 'Floor:',
     enemiesDefeated: 'Enemies Defeated:',

@@ -3,7 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-15
+ * @lastModified 2026-01-19
  */
 
 import type {
@@ -11,10 +11,13 @@ import type {
   Floor,
   RoomType,
   RoomDifficulty,
-  DungeonGenerationOptions
+  DungeonGenerationOptions,
+  TierLevel,
+  DungeonTierConfig
 } from '../../types/dungeon.types';
 import { generateRandomEnemy } from '../combat/Enemy';
 import { ItemGenerator } from '../item/ItemGenerator';
+import { getRandomRarityInRange, DUNGEON_TIER_CONFIGS } from '../../config/BALANCE_CONFIG';
 
 /**
  * Dungeon Generator Class
@@ -22,9 +25,24 @@ import { ItemGenerator } from '../item/ItemGenerator';
 export class DungeonGenerator {
   /**
    * Generate a complete dungeon floor
+   * Now supports tier-based generation with proper enemy scaling
    */
   static generateFloor(options: DungeonGenerationOptions): Floor {
-    const { floorNumber, roomCount, difficulty, guaranteeBoss = true, heroLevel } = options;
+    const {
+      floorNumber,
+      tierFloorNumber = floorNumber,
+      tier = 1 as TierLevel,
+      tierConfig = DUNGEON_TIER_CONFIGS[1],
+      roomCount,
+      difficulty,
+      guaranteeBoss = true,
+      heroLevel,
+      baseEnemyLevel = 5
+    } = options;
+
+    // Calculate effective enemy level based on tier
+    const effectiveEnemyLevel = Math.floor(baseEnemyLevel * tierConfig.enemyLevelMultiplier);
+    const isTierBossFloor = tierFloorNumber === tierConfig.floorsPerTier;
 
     // Generate rooms
     const rooms: Room[] = [];
@@ -41,14 +59,15 @@ export class DungeonGenerator {
     );
     rooms.push(startRoom);
 
-    // Generate path through dungeon
+    // Generate path through dungeon (pass effectiveEnemyLevel for proper tier scaling)
     const generatedRooms = this.generateRoomPath(
       startRoom.position,
       roomCount - (guaranteeBoss ? 3 : 2), // Account for start, exit, and optional boss
       gridSize,
       floorNumber,
       difficulty,
-      heroLevel
+      heroLevel,
+      effectiveEnemyLevel
     );
 
     // Connect start room to first generated room
@@ -65,7 +84,7 @@ export class DungeonGenerator {
 
     rooms.push(...generatedRooms);
 
-    // Add boss room if guaranteed
+    // Add boss room if guaranteed (pass effectiveEnemyLevel for tier scaling)
     let bossRoomId: string | undefined;
     if (guaranteeBoss) {
       const bossRoom = this.createBossRoom(
@@ -73,7 +92,9 @@ export class DungeonGenerator {
         gridSize,
         floorNumber,
         difficulty,
-        heroLevel
+        rooms,  // Pass existing rooms for collision detection
+        heroLevel,
+        effectiveEnemyLevel
       );
       rooms.push(bossRoom);
       bossRoomId = bossRoom.id;
@@ -89,7 +110,8 @@ export class DungeonGenerator {
       'easy',
       floorNumber,
       difficulty,
-      heroLevel
+      heroLevel,
+      effectiveEnemyLevel
     );
     // Position exit room ensuring it doesn't overlap with any existing room (including boss)
     this.positionExitRoom(exitRoom, rooms[rooms.length - 1], gridSize, rooms);
@@ -103,7 +125,8 @@ export class DungeonGenerator {
     this.createGridConnections(rooms);
 
     return {
-      floorNumber,
+      floorNumber: tierFloorNumber,
+      tier,
       rooms,
       currentRoomId: startRoom.id,
       startRoomId: startRoom.id,
@@ -111,7 +134,8 @@ export class DungeonGenerator {
       bossRoomId,
       difficulty,
       explored: false,
-      completed: false
+      completed: false,
+      isTierBossFloor
     };
   }
 
@@ -124,31 +148,32 @@ export class DungeonGenerator {
     gridSize: number,
     floorNumber: number,
     difficulty: number,
-    heroLevel?: number
+    heroLevel?: number,
+    baseEnemyLevel: number = 5
   ): Room[] {
     const rooms: Room[] = [];
     const occupiedPositions = new Set<string>([`${startPosition.x},${startPosition.y}`]);
 
-    // CRITICAL: Start from a position adjacent to startPosition, not from startPosition itself
-    // This ensures the first room is always connected to the start room
-    let currentPosition = this.findNextPosition(startPosition, occupiedPositions, gridSize);
+    // Start from the startPosition - first room will be placed adjacent to it
+    let currentPosition = startPosition;
 
     for (let i = 0; i < count; i++) {
       // Determine room type
       const roomType = this.determineRoomType(i, count);
       const roomDifficulty = this.determineRoomDifficulty();
 
-      // Find next valid position
+      // Find next valid position adjacent to current
       const nextPosition = this.findNextPosition(currentPosition, occupiedPositions, gridSize);
 
-      // Create room
+      // Create room at the next position
       const room = this.createRoom(
         roomType,
         nextPosition,
         roomDifficulty,
         floorNumber,
         difficulty,
-        heroLevel
+        heroLevel,
+        baseEnemyLevel
       );
 
       // Connect to previous room if exists
@@ -173,7 +198,8 @@ export class DungeonGenerator {
     difficulty: RoomDifficulty,
     floorNumber: number,
     difficultyMultiplier: number,
-    heroLevel?: number
+    heroLevel?: number,
+    baseEnemyLevel: number = 5
   ): Room {
     const room: Room = {
       id: `${type}-${position.x}-${position.y}-${Date.now()}-${Math.random()}`,
@@ -187,19 +213,19 @@ export class DungeonGenerator {
     // Populate room based on type
     switch (type) {
       case 'combat':
-        this.populateCombatRoom(room, floorNumber, difficulty, difficultyMultiplier);
+        this.populateCombatRoom(room, baseEnemyLevel, difficulty, floorNumber);
         break;
       case 'treasure':
-        this.populateTreasureRoom(room, floorNumber, difficultyMultiplier, heroLevel);
+        this.populateTreasureRoom(room, baseEnemyLevel, difficultyMultiplier, heroLevel);
         break;
       case 'trap':
-        this.populateTrapRoom(room, floorNumber, difficultyMultiplier);
+        this.populateTrapRoom(room, baseEnemyLevel, difficultyMultiplier);
         break;
       case 'rest':
-        this.populateRestRoom(room, floorNumber);
+        this.populateRestRoom(room, baseEnemyLevel);
         break;
       case 'boss':
-        this.populateBossRoom(room, floorNumber, difficultyMultiplier);
+        this.populateBossRoom(room, baseEnemyLevel, floorNumber);
         break;
       case 'shrine':
         this.populateShrineRoom(room);
@@ -208,10 +234,10 @@ export class DungeonGenerator {
         this.populateMysteryRoom(room);
         break;
       case 'elite':
-        this.populateEliteRoom(room, floorNumber, difficulty, difficultyMultiplier, heroLevel);
+        this.populateEliteRoom(room, baseEnemyLevel, difficulty, floorNumber, heroLevel);
         break;
       case 'miniboss':
-        this.populateMiniBossRoom(room, floorNumber, difficultyMultiplier);
+        this.populateMiniBossRoom(room, baseEnemyLevel, floorNumber);
         break;
     }
 
@@ -220,39 +246,74 @@ export class DungeonGenerator {
 
   /**
    * Create a boss room
+   *
+   * Finds a free position adjacent to nearPosition for the boss room.
+   * Checks all existing rooms to avoid overlapping positions.
    */
   private static createBossRoom(
     nearPosition: { x: number; y: number },
     gridSize: number,
     floorNumber: number,
     difficulty: number,
-    heroLevel?: number
+    existingRooms: Room[],
+    heroLevel?: number,
+    baseEnemyLevel: number = 5
   ): Room {
-    // Position boss room away from current position
-    const bossPosition = {
-      x: Math.min(gridSize - 1, nearPosition.x + 1),
-      y: nearPosition.y
-    };
+    // Create set of occupied positions for collision detection
+    const occupiedPositions = new Set(
+      existingRooms.map(room => `${room.position.x},${room.position.y}`)
+    );
 
-    return this.createRoom('boss', bossPosition, 'elite', floorNumber, difficulty, heroLevel);
+    // Adjacent positions to try (East preferred, then others)
+    const adjacentOffsets = [
+      { x: 1, y: 0 },  // East
+      { x: 0, y: 1 },  // South
+      { x: -1, y: 0 }, // West
+      { x: 0, y: -1 }, // North
+      { x: 1, y: 1 },  // Southeast
+      { x: 1, y: -1 }, // Northeast
+      { x: -1, y: 1 }, // Southwest
+      { x: -1, y: -1 } // Northwest
+    ];
+
+    // Find first free adjacent position
+    for (const offset of adjacentOffsets) {
+      const testX = nearPosition.x + offset.x;
+      const testY = nearPosition.y + offset.y;
+
+      if (testX >= 0 && testX < gridSize && testY >= 0 && testY < gridSize) {
+        const posKey = `${testX},${testY}`;
+        if (!occupiedPositions.has(posKey)) {
+          return this.createRoom('boss', { x: testX, y: testY }, 'elite', floorNumber, difficulty, heroLevel, baseEnemyLevel);
+        }
+      }
+    }
+
+    // Fallback: find any free position in grid
+    for (let x = 0; x < gridSize; x++) {
+      for (let y = 0; y < gridSize; y++) {
+        const posKey = `${x},${y}`;
+        if (!occupiedPositions.has(posKey)) {
+          return this.createRoom('boss', { x, y }, 'elite', floorNumber, difficulty, heroLevel, baseEnemyLevel);
+        }
+      }
+    }
+
+    // Absolute fallback (should never happen - grid is full)
+    return this.createRoom('boss', { x: gridSize, y: gridSize }, 'elite', floorNumber, difficulty, heroLevel, baseEnemyLevel);
   }
 
   /**
    * Position exit room relative to last room
    *
    * Ensures exit room is placed on a unique position that doesn't overlap
-   * with existing rooms. Tries to place east of last room first, then
-   * checks all adjacent positions if needed.
+   * with existing rooms. Tries adjacent positions first, then falls back
+   * to finding any free position in the grid.
    *
    * @param exitRoom - The exit room to position
    * @param lastRoom - The last room in the dungeon
    * @param gridSize - Size of the dungeon grid
    * @param existingRooms - Array of all existing rooms (for collision detection)
-   *
-   * @example
-   * ```typescript
-   * this.positionExitRoom(exitRoom, lastRoom, 10, allRooms);
-   * ```
    */
   private static positionExitRoom(
     exitRoom: Room,
@@ -265,13 +326,7 @@ export class DungeonGenerator {
       existingRooms.map(room => `${room.position.x},${room.position.y}`)
     );
 
-    // Try to place exit room to the east of last room
-    let candidatePosition = {
-      x: Math.min(gridSize - 1, lastRoom.position.x + 1),
-      y: lastRoom.position.y
-    };
-
-    // If that position is occupied, try other adjacent positions
+    // Adjacent positions to try (East preferred, then others)
     const adjacentOffsets = [
       { x: 1, y: 0 },  // East
       { x: 0, y: 1 },  // South
@@ -283,29 +338,50 @@ export class DungeonGenerator {
       { x: -1, y: -1 } // Northwest
     ];
 
+    // Find first free adjacent position
     for (const offset of adjacentOffsets) {
       const testX = lastRoom.position.x + offset.x;
       const testY = lastRoom.position.y + offset.y;
 
-      // Check if position is within grid bounds
       if (testX >= 0 && testX < gridSize && testY >= 0 && testY < gridSize) {
         const posKey = `${testX},${testY}`;
         if (!occupiedPositions.has(posKey)) {
-          candidatePosition = { x: testX, y: testY };
-          break;
+          exitRoom.position = { x: testX, y: testY };
+          return;
         }
       }
     }
 
-    exitRoom.position = candidatePosition;
+    // Fallback: find any free position in grid
+    for (let x = 0; x < gridSize; x++) {
+      for (let y = 0; y < gridSize; y++) {
+        const posKey = `${x},${y}`;
+        if (!occupiedPositions.has(posKey)) {
+          exitRoom.position = { x, y };
+          return;
+        }
+      }
+    }
+
+    // Absolute fallback (grid is full - shouldn't happen)
+    exitRoom.position = { x: gridSize, y: gridSize };
   }
 
   /**
    * Connect two rooms with directions
+   * IMPORTANT: Only connects rooms that are directly adjacent (Manhattan distance = 1)
    */
   private static connectRooms(from: Room, to: Room): void {
     const dx = to.position.x - from.position.x;
     const dy = to.position.y - from.position.y;
+
+    // Only connect if rooms are directly adjacent (Manhattan distance = 1)
+    const manhattanDistance = Math.abs(dx) + Math.abs(dy);
+    if (manhattanDistance !== 1) {
+      // Rooms are not adjacent - skip connection to avoid invalid connections
+      // This can happen when findNextPosition falls back to distant positions
+      return;
+    }
 
     if (dx > 0) {
       if (!from.connections.includes('east')) from.connections.push('east');
@@ -441,24 +517,26 @@ export class DungeonGenerator {
 
   /**
    * Populate combat room
+   * @param baseEnemyLevel - Tier-scaled base enemy level (e.g., 5 * tierMultiplier)
+   * @param floorNumber - Floor within tier (1-5) for minor scaling
    */
   private static populateCombatRoom(
     room: Room,
-    floorNumber: number,
+    baseEnemyLevel: number,
     difficulty: RoomDifficulty,
-    difficultyMultiplier: number
+    floorNumber: number
   ): void {
-    // Calculate enemy level based on floor and room difficulty
-    // Base level is floor number, modified by room difficulty
+    // Calculate enemy level based on tier-scaled base level and room difficulty
     const difficultyModifier = {
-      easy: 0.7,    // 70% of floor level
-      normal: 1.0,  // 100% of floor level
-      hard: 1.3,    // 130% of floor level
-      elite: 1.5    // 150% of floor level
+      easy: 0.8,    // 80% of base level
+      normal: 1.0,  // 100% of base level
+      hard: 1.2,    // 120% of base level
+      elite: 1.4    // 140% of base level
     };
 
-    const baseLevel = floorNumber * difficultyMultiplier;
-    const enemyLevel = Math.max(1, Math.floor(baseLevel * difficultyModifier[difficulty]));
+    // Base level comes from tier system, add small floor bonus (1-5)
+    const floorBonus = (floorNumber - 1) * 0.1; // 0%, 10%, 20%, 30%, 40% bonus per floor
+    const enemyLevel = Math.max(1, Math.floor(baseEnemyLevel * (1 + floorBonus) * difficultyModifier[difficulty]));
 
     const enemyCount = difficulty === 'easy' ? 1 : difficulty === 'elite' ? 3 : 2;
     const enemyType = difficulty === 'elite' ? 'elite' : 'normal';
@@ -473,16 +551,16 @@ export class DungeonGenerator {
 
   /**
    * Populate treasure room
+   * @param baseEnemyLevel - Tier-scaled base level for loot scaling
    */
   private static populateTreasureRoom(
     room: Room,
-    floorNumber: number,
-    difficultyMultiplier: number,
+    baseEnemyLevel: number,
+    _difficultyMultiplier: number,
     heroLevel?: number
   ): void {
-    // Use hero level if available, otherwise use floor-based calculation
-    const floorBasedLevel = Math.max(1, Math.floor(floorNumber * difficultyMultiplier));
-    const itemLevel = heroLevel ? Math.max(floorBasedLevel, heroLevel) : floorBasedLevel;
+    // Use hero level if available, otherwise use tier-scaled base level
+    const itemLevel = heroLevel ? Math.max(baseEnemyLevel, heroLevel) : baseEnemyLevel;
 
     const itemCount = Math.floor(Math.random() * 2) + 1; // 1-2 items
 
@@ -499,13 +577,15 @@ export class DungeonGenerator {
 
   /**
    * Populate trap room
+   * @param baseEnemyLevel - Tier-scaled base level for damage scaling
    */
   private static populateTrapRoom(
     room: Room,
-    floorNumber: number,
-    difficultyMultiplier: number
+    baseEnemyLevel: number,
+    _difficultyMultiplier: number
   ): void {
-    const baseDamage = Math.floor(floorNumber * difficultyMultiplier * 10);
+    // Trap damage scales with tier-adjusted enemy level
+    const baseDamage = Math.floor(baseEnemyLevel * 5);
     room.trapDamage = Math.floor(baseDamage * (0.8 + Math.random() * 0.4));
     room.trapDisarmed = false;
 
@@ -522,23 +602,27 @@ export class DungeonGenerator {
 
   /**
    * Populate rest room
+   * @param baseEnemyLevel - Tier-scaled base level for heal scaling
    */
-  private static populateRestRoom(room: Room, floorNumber: number): void {
-    room.healAmount = Math.floor(50 + floorNumber * 10); // Scales with floor
+  private static populateRestRoom(room: Room, baseEnemyLevel: number): void {
+    // Heal amount scales with tier-adjusted level
+    room.healAmount = Math.floor(50 + baseEnemyLevel * 5);
     room.restUsed = false;
   }
 
   /**
    * Populate boss room
+   * @param baseEnemyLevel - Tier-scaled base enemy level
+   * @param floorNumber - Floor within tier (1-5) for minor scaling
    */
   private static populateBossRoom(
     room: Room,
-    floorNumber: number,
-    difficultyMultiplier: number
+    baseEnemyLevel: number,
+    floorNumber: number
   ): void {
-    // Boss should be very challenging (1.6x floor level)
-    const baseLevel = floorNumber * difficultyMultiplier;
-    const bossLevel = Math.max(1, Math.floor(baseLevel * 1.6));
+    // Boss should be very challenging (1.5x tier-scaled level + floor bonus)
+    const floorBonus = (floorNumber - 1) * 0.1; // 0-40% bonus based on floor
+    const bossLevel = Math.max(1, Math.floor(baseEnemyLevel * (1 + floorBonus) * 1.5));
 
     room.enemies = [generateRandomEnemy(bossLevel, 'boss')];
     room.combatCompleted = false;
@@ -604,14 +688,14 @@ export class DungeonGenerator {
    */
   private static populateEliteRoom(
     room: Room,
-    floorNumber: number,
+    baseEnemyLevel: number,
     difficulty: RoomDifficulty,
-    difficultyMultiplier: number,
+    floorNumber: number,
     heroLevel?: number
   ): void {
-    // Elite rooms should always be challenging (1.4x floor level)
-    const baseLevel = floorNumber * difficultyMultiplier;
-    const enemyLevel = Math.max(1, Math.floor(baseLevel * 1.4));
+    // Elite rooms should always be challenging (1.3x tier-scaled level + floor bonus)
+    const floorBonus = (floorNumber - 1) * 0.1;
+    const enemyLevel = Math.max(1, Math.floor(baseEnemyLevel * (1 + floorBonus) * 1.3));
     const enemyCount = Math.random() < 0.5 ? 1 : 2; // 1-2 elite enemies
 
     room.enemies = [];
@@ -637,12 +721,12 @@ export class DungeonGenerator {
    */
   private static populateMiniBossRoom(
     room: Room,
-    floorNumber: number,
-    difficultyMultiplier: number
+    baseEnemyLevel: number,
+    floorNumber: number
   ): void {
-    // Mini-boss is stronger than elite but weaker than boss (1.5x floor level)
-    const baseLevel = floorNumber * difficultyMultiplier;
-    const miniBossLevel = Math.max(1, Math.floor(baseLevel * 1.5));
+    // Mini-boss is stronger than elite but weaker than boss (1.4x tier-scaled level + floor bonus)
+    const floorBonus = (floorNumber - 1) * 0.1;
+    const miniBossLevel = Math.max(1, Math.floor(baseEnemyLevel * (1 + floorBonus) * 1.4));
 
     // Create elite enemy and boost stats for mini-boss
     const miniBoss = generateRandomEnemy(miniBossLevel, 'elite');

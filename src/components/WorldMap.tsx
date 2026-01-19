@@ -53,7 +53,8 @@ import { flexColumn, flexCenter } from '../styles/common';
 import type { StaticObject, Town, DungeonEntrance, TreasureChest, HiddenPath, Portal, RareSpawn, ObservationTower, HealingWell, WanderingMonster, TravelingMerchant, WeatherType, TimeOfDay, DynamicObject } from '../types/worldmap.types';
 import type { EquipmentSlotName } from '../types/equipment.types';
 import { DEBUG_CONFIG } from '../config/DEBUG_CONFIG';
-import { ENERGY_CONFIG, WORLDMAP_CONFIG } from '../config/BALANCE_CONFIG';
+import { ENERGY_CONFIG, WORLDMAP_CONFIG, DUNGEON_TIER_CONFIGS } from '../config/BALANCE_CONFIG';
+import type { TierLevel } from '../types/dungeon.types';
 import { generateRandomEnemy, Enemy } from '../engine/combat/Enemy';
 import { generateRareSpawnEncounter, generateWanderingMonsterEncounter } from '../engine/combat/NamedEnemies';
 import type { Item } from '../engine/item/Item';
@@ -71,7 +72,7 @@ interface Loot {
 }
 
 interface WorldMapProps {
-  onEnterDungeon?: (dungeon: DungeonEntrance) => void;
+  onEnterDungeon?: (dungeon: DungeonEntrance, selectedTier: TierLevel) => void;
   onQuickCombat?: (enemies: Enemy[], combatType: 'rare_spawn' | 'wandering_monster', metadata?: QuickCombatMetadata) => void;
   userEmail?: string;
   gameState?: GameState;
@@ -134,6 +135,7 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
   // Modal states
   const [showTownModal, setShowTownModal] = useState<Town | null>(null);
   const [showDungeonModal, setShowDungeonModal] = useState<DungeonEntrance | null>(null);
+  const [selectedTier, setSelectedTier] = useState<TierLevel>(1);
   const [showEnergyModal, setShowEnergyModal] = useState<{ message: string; required?: number } | null>(null);
   const [showUnexploredModal, setShowUnexploredModal] = useState(false);
   const [enchantItem, setEnchantItem] = useState<Item | null>(null);
@@ -1099,22 +1101,24 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
   const handleEnterDungeon = () => {
     if (!showDungeonModal) return;
 
-    // Save dungeon reference before closing modal
+    // Save dungeon and tier references before closing modal
     const dungeonToEnter = showDungeonModal;
+    const tierToEnter = selectedTier;
 
-    console.log('🎯 Entering dungeon:', dungeonToEnter);
+    console.log('🎯 Entering dungeon:', dungeonToEnter.name, 'Tier:', tierToEnter);
     console.log('🎯 onEnterDungeon callback exists?', !!onEnterDungeon);
 
     const energyCost = 10;
     gameActions.setEnergy(gameState.energy - energyCost);
 
-    // Close the modal first
+    // Close the modal and reset tier
     setShowDungeonModal(null);
+    setSelectedTier(1);
 
     // Call parent callback to enter dungeon
     if (onEnterDungeon) {
-      console.log('✅ Calling onEnterDungeon callback');
-      onEnterDungeon(dungeonToEnter);
+      console.log('✅ Calling onEnterDungeon callback with tier:', tierToEnter);
+      onEnterDungeon(dungeonToEnter, tierToEnter);
     } else {
       console.log('❌ No onEnterDungeon callback provided');
       // Fallback if no callback provided
@@ -1516,28 +1520,85 @@ export function WorldMap({ onEnterDungeon, onQuickCombat, userEmail: userEmailPr
         </div>
       )}
 
-      {/* Dungeon Modal */}
+      {/* Dungeon Modal - with Tier Selection */}
       <GameModal
         isOpen={!!showDungeonModal}
         title={showDungeonModal?.name || ''}
         icon="🕳️"
-        onClose={() => setShowDungeonModal(null)}
+        onClose={() => { setShowDungeonModal(null); setSelectedTier(1); }}
       >
         {showDungeonModal && (
           <>
-            <ModalInfoRow label="Difficulty:" value={showDungeonModal.difficulty} />
-            <ModalInfoRow label="Recommended Level:" value={showDungeonModal.recommendedLevel} />
-            <ModalInfoRow label="Max Floors:" value={showDungeonModal.maxFloors} />
-            <ModalInfoRow label="Theme:" value={showDungeonModal.theme} />
+            {/* Tier Selection */}
+            <div style={{ marginBottom: SPACING[4] }}>
+              <div style={{ fontWeight: 'bold', marginBottom: SPACING[2] }}>Select Difficulty Tier:</div>
+              <div style={{ display: 'flex', gap: SPACING[2], flexWrap: 'wrap' }}>
+                {([1, 2, 3, 4] as TierLevel[]).map((tier) => {
+                  const tierConfig = DUNGEON_TIER_CONFIGS[tier];
+                  const tierColors: Record<TierLevel, string> = {
+                    1: '#4aff4a',
+                    2: '#ffd700',
+                    3: '#ff8c00',
+                    4: '#ff4444'
+                  };
+                  const isSelected = selectedTier === tier;
+                  return (
+                    <button
+                      key={tier}
+                      onClick={() => setSelectedTier(tier)}
+                      style={{
+                        flex: '1 1 45%',
+                        padding: `${SPACING[3]} ${SPACING[2]}`,
+                        backgroundColor: isSelected ? tierColors[tier] : 'transparent',
+                        color: isSelected ? '#000' : tierColors[tier],
+                        border: `2px solid ${tierColors[tier]}`,
+                        borderRadius: BORDER_RADIUS.md,
+                        cursor: 'pointer',
+                        fontWeight: 'bold',
+                        transition: TRANSITIONS.fast
+                      }}
+                    >
+                      <div>{tierConfig.name}</div>
+                      <div style={{ fontSize: FONT_SIZE.xs, fontWeight: 'normal', marginTop: '2px' }}>
+                        Lvl ×{tierConfig.enemyLevelMultiplier}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Selected Tier Info */}
+            <div style={{
+              padding: SPACING[3],
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              borderRadius: BORDER_RADIUS.md,
+              marginBottom: SPACING[4]
+            }}>
+              <ModalInfoRow
+                label="Enemy Level:"
+                value={`${Math.floor(showDungeonModal.recommendedLevel * DUNGEON_TIER_CONFIGS[selectedTier].enemyLevelMultiplier)}`}
+              />
+              <ModalInfoRow label="Floors:" value="5" />
+              <ModalInfoRow
+                label="Loot Rarity:"
+                value={`${DUNGEON_TIER_CONFIGS[selectedTier].lootRarityMin} - ${DUNGEON_TIER_CONFIGS[selectedTier].lootRarityMax}`}
+              />
+              <ModalInfoRow
+                label="Gold Bonus:"
+                value={`×${DUNGEON_TIER_CONFIGS[selectedTier].goldMultiplier}`}
+              />
+            </div>
+
             <ModalDivider />
             <ModalInfoRow label="Energy Cost:" value="⚡ 10" valueColor="energy" />
             <ModalInfoRow label="Your Energy:" value={`⚡ ${gameState.energy}`} />
             <ModalButtonGroup>
-              <ModalButton onClick={() => setShowDungeonModal(null)} variant="secondary" fullWidth={false}>
+              <ModalButton onClick={() => { setShowDungeonModal(null); setSelectedTier(1); }} variant="secondary" fullWidth={false}>
                 Cancel
               </ModalButton>
               <ModalButton onClick={handleEnterDungeon} variant="primary" fullWidth={false}>
-                Enter Dungeon
+                Enter Tier {selectedTier}
               </ModalButton>
             </ModalButtonGroup>
           </>

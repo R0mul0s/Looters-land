@@ -1,6 +1,6 @@
 # Looters Land - Documentation Index
 
-**Last Updated:** 2025-11-18 (Added Session Management & Online Status System docs)
+**Last Updated:** 2026-01-19 (Added Automated Testing documentation)
 
 ---
 
@@ -33,6 +33,7 @@ This folder contains all documentation for the Looters Land project.
 
 Located in `technical/`:
 
+- **[TESTING.md](technical/TESTING.md)** - **NEW!** Automated testing guide (Vitest, 161 tests, bug reports)
 - **[coding_rules.md](technical/coding_rules.md)** - Coding standards, patterns, and best practices
 - **[LOCALIZATION.md](technical/LOCALIZATION.md)** - Internationalization (i18n) guide
 - **[SUPABASE_SETUP.md](technical/SUPABASE_SETUP.md)** - Database setup and configuration
@@ -77,14 +78,15 @@ Historical documentation kept for reference:
 
 1. **Understanding game mechanics?** → Read **[GAME_MECHANICS_SUMMARY.md](GAME_MECHANICS_SUMMARY.md)**
 2. **Starting development?** → Read [coding_rules.md](technical/coding_rules.md)
-3. **Adding features?** → Check [roadmap.md](roadmap.md)
-4. **Database changes?** → See [SUPABASE_SETUP.md](technical/SUPABASE_SETUP.md)
-5. **Session management?** → See **[SESSION_MANAGEMENT.md](technical/SESSION_MANAGEMENT.md)** (NEW!)
-6. **Online status system?** → See **[ONLINE_STATUS_SYSTEM.md](technical/ONLINE_STATUS_SYSTEM.md)** (NEW!)
-7. **Energy system issues?** → See [ENERGY_REGENERATION_SYSTEM.md](technical/ENERGY_REGENERATION_SYSTEM.md)
-8. **Deploying?** → Follow [DEPLOY_INSTRUCTIONS.md](technical/DEPLOY_INSTRUCTIONS.md)
-9. **React state issues?** → See [REACT_STATE_CLOSURE_FIX.md](technical/REACT_STATE_CLOSURE_FIX.md)
-10. **State management bugs?** → See [STATE_MANAGEMENT_FIX.md](technical/STATE_MANAGEMENT_FIX.md)
+3. **Running tests?** → See **[TESTING.md](technical/TESTING.md)** (NEW! 161 tests, bug reports)
+4. **Adding features?** → Check [roadmap.md](roadmap.md)
+5. **Database changes?** → See [SUPABASE_SETUP.md](technical/SUPABASE_SETUP.md)
+6. **Session management?** → See [SESSION_MANAGEMENT.md](technical/SESSION_MANAGEMENT.md)
+7. **Online status system?** → See [ONLINE_STATUS_SYSTEM.md](technical/ONLINE_STATUS_SYSTEM.md)
+8. **Energy system issues?** → See [ENERGY_REGENERATION_SYSTEM.md](technical/ENERGY_REGENERATION_SYSTEM.md)
+9. **Deploying?** → Follow [DEPLOY_INSTRUCTIONS.md](technical/DEPLOY_INSTRUCTIONS.md)
+10. **React state issues?** → See [REACT_STATE_CLOSURE_FIX.md](technical/REACT_STATE_CLOSURE_FIX.md)
+11. **State management bugs?** → See [STATE_MANAGEMENT_FIX.md](technical/STATE_MANAGEMENT_FIX.md)
 
 ### For Project Management
 

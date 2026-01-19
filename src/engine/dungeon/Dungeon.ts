@@ -3,7 +3,7 @@
  *
  * @author Roman Hlaváček - rhsoft.cz
  * @copyright 2025
- * @lastModified 2025-11-15
+ * @lastModified 2026-01-19
  */
 
 import type {
@@ -12,19 +12,28 @@ import type {
   Room,
   Direction,
   RoomEventResult,
-  DungeonConfig
+  DungeonConfig,
+  TierLevel,
+  TierRunState,
+  DungeonDefinition,
+  TierCompletionResult
 } from '../../types/dungeon.types';
 import type { Hero } from '../hero/Hero';
+import type { Item } from '../item/Item';
 import { DungeonGenerator } from './DungeonGenerator';
+import { getDungeonDefinition, DUNGEON_TIER_CONFIGS, TIER_REWARDS, getRandomRarityInRange } from '../../config/BALANCE_CONFIG';
+import { ItemGenerator } from '../item/ItemGenerator';
 
 /**
  * Default Dungeon Configuration
  */
 const DEFAULT_CONFIG: DungeonConfig = {
   name: 'The Forgotten Depths',
+  definitionId: 'forgotten-mines',
+  startingTier: 1,
   startingFloor: 1,
-  roomsPerFloor: { min: 8, max: 12 },
-  difficultyScaling: 0.3, // 30% stat increase per floor
+  roomsPerFloor: { min: 6, max: 8 },
+  difficultyScaling: 0.1, // 10% stat increase per floor within tier
 
   roomTypeProbabilities: {
     combat: 0.5,
@@ -47,26 +56,53 @@ const DEFAULT_CONFIG: DungeonConfig = {
 export class Dungeon implements IDungeon {
   id: string;
   name: string;
+  definitionId: string;
   floors: Floor[];
   currentFloorIndex: number;
   maxFloorReached: number;
   isActive: boolean;
   startTime?: number;
 
+  // Tier system
+  currentTier: TierLevel;
+  tierFloorNumber: number;
+  tierRunState: TierRunState;
+
   totalGoldEarned: number = 0;
   totalItemsFound: number = 0;
   totalEnemiesDefeated: number = 0;
 
   private config: DungeonConfig;
+  private definition: DungeonDefinition | undefined;
 
   constructor(config: Partial<DungeonConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config };
     this.id = `dungeon-${Date.now()}`;
     this.name = this.config.name;
+    this.definitionId = this.config.definitionId || 'forgotten-mines';
     this.floors = [];
     this.currentFloorIndex = 0;
     this.maxFloorReached = 0;
     this.isActive = false;
+
+    // Load dungeon definition if available
+    this.definition = getDungeonDefinition(this.definitionId);
+
+    // Initialize tier system
+    this.currentTier = this.config.startingTier || 1;
+    this.tierFloorNumber = this.config.startingFloor || 1;
+    this.tierRunState = {
+      dungeonId: this.definitionId,
+      currentTier: this.currentTier,
+      currentFloor: this.tierFloorNumber,
+      floorsCompleted: 0,
+      pendingRewards: {
+        gold: 0,
+        items: [],
+        experience: 0
+      },
+      canContinueToNextTier: false
+    };
 
     // Generate first floor
     this.generateFloor(this.config.startingFloor);
@@ -88,15 +124,16 @@ export class Dungeon implements IDungeon {
   }
 
   /**
-   * Generate a new floor
+   * Generate a new floor using tier-based configuration
    */
   private generateFloor(floorNumber: number): Floor {
-    // Progressive room count: increases with floor number
-    // Formula: base rooms + (floor - 1) * 0.5 rooms per floor
-    // Example: Floor 1 = 4-6 rooms, Floor 5 = 6-8 rooms, Floor 10 = 8-11 rooms
+    const tierConfig = DUNGEON_TIER_CONFIGS[this.currentTier];
+    const baseEnemyLevel = this.definition?.baseEnemyLevel || 5;
+
+    // Progressive room count: slightly increases within tier
     const baseMin = this.config.roomsPerFloor.min;
     const baseMax = this.config.roomsPerFloor.max;
-    const roomsPerFloor = Math.floor((floorNumber - 1) * 0.5);
+    const roomsPerFloor = Math.floor((this.tierFloorNumber - 1) * 0.3);
 
     const adjustedMin = baseMin + roomsPerFloor;
     const adjustedMax = baseMax + roomsPerFloor;
@@ -106,14 +143,22 @@ export class Dungeon implements IDungeon {
         Math.random() * (adjustedMax - adjustedMin + 1)
       ) + adjustedMin;
 
-    const difficulty = 1 + (floorNumber - 1) * this.config.difficultyScaling;
+    // Difficulty scales within tier (10% per floor)
+    const difficulty = 1 + (this.tierFloorNumber - 1) * this.config.difficultyScaling;
+
+    // Boss on floor 5 of each tier
+    const isTierBossFloor = this.tierFloorNumber === tierConfig.floorsPerTier;
 
     const floor = DungeonGenerator.generateFloor({
-      floorNumber,
+      floorNumber: this.tierFloorNumber,
+      tierFloorNumber: this.tierFloorNumber,
+      tier: this.currentTier,
+      tierConfig,
       roomCount,
       difficulty,
-      guaranteeBoss: floorNumber % 5 === 0, // Boss every 5 floors
-      heroLevel: this.config.heroLevel
+      guaranteeBoss: isTierBossFloor,
+      heroLevel: this.config.heroLevel,
+      baseEnemyLevel
     });
 
     this.floors.push(floor);
@@ -476,7 +521,7 @@ export class Dungeon implements IDungeon {
   }
 
   /**
-   * Proceed to next floor
+   * Proceed to next floor (handles tier progression)
    */
   proceedToNextFloor(): RoomEventResult {
     const currentRoom = this.getCurrentRoom();
@@ -493,19 +538,203 @@ export class Dungeon implements IDungeon {
       currentFloor.completed = true;
     }
 
+    // Update tier run state
+    this.tierRunState.floorsCompleted++;
+
+    const tierConfig = DUNGEON_TIER_CONFIGS[this.currentTier];
+    const isTierBossFloor = this.tierFloorNumber === tierConfig.floorsPerTier;
+
+    // Check if this was the tier boss floor
+    if (isTierBossFloor && currentFloor?.isTierBossFloor) {
+      // Tier completed! Calculate tier rewards
+      const tierRewards = this.calculateTierRewards();
+
+      // Add rewards to pending
+      this.tierRunState.pendingRewards.gold += tierRewards.gold;
+      this.tierRunState.pendingRewards.items.push(...tierRewards.items);
+      this.tierRunState.pendingRewards.experience += tierRewards.experience;
+
+      // Can continue to next tier if not tier 4
+      this.tierRunState.canContinueToNextTier = this.currentTier < 4;
+
+      const tierCompletionResult: TierCompletionResult = {
+        tierCompleted: this.currentTier,
+        rewards: tierRewards,
+        canContinue: this.currentTier < 4,
+        nextTier: this.currentTier < 4 ? (this.currentTier + 1) as TierLevel : undefined,
+        isLastTier: this.currentTier === 4
+      };
+
+      return {
+        success: true,
+        message: `🏆 Tier ${this.currentTier} (${tierConfig.name}) completed!`,
+        floorCompleted: true,
+        tierCompleted: true,
+        dungeonCompleted: this.currentTier === 4,
+        tierCompletionResult
+      };
+    }
+
+    // Not tier boss floor - advance to next floor within tier
     this.currentFloorIndex++;
+    this.tierFloorNumber++;
+    this.tierRunState.currentFloor = this.tierFloorNumber;
     this.maxFloorReached = Math.max(this.maxFloorReached, this.currentFloorIndex + 1);
 
     // Generate next floor if it doesn't exist
     if (!this.floors[this.currentFloorIndex]) {
-      this.generateFloor(this.currentFloorIndex + 1);
+      this.generateFloor(this.tierFloorNumber);
     }
 
     return {
       success: true,
-      message: `Descended to Floor ${this.currentFloorIndex + 1}`,
+      message: `Descended to Floor ${this.tierFloorNumber} (Tier ${this.currentTier})`,
       floorCompleted: true
     };
+  }
+
+  /**
+   * Calculate tier completion rewards based on tier config
+   */
+  private calculateTierRewards(): { gold: number; items: Item[]; experience: number } {
+    const tierConfig = DUNGEON_TIER_CONFIGS[this.currentTier];
+
+    // Base gold with tier multiplier
+    const goldBase = TIER_REWARDS.BASE_GOLD[this.currentTier];
+    const totalGold = Math.floor(goldBase * tierConfig.goldMultiplier);
+
+    // Experience based on tier
+    const experience = TIER_REWARDS.EXPERIENCE[this.currentTier];
+
+    // Generate guaranteed boss drop item
+    const items: Item[] = [];
+    const bossDropRarity = tierConfig.bossDropRarity;
+
+    try {
+      const bossItem = ItemGenerator.generateItem({
+        levelRange: { min: (this.config.heroLevel || 1), max: (this.config.heroLevel || 1) + 5 },
+        rarity: bossDropRarity
+      });
+      items.push(bossItem);
+    } catch {
+      // ItemGenerator may not be fully implemented yet
+    }
+
+    // Chance for additional drops based on tier (increases with tier)
+    const additionalDropChance = 0.3 + (this.currentTier - 1) * 0.15; // 30%, 45%, 60%, 75%
+    if (Math.random() < additionalDropChance) {
+      try {
+        const bonusRarity = getRandomRarityInRange(
+          tierConfig.lootRarityMin,
+          tierConfig.lootRarityMax
+        );
+        const bonusItem = ItemGenerator.generateItem({
+          levelRange: { min: (this.config.heroLevel || 1), max: (this.config.heroLevel || 1) + 3 },
+          rarity: bonusRarity
+        });
+        items.push(bonusItem);
+      } catch {
+        // ItemGenerator may not be fully implemented yet
+      }
+    }
+
+    return { gold: totalGold, items, experience };
+  }
+
+  /**
+   * Advance to next tier (called after tier completion)
+   */
+  advanceToNextTier(): RoomEventResult {
+    if (!this.tierRunState.canContinueToNextTier) {
+      return {
+        success: false,
+        message: 'Cannot advance - tier not completed or already at max tier'
+      };
+    }
+
+    if (this.currentTier >= 4) {
+      return {
+        success: false,
+        message: 'Already at maximum tier (Elite)'
+      };
+    }
+
+    // Advance to next tier
+    this.currentTier = (this.currentTier + 1) as TierLevel;
+    this.tierFloorNumber = 1;
+    this.tierRunState.currentTier = this.currentTier;
+    this.tierRunState.currentFloor = 1;
+    this.tierRunState.canContinueToNextTier = false;
+
+    // Increment floor index and generate first floor of new tier
+    this.currentFloorIndex++;
+    this.generateFloor(1);
+    this.maxFloorReached = Math.max(this.maxFloorReached, this.currentFloorIndex + 1);
+
+    const tierConfig = DUNGEON_TIER_CONFIGS[this.currentTier];
+
+    return {
+      success: true,
+      message: `⬆️ Advanced to Tier ${this.currentTier} (${tierConfig.name})!`
+    };
+  }
+
+  /**
+   * Claim pending tier rewards
+   */
+  claimTierRewards(): { gold: number; items: Item[]; experience: number } {
+    const rewards = { ...this.tierRunState.pendingRewards };
+
+    // Add to totals
+    this.totalGoldEarned += rewards.gold;
+    this.totalItemsFound += rewards.items.length;
+
+    // Clear pending rewards
+    this.tierRunState.pendingRewards = {
+      gold: 0,
+      items: [],
+      experience: 0
+    };
+
+    return rewards;
+  }
+
+  /**
+   * Get current tier information
+   */
+  getTierInfo(): {
+    currentTier: TierLevel;
+    tierName: string;
+    floorInTier: number;
+    floorsPerTier: number;
+    canAdvance: boolean;
+    pendingRewards: { gold: number; items: Item[]; experience: number };
+  } {
+    const tierConfig = DUNGEON_TIER_CONFIGS[this.currentTier];
+    return {
+      currentTier: this.currentTier,
+      tierName: tierConfig.name,
+      floorInTier: this.tierFloorNumber,
+      floorsPerTier: tierConfig.floorsPerTier,
+      canAdvance: this.tierRunState.canContinueToNextTier,
+      pendingRewards: this.tierRunState.pendingRewards
+    };
+  }
+
+  /**
+   * Check if current floor is the tier boss floor
+   */
+  isTierBossFloor(): boolean {
+    const tierConfig = DUNGEON_TIER_CONFIGS[this.currentTier];
+    return this.tierFloorNumber === tierConfig.floorsPerTier;
+  }
+
+  /**
+   * Exit dungeon and collect all rewards (forfeit remaining tiers)
+   */
+  exitDungeon(): { gold: number; items: Item[]; experience: number } {
+    this.isActive = false;
+    return this.claimTierRewards();
   }
 
   /**

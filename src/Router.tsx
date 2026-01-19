@@ -21,6 +21,7 @@
 import { useState, useEffect } from 'react';
 import { WorldMap } from './components/WorldMap';
 import type { DungeonEntrance, StaticObject, DynamicObject } from './types/worldmap.types';
+import type { TierLevel } from './types/dungeon.types';
 import { Dungeon } from './engine/dungeon/Dungeon';
 import { DungeonExplorer } from './components/DungeonExplorer';
 import { useGameState } from './hooks/useGameState';
@@ -265,8 +266,8 @@ export function Router() {
    * });
    * ```
    */
-  const handleEnterDungeon = (dungeonEntrance: DungeonEntrance) => {
-    console.log('🏰 Entering dungeon from worldmap:', dungeonEntrance);
+  const handleEnterDungeon = (dungeonEntrance: DungeonEntrance, selectedTier: TierLevel = 1) => {
+    console.log('🏰 Entering dungeon from worldmap:', dungeonEntrance, 'Tier:', selectedTier);
 
     // Calculate average hero level
     const aliveHeroes = gameState.activeParty.filter(h => h.isAlive);
@@ -337,6 +338,8 @@ export function Router() {
     // Create unique dungeon based on the entrance data
     const newDungeon = new Dungeon({
       name: dungeonEntrance.name,
+      definitionId: dungeonEntrance.definitionId,  // Pass the dungeon definition ID for baseEnemyLevel
+      startingTier: selectedTier,                   // Pass the selected tier for level multiplier
       startingFloor: 1,
       roomsPerFloor: roomsConfig[dungeonEntrance.difficulty],
       heroLevel: dungeonBaseLevel,  // Use dungeon base level for enemy scaling

@@ -475,17 +475,16 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
         });
       }
 
-      // Deduplicate heroes by name + class instead of ID
-      // This prevents duplicate heroes from appearing even if they have different IDs
-      const uniqueHeroKeys = new Set<string>();
+      // Deduplicate heroes by ID only (not name+class)
+      // This allows gacha duplicates (same name/class, different IDs) to be kept
+      const uniqueHeroIds = new Set<string>();
       const deduplicatedHeroes: Hero[] = [];
       heroes.forEach(hero => {
-        const heroKey = `${hero.name}-${hero.class}`;
-        if (!uniqueHeroKeys.has(heroKey)) {
-          uniqueHeroKeys.add(heroKey);
+        if (!uniqueHeroIds.has(hero.id)) {
+          uniqueHeroIds.add(hero.id);
           deduplicatedHeroes.push(hero);
         } else {
-          console.warn('⚠️ Duplicate hero detected during load (same name+class), skipping:', hero.name, hero.class, hero.id);
+          console.warn('⚠️ Duplicate hero detected during load (same ID), skipping:', hero.name, hero.class, hero.id);
         }
       });
       heroes = deduplicatedHeroes;
@@ -1373,10 +1372,13 @@ export function useGameState(userEmail?: string): [GameState, GameStateActions] 
           if (duplicatesFixed > 0) {
             console.log(`✅ Fixed ${duplicatesFixed} duplicate heroes, added ${talentPointsAdded} talent points`);
 
-            // Update active party to remove any duplicates
+            // Update active party: find the merged hero by ID first, then by name+class
             const newActiveParty = prev.activeParty
               .map(partyHero => {
-                // Find the kept version of this hero
+                // First try to find by exact ID (hero wasn't merged)
+                const sameHero = uniqueHeroes.find(h => h.id === partyHero.id);
+                if (sameHero) return sameHero;
+                // If not found by ID, find by name+class (hero was merged into another)
                 return uniqueHeroes.find(h =>
                   h.name === partyHero.name && h.class === partyHero.class
                 );

@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import type { Dungeon } from '../engine/dungeon/Dungeon';
-import type { Room, Direction } from '../types/dungeon.types';
+import type { Room, Direction, TierCompletionResult, TierLevel } from '../types/dungeon.types';
 import type { Hero } from '../engine/hero/Hero';
 import type { Item } from '../engine/item/Item';
 import { DungeonMinimap } from './DungeonMinimap';
@@ -24,6 +24,8 @@ interface DungeonExplorerProps {
   onTreasureLooted: (gold: number, items: Item[]) => void;
   onDungeonExit: () => void;
   onFloorComplete: () => void;
+  onTierComplete?: (result: TierCompletionResult) => void;
+  onRewardsClaimed?: (rewards: { gold: number; items: Item[]; experience: number }) => void;
 }
 
 /**
@@ -36,13 +38,17 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
   onCombatStart,
   onTreasureLooted,
   onDungeonExit,
-  onFloorComplete
+  onFloorComplete,
+  onTierComplete,
+  onRewardsClaimed
 }) => {
   const [currentRoom, setCurrentRoom] = useState<Room | null>(null);
   const [message, setMessage] = useState<string>('');
   const [, forceUpdate] = useState({});
   const lastCombatRoomId = useRef<string | null>(null);
   const lastExitRoomId = useRef<string | null>(null);
+  const [tierCompletionResult, setTierCompletionResult] = useState<TierCompletionResult | null>(null);
+  const [showTierCompleteDialog, setShowTierCompleteDialog] = useState(false);
 
   useEffect(() => {
     const room = dungeon.getCurrentRoom();
@@ -91,15 +97,69 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
   }, [dungeon, dungeonUpdateKey]);
 
   /**
+   * Check if current room requires completion before leaving
+   * Returns error message if blocked, null if movement allowed
+   */
+  const getRoomBlockMessage = (): string | null => {
+    if (!currentRoom) return null;
+
+    switch (currentRoom.type) {
+      case 'combat':
+      case 'elite':
+        if (!currentRoom.combatCompleted) {
+          return t('dungeon.mustDefeatEnemies');
+        }
+        break;
+
+      case 'boss':
+        if (!currentRoom.bossDefeated) {
+          return t('dungeon.mustDefeatBoss');
+        }
+        break;
+
+      case 'miniboss':
+        if (!currentRoom.miniBossDefeated) {
+          return t('dungeon.mustDefeatMiniBoss');
+        }
+        break;
+
+      case 'treasure':
+        if (!currentRoom.treasureLooted) {
+          return t('dungeon.mustLootTreasure');
+        }
+        break;
+
+      case 'trap':
+        if (!currentRoom.trapDisarmed) {
+          return t('dungeon.mustDisarmTrap');
+        }
+        break;
+
+      // rest and shrine rooms are optional - player can skip them
+      // case 'rest':
+      // case 'shrine':
+
+      case 'mystery':
+        if (!currentRoom.mysteryResolved) {
+          return t('dungeon.mustResolveMystery');
+        }
+        break;
+
+      // start, exit: no completion requirement
+    }
+
+    return null;
+  };
+
+  /**
    * Handle movement
    */
   const handleMove = (direction: Direction) => {
-    // Block movement if current room has uncompleted combat
-    if (currentRoom && (currentRoom.type === 'combat' || currentRoom.type === 'boss' || currentRoom.type === 'elite' || currentRoom.type === 'miniboss')) {
-      if (!currentRoom.combatCompleted && (currentRoom.type === 'miniboss' ? !currentRoom.miniBossDefeated : true)) {
-        setMessage('⚠️ You must defeat all enemies before leaving this room!');
-        return;
-      }
+    // Block movement if current room has uncompleted action
+    const blockMessage = getRoomBlockMessage();
+    if (blockMessage) {
+      setMessage(`⚠️ ${blockMessage}`);
+      return;
     }
 
     const result = dungeon.moveToRoom(direction);
@@ -232,12 +292,45 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
         setMessage(result.message);
         if (result.success) {
           onFloorComplete();
-          setCurrentRoom(dungeon.getCurrentRoom());
-          forceUpdate({});
+
+          // Check if tier was completed
+          if (result.tierCompleted && result.tierCompletionResult) {
+            setTierCompletionResult(result.tierCompletionResult);
+            setShowTierCompleteDialog(true);
+            onTierComplete?.(result.tierCompletionResult);
+          } else {
+            setCurrentRoom(dungeon.getCurrentRoom());
+            forceUpdate({});
+          }
         }
       }
         break;
     }
+  };
+
+  /**
+   * Handle advancing to next tier
+   */
+  const handleAdvanceToNextTier = () => {
+    const result = dungeon.advanceToNextTier();
+    setMessage(result.message);
+    if (result.success) {
+      setShowTierCompleteDialog(false);
+      setTierCompletionResult(null);
+      setCurrentRoom(dungeon.getCurrentRoom());
+      forceUpdate({});
+    }
+  };
+
+  /**
+   * Handle claiming rewards and exiting
+   */
+  const handleClaimRewardsAndExit = () => {
+    const rewards = dungeon.claimTierRewards();
+    onRewardsClaimed?.(rewards);
+    setShowTierCompleteDialog(false);
+    setTierCompletionResult(null);
+    onDungeonExit();
   };
 
   /**
@@ -350,6 +443,19 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
 
   const stats = dungeon.getStatistics();
   const floor = dungeon.getCurrentFloor();
+  const tierInfo = dungeon.getTierInfo();
+  const tierNames: Record<TierLevel, string> = {
+    1: 'Easy',
+    2: 'Normal',
+    3: 'Hard',
+    4: 'Elite'
+  };
+  const tierColors: Record<TierLevel, string> = {
+    1: '#4aff4a',
+    2: '#ffd700',
+    3: '#ff8c00',
+    4: '#ff4444'
+  };
 
   return (
     <div style={styles.container}>
@@ -390,11 +496,59 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
         </div>
       </div>
 
+      {/* Tier Progress Bar */}
+      <div style={{
+        marginBottom: SPACING[4],
+        padding: `${SPACING[3]} ${SPACING[4]}`,
+        backgroundColor: COLORS.bgCardDark,
+        borderRadius: BORDER_RADIUS.md,
+        border: `2px solid ${tierColors[tierInfo.currentTier]}`
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: SPACING[2] }}>
+          <span style={{ fontWeight: 'bold', color: tierColors[tierInfo.currentTier] }}>
+            Tier {tierInfo.currentTier}: {tierNames[tierInfo.currentTier]}
+          </span>
+          <span style={{ fontSize: FONT_SIZE.sm, color: '#aaa' }}>
+            Floor {tierInfo.floorInTier}/{tierInfo.floorsPerTier}
+          </span>
+        </div>
+        <div style={{
+          width: '100%',
+          height: '8px',
+          backgroundColor: '#333',
+          borderRadius: '4px',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            width: `${(tierInfo.floorInTier / tierInfo.floorsPerTier) * 100}%`,
+            height: '100%',
+            backgroundColor: tierColors[tierInfo.currentTier],
+            transition: 'width 0.3s ease'
+          }} />
+        </div>
+        {dungeon.isTierBossFloor() && (
+          <div style={{
+            marginTop: SPACING[2],
+            fontSize: FONT_SIZE.sm,
+            color: '#ff4444',
+            fontWeight: 'bold'
+          }}>
+            ⚔️ Tier Boss Floor!
+          </div>
+        )}
+      </div>
+
       {/* Statistics */}
       <div style={styles.stats}>
         <div style={styles.statItem}>
+          <span>Tier</span>
+          <strong style={{ color: tierColors[tierInfo.currentTier] }}>
+            {tierInfo.currentTier}/4
+          </strong>
+        </div>
+        <div style={styles.statItem}>
           <span>{t('dungeon.floor')}</span>
-          <strong>{floor?.floorNumber || 0}</strong>
+          <strong>{tierInfo.floorInTier}/{tierInfo.floorsPerTier}</strong>
         </div>
         <div style={styles.statItem}>
           <span>{t('dungeon.enemiesDefeated')}</span>
@@ -453,11 +607,7 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
           floor={floor}
           currentRoomId={currentRoom.id}
           onRoomClick={handleRoomClick}
-          isMovementBlocked={
-            (currentRoom.type === 'combat' || currentRoom.type === 'boss' || currentRoom.type === 'elite' || currentRoom.type === 'miniboss')
-              ? !currentRoom.combatCompleted
-              : false
-          }
+          isMovementBlocked={getRoomBlockMessage() !== null}
         />
       )}
 
@@ -680,6 +830,145 @@ export const DungeonExplorer: React.FC<DungeonExplorerProps> = ({
           <p style={{ textAlign: 'center', color: '#ff4444', fontSize: '16px', margin: 0 }}>
             {t('dungeon.defeatAllEnemies')}
           </p>
+        </div>
+      )}
+
+      {/* Tier Completion Dialog */}
+      {showTierCompleteDialog && tierCompletionResult && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.85)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2000
+        }}>
+          <div style={{
+            backgroundColor: COLORS.bgCardDark,
+            padding: SPACING[6],
+            borderRadius: BORDER_RADIUS.lg,
+            maxWidth: '500px',
+            width: '90%',
+            border: `3px solid ${tierColors[tierCompletionResult.tierCompleted]}`,
+            boxShadow: `0 0 30px ${tierColors[tierCompletionResult.tierCompleted]}40`
+          }}>
+            <h2 style={{
+              textAlign: 'center',
+              marginBottom: SPACING[4],
+              color: tierColors[tierCompletionResult.tierCompleted],
+              fontSize: FONT_SIZE['2xl']
+            }}>
+              🏆 Tier {tierCompletionResult.tierCompleted} Complete!
+            </h2>
+
+            <div style={{
+              textAlign: 'center',
+              marginBottom: SPACING[4],
+              fontSize: FONT_SIZE.lg
+            }}>
+              <span style={{ color: tierColors[tierCompletionResult.tierCompleted], fontWeight: 'bold' }}>
+                {tierNames[tierCompletionResult.tierCompleted]}
+              </span> difficulty conquered!
+            </div>
+
+            {/* Rewards Section */}
+            <div style={{
+              backgroundColor: 'rgba(255, 215, 0, 0.1)',
+              padding: SPACING[4],
+              borderRadius: BORDER_RADIUS.md,
+              marginBottom: SPACING[5]
+            }}>
+              <h3 style={{ marginTop: 0, marginBottom: SPACING[3] }}>🎁 Rewards:</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: SPACING[2] }}>
+                <div>💰 Gold: <strong style={{ color: '#ffd700' }}>{tierCompletionResult.rewards.gold}</strong></div>
+                <div>📖 Experience: <strong style={{ color: '#87ceeb' }}>{tierCompletionResult.rewards.experience}</strong></div>
+                {tierCompletionResult.rewards.items.length > 0 && (
+                  <div>
+                    📦 Items: <strong>{tierCompletionResult.rewards.items.length}</strong>
+                    <div style={{ marginLeft: '15px', marginTop: SPACING[2] }}>
+                      {tierCompletionResult.rewards.items.map((item, idx) => (
+                        <div key={`tier-reward-${item.id || idx}`} style={{
+                          padding: SPACING[2],
+                          backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                          borderRadius: BORDER_RADIUS.sm,
+                          marginBottom: SPACING[1]
+                        }}>
+                          <span style={{
+                            color: item.rarity === 'legendary' ? '#ff8c00' :
+                                   item.rarity === 'epic' ? '#9400d3' :
+                                   item.rarity === 'rare' ? '#4169e1' :
+                                   item.rarity === 'uncommon' ? '#228b22' :
+                                   '#808080'
+                          }}>
+                            ⚔️ {item.name}
+                          </span>
+                          <span style={{ marginLeft: '8px', color: '#aaa', fontSize: FONT_SIZE.sm }}>
+                            ({item.rarity})
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: SPACING[3] }}>
+              {tierCompletionResult.canContinue && (
+                <button
+                  onClick={handleAdvanceToNextTier}
+                  style={{
+                    padding: SPACING[4],
+                    backgroundColor: tierColors[(tierCompletionResult.tierCompleted + 1) as TierLevel] || '#ff4444',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: BORDER_RADIUS.md,
+                    cursor: 'pointer',
+                    fontSize: FONT_SIZE.lg,
+                    fontWeight: 'bold'
+                  }}
+                >
+                  ⬆️ Continue to Tier {tierCompletionResult.nextTier}: {tierNames[tierCompletionResult.nextTier!]}
+                </button>
+              )}
+
+              <button
+                onClick={handleClaimRewardsAndExit}
+                style={{
+                  padding: SPACING[4],
+                  backgroundColor: tierCompletionResult.isLastTier ? '#ffd700' : '#4aff4a',
+                  color: '#000',
+                  border: 'none',
+                  borderRadius: BORDER_RADIUS.md,
+                  cursor: 'pointer',
+                  fontSize: FONT_SIZE.lg,
+                  fontWeight: 'bold'
+                }}
+              >
+                {tierCompletionResult.isLastTier
+                  ? '🏆 Claim Rewards & Complete Dungeon!'
+                  : '✅ Claim Rewards & Exit'
+                }
+              </button>
+            </div>
+
+            {tierCompletionResult.isLastTier && (
+              <div style={{
+                textAlign: 'center',
+                marginTop: SPACING[4],
+                fontSize: FONT_SIZE.lg,
+                color: '#ffd700',
+                fontWeight: 'bold'
+              }}>
+                🎉 Congratulations! You conquered all tiers! 🎉
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

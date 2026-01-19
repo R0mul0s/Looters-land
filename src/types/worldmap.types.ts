@@ -93,9 +93,10 @@ export interface Town extends StaticObject {
 
 export interface DungeonEntrance extends StaticObject {
   type: 'dungeon';
-  difficulty: 'Easy' | 'Medium' | 'Hard' | 'Nightmare';
-  maxFloors: number;
-  recommendedLevel: number;
+  definitionId: string;                // Reference to DUNGEON_DEFINITIONS
+  difficulty: 'Easy' | 'Medium' | 'Hard' | 'Nightmare';  // Legacy field
+  maxFloors: number;                   // Legacy: Total floors (now 20 = 4 tiers * 5 floors)
+  recommendedLevel: number;            // Base enemy level for tier 1
   theme: string;
   asset?: string; // Asset filename (e.g., 'dungeon1.png', 'dungeon4.png')
 }

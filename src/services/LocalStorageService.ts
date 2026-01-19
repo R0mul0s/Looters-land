@@ -20,7 +20,7 @@ import type { Hero } from '../engine/hero/Hero';
 import type { Item } from '../engine/item/Item';
 
 const STORAGE_KEY = 'looters-land-autosave';
-const VERSION = '1.0.0';
+const VERSION = '1.1.0'; // Bumped: Added rarity, talentPoints, and combat stats to hero save
 
 /**
  * Game state structure for localStorage
@@ -32,10 +32,17 @@ interface LocalGameState {
     id: string;
     name: string;
     class: string;
+    rarity: string;           // Added in v1.1.0
     level: number;
     experience: number;
     requiredXP: number;
+    talentPoints: number;     // Added in v1.1.0
     currentHP: number;
+    maxHP: number;            // Added in v1.1.0
+    ATK: number;              // Added in v1.1.0
+    DEF: number;              // Added in v1.1.0
+    SPD: number;              // Added in v1.1.0
+    CRIT: number;             // Added in v1.1.0
     equippedItems: {
       slot: string;
       item: {
@@ -103,10 +110,17 @@ export function saveToLocalStorage(
         id: hero.id,
         name: hero.name,
         class: hero.class,
+        rarity: hero.rarity || 'common',       // Added in v1.1.0
         level: hero.level,
         experience: hero.experience,
         requiredXP: hero.requiredXP,
+        talentPoints: hero.talentPoints || 0,  // Added in v1.1.0
         currentHP: hero.currentHP,
+        maxHP: hero.maxHP,                     // Added in v1.1.0
+        ATK: hero.ATK,                         // Added in v1.1.0
+        DEF: hero.DEF,                         // Added in v1.1.0
+        SPD: hero.SPD,                         // Added in v1.1.0
+        CRIT: hero.CRIT,                       // Added in v1.1.0
         equippedItems: hero.equipment
           ? Object.entries(hero.equipment.slots)
               .filter(([, item]) => item !== null)
@@ -181,10 +195,25 @@ export function loadFromLocalStorage(): LocalGameState | null {
 
     const gameState: LocalGameState = JSON.parse(saved);
 
-    // Version check
+    // Version migration
     if (gameState.version !== VERSION) {
-      console.warn('⚠️ Save version mismatch, may need migration');
-      // TODO: Add migration logic if needed
+      console.warn(`⚠️ Save version mismatch (${gameState.version} -> ${VERSION}), migrating...`);
+
+      // Migrate from v1.0.0 to v1.1.0: Add missing hero fields
+      if (gameState.version === '1.0.0') {
+        gameState.heroes = gameState.heroes.map(hero => ({
+          ...hero,
+          rarity: (hero as any).rarity || 'common',
+          talentPoints: (hero as any).talentPoints || 0,
+          maxHP: (hero as any).maxHP || hero.currentHP || 100,
+          ATK: (hero as any).ATK || 50,
+          DEF: (hero as any).DEF || 30,
+          SPD: (hero as any).SPD || 20,
+          CRIT: (hero as any).CRIT || 5
+        }));
+        gameState.version = '1.1.0';
+        console.log('✅ Migrated save from v1.0.0 to v1.1.0');
+      }
     }
 
     console.log('✅ Loaded auto-save from localStorage');

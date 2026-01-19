@@ -408,38 +408,43 @@ export class WorldMapGenerator {
     const height = tiles.length;
 
     // Dungeon configs matching town progression
+    // Each dungeon now has 4 tiers × 5 floors = 20 total floors
     const dungeonConfigs = [
       {
         name: 'Forgotten Mines',
+        definitionId: 'forgotten-mines',
         difficulty: 'Easy' as const,
-        maxFloors: 10,
-        level: 3,
+        maxFloors: 20,   // 4 tiers × 5 floors
+        level: 5,        // Base enemy level (tier 1)
         theme: 'Goblin Caves',
-        townIndex: 0 // Goldhaven
+        townIndex: 0     // Goldhaven
       },
       {
         name: 'Elven Catacombs',
+        definitionId: 'elven-catacombs',
         difficulty: 'Medium' as const,
-        maxFloors: 25,
-        level: 15,
+        maxFloors: 20,   // 4 tiers × 5 floors
+        level: 15,       // Base enemy level (tier 1)
         theme: 'Ancient Ruins',
-        townIndex: 1 // Ariandel
+        townIndex: 1     // Ariandel
       },
       {
         name: 'Dwarven Depths',
+        definitionId: 'ironforge-depths',  // Must match DUNGEON_DEFINITIONS id
         difficulty: 'Hard' as const,
-        maxFloors: 50,
-        level: 25,
+        maxFloors: 20,   // 4 tiers × 5 floors
+        level: 25,       // Base enemy level (tier 1)
         theme: 'Mountain Depths',
-        townIndex: 2 // Gorundrim
+        townIndex: 2     // Gorundrim
       },
       {
         name: 'Arcane Sanctum',
+        definitionId: 'shadow-sanctum',  // Must match DUNGEON_DEFINITIONS id
         difficulty: 'Nightmare' as const,
-        maxFloors: 75,
-        level: 35,
+        maxFloors: 20,   // 4 tiers × 5 floors
+        level: 35,       // Base enemy level (tier 1)
         theme: 'Arcane Tower',
-        townIndex: 3 // Astralheim
+        townIndex: 3     // Astralheim
       }
     ];
 
@@ -496,6 +501,7 @@ export class WorldMapGenerator {
       const dungeon: DungeonEntrance = {
         id: `dungeon-${i}`,
         type: 'dungeon',
+        definitionId: config.definitionId,
         name: config.name,
         position: { x, y },
         difficulty: config.difficulty,
@@ -550,10 +556,11 @@ export class WorldMapGenerator {
         const endlessDungeon: DungeonEntrance = {
           id: 'dungeon-endless',
           type: 'dungeon',
+          definitionId: 'dragons-lair',  // Use dragon's lair definition
           name: 'Endless Abyss',
           position: { x, y },
           difficulty: 'Nightmare',
-          maxFloors: 999,
+          maxFloors: 20,  // 4 tiers × 5 floors
           recommendedLevel: 50,
           theme: 'Endless Abyss',
           asset: 'dungeon4.png'

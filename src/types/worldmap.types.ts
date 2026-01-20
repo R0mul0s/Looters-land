@@ -260,8 +260,8 @@ export interface WorldMap {
 // ============================================================================
 
 export interface WorldMapGenerationOptions {
-  width: number;
-  height: number;
+  width?: number;    // Defaults to 50
+  height?: number;   // Defaults to 50
   seed?: string;
   townCount?: number;
   dungeonCount?: number;

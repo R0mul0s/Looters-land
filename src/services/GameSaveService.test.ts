@@ -504,7 +504,7 @@ describe('GameSaveService', () => {
         name: 'Legendary Sword',
         slot: 'weapon',
         rarity: 'legendary',
-        stats: { ATK: 50 }
+        stats: { HP: 0, ATK: 50, DEF: 0, SPD: 0, CRIT: 0 }
       });
 
       const heroWithEquipment = createMockHero({
@@ -581,7 +581,7 @@ describe('GameSaveService', () => {
   describe('saveGame - Error Handling', () => {
     it('should return error when Supabase is not configured', async () => {
       vi.doMock('../lib/supabase', () => ({
-        supabase: mockSupabase,
+        supabase: { from: mockFrom },
         isSupabaseConfigured: () => false
       }));
 

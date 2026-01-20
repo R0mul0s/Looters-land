@@ -609,12 +609,10 @@ export class Dungeon implements IDungeon {
     // Generate guaranteed boss drop item
     const items: Item[] = [];
     const bossDropRarity = tierConfig.bossDropRarity;
+    const heroLevel = this.config.heroLevel || 1;
 
     try {
-      const bossItem = ItemGenerator.generateItem({
-        levelRange: { min: (this.config.heroLevel || 1), max: (this.config.heroLevel || 1) + 5 },
-        rarity: bossDropRarity
-      });
+      const bossItem = ItemGenerator.generate(heroLevel + 2, bossDropRarity);
       items.push(bossItem);
     } catch {
       // ItemGenerator may not be fully implemented yet
@@ -628,10 +626,7 @@ export class Dungeon implements IDungeon {
           tierConfig.lootRarityMin,
           tierConfig.lootRarityMax
         );
-        const bonusItem = ItemGenerator.generateItem({
-          levelRange: { min: (this.config.heroLevel || 1), max: (this.config.heroLevel || 1) + 3 },
-          rarity: bonusRarity
-        });
+        const bonusItem = ItemGenerator.generate(heroLevel + 1, bonusRarity);
         items.push(bonusItem);
       } catch {
         // ItemGenerator may not be fully implemented yet

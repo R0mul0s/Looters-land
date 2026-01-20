@@ -282,14 +282,14 @@ export interface RoomEventResult {
  */
 export interface DungeonGenerationOptions {
   floorNumber: number;               // 1-5 within tier
-  tierFloorNumber: number;           // Same as floorNumber (for clarity)
-  tier: TierLevel;                   // Current tier
-  tierConfig: DungeonTierConfig;     // Tier configuration
+  tierFloorNumber?: number;          // Same as floorNumber (for clarity), defaults to floorNumber
+  tier?: TierLevel;                  // Current tier, defaults to 1
+  tierConfig?: DungeonTierConfig;    // Tier configuration, defaults to tier 1 config
   roomCount: number;
   difficulty: number;
   guaranteeBoss?: boolean;           // True for floor 5 of each tier
   heroLevel?: number;
-  baseEnemyLevel: number;            // From DungeonDefinition
+  baseEnemyLevel?: number;           // From DungeonDefinition, defaults to 5
 }
 
 /**

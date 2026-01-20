@@ -281,6 +281,7 @@ describe('Enemy', () => {
 
       enemy.addStatusEffect({
         name: 'Poison',
+        type: 'debuff',
         duration: 3,
         stat: 'ATK',
         value: -10
@@ -293,8 +294,8 @@ describe('Enemy', () => {
     it('should refresh duration of existing effect', () => {
       const enemy = new Enemy('Goblin', 1, 'normal');
 
-      enemy.addStatusEffect({ name: 'Burn', duration: 2, stat: 'DEF', value: -5 });
-      enemy.addStatusEffect({ name: 'Burn', duration: 5, stat: 'DEF', value: -5 });
+      enemy.addStatusEffect({ name: 'Burn', type: 'debuff', duration: 2, stat: 'DEF', value: -5 });
+      enemy.addStatusEffect({ name: 'Burn', type: 'debuff', duration: 5, stat: 'DEF', value: -5 });
 
       expect(enemy.statusEffects).toHaveLength(1);
       expect(enemy.statusEffects[0].duration).toBe(5);
@@ -303,7 +304,7 @@ describe('Enemy', () => {
     it('should tick status effects', () => {
       const enemy = new Enemy('Goblin', 1, 'normal');
 
-      enemy.addStatusEffect({ name: 'Buff', duration: 3, stat: 'ATK', value: 10 });
+      enemy.addStatusEffect({ name: 'Buff', type: 'buff', duration: 3, stat: 'ATK', value: 10 });
       enemy.tickStatusEffects();
 
       expect(enemy.statusEffects[0].duration).toBe(2);
@@ -312,7 +313,7 @@ describe('Enemy', () => {
     it('should remove expired effects', () => {
       const enemy = new Enemy('Goblin', 1, 'normal');
 
-      enemy.addStatusEffect({ name: 'Buff', duration: 1, stat: 'ATK', value: 10 });
+      enemy.addStatusEffect({ name: 'Buff', type: 'buff', duration: 1, stat: 'ATK', value: 10 });
       enemy.tickStatusEffects();
 
       expect(enemy.statusEffects).toHaveLength(0);
@@ -323,7 +324,7 @@ describe('Enemy', () => {
 
       expect(enemy.isStunned()).toBe(false);
 
-      enemy.addStatusEffect({ name: 'Stun', duration: 1, stun: true });
+      enemy.addStatusEffect({ name: 'Stun', type: 'debuff', duration: 1, stun: true });
 
       expect(enemy.isStunned()).toBe(true);
     });
@@ -333,7 +334,7 @@ describe('Enemy', () => {
 
       expect(enemy.hasImmunity()).toBe(false);
 
-      enemy.addStatusEffect({ name: 'Shield', duration: 2, immunity: true });
+      enemy.addStatusEffect({ name: 'Shield', type: 'buff', duration: 2, immunity: true });
 
       expect(enemy.hasImmunity()).toBe(true);
     });
@@ -342,7 +343,7 @@ describe('Enemy', () => {
       const enemy = new Enemy('Goblin', 1, 'normal');
       const baseATK = enemy.ATK;
 
-      enemy.addStatusEffect({ name: 'ATK Boost', duration: 3, stat: 'ATK', value: 50 });
+      enemy.addStatusEffect({ name: 'ATK Boost', type: 'buff', duration: 3, stat: 'ATK', value: 50 });
 
       const boostedATK = enemy.getEffectiveStat(baseATK, 'ATK');
       expect(boostedATK).toBe(Math.floor(baseATK * 1.5));
@@ -351,8 +352,8 @@ describe('Enemy', () => {
     it('should cap damage reduction at 90%', () => {
       const enemy = new Enemy('Goblin', 1, 'normal');
 
-      enemy.addStatusEffect({ name: 'Shield1', duration: 3, stat: 'damageReduction', value: 60 });
-      enemy.addStatusEffect({ name: 'Shield2', duration: 3, stat: 'damageReduction', value: 60 });
+      enemy.addStatusEffect({ name: 'Shield1', type: 'buff', duration: 3, stat: 'damageReduction', value: 60 });
+      enemy.addStatusEffect({ name: 'Shield2', type: 'buff', duration: 3, stat: 'damageReduction', value: 60 });
 
       const reduction = enemy.getDamageReduction();
       expect(reduction).toBe(90);
@@ -445,7 +446,7 @@ describe('Enemy', () => {
   describe('Reset Functions', () => {
     it('should reset combat state', () => {
       const enemy = new Enemy('Goblin', 1, 'normal');
-      enemy.addStatusEffect({ name: 'Buff', duration: 5, stat: 'ATK', value: 10 });
+      enemy.addStatusEffect({ name: 'Buff', type: 'buff', duration: 5, stat: 'ATK', value: 10 });
 
       enemy.resetCombatState();
 
@@ -456,7 +457,7 @@ describe('Enemy', () => {
       const enemy = new Enemy('Goblin', 1, 'normal');
       enemy.currentHP = 1;
       enemy.isAlive = false;
-      enemy.addStatusEffect({ name: 'Buff', duration: 5, stat: 'ATK', value: 10 });
+      enemy.addStatusEffect({ name: 'Buff', type: 'buff', duration: 5, stat: 'ATK', value: 10 });
 
       enemy.reset();
 
@@ -493,7 +494,7 @@ describe('Enemy', () => {
       const enemy = new Enemy('Goblin', 1, 'normal');
       const baseATK = enemy.ATK;
 
-      enemy.addStatusEffect({ name: 'Boost', duration: 3, stat: 'ATK', value: 25 });
+      enemy.addStatusEffect({ name: 'Boost', type: 'buff', duration: 3, stat: 'ATK', value: 25 });
 
       const combatStats = enemy.getCombatStats();
       expect(combatStats.ATK).toBe(Math.floor(baseATK * 1.25));
